@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -27,7 +28,7 @@ const NAV_ITEMS = [
 ];
 
 export const Header = () => {
-  const { isAuthenticated, userRole } = useAuth();
+  const { isAuthenticated, userRole, logout } = useAuth();
   const isMobile = useIsMobile();
   const [location, setLocation] = useState("Select Barangay");
   const [search, setSearch] = useState("");
@@ -144,7 +145,7 @@ export const Header = () => {
                 <DropdownMenuItem asChild>
                   <Link to="/settings">Settings</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={logout}>
+                <DropdownMenuItem onClick={() => logout()}>
                   Logout
                 </DropdownMenuItem>
               </>
