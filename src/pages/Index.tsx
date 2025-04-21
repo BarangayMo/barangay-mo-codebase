@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight, Briefcase, MapPin, ShieldCheck, Users, ShoppingCart, Star } from "lucide-react";
@@ -14,10 +13,10 @@ const Index = () => {
     <Layout>
       <div className="w-full -mt-4">
         {/* Hero Section - Full width */}
-        <section className="relative w-full h-auto">
+        <section className="relative w-full">
           {/* Dark gradient background */}
           <div 
-            className="absolute inset-0 bg-[url('/lovable-uploads/af48621c-11ee-404e-a91f-975286eb7ac9.png')] bg-cover bg-center"
+            className="absolute inset-0 bg-[url('/lovable-uploads/8e29a7c5-dd91-46ca-be5e-3bb8f718b8e9.png')] bg-cover bg-center"
             style={{
               backgroundBlendMode: 'overlay',
             }}
@@ -41,7 +40,7 @@ const Index = () => {
                     Beta Version 1.0
                   </Badge>
                   
-                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-white font-outfit leading-tight">
+                  <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 text-white font-outfit leading-tight">
                     Your Smart <br />
                     <span className="relative">
                       Barangay
@@ -51,11 +50,11 @@ const Index = () => {
                     </span>
                   </h1>
                   
-                  <p className="text-xl text-white/90 mb-8 max-w-lg">
+                  <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-lg">
                     Connecting communities, empowering residents, and streamlining local governance in the Philippines.
                   </p>
                   
-                  <div className="flex flex-wrap gap-4 justify-center md:justify-start">
+                  <div className="flex flex-wrap gap-4 justify-center md:justify-start mb-8">
                     <Button size="lg" className="bg-white text-blue-600 hover:bg-white/90 font-medium shadow-lg">
                       <Link to="/register" className="flex items-center gap-2">
                         Join Your Community
@@ -68,7 +67,6 @@ const Index = () => {
                     </Button>
                   </div>
                   
-                  {/* Trust indicators - all on one line */}
                   <div className="mt-8 flex items-center flex-nowrap justify-center md:justify-start overflow-x-auto pb-2 gap-6">
                     <div className="flex items-center gap-2 whitespace-nowrap">
                       <div className="flex">
@@ -119,7 +117,6 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Features Section */}
         <section className="py-16 bg-white">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
@@ -165,7 +162,6 @@ const Index = () => {
           </div>
         </section>
         
-        {/* CTA Section */}
         <section className="py-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-[40px] mx-4">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl font-bold mb-6 font-outfit">Ready to join your smart barangay?</h2>

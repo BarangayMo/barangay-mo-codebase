@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Facebook, Twitter, Linkedin } from "lucide-react";
 
@@ -34,7 +33,7 @@ export const Footer = () => {
           <div>
             <h3 className="text-sm font-semibold text-gray-900">About us</h3>
             <ul className="mt-4 space-y-3">
-              {['About heilsa', 'Contact us', 'Features', 'Careers'].map((item) => (
+              {['About Barangay Mo', 'Contact us', 'Features', 'Careers'].map((item) => (
                 <li key={item}>
                   <Link to="#" className="text-sm text-gray-500 hover:text-gray-900">
                     {item}
