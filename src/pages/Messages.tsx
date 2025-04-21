@@ -6,7 +6,7 @@ import { MessageChat } from "@/components/messages/MessageChat";
 export default function Messages() {
   return (
     <Layout>
-      <div className="flex h-[calc(100vh-80px)]">
+      <div className="flex h-[calc(100vh-80px)] w-full">
         <MessageList />
         <MessageChat />
       </div>

@@ -7,12 +7,13 @@ import { Badge } from "@/components/ui/badge";
 
 const Index = () => {
   const isMobile = useIsMobile();
+  const currentYear = new Date().getFullYear();
   
   return (
     <Layout>
       <div className="w-full">
         {/* Hero Section with Dynamic Background */}
-        <section className="relative min-h-[600px] overflow-hidden">
+        <section className="relative min-h-[600px] overflow-hidden -mt-[80px]">
           {/* Dark gradient background with animation */}
           <div 
             className="absolute inset-0 bg-[url('/public/lovable-uploads/af48621c-11ee-404e-a91f-975286eb7ac9.png')] bg-cover bg-center"
@@ -31,7 +32,7 @@ const Index = () => {
             <div className="absolute top-1/2 left-1/3 w-48 h-48 bg-[#1EAEDB]/10 rounded-full blur-2xl animate-pulse delay-700"></div>
           </div>
 
-          <div className="container relative z-10 mx-auto px-4 py-20 md:py-32">
+          <div className="container relative z-10 mx-auto px-4 py-32">
             <div className="flex flex-col md:flex-row items-center justify-between gap-8">
               <div className="w-full md:w-1/2 text-center md:text-left">
                 <Badge className="mb-4 bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-sm">
@@ -60,7 +61,7 @@ const Index = () => {
                     </Link>
                   </Button>
                   
-                  <Button size="lg" variant="secondary" className="bg-white text-black hover:bg-white/90">
+                  <Button size="lg" variant="outline" className="bg-transparent backdrop-blur-sm border-white text-white hover:bg-white/10">
                     <Link to="/about">Learn More</Link>
                   </Button>
                 </div>
@@ -162,7 +163,7 @@ const Index = () => {
         </section>
         
         {/* CTA Section */}
-        <section className="py-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+        <section className="py-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-[40px] mx-4">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl font-bold mb-6 font-outfit">Ready to join your smart barangay?</h2>
             <p className="text-xl mb-8 max-w-2xl mx-auto">
@@ -173,6 +174,10 @@ const Index = () => {
             </Button>
           </div>
         </section>
+
+        <footer className="py-8 text-center text-sm text-gray-500">
+          <p>&copy; {currentYear} Smart Barangay. All rights reserved.</p>
+        </footer>
       </div>
     </Layout>
   );

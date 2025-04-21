@@ -43,6 +43,9 @@ const App = () => (
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/resident/profile/:id" element={<ResidentProfile />} />
             <Route path="/messages" element={<Messages />} />
+            <Route path="/messages/:id" element={<Messages />} />
+            <Route path="/about" element={<div>About Page</div>} />
+            <Route path="/contact" element={<div>Contact Page</div>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </TooltipProvider>
