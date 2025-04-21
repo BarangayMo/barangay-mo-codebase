@@ -12,10 +12,10 @@ const Index = () => {
   
   return (
     <Layout>
-      <div className="w-full -mt-4 overflow-hidden">
-        {/* Hero Section - Full width, no padding */}
-        <section className="relative w-full" style={{ minHeight: "calc(100vh - 4rem)" }}>
-          {/* Dark gradient background with animation */}
+      <div className="w-full -mt-4">
+        {/* Hero Section - Full width */}
+        <section className="relative w-full h-auto">
+          {/* Dark gradient background */}
           <div 
             className="absolute inset-0 bg-[url('/lovable-uploads/af48621c-11ee-404e-a91f-975286eb7ac9.png')] bg-cover bg-center"
             style={{
@@ -24,16 +24,16 @@ const Index = () => {
           />
           
           {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#1A1F2C]/90 via-[#403E43]/90 to-[#0EA5E9]/90 animate-gradient-x"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-[#1A1F2C]/90 via-[#403E43]/90 to-[#0EA5E9]/90 animate-gradient-x" />
           
           {/* Glassmorphism elements */}
           <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute top-20 left-20 w-72 h-72 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
-            <div className="absolute bottom-20 right-20 w-96 h-96 bg-[#0EA5E9]/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-            <div className="absolute top-1/2 left-1/3 w-48 h-48 bg-[#1EAEDB]/10 rounded-full blur-2xl animate-pulse delay-700"></div>
+            <div className="absolute top-20 left-20 w-72 h-72 bg-white/5 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-20 right-20 w-96 h-96 bg-[#0EA5E9]/10 rounded-full blur-3xl animate-pulse delay-1000" />
+            <div className="absolute top-1/2 left-1/3 w-48 h-48 bg-[#1EAEDB]/10 rounded-full blur-2xl animate-pulse delay-700" />
           </div>
 
-          <div className="relative z-10 w-full mx-auto px-4 md:px-6 py-16 md:py-24 flex items-center">
+          <div className="relative z-10 w-full mx-auto px-4 md:px-6 py-12 md:py-16">
             <div className="w-full max-w-7xl mx-auto">
               <div className="flex flex-col md:flex-row items-center justify-between gap-8">
                 <div className="w-full md:w-1/2 text-center md:text-left">
