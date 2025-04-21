@@ -18,6 +18,7 @@ import ResidentHome from "./pages/ResidentHome";
 import Notifications from "./pages/Notifications";
 import ResidentProfile from "./pages/ResidentProfile";
 import Register from "./pages/Register";
+import Messages from "./pages/Messages";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/resident-home" element={<ResidentHome />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/resident/profile/:id" element={<ResidentProfile />} />
+            <Route path="/messages" element={<Messages />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </TooltipProvider>
