@@ -31,8 +31,8 @@ export const Layout = ({ children }: LayoutProps) => {
       >
         <Header />
         <main className={cn(
-          "flex-grow p-5",
-          isMobile ? "pb-20" : "pb-6"
+          "flex-grow",
+          isMobile ? "pb-20" : "p-5"
         )}>
           {children}
         </main>

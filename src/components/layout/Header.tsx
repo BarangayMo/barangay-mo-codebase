@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -38,8 +37,8 @@ export const Header = () => {
   const filtered = BARANGAYS.filter(brgy => brgy.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <header className="sticky top-0 z-50 w-full px-4 py-4">
-      <div className="mx-auto max-w-7xl bg-white/80 backdrop-blur-md rounded-[10%] px-6 py-3 flex items-center justify-between shadow-sm">
+    <header className="sticky top-0 z-50 w-full">
+      <div className="mx-auto max-w-7xl bg-white/80 backdrop-blur-md px-4 py-3 flex items-center justify-between shadow-sm">
         {!isMobile && (
           <Link to="/" className="text-xl font-bold whitespace-nowrap">
             Smart Barangay
