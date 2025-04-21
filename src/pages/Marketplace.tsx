@@ -224,7 +224,11 @@ export default function Marketplace() {
           
           <div className="flex overflow-x-auto gap-3 pb-2 no-scrollbar">
             {products.slice(0, 4).map((product) => (
-              <div key={product.id} className="min-w-[120px] max-w-[120px] bg-white border rounded-md overflow-hidden">
+              <Link 
+                key={product.id} 
+                to={`/marketplace/${product.id}`}
+                className="min-w-[120px] max-w-[120px] bg-white border rounded-md overflow-hidden"
+              >
                 <div className="relative">
                   {product.image ? (
                     <img
@@ -247,7 +251,7 @@ export default function Marketplace() {
                   <div className="text-red-500 font-bold">₱{product.price.toFixed(2)}</div>
                   <div className="line-through text-xs text-gray-400">₱{product.originalPrice.toFixed(2)}</div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -375,18 +379,18 @@ export default function Marketplace() {
         
         {/* Bottom Navigation */}
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around pt-2 pb-6">
-          <div className="flex flex-col items-center">
+          <Link to="/marketplace/wishlist" className="flex flex-col items-center">
             <Heart className="w-6 h-6 text-gray-400" />
             <span className="text-xs">Wishlist</span>
-          </div>
-          <div className="flex flex-col items-center">
+          </Link>
+          <Link to="/marketplace/cart" className="flex flex-col items-center">
             <ShoppingCart className="w-6 h-6 text-gray-400" />
             <span className="text-xs">Cart</span>
-          </div>
-          <div className="flex flex-col items-center">
+          </Link>
+          <Link to="/messages" className="flex flex-col items-center">
             <MessageSquare className="w-6 h-6 text-gray-400" />
             <span className="text-xs">Chat</span>
-          </div>
+          </Link>
         </div>
       </div>
     </Layout>

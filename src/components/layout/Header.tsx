@@ -1,7 +1,8 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, ChevronDown, MapPin, User, Home, Briefcase, ShoppingCart, Info, Phone } from "lucide-react";
+import { Bell, ChevronDown, MapPin, User, Home, Briefcase, Package, Info, Phone } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,7 +22,7 @@ const BARANGAYS = [
 const NAV_ITEMS = [
   { label: "Home", icon: Home, path: "/" },
   { label: "Jobs", icon: Briefcase, path: "/jobs" },
-  { label: "Marketplace", icon: ShoppingCart, path: "/marketplace" },
+  { label: "Marketplace", icon: Package, path: "/marketplace" },
   { label: "About", icon: Info, path: "/about" },
   { label: "Contact", icon: Phone, path: "/contact" },
 ];
@@ -61,13 +62,13 @@ export const Header = () => {
           )}
         </div>
 
-        <div className="flex items-center gap-2 md:gap-4">
+        <div className="flex items-center gap-2 md:gap-4 ml-0">
           <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="flex items-center gap-2 justify-start px-2"
+                className="flex items-center gap-2 justify-start px-2 ml-0"
               >
                 <MapPin className="h-4 w-4 shrink-0" />
                 <span className="truncate max-w-[100px] md:max-w-none">{location}</span>
@@ -105,16 +106,6 @@ export const Header = () => {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {!isAuthenticated ? (
-            <Button asChild variant="default" size="sm">
-              <Link to="/register">Get Started</Link>
-            </Button>
-          ) : (
-            <Button asChild variant="outline" size="sm">
-              <Link to={`/${userRole}-home`}>My Dashboard</Link>
-            </Button>
-          )}
-
           {isAuthenticated && (
             <Button
               variant="ghost"
@@ -128,6 +119,18 @@ export const Header = () => {
                   3
                 </span>
               </Link>
+            </Button>
+          )}
+
+          {!isAuthenticated ? (
+            !isMobile && (
+              <Button asChild variant="default" size="sm">
+                <Link to="/register">Get Started</Link>
+              </Button>
+            )
+          ) : (
+            <Button asChild variant="outline" size="sm" className="hidden md:flex">
+              <Link to={`/${userRole}-home`}>My Dashboard</Link>
             </Button>
           )}
 

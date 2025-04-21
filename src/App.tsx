@@ -1,57 +1,52 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "./contexts/AuthContext";
-import { ThemeProvider } from "./contexts/ThemeContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import MPIN from "./pages/MPIN";
-import AdminDashboard from "./pages/AdminDashboard";
-import OfficialsDashboard from "./pages/OfficialsDashboard";
+import Messages from "./pages/Messages";
+import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
+import ResidentHome from "./pages/ResidentHome";
+import ResidentProfile from "./pages/ResidentProfile";
+import OfficialsDashboard from "./pages/OfficialsDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import Jobs from "./pages/Jobs";
 import Marketplace from "./pages/Marketplace";
-import ResidentHome from "./pages/ResidentHome";
-import Notifications from "./pages/Notifications";
-import ResidentProfile from "./pages/ResidentProfile";
-import Register from "./pages/Register";
-import Messages from "./pages/Messages";
+import { Toaster } from "@/components/ui/toaster"
+import { ProductDetail, Cart, Checkout, OrderConfirmation, MyOrders } from "./pages/marketplace";
 
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
+function App() {
+  return (
+    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/mpin" element={<MPIN />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/official-dashboard" element={<OfficialsDashboard />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/jobs" element={<Jobs />} />
-            <Route path="/marketplace" element={<Marketplace />} />
-            <Route path="/resident-home" element={<ResidentHome />} />
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/resident/profile/:id" element={<ResidentProfile />} />
-            <Route path="/messages" element={<Messages />} />
-            <Route path="/messages/:id" element={<Messages />} />
-            <Route path="/about" element={<div>About Page</div>} />
-            <Route path="/contact" element={<div>Contact Page</div>} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </TooltipProvider>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/mpin" element={<MPIN />} />
+          <Route path="/messages" element={<Messages />} />
+          <Route path="/notifications" element={<Notifications />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/resident-home" element={<ResidentHome />} />
+          <Route path="/resident-profile" element={<ResidentProfile />} />
+          <Route path="/official-dashboard" element={<OfficialsDashboard />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/jobs" element={<Jobs />} />
+          <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/marketplace/:productId" element={<ProductDetail />} />
+          <Route path="/marketplace/cart" element={<Cart />} />
+          <Route path="/marketplace/checkout" element={<Checkout />} />
+          <Route path="/marketplace/order-confirmation" element={<OrderConfirmation />} />
+          <Route path="/marketplace/orders" element={<MyOrders />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <Toaster />
       </AuthProvider>
     </ThemeProvider>
-  </QueryClientProvider>
-);
+  );
+}
 
 export default App;
