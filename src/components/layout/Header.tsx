@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, ChevronDown, MapPin, User, Home, Briefcase, Package, Info, Phone } from "lucide-react";
+import { Bell, ChevronDown, MapPin, User } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,14 +19,6 @@ const BARANGAYS = [
   "Greater Lagro", "Kaligayahan", "Pasong Putik"
 ];
 
-const NAV_ITEMS = [
-  { label: "Home", icon: Home, path: "/" },
-  { label: "Jobs", icon: Briefcase, path: "/jobs" },
-  { label: "Marketplace", icon: Package, path: "/marketplace" },
-  { label: "About", icon: Info, path: "/about" },
-  { label: "Contact", icon: Phone, path: "/contact" },
-];
-
 export const Header = () => {
   const { isAuthenticated, userRole, logout } = useAuth();
   const isMobile = useIsMobile();
@@ -40,37 +32,17 @@ export const Header = () => {
   return (
     <header className="sticky top-0 z-50 w-full">
       <div className="mx-auto max-w-7xl bg-white/80 backdrop-blur-md px-4 py-3 flex items-center justify-between shadow-sm">
-        <div className="flex items-center">
-          <Link to="/" className="text-xl font-bold font-outfit whitespace-nowrap">
-            Smart Barangay
-          </Link>
-          
-          {!isMobile && (
-            <nav className="hidden md:flex items-center gap-6 ml-8">
-              {NAV_ITEMS.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className="text-sm font-medium hover:text-primary transition-colors"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2 md:gap-4">
+        <div className="flex-1">
           <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="flex items-center gap-2 justify-start px-2"
+                className="flex items-center gap-2"
               >
                 <MapPin className="h-4 w-4 shrink-0" />
-                <span className="truncate max-w-[100px] md:max-w-none">{location}</span>
-                <ChevronDown className="h-3 w-3 opacity-50 ml-auto" />
+                <span className="truncate">{location}</span>
+                <ChevronDown className="h-3 w-3 opacity-50" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-[240px]">
@@ -94,16 +66,13 @@ export const Header = () => {
                       {brgy}
                     </DropdownMenuItem>
                   ))}
-                  {filtered.length === 0 && (
-                    <div className="text-xs text-muted-foreground px-2 py-1">
-                      No barangay found
-                    </div>
-                  )}
                 </div>
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
+        </div>
 
+        <div className="flex items-center gap-2">
           {isAuthenticated && (
             <Button
               variant="ghost"
@@ -120,56 +89,11 @@ export const Header = () => {
             </Button>
           )}
 
-          {!isAuthenticated ? (
-            !isMobile && (
-              <Button asChild variant="default" size="sm">
-                <Link to="/register">Get Started</Link>
-              </Button>
-            )
-          ) : (
-            <Button asChild variant="outline" size="sm" className="hidden md:flex">
-              <Link to={`/${userRole}-home`}>My Dashboard</Link>
-            </Button>
-          )}
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full"
-              >
-                <User className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {isAuthenticated ? (
-                <>
-                  <DropdownMenuItem asChild>
-                    <Link to="/profile">Profile</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/settings">Settings</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => {
-                    logout();
-                    navigate('/');
-                  }}>
-                    Logout
-                  </DropdownMenuItem>
-                </>
-              ) : (
-                <>
-                  <DropdownMenuItem asChild>
-                    <Link to="/login">Login</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/register">Register</Link>
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button asChild variant="ghost" size="icon" className="rounded-full">
+            <Link to="/menu">
+              <User className="h-5 w-5" />
+            </Link>
+          </Button>
         </div>
       </div>
     </header>

@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/layout/Layout";
 import { DashboardStats } from "@/components/officials/DashboardStats";
 import { BudgetAllocationChart } from "@/components/officials/BudgetAllocationChart";
@@ -11,16 +10,26 @@ const OfficialsDashboard = () => {
   return (
     <Layout>
       <div className="max-w-7xl mx-auto py-4 px-4">
-        <Card className="mb-6 bg-white">
+        <Card className="mb-6 bg-gradient-to-r from-[#ff6b6b] to-[#ff8787] text-white">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16">
-                <AvatarImage src="/placeholder.svg" />
+              <Avatar className="h-20 w-20 border-4 border-white">
+                <AvatarImage src="/lovable-uploads/fbf01be4-64e1-4cf6-bd12-246685226be5.png" />
                 <AvatarFallback>BM</AvatarFallback>
               </Avatar>
               <div>
-                <h2 className="text-xl font-semibold">Barangay Mo</h2>
-                <p className="text-gray-500">Official Dashboard</p>
+                <h2 className="text-2xl font-bold">Juan Dela Cruz</h2>
+                <p className="text-white/90">Barangay Captain</p>
+                <div className="flex items-center gap-4 mt-2">
+                  <div>
+                    <p className="text-sm text-white/80">Ward</p>
+                    <p className="font-semibold">Ward 7</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-white/80">ID Number</p>
+                    <p className="font-semibold">#123456</p>
+                  </div>
+                </div>
               </div>
             </div>
           </CardContent>
