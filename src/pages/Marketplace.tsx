@@ -60,7 +60,7 @@ export default function Marketplace() {
               key={product.id}
               className="block group"
             >
-              <div className="rounded-xl p-3 border bg-white shadow-sm flex flex-col items-center text-center hover-scale transition">
+              <div className="rounded-xl p-3 bg-white/40 backdrop-blur-xl border shadow-lg flex flex-col items-center text-center hover:scale-105 transition">
                 <div className="relative w-20 h-20 mb-1">
                   {product.image ? (
                     <img
