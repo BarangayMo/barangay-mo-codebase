@@ -8,11 +8,15 @@ interface MessageListItemProps {
   time: string;
   online?: boolean;
   unread?: number;
+  onClick?: () => void;
 }
 
-export function MessageListItem({ name, avatar, message, time, online, unread }: MessageListItemProps) {
+export function MessageListItem({ name, avatar, message, time, online, unread, onClick }: MessageListItemProps) {
   return (
-    <div className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
+    <div 
+      className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer"
+      onClick={onClick}
+    >
       <div className="relative">
         <Avatar>
           <AvatarImage src={avatar} alt={name} />
