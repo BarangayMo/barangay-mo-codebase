@@ -17,9 +17,6 @@ const Index = () => {
           {/* Dark gradient background */}
           <div 
             className="absolute inset-0 bg-[url('/lovable-uploads/8e29a7c5-dd91-46ca-be5e-3bb8f718b8e9.png')] bg-cover bg-center"
-            style={{
-              backgroundBlendMode: 'overlay',
-            }}
           />
           
           {/* Gradient overlay */}

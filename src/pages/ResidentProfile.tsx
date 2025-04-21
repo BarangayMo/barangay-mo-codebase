@@ -1,6 +1,8 @@
 
-import { ArrowLeft, MoreHorizontal } from "lucide-react";
+import { ArrowLeft, MoreHorizontal, Check, Calendar, User, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 
 const coverPhoto = "/lovable-uploads/c7d7f7a8-491d-49f1-910c-bb4dd5a85996.png";
 const avatarPhoto = "https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?auto=format&fit=facearea&w=300&q=80";
@@ -15,6 +17,9 @@ const rating = 5;
 const rate = 3.00;
 const minTalkMins = 5;
 const sessions = 36;
+
+// RBI Completion status
+const rbiCompletionPercentage = 65;
 
 export default function ResidentProfile() {
   return (
@@ -100,6 +105,54 @@ export default function ResidentProfile() {
               <span>{sessions}</span>
             </div>
             <span className="text-xs text-gray-500">sessions</span>
+          </div>
+        </div>
+
+        {/* RBI Completion Card */}
+        <div className="mt-6 pt-6 border-t border-gray-100">
+          <div className="bg-blue-50 rounded-xl p-4">
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center gap-2">
+                <FileText className="text-blue-600 w-5 h-5" />
+                <h3 className="font-medium text-gray-900">RBI Completion</h3>
+              </div>
+              <span className="text-sm font-medium text-blue-600">{rbiCompletionPercentage}%</span>
+            </div>
+            
+            <Progress value={rbiCompletionPercentage} className="h-2 mb-4" />
+            
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <User className="text-gray-400 w-4 h-4" />
+                  <span className="text-gray-600">Personal Details</span>
+                </div>
+                <Check className="text-green-500 w-4 h-4" />
+              </div>
+              
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <Calendar className="text-gray-400 w-4 h-4" />
+                  <span className="text-gray-600">Address & Other Info</span>
+                </div>
+                <Check className="text-green-500 w-4 h-4" />
+              </div>
+              
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <User className="text-gray-400 w-4 h-4" />
+                  <span className="text-gray-600">Parent Details</span>
+                </div>
+                <div className="w-4 h-4 rounded-full border border-gray-300"></div>
+              </div>
+            </div>
+            
+            <Button variant="outline" className="w-full mt-4" asChild>
+              <Link to="/rbi-registration" className="flex items-center justify-center gap-2">
+                <FileText className="w-4 h-4" />
+                <span>Complete Your RBI Profile</span>
+              </Link>
+            </Button>
           </div>
         </div>
       </main>

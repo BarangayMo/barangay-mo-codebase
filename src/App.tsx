@@ -1,3 +1,4 @@
+
 import { Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./components/theme-provider";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -10,6 +11,7 @@ import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
 import ResidentHome from "./pages/ResidentHome";
 import ResidentProfile from "./pages/ResidentProfile";
+import RbiRegistration from "./pages/RbiRegistration";
 import OfficialsDashboard from "./pages/OfficialsDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
@@ -33,6 +35,7 @@ function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/resident-home" element={<ResidentHome />} />
           <Route path="/resident-profile" element={<ResidentProfile />} />
+          <Route path="/rbi-registration" element={<RbiRegistration />} />
           <Route path="/official-dashboard" element={<OfficialsDashboard />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/jobs" element={<Jobs />} />
