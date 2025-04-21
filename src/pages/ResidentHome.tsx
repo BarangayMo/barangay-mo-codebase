@@ -9,7 +9,7 @@ export default function ResidentHome() {
   return (
     <Layout>
       <div
-        className="fixed inset-0 min-h-screen"
+        className="fixed inset-0 min-h-screen pt-16"
         style={{
           backgroundImage: 'url("/lovable-uploads/c18ab531-de58-47d3-a486-6d9882bc2559.png")',
           backgroundSize: "cover",
@@ -18,7 +18,7 @@ export default function ResidentHome() {
       >
         <div className="absolute inset-0 bg-black/60" />
         
-        <div className="relative z-10 h-screen overflow-y-auto px-4 pt-6 pb-10">
+        <div className="relative z-10 h-full overflow-y-auto px-4 pt-6 pb-10">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <img src="/placeholder.svg" alt="Profile" className="rounded-full w-14 h-14 border-2 border-green-400" />

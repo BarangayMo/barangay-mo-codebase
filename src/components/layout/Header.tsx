@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, ChevronDown, MapPin, User, Menu as MenuIcon } from "lucide-react";
+import { Bell, ChevronDown, MapPin, User } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -109,12 +109,6 @@ export const Header = () => {
           <Button asChild variant="ghost" size="icon" className="rounded-full">
             <Link to="/login">
               <User className="h-5 w-5" />
-            </Link>
-          </Button>
-
-          <Button asChild variant="ghost" size="icon" className="md:hidden">
-            <Link to="/menu">
-              <MenuIcon className="h-5 w-5" />
             </Link>
           </Button>
         </div>
