@@ -1,3 +1,4 @@
+
 import { Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "./contexts/AuthContext";
