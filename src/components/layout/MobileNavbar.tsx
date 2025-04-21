@@ -17,7 +17,7 @@ export const MobileNavbar = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t px-2 py-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md bg-white/80 border-t border-white/20 px-2 py-2">
       <div className="flex items-center justify-between max-w-lg mx-auto">
         {navItems.map(({ icon: Icon, path, label }) => (
           <Link 
@@ -28,12 +28,12 @@ export const MobileNavbar = () => {
             <Icon 
               className={cn(
                 "h-6 w-6 transition-colors",
-                pathname === path ? "text-blue-600" : "text-gray-500"
+                pathname === path ? "text-[#ea384c]" : "text-black"
               )} 
             />
             <span className={cn(
               "text-xs mt-1",
-              pathname === path ? "text-blue-600 font-medium" : "text-gray-500"
+              pathname === path ? "text-[#ea384c] font-medium" : "text-black"
             )}>
               {label}
             </span>
@@ -66,4 +66,4 @@ export const MobileNavbar = () => {
       </div>
     </nav>
   );
-};
+}

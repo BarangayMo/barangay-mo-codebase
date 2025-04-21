@@ -1,7 +1,7 @@
-
 import { Search } from "lucide-react";
 import { MessageListItem } from "./MessageListItem";
 import { Card } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
 
 const messages = [
   {
@@ -48,8 +48,14 @@ const messages = [
 ];
 
 export function MessageList() {
+  const navigate = useNavigate();
+
+  const handleMessageClick = (id: number) => {
+    navigate(`/messages/${id}`);
+  };
+
   return (
-    <Card className="w-full md:w-[380px] flex-shrink-0 p-4">
+    <Card className="w-full md:w-[380px] flex-shrink-0 p-4 shadow-lg border-0">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Messages</h1>
         <button className="p-2 hover:bg-gray-100 rounded-full">
@@ -59,11 +65,15 @@ export function MessageList() {
       
       <div className="space-y-4">
         {messages.map((message) => (
-          <MessageListItem key={message.id} {...message} />
+          <MessageListItem 
+            key={message.id} 
+            {...message} 
+            onClick={() => handleMessageClick(message.id)}
+          />
         ))}
       </div>
 
-      <button className="fixed bottom-24 right-6 md:relative md:bottom-auto md:right-auto w-12 h-12 md:w-full md:h-12 bg-pink-500 text-white rounded-full md:rounded-lg flex items-center justify-center mt-4 shadow-lg hover:bg-pink-600 transition-colors">
+      <button className="fixed bottom-24 right-6 md:relative md:bottom-auto md:right-auto w-12 h-12 md:w-full md:h-12 bg-[#ea384c] text-white rounded-full md:rounded-lg flex items-center justify-center mt-4 shadow-lg hover:bg-[#c41c2e] transition-colors">
         <span className="text-2xl">+</span>
       </button>
     </Card>

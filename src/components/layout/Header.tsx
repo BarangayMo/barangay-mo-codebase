@@ -54,13 +54,13 @@ export const Header = () => {
         </Link>
       )}
 
-      <div className="flex-1 flex justify-center max-w-md mx-4">
+      <div className="flex-1 flex justify-start max-w-md mx-4">
         <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
           <DropdownMenuTrigger asChild>
             <Button 
-              variant="outline" 
+              variant="ghost" 
               size="sm" 
-              className="w-full max-w-[240px] flex items-center gap-2 justify-start px-4"
+              className="max-w-[240px] flex items-center gap-2 justify-start px-4"
             >
               <MapPin className="h-4 w-4 shrink-0" />
               <span className="truncate">{location}</span>
@@ -122,7 +122,7 @@ export const Header = () => {
             <Button
               variant="ghost"
               size="icon"
-              className={`rounded-full border-2 ${borderColor}`}
+              className="rounded-full"
             >
               <User className="h-5 w-5" />
             </Button>

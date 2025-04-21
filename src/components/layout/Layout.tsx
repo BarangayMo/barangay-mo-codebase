@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Header } from "./Header";
 import { MobileNavbar } from "./MobileNavbar";
 import { DesktopSidebar } from "./DesktopSidebar";
+import { Footer } from "./Footer";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,7 @@ export const Layout = ({ children }: LayoutProps) => {
           {children}
         </main>
         {isMobile && <MobileNavbar />}
+        <Footer />
       </div>
     </div>
   );
