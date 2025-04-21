@@ -35,7 +35,8 @@ const products = [
     rating: 4.9,
     ratingCount: 128,
     sold: 456,
-    freeShipping: true
+    freeShipping: true,
+    shopBadge: "Official"
   },
   {
     id: 2,
@@ -49,7 +50,8 @@ const products = [
     rating: 4.7,
     ratingCount: 92,
     sold: 328,
-    freeShipping: true
+    freeShipping: true,
+    shopBadge: "Popular"
   },
   {
     id: 3,
@@ -79,7 +81,8 @@ const products = [
     ratingCount: 210,
     sold: 867,
     freeShipping: true,
-    saleEvent: "SULIT SWELDO"
+    saleEvent: "SULIT SWELDO",
+    shopBadge: "Preferred"
   },
   {
     id: 5,
@@ -94,6 +97,7 @@ const products = [
     ratingCount: 125,
     sold: 7000,
     freeShipping: true,
+    shopBadge: "Official"
   },
   {
     id: 6,
@@ -107,7 +111,8 @@ const products = [
     rating: 4.5,
     ratingCount: 63,
     sold: 420,
-    freeShipping: true
+    freeShipping: true,
+    shopBadge: "Verified"
   },
   {
     id: 7,
@@ -122,7 +127,8 @@ const products = [
     ratingCount: 345,
     sold: 23200,
     freeShipping: true,
-    justBought: true
+    justBought: true,
+    shopBadge: "Official"
   },
 ];
 

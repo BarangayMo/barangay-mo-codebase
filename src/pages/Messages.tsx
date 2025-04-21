@@ -3,6 +3,7 @@ import { Layout } from "@/components/layout/Layout";
 import { MessageList } from "@/components/messages/MessageList";
 import { MessageChat } from "@/components/messages/MessageChat";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 export default function Messages() {
   const isMobile = useIsMobile();
