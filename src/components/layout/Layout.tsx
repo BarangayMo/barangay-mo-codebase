@@ -18,10 +18,10 @@ export const Layout = ({ children }: LayoutProps) => {
   const { pathname } = useLocation();
 
   // Only show sidebar on admin dashboard route
-  const showSidebar = isAuthenticated && !isMobile && pathname.startsWith("/admin");
+  const showSidebar = isAuthenticated && pathname === "/admin" && !isMobile;
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 w-full">
       {/* Desktop Sidebar (only in admin) */}
       {showSidebar && <DesktopSidebar />}
       <div
@@ -37,7 +37,7 @@ export const Layout = ({ children }: LayoutProps) => {
         )}>
           {children}
         </main>
-        {isMobile && <MobileNavbar />}
+        {!showSidebar && isMobile && <MobileNavbar />}
       </div>
     </div>
   );
