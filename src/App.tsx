@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,6 +16,8 @@ import Jobs from "./pages/Jobs";
 import Marketplace from "./pages/Marketplace";
 import ResidentHome from "./pages/ResidentHome";
 import Notifications from "./pages/Notifications";
+import ResidentProfile from "./pages/ResidentProfile";
+import Register from "./pages/Register";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +31,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/official-dashboard" element={<OfficialsDashboard />} />
             <Route path="/settings" element={<Settings />} />
@@ -35,6 +39,7 @@ const App = () => (
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/resident-home" element={<ResidentHome />} />
             <Route path="/notifications" element={<Notifications />} />
+            <Route path="/resident/profile/:id" element={<ResidentProfile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
