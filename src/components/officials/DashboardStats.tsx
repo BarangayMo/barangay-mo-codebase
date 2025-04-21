@@ -1,8 +1,4 @@
-
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { ArrowDownRight, ArrowUpRight } from "lucide-react";
 
 interface StatCardProps {
@@ -14,7 +10,7 @@ interface StatCardProps {
 }
 
 const StatCard = ({ title, value, subtitle, trend, trendValue }: StatCardProps) => (
-  <Card className="bg-white border-[1.5px] border-[#ffd7da]">
+  <Card className="shadow-lg bg-white">
     <CardContent className="p-6">
       <div className="flex justify-between items-start">
         <div>
@@ -43,7 +39,7 @@ const StatCard = ({ title, value, subtitle, trend, trendValue }: StatCardProps) 
 
 export const DashboardStats = () => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
       <StatCard
         title="Total Budget"
         value="₱5,240,000"

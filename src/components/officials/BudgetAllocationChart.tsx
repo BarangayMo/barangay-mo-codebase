@@ -12,11 +12,11 @@ const data = [
 
 export const BudgetAllocationChart = () => {
   return (
-    <Card className="border-[1.5px] border-[#ffd7da]">
-      <CardHeader>
+    <Card className="shadow-lg">
+      <CardHeader className="p-6">
         <CardTitle>Budget Allocation</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-6">
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>

@@ -17,12 +17,10 @@ export const Layout = ({ children }: LayoutProps) => {
   const isMobile = useIsMobile();
   const { pathname } = useLocation();
 
-  // Only show sidebar on admin dashboard route
   const showSidebar = isAuthenticated && pathname === "/admin" && !isMobile && userRole === "superadmin";
 
   return (
-    <div className="flex min-h-screen bg-gray-50 w-full">
-      {/* Desktop Sidebar (only in admin) */}
+    <div className="flex min-h-screen bg-gray-50 w-full overflow-x-hidden">
       {showSidebar && <DesktopSidebar />}
       <div
         className={cn(
@@ -32,7 +30,7 @@ export const Layout = ({ children }: LayoutProps) => {
       >
         <Header />
         <main className={cn(
-          "flex-grow",
+          "flex-grow p-5",
           isMobile ? "pb-20" : "pb-6"
         )}>
           {children}
