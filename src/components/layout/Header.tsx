@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, ChevronDown, MapPin, User } from "lucide-react";
+import { Bell, ChevronDown, MapPin, User, Home, Briefcase, ShoppingCart, Info, Phone } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
