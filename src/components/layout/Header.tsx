@@ -29,12 +29,12 @@ export const Header = () => {
   // Filtered barangays
   const filtered = BARANGAYS.filter(brgy => brgy.toLowerCase().includes(search.toLowerCase()));
 
-  // Role color rings for notification/avatar
-  const ringColor = userRole === 'official'
-    ? 'ring-official'
+  // Role color for notification/avatar
+  const notificationColor = userRole === 'official'
+    ? 'bg-official'
     : userRole === 'resident'
-      ? 'ring-resident'
-      : 'ring-primary';
+      ? 'bg-resident'
+      : 'bg-primary';
 
   const borderColor = userRole === 'official'
     ? 'border-official'
@@ -46,7 +46,7 @@ export const Header = () => {
 
   return (
     <header className={`
-      w-full p-6 sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b flex items-center justify-between
+      w-full p-4 md:p-6 sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b flex items-center justify-between
       ${userRole === 'official' ? 'border-official/20' : ''}
       ${userRole === 'resident' ? 'border-resident/20' : ''}
       ${userRole === 'superadmin' ? 'border-primary/20' : ''}
@@ -56,71 +56,72 @@ export const Header = () => {
         <Link to="/" className="text-2xl font-bold whitespace-nowrap px-2">Smart Barangay</Link>
       )}
 
-      {/* Searchable Barangay Dropdown */}
-      <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" className="flex items-center gap-1 min-w-[210px] justify-start px-4">
-            <MapPin className="h-4 w-4" />
-            <span className={isMobile ? "max-w-[90px] truncate" : "truncate"}>
-              {location}
-            </span>
-            <ChevronDown className="h-3 w-3 opacity-50" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="z-50 min-w-[240px]">
-          <div className="p-2">
-            <Input
-              placeholder="Search barangay..."
-              value={search}
-              autoFocus
-              onChange={e => setSearch(e.target.value)}
-              className="mb-2"
-            />
-            <div className="max-h-40 overflow-y-auto">
-              {filtered.map(brgy => (
-                <DropdownMenuItem
-                  onClick={() => {
-                    setLocation(brgy);
-                    setDropdownOpen(false);
-                    setSearch("");
-                  }}
-                  key={brgy}
-                >
-                  {brgy}
-                </DropdownMenuItem>
-              ))}
-              {filtered.length === 0 && (
-                <div className="text-xs text-muted-foreground px-2">No barangay found</div>
-              )}
+      <div className="flex-1 flex justify-center mx-4">
+        {/* Searchable Barangay Dropdown */}
+        <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="flex items-center gap-1 min-w-[210px] justify-start px-4">
+              <MapPin className="h-4 w-4" />
+              <span className={isMobile ? "max-w-[90px] truncate" : "truncate"}>
+                {location}
+              </span>
+              <ChevronDown className="h-3 w-3 opacity-50" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="z-50 min-w-[240px]">
+            <div className="p-2">
+              <Input
+                placeholder="Search barangay..."
+                value={search}
+                autoFocus
+                onChange={e => setSearch(e.target.value)}
+                className="mb-2"
+              />
+              <div className="max-h-40 overflow-y-auto">
+                {filtered.map(brgy => (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setLocation(brgy);
+                      setDropdownOpen(false);
+                      setSearch("");
+                    }}
+                    key={brgy}
+                  >
+                    {brgy}
+                  </DropdownMenuItem>
+                ))}
+                {filtered.length === 0 && (
+                  <div className="text-xs text-muted-foreground px-2">No barangay found</div>
+                )}
+              </div>
+              <DropdownMenuItem
+                onClick={() => {
+                  setLocation("Select from map");
+                  setDropdownOpen(false);
+                  setSearch("");
+                }}
+                className="flex items-center gap-2 mt-1"
+              >
+                <Map className="h-4 w-4" /> Select from Map
+              </DropdownMenuItem>
             </div>
-            <DropdownMenuItem
-              onClick={() => {
-                setLocation("Select from map");
-                setDropdownOpen(false);
-                setSearch("");
-              }}
-              className="flex items-center gap-2 mt-1"
-            >
-              <Map className="h-4 w-4" /> Select from Map
-            </DropdownMenuItem>
-          </div>
-        </DropdownMenuContent>
-      </DropdownMenu>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
       {/* Right Menu */}
       <div className="flex items-center gap-6">
         <Button
           variant="ghost"
           size="icon"
-          className={`relative ring-2 ${ringColor}`}
+          className="relative"
           asChild
         >
           <Link to="/notifications">
             <Bell className="h-5 w-5" />
             <span className={`
-              absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center
-              ${userRole === 'official' ? 'bg-official' : ''}
-              ${userRole === 'resident' ? 'bg-resident' : ''}
+              absolute -top-1 -right-1 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center
+              ${notificationColor}
             `}>
               3
             </span>

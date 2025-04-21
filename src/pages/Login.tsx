@@ -67,7 +67,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#F9F9FB] px-4 py-10">
-      <div className="w-full max-w-5xl rounded-3xl bg-white shadow-2xl flex flex-col md:flex-row overflow-hidden border-2 border-[#e0e2ec] scale-[2] md:scale-150">
+      <div className="w-full max-w-5xl rounded-3xl bg-white shadow-2xl flex flex-col md:flex-row overflow-hidden border-2 border-[#e0e2ec] scale-100 md:scale-100">
         {/* Left - Brand panel */}
         <div className="hidden md:flex flex-col w-1/2 bg-[#528462] text-white p-12 justify-between gap-8" style={{ background: "linear-gradient(120deg, #39bc90 40%, #72d1de 100%)" }}>
           <div>
@@ -97,7 +97,7 @@ export default function Login() {
           </div>
         </div>
         {/* Right - Login panel */}
-        <div className="flex-1 bg-white flex flex-col justify-center px-12 py-16 min-w-[400px]">
+        <div className="flex-1 bg-white flex flex-col justify-center px-8 py-12 md:px-12 md:py-16">
           <div className="w-full max-w-md mx-auto">
             <div className="mb-6 text-2xl font-bold text-[#23263a]">Login</div>
             <div className="mb-8 text-gray-500 text-sm">

@@ -16,11 +16,15 @@ import {
   Activity, 
   ArrowUpRight, 
   ArrowDownRight,
-  CalendarDays
+  CalendarDays,
+  Filter,
+  Search,
+  Download
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Input } from "@/components/ui/input";
 
 // Sample data for charts
 const barData = [
@@ -64,36 +68,33 @@ const AdminDashboard = () => {
     title, 
     value, 
     subtitle, 
-    icon: Icon, 
     trend, 
     trendValue 
   }: { 
     title: string; 
     value: string; 
     subtitle: string; 
-    icon: any; 
     trend: 'up' | 'down'; 
     trendValue: string;
   }) => (
-    <Card>
+    <Card className="bg-white border-0">
       <CardContent className="p-6">
-        <div className="flex items-center justify-between">
+        <div className="flex justify-between items-start">
           <div>
             <p className="text-sm font-medium text-muted-foreground">
               {title}
             </p>
-            <p className="text-2xl font-bold">{value}</p>
+            <p className="text-2xl font-bold mt-1">{value}</p>
           </div>
-          <div className="bg-primary/10 p-2 rounded-full">
-            <Icon className="h-5 w-5" />
+          <div className={`rounded-full p-1 ${trend === 'up' ? 'bg-green-100' : 'bg-red-100'}`}>
+            {trend === 'up' ? (
+              <ArrowUpRight className="h-4 w-4 text-green-500" />
+            ) : (
+              <ArrowDownRight className="h-4 w-4 text-red-500" />
+            )}
           </div>
         </div>
         <div className="mt-4 flex items-center text-sm">
-          {trend === 'up' ? (
-            <ArrowUpRight className="mr-1 h-4 w-4 text-green-500" />
-          ) : (
-            <ArrowDownRight className="mr-1 h-4 w-4 text-red-500" />
-          )}
           <span className={trend === 'up' ? "text-green-500" : "text-red-500"}>
             {trendValue}
           </span>
@@ -106,221 +107,145 @@ const AdminDashboard = () => {
   return (
     <Layout>
       <div className="container mx-auto p-4 md:p-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">Dashboard</h1>
-            <p className="text-muted-foreground">
-              Welcome back, Admin! Here's what's happening.
-            </p>
-          </div>
-          <div className="flex gap-2 mt-4 md:mt-0">
-            <Button>Export Data</Button>
-            <Button variant="outline">Settings</Button>
+        {/* Welcome panel with gradient background */}
+        <div className="rounded-xl bg-gradient-to-r from-purple-200 to-pink-200 mb-6 p-6">
+          <div className="max-w-lg">
+            <h1 className="text-2xl md:text-3xl font-bold">Welcome back Williams</h1>
+            <p className="text-gray-700">Automate your financial operations with ease</p>
+            
+            {/* Task checklist */}
+            <div className="mt-8 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="bg-green-500 text-white rounded-full p-0.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+                <span>Create an expense account</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="bg-green-500 text-white rounded-full p-0.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+                <span>Make a local or international payment</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="bg-green-500 text-white rounded-full p-0.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+                <span>Set up an approval workflow</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="bg-green-500 text-white rounded-full p-0.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+                <span>Claim a reimbursement</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="bg-green-500 text-white rounded-full p-0.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+                <span>Automatically screen for expense fraud</span>
+              </div>
+            </div>
           </div>
         </div>
         
-        <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="reports">Reports</TabsTrigger>
-          </TabsList>
+        <div className="bg-white p-6 rounded-xl shadow-sm mb-6">
+          <div className="flex flex-wrap gap-4 items-center justify-between mb-4">
+            <h2 className="text-xl font-bold">Expenses - My Expenses</h2>
+            
+            <div className="flex gap-2">
+              <Button variant="outline">Select Currency</Button>
+              <Button>Create New Expense</Button>
+            </div>
+          </div>
           
-          <TabsContent value="overview" className="space-y-4">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              <StatCard 
-                title="Total Users"
-                value="56,789"
-                subtitle="since last month"
-                icon={Users}
-                trend="up"
-                trendValue="+12%"
-              />
-              <StatCard 
-                title="Barangays"
-                value="234"
-                subtitle="total registered"
-                icon={Building}
-                trend="up"
-                trendValue="+3%"
-              />
-              <StatCard 
-                title="Active Jobs"
-                value="1,234"
-                subtitle="since last week"
-                icon={Briefcase}
-                trend="down"
-                trendValue="-2%"
-              />
-              <StatCard 
-                title="Products Listed"
-                value="5,678"
-                subtitle="in marketplace"
-                icon={ShoppingCart}
-                trend="up"
-                trendValue="+8%"
-              />
+          <div className="mb-6">
+            <p className="text-sm text-gray-500">Expense Amount Submitted</p>
+            <p className="text-3xl font-bold text-green-800 mt-1">₦45,200,643.00</p>
+            <p className="text-sm text-gray-500 mt-1"><span className="text-green-500 font-medium">+19.20%</span> from last week</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="border-l-4 border-l-blue-500">
+              <CardContent className="p-4">
+                <div className="font-medium text-gray-500">Submitted</div>
+                <div className="text-2xl font-bold mt-1">56</div>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-l-4 border-l-orange-500">
+              <CardContent className="p-4">
+                <div className="font-medium text-gray-500">Pending Approval</div>
+                <div className="text-2xl font-bold mt-1">78</div>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-l-4 border-l-red-500">
+              <CardContent className="p-4">
+                <div className="font-medium text-gray-500">Rejected</div>
+                <div className="text-2xl font-bold mt-1">12</div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+        
+        <div className="bg-white p-6 rounded-xl shadow-sm">
+          <h2 className="text-xl font-bold mb-4">Expenses</h2>
+          
+          <div className="flex flex-wrap gap-2 mb-6">
+            <Button variant="outline" className="bg-blue-50 text-blue-700 border-blue-100">Saved</Button>
+            <Button variant="ghost">Reported</Button>
+          </div>
+          
+          <div className="flex flex-wrap gap-4 mb-6 justify-between">
+            <div className="relative w-full md:w-96">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input className="pl-10" placeholder="Search" />
             </div>
             
-            {/* Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <Card className="col-span-2">
-                <CardHeader>
-                  <CardTitle>User Registration Trends</CardTitle>
-                  <CardDescription>
-                    New users registered per month
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={barData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Bar dataKey="residents" fill="#4CAF50" name="Residents" />
-                        <Bar dataKey="officials" fill="#ea384c" name="Officials" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle>User Distribution by Location</CardTitle>
-                  <CardDescription>
-                    Total users across barangays
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={pieData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={80}
-                          fill="#8884d8"
-                          paddingAngle={5}
-                          dataKey="value"
-                          label
-                        >
-                          {pieData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Activity</CardTitle>
-                  <CardDescription>
-                    Jobs and product listings
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={lineData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Line 
-                          type="monotone" 
-                          dataKey="jobs" 
-                          stroke="#ea384c" 
-                          activeDot={{ r: 8 }}
-                          name="Job Listings"
-                        />
-                        <Line 
-                          type="monotone" 
-                          dataKey="products" 
-                          stroke="#4CAF50" 
-                          name="Product Listings"
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
+            <div className="flex gap-2">
+              <Button variant="outline">
+                <Filter className="h-4 w-4 mr-2" />
+                Filter
+              </Button>
+              <Button variant="outline">Sort</Button>
+              <Button variant="outline">
+                <Download className="h-4 w-4" />
+              </Button>
             </div>
-            
-            {/* Recent Activities */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Activities</CardTitle>
-                <CardDescription>
-                  Latest actions across the platform
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-8">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div key={i} className="flex items-start">
-                      <div className="mr-4 rounded-full bg-primary/10 p-2">
-                        <Activity className="h-4 w-4" />
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium leading-none">
-                          {["New barangay registered", "User complaint resolved", "Product listing approved", "Job application reviewed", "Official account verified"][i-1]}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {["Makati City", "Quezon City", "Manila", "Pasig City", "Taguig City"][i-1]}
-                        </p>
-                      </div>
-                      <div className="ml-auto flex items-center text-sm text-muted-foreground">
-                        <CalendarDays className="mr-1 h-3 w-3" />
-                        {["2 hours ago", "5 hours ago", "Yesterday", "2 days ago", "1 week ago"][i-1]}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+          </div>
           
-          <TabsContent value="analytics" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Analytics Content</CardTitle>
-                <CardDescription>
-                  Detailed analytics information would be displayed here.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p>Advanced analytics dashboard to be implemented.</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="reports" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Reports Content</CardTitle>
-                <CardDescription>
-                  Generated reports would be displayed here.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p>Report generation features to be implemented.</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b text-left text-sm text-gray-500">
+                  <th className="pb-3">DATE CREATED</th>
+                  <th className="pb-3">AMOUNT</th>
+                  <th className="pb-3">CATEGORY</th>
+                  <th className="pb-3">DESCRIPTION</th>
+                  <th className="pb-3">REPORT</th>
+                  <th className="pb-3">STATUS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* Table content would go here */}
+                <tr className="h-16 border-b border-gray-100">
+                  <td colSpan={6} className="text-center text-gray-500">No expenses found</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </Layout>
   );

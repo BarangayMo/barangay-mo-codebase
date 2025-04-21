@@ -13,12 +13,12 @@ interface LayoutProps {
 }
 
 export const Layout = ({ children }: LayoutProps) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, userRole } = useAuth();
   const isMobile = useIsMobile();
   const { pathname } = useLocation();
 
   // Only show sidebar on admin dashboard route
-  const showSidebar = isAuthenticated && pathname === "/admin" && !isMobile;
+  const showSidebar = isAuthenticated && pathname === "/admin" && !isMobile && userRole === "superadmin";
 
   return (
     <div className="flex min-h-screen bg-gray-50 w-full">
@@ -37,7 +37,7 @@ export const Layout = ({ children }: LayoutProps) => {
         )}>
           {children}
         </main>
-        {!showSidebar && isMobile && <MobileNavbar />}
+        {isMobile && <MobileNavbar />}
       </div>
     </div>
   );

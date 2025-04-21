@@ -63,15 +63,17 @@ export const MobileNavbar = () => {
             <div className="flex flex-col gap-4 py-4">
               <h2 className="text-lg font-semibold">Menu</h2>
               <div className="flex flex-col space-y-3">
+                <Link to="/" className="py-2">Home</Link>
+                <Link to="/jobs" className="py-2">Jobs</Link>
+                <Link to="/marketplace" className="py-2">Marketplace</Link>
                 <Link to="/about" className="py-2">About Us</Link>
                 <Link to="/contact" className="py-2">Contact Us</Link>
-                <Link to="/privacy" className="py-2">Privacy Policy</Link>
-                <Link to="/terms" className="py-2">Terms & Conditions</Link>
                 <Link to="/settings" className="py-2">Settings</Link>
                 {/* Role-specific menu items */}
-                {(userRole === 'official' || userRole === 'superadmin') && (
+                {(userRole === 'official') && (
                   <>
                     <hr className="my-2" />
+                    <Link to="/official-dashboard" className="py-2">Official Dashboard</Link>
                     <Link to="/manage-residents" className="py-2">Manage Residents</Link>
                     <Link to="/manage-listings" className="py-2">Manage Listings</Link>
                     <Link to="/manage-jobs" className="py-2">Manage Jobs</Link>
@@ -81,7 +83,6 @@ export const MobileNavbar = () => {
                   <>
                     <hr className="my-2" />
                     <Link to="/admin" className="py-2">Admin Dashboard</Link>
-                    <Link to="/manage-officials" className="py-2">Manage Officials</Link>
                   </>
                 )}
               </div>
