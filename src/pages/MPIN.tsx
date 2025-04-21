@@ -49,6 +49,7 @@ export default function MPIN() {
                 {slots.map((slot, index) => (
                   <InputOTPSlot
                     key={index}
+                    index={index}
                     {...slot}
                     className="w-12 h-12 text-lg border-2 border-white/40 bg-white/20 backdrop-blur-sm text-white"
                   />
