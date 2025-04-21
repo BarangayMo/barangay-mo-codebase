@@ -11,9 +11,9 @@ const Index = () => {
   
   return (
     <Layout>
-      <div className="w-full">
+      <div className="w-full -mx-4">
         {/* Hero Section with Dynamic Background */}
-        <section className="relative min-h-[600px] overflow-hidden -mt-[80px]">
+        <section className="relative min-h-[600px] rounded-[10%] overflow-hidden mt-4">
           {/* Dark gradient background with animation */}
           <div 
             className="absolute inset-0 bg-[url('/public/lovable-uploads/af48621c-11ee-404e-a91f-975286eb7ac9.png')] bg-cover bg-center"

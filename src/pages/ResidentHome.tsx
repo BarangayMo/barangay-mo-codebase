@@ -1,4 +1,3 @@
-
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Layout } from "@/components/layout/Layout";
 import { ShoppingCart, Briefcase, Users } from "lucide-react";
@@ -10,16 +9,16 @@ export default function ResidentHome() {
   return (
     <Layout>
       <div
-        className="relative min-h-screen"
+        className="fixed inset-0 min-h-screen"
         style={{
-          backgroundImage: 'url("/lovable-uploads/99aa953e-adc7-47d1-884a-8228b0ca6527.png")',
+          backgroundImage: 'url("/lovable-uploads/c18ab531-de58-47d3-a486-6d9882bc2559.png")',
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
       >
         <div className="absolute inset-0 bg-black/60" />
-        <div className="relative z-10 px-4 pt-6 pb-10">
-          {/* Header */}
+        
+        <div className="relative z-10 h-screen overflow-y-auto px-4 pt-6 pb-10">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <img src="/placeholder.svg" alt="Profile" className="rounded-full w-14 h-14 border-2 border-green-400" />
@@ -29,12 +28,10 @@ export default function ResidentHome() {
               </div>
             </div>
             <div className="rounded-full border-2 border-white p-1">
-              {/* Placeholder for QR or icon */}
               <svg width="32" height="32" fill="none" className="text-white" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/><circle cx="8" cy="8" r="1" fill="currentColor"/><circle cx="16" cy="8" r="1" fill="currentColor"/><circle cx="8" cy="16" r="1" fill="currentColor"/><path stroke="currentColor" strokeWidth="2" d="M15.5 15.5h.01"/></svg>
             </div>
           </div>
 
-          {/* Barangay Card */}
           <div className="rounded-2xl bg-white/20 backdrop-blur-xl shadow-lg px-5 py-4 mb-6 flex flex-row items-center justify-between text-white">
             <div>
               <div className="font-semibold text-lg">Barangay New Cabalan</div>
@@ -59,7 +56,6 @@ export default function ResidentHome() {
             <img src="/lovable-uploads/2cc58007-fc42-44a8-80a5-ef6765602013.png" alt="Brgy icon" className="rounded-full w-12 h-12 border ml-4 hidden sm:block" />
           </div>
 
-          {/* Quick Actions */}
           <div>
             <div className="text-white font-semibold mb-2 text-lg">Quick Actions</div>
             <div className="grid grid-cols-3 gap-4 mb-8">
@@ -78,7 +74,6 @@ export default function ResidentHome() {
             </div>
           </div>
 
-          {/* ANNOUNCEMENTS */}
           <div>
             <div className="text-white font-semibold mb-2 text-lg">Announcements</div>
             <div className="rounded-2xl bg-white/20 backdrop-blur-xl p-4 mb-2">

@@ -1,7 +1,8 @@
+
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, ChevronDown, MapPin, User, Menu, Home, Briefcase, ShoppingCart, Phone, Info } from "lucide-react";
+import { Bell, ChevronDown, MapPin, User } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
 export const Header = () => {
   const { isAuthenticated, userRole, logout } = useAuth();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const [location, setLocation] = useState("Select Barangay");
   const [search, setSearch] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -37,12 +39,14 @@ export const Header = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full px-4 py-4">
-      <div className="mx-auto max-w-7xl bg-white/80 backdrop-blur-md rounded-[40px] px-6 py-3 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-4 md:gap-6">
+      <div className="mx-auto max-w-7xl bg-white/80 backdrop-blur-md rounded-[10%] px-6 py-3 flex items-center justify-between shadow-sm">
+        {!isMobile && (
           <Link to="/" className="text-xl font-bold whitespace-nowrap">
             Smart Barangay
           </Link>
+        )}
 
+        <div className="flex items-center gap-4 md:gap-6">
           {!isMobile && (
             <nav className="hidden md:flex items-center gap-6">
               {NAV_ITEMS.map((item) => (
@@ -58,7 +62,7 @@ export const Header = () => {
           )}
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
           <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
             <DropdownMenuTrigger asChild>
               <Button 
@@ -67,7 +71,7 @@ export const Header = () => {
                 className="flex items-center gap-2 justify-start px-2"
               >
                 <MapPin className="h-4 w-4 shrink-0" />
-                <span className="truncate">{location}</span>
+                <span className="truncate max-w-[100px] md:max-w-none">{location}</span>
                 <ChevronDown className="h-3 w-3 opacity-50 ml-auto" />
               </Button>
             </DropdownMenuTrigger>
@@ -108,23 +112,25 @@ export const Header = () => {
             </Button>
           ) : (
             <Button asChild variant="outline" size="sm">
-              <Link to={`/${userRole}-dashboard`}>My Dashboard</Link>
+              <Link to={`/${userRole}-home`}>My Dashboard</Link>
             </Button>
           )}
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative"
-            asChild
-          >
-            <Link to="/notifications">
-              <Bell className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center bg-[#ea384c]">
-                3
-              </span>
-            </Link>
-          </Button>
+          {isAuthenticated && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative"
+              asChild
+            >
+              <Link to="/notifications">
+                <Bell className="h-5 w-5" />
+                <span className="absolute -top-1 -right-1 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center bg-[#ea384c]">
+                  3
+                </span>
+              </Link>
+            </Button>
+          )}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -145,7 +151,10 @@ export const Header = () => {
                   <DropdownMenuItem asChild>
                     <Link to="/settings">Settings</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => logout()}>
+                  <DropdownMenuItem onClick={() => {
+                    logout();
+                    navigate('/');
+                  }}>
                     Logout
                   </DropdownMenuItem>
                 </>
