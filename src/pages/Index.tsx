@@ -12,15 +12,23 @@ const Index = () => {
     <Layout>
       <div className="w-full">
         {/* Hero Section with Dynamic Background */}
-        <section className="relative overflow-hidden">
-          {/* Animated gradient background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-purple-500 to-pink-500 animate-gradient-x"></div>
+        <section className="relative min-h-[600px] overflow-hidden">
+          {/* Dark gradient background with animation */}
+          <div 
+            className="absolute inset-0 bg-[url('/public/lovable-uploads/af48621c-11ee-404e-a91f-975286eb7ac9.png')] bg-cover bg-center"
+            style={{
+              backgroundBlendMode: 'overlay',
+            }}
+          />
+          
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#1A1F2C]/90 via-[#403E43]/90 to-[#0EA5E9]/90 animate-gradient-x"></div>
           
           {/* Glassmorphism elements */}
           <div className="absolute inset-0">
-            <div className="absolute top-20 left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-            <div className="absolute bottom-20 right-20 w-96 h-96 bg-pink-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-            <div className="absolute top-1/2 left-1/3 w-48 h-48 bg-yellow-500/20 rounded-full blur-2xl animate-pulse delay-700"></div>
+            <div className="absolute top-20 left-20 w-72 h-72 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-20 right-20 w-96 h-96 bg-[#0EA5E9]/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+            <div className="absolute top-1/2 left-1/3 w-48 h-48 bg-[#1EAEDB]/10 rounded-full blur-2xl animate-pulse delay-700"></div>
           </div>
 
           <div className="container relative z-10 mx-auto px-4 py-20 md:py-32">
@@ -81,16 +89,14 @@ const Index = () => {
               </div>
               
               <div className="w-full md:w-2/5 relative">
-                {/* Main Image with Glass Effect */}
                 <div className="rounded-2xl overflow-hidden backdrop-blur-sm bg-white/10 p-1 shadow-2xl border border-white/20">
                   <img 
-                    src="/placeholder.svg" 
-                    alt="Smart Barangay Platform" 
-                    className="rounded-xl w-full h-auto object-cover"
+                    src="/lovable-uploads/f39411e2-71c1-4c46-8b45-5fc0f2d8eca5.png"
+                    alt="Community Illustration" 
+                    className="w-full h-auto"
                   />
                 </div>
                 
-                {/* Floating Elements */}
                 <div className="absolute -top-6 -right-6 bg-white/90 backdrop-blur-sm p-4 rounded-lg shadow-xl rotate-3 hidden md:block">
                   <div className="flex items-center gap-2">
                     <ShoppingCart className="w-5 h-5 text-blue-600" />
