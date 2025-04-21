@@ -55,7 +55,7 @@ export function MessageList() {
   };
 
   return (
-    <Card className="w-full md:w-[380px] flex-shrink-0 p-4 shadow-lg border-0">
+    <Card className="w-full flex-shrink-0 p-4 shadow-lg border-0 md:rounded-none">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Messages</h1>
         <button className="p-2 hover:bg-gray-100 rounded-full">

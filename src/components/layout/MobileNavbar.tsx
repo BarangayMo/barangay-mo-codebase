@@ -17,8 +17,8 @@ export const MobileNavbar = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md bg-white/60 border-t border-white/20 px-2 py-2">
-      <div className="flex items-center justify-between max-w-lg mx-auto">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md bg-white/60 border-t border-white/20">
+      <div className="flex items-center justify-between px-6 py-2">
         {navItems.map(({ icon: Icon, path, label }) => (
           <Link 
             key={path} 

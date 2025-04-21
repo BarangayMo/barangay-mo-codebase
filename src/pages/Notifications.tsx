@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/layout/Layout";
 import { NotificationItem } from "@/components/notifications/NotificationItem";
 import { Check, Video, User, MessageSquare } from "lucide-react";
@@ -14,7 +13,7 @@ const profile6 = "https://i.pravatar.cc/80?img=10";
 export default function Notifications() {
   return (
     <Layout>
-      <div className="max-w-xl mx-auto w-full pb-36 min-h-screen bg-gray-50">
+      <div className="w-full pb-36 min-h-screen bg-gray-50">
         {/* Header */}
         <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-md p-4 flex items-center">
           <h1 className="text-2xl font-bold flex-1">Notifications</h1>
@@ -29,7 +28,7 @@ export default function Notifications() {
         </div>
 
         {/* New */}
-        <div className="px-4 pt-4">
+        <div className="px-4 sm:px-6 pt-4">
           <div className="font-semibold text-lg mb-2">New</div>
           <div className="rounded-xl bg-blue-50">
             <NotificationItem
@@ -52,7 +51,7 @@ export default function Notifications() {
         </div>
 
         {/* Earlier */}
-        <div className="px-4 pt-8">
+        <div className="px-4 sm:px-6 pt-8">
           <div className="font-semibold text-lg mb-2">Earlier</div>
           <div className="rounded-xl overflow-hidden bg-blue-50 divide-y">
             <NotificationItem
