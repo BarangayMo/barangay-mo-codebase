@@ -3,16 +3,18 @@ import { Link } from "react-router-dom";
 import { Facebook, Twitter, Linkedin } from "lucide-react";
 
 export const Footer = () => {
+  const currentYear = new Date().getFullYear();
+  
   return (
     <footer className="hidden md:block bg-white border-t">
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8">
         <div className="grid grid-cols-5 gap-8">
           <div className="col-span-2">
-            <Link to="/" className="text-xl font-bold">
+            <Link to="/" className="text-xl font-bold font-outfit">
               Smart Barangay
             </Link>
             <p className="mt-4 text-sm text-gray-500">
-              ©2024 Smart Barangay. All rights reserved.
+              ©{currentYear} Smart Barangay. All rights reserved.
             </p>
           </div>
 

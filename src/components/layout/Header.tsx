@@ -40,15 +40,13 @@ export const Header = () => {
   return (
     <header className="sticky top-0 z-50 w-full">
       <div className="mx-auto max-w-7xl bg-white/80 backdrop-blur-md px-4 py-3 flex items-center justify-between shadow-sm">
-        {!isMobile && (
-          <Link to="/" className="text-xl font-bold whitespace-nowrap">
+        <div className="flex items-center">
+          <Link to="/" className="text-xl font-bold font-outfit whitespace-nowrap">
             Smart Barangay
           </Link>
-        )}
-
-        <div className="flex items-center gap-4 md:gap-6">
+          
           {!isMobile && (
-            <nav className="hidden md:flex items-center gap-6">
+            <nav className="hidden md:flex items-center gap-6 ml-8">
               {NAV_ITEMS.map((item) => (
                 <Link
                   key={item.path}
@@ -62,13 +60,13 @@ export const Header = () => {
           )}
         </div>
 
-        <div className="flex items-center gap-2 md:gap-4 ml-0">
+        <div className="flex items-center gap-2 md:gap-4">
           <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="flex items-center gap-2 justify-start px-2 ml-0"
+                className="flex items-center gap-2 justify-start px-2"
               >
                 <MapPin className="h-4 w-4 shrink-0" />
                 <span className="truncate max-w-[100px] md:max-w-none">{location}</span>

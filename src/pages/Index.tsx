@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight, Briefcase, MapPin, ShieldCheck, Users, ShoppingCart, Star } from "lucide-react";
@@ -67,7 +68,7 @@ const Index = () => {
                 </div>
                 
                 {/* Trust indicators */}
-                <div className="mt-8 flex flex-wrap gap-6 justify-center md:justify-start">
+                <div className="mt-8 flex flex-wrap items-center gap-6 justify-center md:justify-start">
                   <div className="flex items-center gap-2">
                     <div className="flex">
                       {[1, 2, 3, 4, 5].map((_, i) => (
@@ -175,7 +176,7 @@ const Index = () => {
           </div>
         </section>
 
-        <footer className="py-8 text-center text-sm text-gray-500">
+        <footer className="py-8 text-center text-sm text-gray-500 md:hidden">
           <p>&copy; {currentYear} Smart Barangay. All rights reserved.</p>
         </footer>
       </div>
