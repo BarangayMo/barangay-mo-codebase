@@ -32,7 +32,10 @@ export const Header = () => {
   return (
     <header className="sticky top-0 z-50 w-full">
       <div className="mx-auto max-w-7xl bg-white/80 backdrop-blur-md px-4 py-3 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-6">
+          <Link to="/" className="flex items-center gap-2">
+            <img src="/lovable-uploads/85c8261a-25d6-40a1-ae7a-86c6a423f41f.png" alt="Logo" className="h-8 w-auto" />
+          </Link>
           <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
             <DropdownMenuTrigger asChild>
               <Button 

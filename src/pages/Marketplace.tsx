@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Input } from "@/components/ui/input";
@@ -7,6 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 // Mock product data with more properties
 const products = [
@@ -149,123 +155,49 @@ export default function Marketplace() {
 
   return (
     <Layout>
-      <div className="max-w-lg mx-auto min-h-[calc(100vh-80px)] bg-gray-100 pb-20">
-        {/* Search Header */}
-        <div className="sticky top-0 z-20 bg-gradient-to-r from-pink-500 to-purple-500 p-3">
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <Input
-                className="pl-10 pr-4 py-2 rounded-full border-0 shadow-md"
-                placeholder="Search products..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-            </div>
-            <Link to="/marketplace/cart" className="relative">
-              <div className="bg-white p-2 rounded-full shadow-md">
-                <ShoppingCart className="text-gray-700 w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center bg-red-500 text-white text-xs rounded-full">3</span>
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Hero Carousel */}
+        <Carousel className="mb-8">
+          <CarouselContent>
+            <CarouselItem>
+              <div className="grid grid-cols-2 gap-4 bg-blue-50 rounded-2xl overflow-hidden">
+                <div className="p-8 flex flex-col justify-center">
+                  <h2 className="text-3xl font-bold mb-4">Active Summer With Juice Milk 300ml</h2>
+                  <p className="text-gray-600 mb-6">New arrivals with nature fruits juice milks essential for summer</p>
+                  <Button className="w-fit">Shop Now</Button>
+                </div>
+                <div className="relative">
+                  <img src="/lovable-uploads/3e346d58-c383-498e-adb1-4b769d5293f9.png" alt="Juice" className="object-cover h-full" />
+                </div>
               </div>
-            </Link>
-          </div>
-        </div>
-
-        {/* Banner */}
-        <div className="relative overflow-hidden">
-          <img 
-            src="/placeholder.svg" 
-            alt="Special Sale" 
-            className="w-full h-32 object-cover"
-          />
-          <div className="absolute inset-0 flex items-center justify-center flex-col bg-gradient-to-r from-pink-500/70 to-purple-500/70">
-            <h2 className="font-outfit text-xl font-bold text-white">SULIT SWELDO SALE</h2>
-            <p className="text-white text-sm">MAR 30 - APR 21</p>
-          </div>
-        </div>
-
-        {/* Free shipping banner */}
-        <div className="bg-white p-3 flex justify-around items-center text-xs border-b">
-          <div className="flex items-center gap-1">
-            <Truck className="w-4 h-4 text-gray-700" />
-            <span>Free Shipping</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Clock className="w-4 h-4 text-gray-700" />
-            <span>Fast Delivery</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Package className="w-4 h-4 text-gray-700" />
-            <span>Free Returns</span>
-          </div>
-        </div>
+            </CarouselItem>
+            {/* Add more carousel items as needed */}
+          </CarouselContent>
+          <CarouselPrevious />
+          <CarouselNext />
+        </Carousel>
 
         {/* Categories */}
-        <div className="bg-white p-3 grid grid-cols-4 gap-2 mb-2">
-          {categories.map((category, index) => (
-            <div key={index} className="flex flex-col items-center">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center mb-1">
-                {category.icon}
-              </div>
-              <span className="text-xs">{category.name}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Flash Sale */}
-        <div className="bg-white p-3 mb-2">
-          <div className="flex justify-between items-center mb-3">
-            <div className="flex items-center gap-2">
-              <Tag className="w-5 h-5 text-red-500" />
-              <span className="font-outfit font-bold text-lg">Flash Sale</span>
-            </div>
-            <Link to="/marketplace/flash-sale" className="text-sm text-blue-500">See all</Link>
-          </div>
-          
-          <div className="flex overflow-x-auto gap-3 pb-2 no-scrollbar">
-            {products.slice(0, 4).map((product) => (
-              <Link 
-                key={product.id} 
-                to={`/marketplace/${product.id}`}
-                className="min-w-[120px] max-w-[120px] bg-white border rounded-md overflow-hidden"
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold mb-6">Browse by Category</h2>
+          <div className="grid grid-cols-4 md:grid-cols-8 gap-4">
+            {/* Category cards */}
+            {products.slice(0, 8).map((product, index) => (
+              <Link
+                key={index}
+                to={`/marketplace/category/${index}`}
+                className="p-4 bg-gray-50 rounded-xl text-center transition-transform hover:scale-105"
               >
-                <div className="relative">
-                  {product.image ? (
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-full h-24 object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-24 bg-gray-100 flex items-center justify-center">
-                      <ShoppingCart className="w-8 h-8 text-gray-300" />
-                    </div>
-                  )}
-                  {product.discount > 0 && (
-                    <div className="absolute top-0 right-0 bg-red-500 text-white text-xs px-1 font-semibold">
-                      -{product.discount}%
-                    </div>
-                  )}
-                </div>
-                <div className="p-2">
-                  <div className="text-red-500 font-bold">₱{product.price.toFixed(2)}</div>
-                  <div className="line-through text-xs text-gray-400">₱{product.originalPrice.toFixed(2)}</div>
-                </div>
+                <Package className="w-8 h-8 mx-auto mb-2" />
+                <span className="text-sm font-medium">{product.name.split(' ')[0]}</span>
               </Link>
             ))}
           </div>
         </div>
 
-        {/* 4.4 Sale Banner */}
-        <div className="bg-gradient-to-r from-purple-500 to-purple-400 p-3 mb-2 text-white flex justify-between items-center">
-          <div className="text-2xl font-bold font-outfit">4.4 SALE</div>
-          <div className="text-sm">UP TO ₱1,500 VOUCHER</div>
-        </div>
-
-        {/* Product Grid */}
-        <div className="bg-gray-100 p-2">
-          <div className="grid grid-cols-2 gap-2">
-            {filteredProducts.map((product) => (
+        {/* Featured Products Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4">
+          {filteredProducts.map((product) => (
               <Link
                 to={`/marketplace/${product.id}`}
                 key={product.id}
@@ -368,29 +300,6 @@ export default function Marketplace() {
                 </div>
               </Link>
             ))}
-          </div>
-          
-          {filteredProducts.length === 0 && (
-            <div className="py-12 text-center text-muted-foreground">
-              No products found.
-            </div>
-          )}
-        </div>
-        
-        {/* Bottom Navigation */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around pt-2 pb-6">
-          <Link to="/marketplace/wishlist" className="flex flex-col items-center">
-            <Heart className="w-6 h-6 text-gray-400" />
-            <span className="text-xs">Wishlist</span>
-          </Link>
-          <Link to="/marketplace/cart" className="flex flex-col items-center">
-            <ShoppingCart className="w-6 h-6 text-gray-400" />
-            <span className="text-xs">Cart</span>
-          </Link>
-          <Link to="/messages" className="flex flex-col items-center">
-            <MessageSquare className="w-6 h-6 text-gray-400" />
-            <span className="text-xs">Chat</span>
-          </Link>
         </div>
       </div>
     </Layout>

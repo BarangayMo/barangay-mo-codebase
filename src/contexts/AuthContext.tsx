@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode } from "react";
 
 export type UserRole = "resident" | "official" | "superadmin" | null;
@@ -15,6 +14,8 @@ interface AuthContextType {
   user: User | null;
   login: (role: UserRole) => void;
   logout: (navigateToPath?: string) => void;
+  rbiCompleted: boolean;
+  setRbiCompleted: (completed: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,15 +34,19 @@ export const AuthProvider = ({
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [rbiCompleted, setRbiCompleted] = useState(false);
 
   const login = (role: UserRole) => {
     setIsAuthenticated(true);
     setUserRole(role);
-    // Set a mock user for demonstration
     setUser({
       name: role === "resident" ? "John Resident" : 
             role === "official" ? "Maria Official" : "Admin User"
     });
+    
+    if (role === "resident" && !rbiCompleted && navigate) {
+      navigate("/rbi-registration");
+    }
   };
 
   const logout = (navigateToPath?: string) => {
@@ -49,10 +54,7 @@ export const AuthProvider = ({
     setUserRole(null);
     setUser(null);
     
-    // Only navigate if the navigate function is provided
     if (navigate) {
-      // Smart redirection
-      // if on a public page, go to home, else always go to login
       const publicPaths = ["/", "/about", "/contact", "/privacy", "/terms"];
       if (navigateToPath) {
         navigate(navigateToPath);
@@ -64,7 +66,15 @@ export const AuthProvider = ({
     }
   };
 
-  const value = { isAuthenticated, userRole, user, login, logout };
+  const value = { 
+    isAuthenticated, 
+    userRole, 
+    user, 
+    login, 
+    logout,
+    rbiCompleted,
+    setRbiCompleted 
+  };
   
   return (
     <AuthContext.Provider value={value}>
