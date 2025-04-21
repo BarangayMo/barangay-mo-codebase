@@ -99,30 +99,14 @@ export default function Jobs() {
 
   return (
     <Layout>
-      <div className="flex flex-col md:flex-row max-w-6xl mx-auto py-4 px-2 min-h-[calc(100vh-80px)]">
-        <div className="flex justify-between items-center mb-2">
-          <Input
-            className="mr-2 rounded-xl max-w-xs"
-            placeholder="Search job title, company, etc."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-          <Drawer>
-            <DrawerTrigger asChild>
-              <button className="flex items-center gap-2 bg-white/80 px-3 py-2 rounded-lg shadow text-gray-900 font-medium">
-                <Filter className="w-4 h-4" /> Filters
-              </button>
-            </DrawerTrigger>
-            <DrawerContent className="p-4">
-              <DrawerHeader className="p-0">
-                <DrawerTitle>Filter Jobs</DrawerTitle>
-                <DrawerDescription>
-                  Use the filters below to narrow your search.
-                </DrawerDescription>
-              </DrawerHeader>
-              <div className="space-y-4 mt-4">
+      <div className="flex flex-col lg:flex-row max-w-7xl mx-auto py-4 px-4 min-h-[calc(100vh-80px)] gap-6">
+        <div className="lg:w-1/4">
+          <div className="sticky top-20">
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <h2 className="font-semibold mb-4">Filters</h2>
+              <div className="space-y-4">
                 <div>
-                  <div className="font-bold text-sm mb-2">Type</div>
+                  <div className="font-medium text-sm mb-2">Type</div>
                   <div className="flex flex-wrap gap-2">
                     {jobFilters.map((filter) => (
                       <button
@@ -161,11 +145,20 @@ export default function Jobs() {
                   </div>
                 ))}
               </div>
-            </DrawerContent>
-          </Drawer>
+            </div>
+          </div>
         </div>
-        
-        <div className="flex-1">
+
+        <div className="lg:w-3/4">
+          <div className="flex items-center gap-4 mb-6">
+            <Input
+              className="max-w-xs"
+              placeholder="Search job title, company, etc."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+          
           <div className="space-y-4">
             {filteredJobs.map((job) => (
               <div

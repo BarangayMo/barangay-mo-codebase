@@ -1,18 +1,25 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Input } from "@/components/ui/input";
-import { Search, ShoppingCart, Package, Truck, Tag, Star, Clock, Heart, MessageSquare } from "lucide-react";
+import { 
+  Search, 
+  ShoppingCart, 
+  Box, 
+  Truck, 
+  Tag, 
+  Star, 
+  Store, 
+  HeartIcon,
+  Bell,
+  Home,
+  LayoutGrid,
+  MessagesSquare,
+  User
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
 import { Button } from "@/components/ui/button";
 
 const products = [
@@ -23,14 +30,12 @@ const products = [
     originalPrice: 280.00,
     discount: 11,
     seller: "Barangay Coop",
-    shopBadge: "LazMall",
     image: "/lovable-uploads/bf986c64-ee34-427c-90ad-0512f2e7f353.png",
     available: true,
     rating: 4.9,
     ratingCount: 128,
     sold: 456,
-    freeShipping: true,
-    coins: true,
+    freeShipping: true
   },
   {
     id: 2,
@@ -39,14 +44,12 @@ const products = [
     originalPrice: 170.00,
     discount: 12,
     seller: "Manang Lorna",
-    shopBadge: "LazMall",
     image: "/lovable-uploads/7a5fdb55-e1bf-49fb-956a-2ac513bdbcd5.png",
     available: true,
     rating: 4.7,
     ratingCount: 92,
     sold: 328,
-    freeShipping: true,
-    coins: true,
+    freeShipping: true
   },
   {
     id: 3,
@@ -55,14 +58,12 @@ const products = [
     originalPrice: 299.00,
     discount: 4,
     seller: "Metro Cookwares",
-    shopBadge: "LazMall",
     image: "/lovable-uploads/f1fa3bc1-5d74-4b1d-99de-f56d89e4b510.png",
     available: true,
     rating: 5,
     ratingCount: 83,
     sold: 242,
     freeShipping: true,
-    coins: true,
     saleEvent: "SULIT SWELDO"
   },
   {
@@ -78,7 +79,6 @@ const products = [
     ratingCount: 210,
     sold: 867,
     freeShipping: true,
-    coins: true,
     saleEvent: "SULIT SWELDO"
   },
   {
@@ -88,14 +88,12 @@ const products = [
     originalPrice: 450.00,
     discount: 14,
     seller: "Vention Official",
-    shopBadge: "LazMall",
     image: "/lovable-uploads/ed25f4d6-4f46-45de-a775-62db112f1277.png",
     available: true,
     rating: 4.6,
     ratingCount: 125,
     sold: 7000,
     freeShipping: true,
-    coins: true,
   },
   {
     id: 6,
@@ -124,16 +122,31 @@ const products = [
     ratingCount: 345,
     sold: 23200,
     freeShipping: true,
-    coins: true,
     justBought: true
   },
 ];
 
 const categories = [
-  { name: "Food", icon: <Package className="w-5 h-5" /> },
-  { name: "Home & Living", icon: <Truck className="w-5 h-5" /> },
-  { name: "Flash Sale", icon: <Tag className="w-5 h-5" /> },
-  { name: "Vouchers", icon: <Tag className="w-5 h-5" /> },
+  { 
+    name: "Food & Groceries", 
+    icon: <Store className="w-6 h-6 text-green-500" />,
+    bgColor: "bg-green-100" 
+  },
+  { 
+    name: "Home & Living", 
+    icon: <Home className="w-6 h-6 text-blue-500" />,
+    bgColor: "bg-blue-100"
+  },
+  { 
+    name: "Electronics", 
+    icon: <Box className="w-6 h-6 text-purple-500" />,
+    bgColor: "bg-purple-100"
+  },
+  { 
+    name: "Flash Sale", 
+    icon: <Tag className="w-6 h-6 text-red-500" />,
+    bgColor: "bg-red-100"
+  },
 ];
 
 export default function Marketplace() {
@@ -154,46 +167,79 @@ export default function Marketplace() {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Hero Carousel */}
-        <Carousel className="mb-8">
-          <CarouselContent>
-            <CarouselItem>
-              <div className="grid grid-cols-2 gap-4 bg-blue-50 rounded-2xl overflow-hidden">
-                <div className="p-8 flex flex-col justify-center">
-                  <h2 className="text-3xl font-bold mb-4">Active Summer With Juice Milk 300ml</h2>
-                  <p className="text-gray-600 mb-6">New arrivals with nature fruits juice milks essential for summer</p>
-                  <Button className="w-fit">Shop Now</Button>
-                </div>
-                <div className="relative">
-                  <img src="/lovable-uploads/3e346d58-c383-498e-adb1-4b769d5293f9.png" alt="Juice" className="object-cover h-full" />
-                </div>
-              </div>
-            </CarouselItem>
-          </CarouselContent>
-          <CarouselPrevious />
-          <CarouselNext />
-        </Carousel>
+      {/* Mobile Header */}
+      <div className="sticky top-16 z-40 bg-resident md:hidden">
+        <div className="flex items-center gap-3 p-4">
+          <div className="flex-1 relative">
+            <Input
+              placeholder="Search items..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 bg-white/90 rounded-full"
+            />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          </div>
+          <Link to="/marketplace/cart">
+            <div className="relative">
+              <ShoppingCart className="w-6 h-6 text-white" />
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                2
+              </span>
+            </div>
+          </Link>
+        </div>
+      </div>
 
+      {/* Mobile Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t py-2 md:hidden z-50">
+        <div className="flex justify-around items-center">
+          <Link to="/marketplace" className="flex flex-col items-center gap-1">
+            <Home className="w-6 h-6 text-resident" />
+            <span className="text-xs">Home</span>
+          </Link>
+          <Link to="/marketplace/categories" className="flex flex-col items-center gap-1">
+            <LayoutGrid className="w-6 h-6" />
+            <span className="text-xs">Categories</span>
+          </Link>
+          <Link to="/marketplace/wishlist" className="flex flex-col items-center gap-1">
+            <HeartIcon className="w-6 h-6" />
+            <span className="text-xs">Wishlist</span>
+          </Link>
+          <Link to="/notifications" className="flex flex-col items-center gap-1">
+            <Bell className="w-6 h-6" />
+            <span className="text-xs">Notifications</span>
+          </Link>
+          <Link to="/profile" className="flex flex-col items-center gap-1">
+            <User className="w-6 h-6" />
+            <span className="text-xs">Profile</span>
+          </Link>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 py-6 mb-20 md:mb-0">
         {/* Categories */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold mb-6">Browse by Category</h2>
-          <div className="grid grid-cols-4 md:grid-cols-8 gap-4">
-            {products.slice(0, 8).map((product, index) => (
+        <div className="mb-8">
+          <div className="grid grid-cols-4 gap-4">
+            {categories.map((category) => (
               <Link
-                key={index}
-                to={`/marketplace/category/${index}`}
-                className="p-4 bg-gray-50 rounded-xl text-center transition-transform hover:scale-105"
+                key={category.name}
+                to={`/marketplace/category/${category.name.toLowerCase()}`}
+                className={cn(
+                  "flex flex-col items-center p-4 rounded-xl transition-transform hover:scale-105",
+                  category.bgColor
+                )}
               >
-                <Package className="w-8 h-8 mx-auto mb-2" />
-                <span className="text-sm font-medium">{product.name.split(' ')[0]}</span>
+                {category.icon}
+                <span className="text-sm font-medium mt-2 text-center">
+                  {category.name}
+                </span>
               </Link>
             ))}
           </div>
         </div>
 
         {/* Featured Products Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4">
           {filteredProducts.map((product) => (
               <Link
                 to={`/marketplace/${product.id}`}
@@ -257,11 +303,6 @@ export default function Marketplace() {
                     {product.freeShipping && (
                       <div className="bg-teal-100 text-teal-600 text-[10px] px-1 rounded">
                         FREE SHIPPING
-                      </div>
-                    )}
-                    {product.coins && (
-                      <div className="bg-yellow-100 text-yellow-600 text-[10px] px-1 rounded">
-                        COINS
                       </div>
                     )}
                   </div>
