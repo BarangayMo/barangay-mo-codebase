@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight, Briefcase, MapPin, ShieldCheck, Users, ShoppingCart, Star } from "lucide-react";
@@ -12,19 +11,19 @@ const Index = () => {
   return (
     <Layout>
       <div className="w-full">
-        {/* Hero Section - Modern Design */}
+        {/* Hero Section with Dynamic Background */}
         <section className="relative overflow-hidden">
-          {/* Background with gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-purple-500 to-pink-500"></div>
+          {/* Animated gradient background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-purple-500 to-pink-500 animate-gradient-x"></div>
           
-          {/* Decorative elements */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-10 left-10 w-40 h-40 rounded-full bg-white/20 blur-3xl"></div>
-            <div className="absolute bottom-10 right-10 w-60 h-60 rounded-full bg-pink-300/40 blur-3xl"></div>
-            <div className="absolute top-1/2 left-1/3 w-20 h-20 rounded-full bg-yellow-300/40 blur-xl"></div>
+          {/* Glassmorphism elements */}
+          <div className="absolute inset-0">
+            <div className="absolute top-20 left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-20 right-20 w-96 h-96 bg-pink-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+            <div className="absolute top-1/2 left-1/3 w-48 h-48 bg-yellow-500/20 rounded-full blur-2xl animate-pulse delay-700"></div>
           </div>
 
-          <div className="container mx-auto relative z-10 px-4 py-16 md:py-28">
+          <div className="container relative z-10 mx-auto px-4 py-20 md:py-32">
             <div className="flex flex-col md:flex-row items-center justify-between gap-8">
               <div className="w-full md:w-1/2 text-center md:text-left">
                 <Badge className="mb-4 bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-sm">

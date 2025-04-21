@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { Crown, Search, MessageSquare, Menu } from "lucide-react";
+import { Home, MessageSquare, Briefcase, ShoppingCart, Menu } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -9,80 +9,54 @@ export const MobileNavbar = () => {
   const { pathname } = useLocation();
   const { userRole } = useAuth();
 
-  // Determine color based on user role
-  const roleColor = userRole === 'official'
-    ? 'text-official'
-    : userRole === 'resident'
-      ? 'text-resident'
-      : 'text-primary';
-
-  // For more subtle purple shade (icon deactive)
-  const inactive = "text-[#7E69AB] opacity-60";
+  const navItems = [
+    { icon: Home, path: "/", label: "Home" },
+    { icon: MessageSquare, path: "/messages", label: "Messages" },
+    { icon: Briefcase, path: "/jobs", label: "Jobs" },
+    { icon: ShoppingCart, path: "/marketplace", label: "Market" }
+  ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-black rounded-t-3xl px-4 pb-3 pt-4">
-      <div className="flex items-center justify-between">
-        {/* Crown/home */}
-        <Link to="/" className="flex flex-col items-center pt-1">
-          <Crown className={cn(
-            "h-7 w-7",
-            pathname === "/" ? roleColor : inactive
-          )}/>
-        </Link>
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t px-2 py-2">
+      <div className="flex items-center justify-between max-w-lg mx-auto">
+        {navItems.map(({ icon: Icon, path, label }) => (
+          <Link 
+            key={path} 
+            to={path}
+            className="flex flex-col items-center p-2"
+          >
+            <Icon 
+              className={cn(
+                "h-6 w-6 transition-colors",
+                pathname === path ? "text-blue-600" : "text-gray-500"
+              )} 
+            />
+            <span className={cn(
+              "text-xs mt-1",
+              pathname === path ? "text-blue-600 font-medium" : "text-gray-500"
+            )}>
+              {label}
+            </span>
+          </Link>
+        ))}
 
-        {/* Discover - pill button with Search icon */}
-        <Link to="/discover"
-          className={cn(
-            "relative flex items-center px-5 h-12 rounded-full bg-white shadow-md transition",
-            pathname === "/discover"
-              ? "ring-2 ring-primary"
-              : ""
-          )}
-          style={{
-            marginTop: -24
-          }}
-        >
-          <Search className="h-6 w-6 mr-2 text-gray-700" />
-          <span className="font-semibold text-lg text-gray-800">Discover</span>
-        </Link>
-
-        {/* Messages */}
-        <Link to="/messages" className="flex flex-col items-center pt-1">
-          <MessageSquare className={cn(
-            "h-7 w-7",
-            pathname === "/messages" ? roleColor : inactive
-          )} />
-        </Link>
-
-        {/* Menu */}
         <Sheet>
-          <SheetTrigger className="flex flex-col items-center pt-1 pl-2">
-            <Menu className="h-7 w-7 text-[#7E69AB]" />
+          <SheetTrigger className="flex flex-col items-center p-2">
+            <Menu className="h-6 w-6 text-gray-500" />
+            <span className="text-xs mt-1 text-gray-500">Menu</span>
           </SheetTrigger>
-          <SheetContent side="right" className="z-50! bg-white">
-            <div className="flex flex-col gap-4 py-4">
-              <h2 className="text-lg font-semibold">Menu</h2>
-              <div className="flex flex-col space-y-3">
-                <Link to="/" className="py-2">Home</Link>
-                <Link to="/jobs" className="py-2">Jobs</Link>
-                <Link to="/marketplace" className="py-2">Marketplace</Link>
-                <Link to="/about" className="py-2">About Us</Link>
-                <Link to="/contact" className="py-2">Contact Us</Link>
-                <Link to="/settings" className="py-2">Settings</Link>
-                {/* Role-specific menu items */}
-                {(userRole === 'official') && (
+          <SheetContent side="right" className="w-[300px]">
+            {/* Menu content */}
+            <div className="py-4">
+              <h2 className="text-lg font-medium mb-4">Menu</h2>
+              <div className="space-y-3">
+                <Link to="/" className="block p-2 hover:bg-gray-100 rounded-lg">Home</Link>
+                <Link to="/jobs" className="block p-2 hover:bg-gray-100 rounded-lg">Jobs</Link>
+                <Link to="/marketplace" className="block p-2 hover:bg-gray-100 rounded-lg">Marketplace</Link>
+                {userRole === 'official' && (
                   <>
                     <hr className="my-2" />
-                    <Link to="/official-dashboard" className="py-2">Official Dashboard</Link>
-                    <Link to="/manage-residents" className="py-2">Manage Residents</Link>
-                    <Link to="/manage-listings" className="py-2">Manage Listings</Link>
-                    <Link to="/manage-jobs" className="py-2">Manage Jobs</Link>
-                  </>
-                )}
-                {userRole === 'superadmin' && (
-                  <>
-                    <hr className="my-2" />
-                    <Link to="/admin" className="py-2">Admin Dashboard</Link>
+                    <Link to="/official-dashboard" className="block p-2 hover:bg-gray-100 rounded-lg">Official Dashboard</Link>
                   </>
                 )}
               </div>
