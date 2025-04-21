@@ -11,6 +11,11 @@ const Menu = () => {
   const appVersion = "1.0.0"; // You can make this dynamic if needed
   const currentYear = new Date().getFullYear();
 
+  // Create a handler function that will call logout
+  const handleLogout = () => {
+    logout();
+  };
+
   return (
     <Layout>
       <div className="container max-w-lg mx-auto p-4">
@@ -35,7 +40,11 @@ const Menu = () => {
               <Settings className="mr-3 h-5 w-5" /> Account Settings
             </a>
           </Button>
-          <Button variant="outline" className="w-full justify-start text-base h-12" onClick={logout}>
+          <Button 
+            variant="outline" 
+            className="w-full justify-start text-base h-12" 
+            onClick={handleLogout}
+          >
             <LogOut className="mr-3 h-5 w-5" /> Log out
           </Button>
         </div>
