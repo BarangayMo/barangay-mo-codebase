@@ -97,7 +97,7 @@ export default function Notifications() {
             <NotificationItem
               avatar={profile6}
               name="jaroslawkolubski"
-              message={<>sent a message to <span className="font-bold">dlbcphilippines</span>: <span className="italic text-gray-700">"Hello. Do you pray with people on the..."</span>}
+              message={<>sent a message to <span className="font-bold">dlbcphilippines</span>: <span className="italic text-gray-700">"Hello. Do you pray with people on the..."</span></>}
               time="4d"
             />
             <NotificationItem
