@@ -9,6 +9,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
+import OfficialsDashboard from "./pages/OfficialsDashboard";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Jobs from "./pages/Jobs";
@@ -29,6 +30,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/official-dashboard" element={<OfficialsDashboard />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/jobs" element={<Jobs />} />
               <Route path="/marketplace" element={<Marketplace />} />

@@ -6,37 +6,37 @@ import { DesktopSidebar } from "./DesktopSidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { useLocation } from "react-router-dom";
 
 interface LayoutProps {
   children: ReactNode;
 }
 
 export const Layout = ({ children }: LayoutProps) => {
-  const { isAuthenticated, userRole } = useAuth();
+  const { isAuthenticated } = useAuth();
   const isMobile = useIsMobile();
-  
+  const { pathname } = useLocation();
+
+  // Only show sidebar on admin dashboard route
+  const showSidebar = isAuthenticated && !isMobile && pathname.startsWith("/admin");
+
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Desktop Sidebar (hidden on mobile) */}
-      {isAuthenticated && !isMobile && <DesktopSidebar />}
-      
-      {/* Main Content */}
+      {/* Desktop Sidebar (only in admin) */}
+      {showSidebar && <DesktopSidebar />}
       <div
         className={cn(
           "flex flex-col min-h-screen w-full",
-          isAuthenticated && !isMobile ? "md:pl-64" : ""
+          showSidebar ? "md:pl-64" : ""
         )}
       >
         <Header />
-        
         <main className={cn(
           "flex-grow",
-          isMobile ? "pb-20" : "pb-6" // Add padding at the bottom for mobile navbar
+          isMobile ? "pb-20" : "pb-6"
         )}>
           {children}
         </main>
-        
-        {/* Mobile Navigation (visible only on mobile) */}
         {isMobile && <MobileNavbar />}
       </div>
     </div>

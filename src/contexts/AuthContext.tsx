@@ -1,5 +1,6 @@
 
 import { createContext, useContext, useState, ReactNode } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export type UserRole = "resident" | "official" | "superadmin" | null;
 
@@ -12,9 +13,11 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+function useProvideAuth(): AuthContextType {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState<UserRole>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const login = (role: UserRole) => {
     setIsAuthenticated(true);
@@ -24,10 +27,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setIsAuthenticated(false);
     setUserRole(null);
+    // Smart redirection
+    // if on a public page, go to home, else always go to login
+    const publicPaths = ["/", "/about", "/contact", "/privacy", "/terms"];
+    if (publicPaths.includes(location.pathname)) {
+      navigate("/");
+    } else {
+      navigate("/login");
+    }
   };
 
+  return { isAuthenticated, userRole, login, logout };
+}
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  // Provide AuthContext through a custom hook that has navigation access
+  const auth = useProvideAuth();
   return (
-    <AuthContext.Provider value={{ isAuthenticated, userRole, login, logout }}>
+    <AuthContext.Provider value={auth}>
       {children}
     </AuthContext.Provider>
   );
