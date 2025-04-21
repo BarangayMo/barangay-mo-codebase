@@ -4,11 +4,28 @@ import { DashboardStats } from "@/components/officials/DashboardStats";
 import { BudgetAllocationChart } from "@/components/officials/BudgetAllocationChart";
 import { Button } from "@/components/ui/button";
 import { CalendarDays, Download } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const OfficialsDashboard = () => {
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto py-8 px-4">
+      <div className="max-w-7xl mx-auto py-4 px-4">
+        <Card className="mb-6 bg-white">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <Avatar className="h-16 w-16">
+                <AvatarImage src="/placeholder.svg" />
+                <AvatarFallback>BM</AvatarFallback>
+              </Avatar>
+              <div>
+                <h2 className="text-xl font-semibold">Barangay Mo</h2>
+                <p className="text-gray-500">Official Dashboard</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
             <h1 className="text-3xl font-bold text-official">Officials Dashboard</h1>
@@ -28,8 +45,10 @@ const OfficialsDashboard = () => {
 
         <DashboardStats />
 
-        <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <BudgetAllocationChart />
+        <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6 overflow-x-hidden">
+          <div className="w-full min-w-0 overflow-hidden">
+            <BudgetAllocationChart />
+          </div>
           <div className="bg-white rounded-xl border-[1.5px] border-[#ffd7da] p-6">
             <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
             <div className="space-y-3">

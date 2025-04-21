@@ -1,4 +1,3 @@
-
 import { Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./components/theme-provider";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -18,6 +17,7 @@ import Jobs from "./pages/Jobs";
 import Marketplace from "./pages/Marketplace";
 import { Toaster } from "@/components/ui/toaster"
 import { ProductDetail, Cart, Checkout, OrderConfirmation, MyOrders } from "./pages/marketplace";
+import Menu from "./pages/Menu";
 
 function App() {
   return (
@@ -42,6 +42,7 @@ function App() {
           <Route path="/marketplace/checkout" element={<Checkout />} />
           <Route path="/marketplace/order-confirmation" element={<OrderConfirmation />} />
           <Route path="/marketplace/orders" element={<MyOrders />} />
+          <Route path="/menu" element={<Menu />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Toaster />
