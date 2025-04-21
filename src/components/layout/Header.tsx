@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, ChevronDown, MapPin, User } from "lucide-react";
+import { Bell, ChevronDown, MapPin, User, Menu as MenuIcon } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,7 +32,7 @@ export const Header = () => {
   return (
     <header className="sticky top-0 z-50 w-full">
       <div className="mx-auto max-w-7xl bg-white/80 backdrop-blur-md px-4 py-3 flex items-center justify-between shadow-sm">
-        <div className="flex-1">
+        <div className="flex items-center gap-2">
           <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
             <DropdownMenuTrigger asChild>
               <Button 
@@ -72,6 +72,23 @@ export const Header = () => {
           </DropdownMenu>
         </div>
 
+        {!isMobile && (
+          <div className="hidden md:flex items-center space-x-4">
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/">Home</Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/marketplace">Marketplace</Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/jobs">Jobs</Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/messages">Messages</Link>
+            </Button>
+          </div>
+        )}
+
         <div className="flex items-center gap-2">
           {isAuthenticated && (
             <Button
@@ -90,8 +107,14 @@ export const Header = () => {
           )}
 
           <Button asChild variant="ghost" size="icon" className="rounded-full">
-            <Link to="/menu">
+            <Link to="/login">
               <User className="h-5 w-5" />
+            </Link>
+          </Button>
+
+          <Button asChild variant="ghost" size="icon" className="md:hidden">
+            <Link to="/menu">
+              <MenuIcon className="h-5 w-5" />
             </Link>
           </Button>
         </div>

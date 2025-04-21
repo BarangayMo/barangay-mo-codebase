@@ -9,6 +9,7 @@ import { User, Settings, LogOut } from "lucide-react";
 const Menu = () => {
   const { user, logout } = useAuth();
   const appVersion = "1.0.0"; // You can make this dynamic if needed
+  const currentYear = new Date().getFullYear();
 
   return (
     <Layout>
@@ -17,7 +18,7 @@ const Menu = () => {
           <CardContent className="p-6">
             <div className="flex items-center gap-4 mb-6">
               <Avatar className="h-16 w-16">
-                <AvatarImage src="/placeholder.svg" alt={user?.name} />
+                <AvatarImage src="/lovable-uploads/07f9ee00-178f-4302-85d8-83a44b75bb9d.png" alt={user?.name} />
                 <AvatarFallback>{user?.name?.[0] || "U"}</AvatarFallback>
               </Avatar>
               <div>
@@ -41,6 +42,7 @@ const Menu = () => {
 
         <div className="mt-8 text-center text-sm text-gray-500">
           <p>Barangay Mo App v{appVersion}</p>
+          <p className="mt-2">&copy; {currentYear} All rights reserved.</p>
         </div>
       </div>
     </Layout>

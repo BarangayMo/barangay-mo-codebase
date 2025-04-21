@@ -13,7 +13,7 @@ const Index = () => {
   return (
     <Layout>
       <div className="w-full -mt-4">
-        {/* Hero Section with Dynamic Background */}
+        {/* Hero Section with Dynamic Background - Full width, no padding */}
         <section className="relative min-h-[calc(100vh-4rem)] overflow-hidden">
           {/* Dark gradient background with animation */}
           <div 
@@ -67,8 +67,8 @@ const Index = () => {
                   </Button>
                 </div>
                 
-                {/* Trust indicators */}
-                <div className="mt-8 flex flex-wrap items-center gap-6 justify-center md:justify-start">
+                {/* Trust indicators - ensure they stay on one line */}
+                <div className="mt-8 flex items-center flex-wrap gap-x-6 gap-y-3 justify-center md:justify-start">
                   <div className="flex items-center gap-2">
                     <div className="flex">
                       {[1, 2, 3, 4, 5].map((_, i) => (

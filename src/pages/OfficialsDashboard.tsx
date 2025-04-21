@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/layout/Layout";
 import { DashboardStats } from "@/components/officials/DashboardStats";
 import { BudgetAllocationChart } from "@/components/officials/BudgetAllocationChart";
@@ -14,13 +15,13 @@ const OfficialsDashboard = () => {
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <Avatar className="h-20 w-20 border-4 border-white">
-                <AvatarImage src="/lovable-uploads/fbf01be4-64e1-4cf6-bd12-246685226be5.png" />
+                <AvatarImage src="/lovable-uploads/07f9ee00-178f-4302-85d8-83a44b75bb9d.png" />
                 <AvatarFallback>BM</AvatarFallback>
               </Avatar>
               <div>
-                <h2 className="text-2xl font-bold">Juan Dela Cruz</h2>
+                <h2 className="text-2xl font-bold font-outfit">Juan Dela Cruz</h2>
                 <p className="text-white/90">Barangay Captain</p>
-                <div className="flex items-center gap-4 mt-2">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-2">
                   <div>
                     <p className="text-sm text-white/80">Ward</p>
                     <p className="font-semibold">Ward 7</p>
@@ -37,7 +38,7 @@ const OfficialsDashboard = () => {
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-official">Officials Dashboard</h1>
+            <h1 className="text-3xl font-bold text-official font-outfit">Officials Dashboard</h1>
             <p className="text-gray-600 mt-1">Welcome back, Barangay Official</p>
           </div>
           <div className="flex gap-3 mt-4 md:mt-0">
@@ -54,12 +55,14 @@ const OfficialsDashboard = () => {
 
         <DashboardStats />
 
-        <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6 overflow-x-hidden">
-          <div className="w-full min-w-0 overflow-hidden">
-            <BudgetAllocationChart />
+        <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="w-full overflow-x-auto">
+            <div className="min-w-[300px]">
+              <BudgetAllocationChart />
+            </div>
           </div>
           <div className="bg-white rounded-xl border-[1.5px] border-[#ffd7da] p-6">
-            <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
+            <h3 className="text-lg font-semibold mb-4 font-outfit">Quick Actions</h3>
             <div className="space-y-3">
               <Button variant="outline" className="w-full justify-start">Review Pending Requests</Button>
               <Button variant="outline" className="w-full justify-start">Manage Resident Database</Button>
