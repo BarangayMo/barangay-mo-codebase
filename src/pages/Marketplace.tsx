@@ -13,8 +13,8 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { Button } from "@/components/ui/button";
 
-// Mock product data with more properties
 const products = [
   {
     id: 1,
@@ -129,7 +129,6 @@ const products = [
   },
 ];
 
-// Categories for quick navigation
 const categories = [
   { name: "Food", icon: <Package className="w-5 h-5" /> },
   { name: "Home & Living", icon: <Truck className="w-5 h-5" /> },
@@ -171,7 +170,6 @@ export default function Marketplace() {
                 </div>
               </div>
             </CarouselItem>
-            {/* Add more carousel items as needed */}
           </CarouselContent>
           <CarouselPrevious />
           <CarouselNext />
@@ -181,7 +179,6 @@ export default function Marketplace() {
         <div className="mb-12">
           <h2 className="text-2xl font-bold mb-6">Browse by Category</h2>
           <div className="grid grid-cols-4 md:grid-cols-8 gap-4">
-            {/* Category cards */}
             {products.slice(0, 8).map((product, index) => (
               <Link
                 key={index}
