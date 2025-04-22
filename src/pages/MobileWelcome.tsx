@@ -14,7 +14,7 @@ export default function Welcome() {
         backgroundRepeat: 'no-repeat'
       }}
     >
-      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-black/10 to-black/10" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/60 to-black/90" />
       <div className="relative w-full min-h-screen flex flex-col items-center justify-between p-6">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
