@@ -3,7 +3,7 @@ import { useState } from "react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
-import { Fingerprint, Flag, SkipForward } from "lucide-react";
+import { Fingerprint, SkipForward } from "lucide-react";
 import { NumPad } from "@/components/ui/numpad";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
@@ -50,7 +50,7 @@ export default function MPIN() {
         <h2 className="text-3xl md:text-4xl font-bold mb-3 text-white font-outfit tracking-tight">Smart Barangay</h2>
         <p className="text-base md:text-lg text-white/90 mb-6 font-light">"Your community in your hands"</p>
         
-        <div className="bg-white/10 backdrop-blur-md rounded-xl py-3 px-4 md:px-6 inline-flex items-center gap-3">
+        <div className="bg-white/10 backdrop-blur-md rounded-xl py-3 px-4 md:px-6 inline-flex items-center gap-3 mx-auto">
           <img
             src="/lovable-uploads/69289dcf-6417-4971-9806-b93b578586d6.png"
             alt="Philippines Flag"
@@ -70,29 +70,31 @@ export default function MPIN() {
       <div className="w-full max-w-md space-y-6 px-4">
         <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8">
           <h3 className="text-white text-xl font-medium mb-6 text-center">Enter Your MPIN</h3>
-          <InputOTP
-            maxLength={6}
-            value={otp}
-            onChange={setOtp}
-            render={({ slots }) => (
-              <InputOTPGroup className="gap-2 justify-center">
-                {slots.map((slot, index) => (
-                  <InputOTPSlot
-                    key={index}
-                    index={index}
-                    {...slot}
-                    className="w-10 h-12 text-lg border-2 border-white/20 bg-white/10 backdrop-blur-sm text-white rounded-xl focus:border-white/40 transition-colors"
-                  />
-                ))}
-              </InputOTPGroup>
-            )}
-          />
+          <div className="flex justify-center mb-6">
+            <InputOTP
+              maxLength={6}
+              value={otp}
+              onChange={setOtp}
+              render={({ slots }) => (
+                <InputOTPGroup className="gap-2 justify-center">
+                  {slots.map((slot, index) => (
+                    <InputOTPSlot
+                      key={index}
+                      index={index}
+                      {...slot}
+                      className="w-10 h-12 text-lg border-2 border-white/20 bg-white/10 backdrop-blur-sm text-white rounded-xl focus:border-white/40 transition-colors"
+                    />
+                  ))}
+                </InputOTPGroup>
+              )}
+            />
+          </div>
           
           <div className="mt-6">
             <NumPad 
               onNumberClick={handleNumPadInput}
               onDelete={handleNumPadDelete}
-              className="mb-4"
+              className="mx-auto max-w-[280px]"
             />
           </div>
 
