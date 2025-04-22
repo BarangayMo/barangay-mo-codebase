@@ -46,7 +46,7 @@ export function LocationDropdown() {
             onChange={e => setSearch(e.target.value)}
             className="mb-2"
           />
-          <div className="max-h-40 overflow-y-auto">
+          <div className="max-h-[200px] overflow-y-auto">
             {isLoading ? (
               <div className="p-2 text-center text-sm text-muted-foreground">Loading...</div>
             ) : error ? (
@@ -66,7 +66,7 @@ export function LocationDropdown() {
               ))
             ) : (
               <div className="p-2 text-center text-sm text-muted-foreground">
-                No barangay found
+                {search ? "No matching barangay found" : "No barangays available"}
               </div>
             )}
           </div>

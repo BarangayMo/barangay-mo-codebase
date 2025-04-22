@@ -28,27 +28,14 @@ export const useBarangayData = () => {
           console.log("Unique barangays:", uniqueBarangays);
           setBarangays(uniqueBarangays);
         } else {
-          console.log("No barangay data found, using fallback data");
-          // Provide some fallback data
-          setBarangays([
-            "Barangay New Cabalan",
-            "Barangay West Bajac-Bajac", 
-            "Barangay East Bajac-Bajac",
-            "Barangay Barretto",
-            "Barangay Gordon Heights"
-          ]);
+          console.log("No barangay data found in database");
+          setError('No barangay data available');
+          setBarangays([]);
         }
       } catch (err) {
         console.error('Error fetching barangay data:', err);
         setError('Failed to load barangay data');
-        // Provide some fallback data
-        setBarangays([
-          "Barangay New Cabalan",
-          "Barangay West Bajac-Bajac", 
-          "Barangay East Bajac-Bajac",
-          "Barangay Barretto",
-          "Barangay Gordon Heights"
-        ]);
+        setBarangays([]);
       } finally {
         setIsLoading(false);
       }

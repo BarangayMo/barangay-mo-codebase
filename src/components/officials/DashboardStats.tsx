@@ -11,7 +11,7 @@ interface StatCardProps {
 }
 
 const StatCard = ({ title, value, subtitle, trend, trendValue }: StatCardProps) => (
-  <Card className="shadow-lg bg-white">
+  <Card className="shadow-lg bg-white h-full">
     <CardContent className="p-6">
       <div className="flex justify-between items-start">
         <div>
@@ -40,7 +40,7 @@ const StatCard = ({ title, value, subtitle, trend, trendValue }: StatCardProps) 
 
 export const DashboardStats = () => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
       <StatCard
         title="Total Budget"
         value="₱5,240,000"
