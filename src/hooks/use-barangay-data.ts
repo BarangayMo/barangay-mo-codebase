@@ -1,6 +1,16 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+// Add a fallback list of barangays in case the API fails
+const FALLBACK_BARANGAYS = [
+  "Abucay", "Aguinaldo", "Alangan", "Bagumbayan", "Balibago", 
+  "Camilmil", "Dau", "East Bajac-Bajac", "Gordon Heights", "Kalaklan",
+  "Mabayuan", "Malabanias", "New Cabalan", "Old Cabalan", "Pag-asa",
+  "Pamatawan", "Pandan", "Poblacion", "Sabang", "San Antonio",
+  "Santa Rita", "Santo Tomas", "Tabacuhan", "West Bajac-Bajac", "West Tapinac"
+];
 
 export const useBarangayData = () => {
   const [barangays, setBarangays] = useState<string[]>([]);
@@ -14,8 +24,7 @@ export const useBarangayData = () => {
         const { data, error } = await supabase
           .from('Barangays')
           .select('BARANGAY')
-          .order('BARANGAY')
-          .limit(50); // Limiting to 50 results for better performance
+          .order('BARANGAY');
         
         if (error) {
           console.error("Supabase error:", error);
@@ -29,14 +38,14 @@ export const useBarangayData = () => {
           console.log("Unique barangays:", uniqueBarangays);
           setBarangays(uniqueBarangays);
         } else {
-          console.log("No barangay data found in database");
-          setError('No barangay data available');
-          setBarangays([]);
+          console.log("No barangay data found in database, using fallback data");
+          setBarangays(FALLBACK_BARANGAYS);
+          toast.info("Using sample barangay data as actual data couldn't be retrieved");
         }
       } catch (err) {
         console.error('Error fetching barangay data:', err);
-        setError('Failed to load barangay data');
-        setBarangays([]);
+        setError('Failed to load barangay data, using fallback data instead');
+        setBarangays(FALLBACK_BARANGAYS);
       } finally {
         setIsLoading(false);
       }

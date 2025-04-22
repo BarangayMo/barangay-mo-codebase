@@ -1,6 +1,6 @@
 
-import { useState, useEffect } from "react";
-import { MapPin, ChevronDown } from "lucide-react";
+import { useState } from "react";
+import { MapPin, ChevronDown, Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { useBarangayData } from "@/hooks/use-barangay-data";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function LocationDropdown() {
   const [location, setLocation] = useState("Select Barangay");
@@ -28,9 +29,19 @@ export function LocationDropdown() {
           variant="ghost" 
           size="sm" 
           className="flex items-center gap-2 min-w-[150px]"
+          disabled={isLoading}
         >
-          <MapPin className="h-4 w-4 shrink-0" />
-          <span className="truncate max-w-[100px]">{location}</span>
+          {isLoading ? (
+            <>
+              <Loader className="h-4 w-4 shrink-0 animate-spin" />
+              <span className="truncate max-w-[100px]">Loading...</span>
+            </>
+          ) : (
+            <>
+              <MapPin className="h-4 w-4 shrink-0" />
+              <span className="truncate max-w-[100px]">{location}</span>
+            </>
+          )}
           <ChevronDown className="h-3 w-3 opacity-50 ml-auto" />
         </Button>
       </DropdownMenuTrigger>
@@ -44,7 +55,11 @@ export function LocationDropdown() {
           />
           <div className="max-h-[300px] overflow-y-auto">
             {isLoading ? (
-              <div className="p-2 text-center text-sm text-muted-foreground">Loading barangays...</div>
+              <div className="space-y-1 p-1">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Skeleton key={i} className="h-8 w-full" />
+                ))}
+              </div>
             ) : error ? (
               <div className="p-2 text-center text-sm text-red-500">{error}</div>
             ) : filtered.length > 0 ? (
