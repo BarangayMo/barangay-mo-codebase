@@ -57,16 +57,16 @@ export default {
 					foreground: 'hsl(var(--card-foreground))'
 				},
 				official: {
-					DEFAULT: '#ea384c',
+					DEFAULT: 'var(--official-color)',
 					foreground: '#ffffff',
-					light: '#ffd7da',
-					dark: '#c41c2e'
+					light: 'var(--official-light)',
+					dark: 'var(--official-dark)'
 				},
 				resident: {
-					DEFAULT: '#4CAF50',
+					DEFAULT: 'var(--resident-color)',
 					foreground: '#ffffff',
-					light: '#E8F5E9',
-					dark: '#2E7D32'
+					light: 'var(--resident-light)',
+					dark: 'var(--resident-dark)'
 				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',

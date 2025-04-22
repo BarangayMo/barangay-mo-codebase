@@ -1,219 +1,271 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Input } from "@/components/ui/input";
-import { Briefcase, MapPin, Filter } from "lucide-react";
-import { Link } from "react-router-dom";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerTrigger } from "@/components/ui/drawer";
-import JobDrawer from "@/components/jobs/JobDrawer";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { Button } from "@/components/ui/button";
+import { Building2, MapPin, Clock, ChevronDown, Plus, Filter } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
-const jobFilters = [
-  "All",
-  "Remote",
-  "Part-time",
-  "Full-time",
-  "Contract",
-];
-
-const extraFilters = [
-  { label: "Experience", values: ["Entry", "Mid", "Senior"] },
-  { label: "Location", values: ["Quezon City", "Olongapo", "Caloocan", "San Fernando"] },
-  { label: "Category", values: ["Health", "Safety", "Maintenance", "Education"] }
+const sortOptions = [
+  { label: "Most Recent", value: "recent" },
+  { label: "Highest Paid", value: "salary-high" },
+  { label: "Lowest Paid", value: "salary-low" },
 ];
 
 const jobs = [
   {
     id: 1,
-    title: "Community Health Worker",
-    company: "Barangay Health Center",
-    location: "Quezon City",
-    type: "Part-time",
-    posted: "2d ago",
-    logo: "/lovable-uploads/bf986c64-ee34-427c-90ad-0512f2e7f353.png",
-    status: "Open",
-    salary: "₱9,000/mo",
-    experience: "Entry",
-    category: "Health",
-    excerpt: "Support health programs in your community. Flexible hours.",
+    title: "Administrative Assistant",
+    company: "XYZ Corporation",
+    location: "Barangay 2, Makati City",
+    salary: "₱18,000 - ₱22,000 per month",
+    type: "Full-time",
+    posted: "Posted 2 days ago",
+    description: "We are looking for an Administrative Assistant to join our team. The ideal candidate will be responsible for handling office tasks, filing documents, answering phones, and providing support to the management team.",
+    requirements: [
+      "At least high school graduate, college degree preferred",
+      "Proficient in MS Office applications",
+      "Excellent organizational skills"
+    ],
+    image: "/lovable-uploads/3dcb24b2-de0f-453d-b088-ff9643f1ebbc.png"
   },
   {
     id: 2,
-    title: "Barangay Tanod",
-    company: "Barangay Hall",
-    location: "Quezon City",
+    title: "Customer Service Representative",
+    company: "ABC Company",
+    location: "Barangay 5, Quezon City",
+    salary: "₱15,000 - ₱20,000 per month",
     type: "Full-time",
-    posted: "5d ago",
-    logo: "/lovable-uploads/7a5fdb55-e1bf-49fb-956a-2ac513bdbcd5.png",
-    status: "Open",
-    salary: "₱12,000/mo",
-    experience: "Mid",
-    category: "Safety",
-    excerpt: "Help keep the barangay safe. Day/night shifts available.",
+    posted: "Posted 5 days ago",
+    description: "We are hiring a Customer Service Representative to provide excellent customer service and support. Responsibilities include answering inquiries, resolving complaints, and processing orders.",
+    requirements: [
+      "High school diploma or equivalent",
+      "Excellent communication skills",
+      "Ability to multitask and prioritize"
+    ],
+    image: "/lovable-uploads/7a5fdb55-e1bf-49fb-956a-2ac513bdbcd5.png"
   },
   {
     id: 3,
-    title: "Clean & Green Worker",
-    company: "Barangay Maintenance",
-    location: "Quezon City",
-    type: "Contract",
-    posted: "1w ago",
-    logo: "",
-    status: "Closed",
-    salary: "₱7,500/mo",
-    experience: "Entry",
-    category: "Maintenance",
-    excerpt: "Maintain cleanliness and green spaces in the community.",
+    title: "Data Entry Clerk",
+    company: "123 Data Solutions",
+    location: "Barangay 10, Pasig City",
+    salary: "₱16,000 - ₱19,000 per month",
+    type: "Part-time",
+    posted: "Posted 1 week ago",
+    description: "We need a Data Entry Clerk to accurately input and maintain data in our systems. The ideal candidate will have strong attention to detail and proficiency in data entry software.",
+    requirements: [
+      "High school diploma or equivalent",
+      "Proficient in data entry",
+      "Strong attention to detail"
+    ],
+    image: "/lovable-uploads/bf986c64-ee34-427c-90ad-0512f2e7f353.png"
+  },
+  {
+    id: 4,
+    title: "Delivery Driver",
+    company: "Fast Delivery Services",
+    location: "Barangay 15, Mandaluyong City",
+    salary: "₱17,000 - ₱21,000 per month",
+    type: "Full-time",
+    posted: "Posted 2 weeks ago",
+    description: "We are seeking a Delivery Driver to safely and efficiently deliver packages to our customers. The ideal candidate will have a valid driver's license and a clean driving record.",
+    requirements: [
+      "Valid driver's license",
+      "Clean driving record",
+      "Ability to lift heavy packages"
+    ],
+    image: "/lovable-uploads/3dcb24b2-de0f-453d-b088-ff9643f1ebbc.png"
+  },
+  {
+    id: 5,
+    title: "Sales Associate",
+    company: "Retail Emporium",
+    location: "Barangay 3, Taguig City",
+    salary: "₱15,000 - ₱18,000 per month",
+    type: "Part-time",
+    posted: "Posted 3 weeks ago",
+    description: "We are looking for a Sales Associate to assist customers and promote our products. The ideal candidate will have excellent customer service skills and a passion for sales.",
+    requirements: [
+      "High school diploma or equivalent",
+      "Excellent customer service skills",
+      "Ability to work in a fast-paced environment"
+    ],
+    image: "/lovable-uploads/7a5fdb55-e1bf-49fb-956a-2ac513bdbcd5.png"
   },
 ];
 
 export default function Jobs() {
   const [search, setSearch] = useState("");
-  const [activeFilter, setActiveFilter] = useState("All");
-  const [selectedJob, setSelectedJob] = useState(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const isMobile = useIsMobile();
-
-  const [selectedExtras, setSelectedExtras] = useState({
-    Experience: null,
-    Location: null,
-    Category: null,
-  });
-
-  const handleOpenDrawer = (job: any) => {
-    setSelectedJob(job);
-    setDrawerOpen(true);
-  };
-
-  const handleCloseDrawer = () => {
-    setDrawerOpen(false);
-    setSelectedJob(null);
-  };
-
-  const filteredJobs = jobs.filter((job) => {
-    const matchesSearch = job.title.toLowerCase().includes(search.toLowerCase()) ||
-      job.company.toLowerCase().includes(search.toLowerCase());
-    const matchesFilter = activeFilter === "All" ? true : job.type === activeFilter;
-    const matchesExtras = Object.entries(selectedExtras).every(([key, value]) => !value || job[key.toLowerCase()] === value);
-    return matchesSearch && matchesFilter && matchesExtras;
-  });
+  const [sortBy, setSortBy] = useState("recent");
 
   return (
     <Layout>
-      <div className="flex flex-col lg:flex-row max-w-7xl mx-auto py-4 px-4 min-h-[calc(100vh-80px)] gap-6">
-        <div className="lg:w-1/4">
-          <div className="sticky top-20">
-            <div className="bg-white rounded-lg p-4 shadow-sm">
-              <h2 className="font-semibold mb-4">Filters</h2>
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Job Board</h1>
+            <p className="text-muted-foreground">
+              Find employment opportunities in your community
+            </p>
+          </div>
+          <Button className="bg-official hover:bg-official-dark">
+            <Plus className="w-4 h-4 mr-2" />
+            Post a Job
+          </Button>
+        </div>
+
+        <div className="grid lg:grid-cols-[300px,1fr] gap-6">
+          {/* Filters Section */}
+          <div className="space-y-6">
+            <div className="bg-white p-6 rounded-lg border shadow-sm">
+              <h2 className="text-lg font-semibold mb-4">Filters</h2>
+              
               <div className="space-y-4">
                 <div>
-                  <div className="font-medium text-sm mb-2">Type</div>
-                  <div className="flex flex-wrap gap-2">
-                    {jobFilters.map((filter) => (
-                      <button
-                        key={filter}
-                        onClick={() => setActiveFilter(filter)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                          activeFilter === filter
-                            ? "bg-primary text-primary-foreground border-primary"
-                            : "bg-muted text-muted-foreground border-muted"
-                        }`}
-                      >{filter}</button>
-                    ))}
+                  <label className="text-sm font-medium mb-2 block">Search</label>
+                  <Input
+                    placeholder="Search jobs..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Job Type</label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All Types" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="full-time">Full-time</SelectItem>
+                      <SelectItem value="part-time">Part-time</SelectItem>
+                      <SelectItem value="contract">Contract</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Location</label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All Locations" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Locations</SelectItem>
+                      <SelectItem value="makati">Makati</SelectItem>
+                      <SelectItem value="quezon">Quezon City</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Salary Range</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input placeholder="Min" type="number" />
+                    <Input placeholder="Max" type="number" />
                   </div>
                 </div>
-                {extraFilters.map(filterObj => (
-                  <div key={filterObj.label}>
-                    <div className="font-bold text-sm mb-2">{filterObj.label}</div>
-                    <div className="flex flex-wrap gap-2">
-                      {filterObj.values.map(val => (
-                        <button
-                          key={val}
-                          onClick={() =>
-                            setSelectedExtras((prev) => ({
-                              ...prev,
-                              [filterObj.label]: prev[filterObj.label] === val ? null : val
-                            }))
-                          }
-                          className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                            selectedExtras[filterObj.label] === val
-                              ? "bg-primary text-primary-foreground border-primary"
-                              : "bg-muted text-muted-foreground border-muted"
-                          }`}
-                        >{val}</button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+
+                <Button className="w-full" variant="outline">
+                  <Filter className="w-4 h-4 mr-2" />
+                  Apply Filters
+                </Button>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="lg:w-3/4">
-          <div className="flex items-center gap-4 mb-6">
-            <Input
-              className="max-w-xs"
-              placeholder="Search job title, company, etc."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
-          </div>
-          
-          <div className="space-y-4">
-            {filteredJobs.map((job) => (
-              <div
-                key={job.id}
-                className="cursor-pointer"
-                onClick={() => handleOpenDrawer(job)}
-              >
-                <div className="rounded-2xl p-6 border bg-white/70 shadow-lg flex items-center hover:scale-[1.01] transition group"
-                  style={{ minHeight: "120px" }}
+          {/* Jobs List Section */}
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <p className="text-muted-foreground">
+                Showing {jobs.length} jobs
+              </p>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sortOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-4">
+              {jobs.map((job) => (
+                <div
+                  key={job.id}
+                  className="bg-white rounded-lg border p-6 hover:shadow-md transition-shadow"
                 >
-                  <div className="mr-5 flex-shrink-0 relative">
-                    {job.logo ? (
-                      <img
-                        src={job.logo}
-                        alt={job.company}
-                        className="rounded-full w-16 h-16 object-cover border-2 border-gray-100"
-                      />
-                    ) : (
-                      <div className="rounded-full w-16 h-16 bg-gray-100 flex items-center justify-center text-gray-400">
-                        <Briefcase className="w-8 h-8" />
+                  <div className="flex gap-4">
+                    <img
+                      src={job.image}
+                      alt={job.company}
+                      className="w-20 h-20 rounded-lg object-cover"
+                    />
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="text-xl font-semibold mb-1">{job.title}</h3>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <Building2 className="w-4 h-4" />
+                              {job.company}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <MapPin className="w-4 h-4" />
+                              {job.location}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-4 h-4" />
+                              {job.posted}
+                            </span>
+                          </div>
+                        </div>
+                        <span className="inline-flex px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                          {job.type}
+                        </span>
                       </div>
-                    )}
-                    <span className={`absolute bottom-0 right-0 block w-3 h-3 rounded-full border-2 border-white ${
-                      job.status === "Open"
-                        ? "bg-green-500"
-                        : "bg-gray-400"
-                    }`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xl font-semibold truncate">{job.title}</span>
-                      <span className="text-xs text-gray-400">{job.posted}</span>
+
+                      <p className="mt-4 text-muted-foreground">{job.description}</p>
+                      
+                      <div className="mt-4">
+                        <h4 className="font-medium mb-2">Requirements:</h4>
+                        <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                          {job.requirements.map((req, index) => (
+                            <li key={index}>{req}</li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="mt-6 flex items-center justify-between">
+                        <span className="font-semibold text-lg">{job.salary}</span>
+                        <div className="space-x-3">
+                          <Button variant="outline">Save Job</Button>
+                          <Button className="bg-resident hover:bg-resident-dark text-white">
+                            Apply Now
+                          </Button>
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-base text-gray-700 truncate">{job.company}</div>
-                    <div className="flex flex-wrap items-center gap-2 mt-1">
-                      <span className="flex items-center text-xs bg-muted rounded px-2 py-0.5 text-gray-700"><MapPin className="w-3 h-3 mr-1" />{job.location}</span>
-                      <span className="flex items-center text-xs bg-muted rounded px-2 py-0.5 text-gray-700">{job.type}</span>
-                      <span className="flex items-center text-xs bg-muted rounded px-2 py-0.5 text-gray-700">{job.salary}</span>
-                      <span className="flex items-center text-xs bg-muted rounded px-2 py-0.5 text-gray-700">{job.experience} Level</span>
-                      <span className="flex items-center text-xs bg-muted rounded px-2 py-0.5 text-gray-700">{job.category}</span>
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1 line-clamp-2">{job.excerpt}</div>
                   </div>
                 </div>
-              </div>
-            ))}
-            {filteredJobs.length === 0 && (
-              <div className="py-12 text-center text-muted-foreground animate-fade-in">
-                No jobs found.
-              </div>
-            )}
+              ))}
+            </div>
           </div>
         </div>
-
-        <JobDrawer open={drawerOpen} onOpenChange={handleCloseDrawer} job={selectedJob} jobs={jobs} />
       </div>
     </Layout>
   );
