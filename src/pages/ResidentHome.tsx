@@ -1,8 +1,9 @@
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Layout } from "@/components/layout/Layout";
-import { ShoppingCart, Briefcase, FileText, Heart, FileSearch, ClipboardCheck, ArrowRight } from "lucide-react";
+import { ShoppingCart, Briefcase, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Helmet } from "react-helmet";
 
 export default function ResidentHome() {
   const isMobile = useIsMobile();
@@ -15,7 +16,10 @@ export default function ResidentHome() {
 
   return (
     <Layout>
-      <div className="min-h-screen pt-16 bg-fixed overflow-hidden relative">
+      <Helmet>
+        <title>Resident Dashboard - Barangay Management System</title>
+      </Helmet>
+      <div className="min-h-screen pt-16 bg-[url('/lovable-uploads/3ee20358-a5dd-4933-a21d-71d3f13d0047.png')] bg-cover bg-fixed overflow-hidden relative">
         <div
           className="absolute inset-0 bg-black/70" />
         

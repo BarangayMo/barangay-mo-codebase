@@ -129,10 +129,13 @@ export const Header = () => {
             
             {isAuthenticated && (
               <Button 
-                variant="ghost" 
                 size="sm" 
                 asChild
-                className={pathname === getDashboardRoute() ? (userRole === "resident" ? "text-[#1a237e]" : "text-[#ea384c]") : ""}
+                className={`bg-gradient-to-r ${
+                  userRole === "resident" 
+                    ? "from-[#1a237e] to-[#534bae]" 
+                    : "from-[#ea384c] to-[#ff6b78]"
+                } text-white hover:opacity-90 transition-opacity`}
               >
                 <Link to={getDashboardRoute()}>Dashboard</Link>
               </Button>
