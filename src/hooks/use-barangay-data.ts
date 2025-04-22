@@ -40,7 +40,7 @@ export const useBarangayData = () => {
         } else {
           console.log("No barangay data found in database, using fallback data");
           setBarangays(FALLBACK_BARANGAYS);
-          toast.info("Using sample barangay data as actual data couldn't be retrieved");
+          toast("Using sample barangay data as actual data couldn't be retrieved");
         }
       } catch (err) {
         console.error('Error fetching barangay data:', err);
