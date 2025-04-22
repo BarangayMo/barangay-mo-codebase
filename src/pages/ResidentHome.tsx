@@ -1,16 +1,26 @@
 
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Layout } from "@/components/layout/Layout";
-import { ShoppingCart, Briefcase, Users } from "lucide-react";
+import { ShoppingCart, Briefcase, Users, FileText, Heart, FileSearch, ClipboardCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function ResidentHome() {
   const isMobile = useIsMobile();
 
+  const quickActions = [
+    { icon: ShoppingCart, label: "Market", path: "/marketplace" },
+    { icon: Briefcase, label: "Jobs", path: "/jobs" },
+    { icon: Users, label: "Community", path: "/community" },
+    { icon: FileText, label: "Documents", path: "/services/documents" },
+    { icon: Heart, label: "Healthcare", path: "/services/healthcare" },
+    { icon: FileSearch, label: "Permits", path: "/services/permits" },
+    { icon: ClipboardCheck, label: "Clearance", path: "/services/clearance" }
+  ];
+
   return (
     <Layout>
       <div
-        className="fixed inset-0 min-h-screen pt-16"
+        className="fixed inset-0 min-h-screen pt-16 bg-fixed"
         style={{
           backgroundImage: 'url("/lovable-uploads/c18ab531-de58-47d3-a486-6d9882bc2559.png")',
           backgroundSize: "cover",
@@ -19,7 +29,7 @@ export default function ResidentHome() {
       >
         <div className="absolute inset-0 bg-black/60" />
         
-        <div className="relative z-10 h-full overflow-y-auto px-4 pt-6 pb-10">
+        <div className="relative z-10 h-full px-4 pt-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <img src="/placeholder.svg" alt="Profile" className="rounded-full w-14 h-14 border-2 border-green-400" />
@@ -29,7 +39,13 @@ export default function ResidentHome() {
               </div>
             </div>
             <div className="rounded-full border-2 border-white p-1">
-              <svg width="32" height="32" fill="none" className="text-white" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/><circle cx="8" cy="8" r="1" fill="currentColor"/><circle cx="16" cy="8" r="1" fill="currentColor"/><circle cx="8" cy="16" r="1" fill="currentColor"/><path stroke="currentColor" strokeWidth="2" d="M15.5 15.5h.01"/></svg>
+              <svg width="32" height="32" fill="none" className="text-white" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
+                <circle cx="8" cy="8" r="1" fill="currentColor"/>
+                <circle cx="16" cy="8" r="1" fill="currentColor"/>
+                <circle cx="8" cy="16" r="1" fill="currentColor"/>
+                <path stroke="currentColor" strokeWidth="2" d="M15.5 15.5h.01"/>
+              </svg>
             </div>
           </div>
 
@@ -54,21 +70,19 @@ export default function ResidentHome() {
             </div>
           </div>
 
-          <div>
-            <div className="text-white font-semibold mb-2 text-lg">Quick Actions</div>
-            <div className="grid grid-cols-3 gap-4 mb-8">
-              <Link to="/marketplace" className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/20 backdrop-blur-lg py-5 hover:bg-white/40 transition-all">
-                <ShoppingCart className="text-white h-7 w-7" />
-                <span className="text-white text-sm font-medium">Market</span>
-              </Link>
-              <Link to="/jobs" className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/20 backdrop-blur-lg py-5 hover:bg-white/40 transition-all">
-                <Briefcase className="text-white h-7 w-7" />
-                <span className="text-white text-sm font-medium">Jobs</span>
-              </Link>
-              <Link to="/community" className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/20 backdrop-blur-lg py-5 hover:bg-white/40 transition-all">
-                <Users className="text-white h-7 w-7" />
-                <span className="text-white text-sm font-medium">Community</span>
-              </Link>
+          <div className="mb-8">
+            <div className="text-white font-semibold mb-4 text-lg">Quick Actions</div>
+            <div className="grid grid-cols-3 gap-3">
+              {quickActions.map((action, index) => (
+                <Link 
+                  key={index}
+                  to={action.path} 
+                  className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/20 backdrop-blur-lg py-5 hover:bg-white/40 transition-all aspect-square"
+                >
+                  <action.icon className="text-white h-7 w-7" />
+                  <span className="text-white text-sm font-medium text-center px-2">{action.label}</span>
+                </Link>
+              ))}
             </div>
           </div>
 
