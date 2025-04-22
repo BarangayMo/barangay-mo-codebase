@@ -1,24 +1,38 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link, useNavigate } from "react-router-dom";
-import { ChevronDown, ChevronLeft } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { ChevronLeft, SkipForward } from "lucide-react";
 import { motion } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Phone() {
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const location = useLocation();
   const navigate = useNavigate();
+  const { userRole } = useAuth();
+  const [phoneNumber, setPhoneNumber] = useState("");
+
+  useEffect(() => {
+    if (location.state?.phoneNumber) {
+      setPhoneNumber(location.state.phoneNumber);
+    }
+  }, [location.state]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     navigate("/verify");
+  };
+
+  const handleSkip = () => {
+    switch(userRole) {
+      case "official":
+        navigate("/official-dashboard");
+        break;
+      case "resident":
+      default:
+        navigate("/resident-home");
+        break;
+    }
   };
 
   return (
@@ -86,9 +100,21 @@ export default function Phone() {
             />
           </div>
 
-          <Button type="submit" className="w-full h-12 bg-emerald-600 hover:bg-emerald-700">
-            Submit
-          </Button>
+          <div className="space-y-3">
+            <Button type="submit" className="w-full h-12 bg-emerald-600 hover:bg-emerald-700">
+              Submit
+            </Button>
+            
+            <Button 
+              type="button"
+              variant="ghost"
+              onClick={handleSkip}
+              className="w-full h-12 text-gray-600 hover:text-gray-800 hover:bg-gray-100 flex items-center gap-2 justify-center"
+            >
+              <SkipForward className="w-5 h-5" />
+              Skip Verification
+            </Button>
+          </div>
         </motion.form>
 
         <p className="mt-6 text-sm text-gray-500 text-center">

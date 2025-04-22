@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, User, Mail, Lock, MapPin, Phone } from "lucide-react";
+import { ArrowLeft, User, Mail, Lock, MapPin, Phone, Eye, EyeOff } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -15,11 +16,14 @@ export default function Register() {
     firstName: "",
     lastName: "",
     phoneNumber: "",
-    barangay: ""
+    barangay: "",
+    role: "resident"
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,7 +38,8 @@ export default function Register() {
           firstName: formData.firstName,
           lastName: formData.lastName,
           phoneNumber: formData.phoneNumber,
-          barangay: formData.barangay
+          barangay: formData.barangay,
+          role: formData.role
         }
       );
 
@@ -44,6 +49,8 @@ export default function Register() {
           title: "Registration failed",
           description: error.message
         });
+      } else {
+        navigate("/phone", { state: { phoneNumber: formData.phoneNumber } });
       }
     } catch (err) {
       toast({
@@ -150,14 +157,25 @@ export default function Register() {
             <div className="relative">
               <Input
                 id="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="●●●●●●●●"
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className="pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
+                className="pl-10 pr-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
               />
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
             </div>
             <p className="text-xs text-gray-500">Password must be at least 8 characters</p>
           </div>
@@ -202,6 +220,26 @@ export default function Register() {
         <p className="text-gray-500 mb-6">Join your barangay's digital community</p>
         
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label className="text-gray-700">I am registering as a</Label>
+            <RadioGroup
+              defaultValue="resident"
+              name="role"
+              className="flex gap-4"
+              value={formData.role}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, role: value }))}
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="resident" id="resident" />
+                <Label htmlFor="resident" className="cursor-pointer">Resident</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="official" id="official" />
+                <Label htmlFor="official" className="cursor-pointer">Official</Label>
+              </div>
+            </RadioGroup>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="fullname-desktop" className="text-gray-700">Full Name</Label>
             <div className="relative">
@@ -271,14 +309,25 @@ export default function Register() {
             <div className="relative">
               <Input
                 id="password-desktop"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="●●●●●●●●"
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className="pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
+                className="pl-10 pr-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
               />
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
             </div>
             <p className="text-xs text-gray-500">Password must be at least 8 characters</p>
           </div>

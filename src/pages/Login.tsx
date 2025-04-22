@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -68,7 +67,7 @@ export default function Login() {
     }
   };
 
-  const handleDemoLogin = (role: "resident" | "official" | "superadmin") => {
+  const handleDemoLogin = async (role: "resident" | "official" | "superadmin") => {
     setIsLoading(true);
     let demoEmail, demoPassword;
     
@@ -87,22 +86,24 @@ export default function Login() {
         break;
     }
     
-    setEmail(demoEmail);
-    setPassword(demoPassword);
-    
-    login(demoEmail, demoPassword)
-      .then(({ error }) => {
-        if (error) {
-          toast({
-            variant: "destructive",
-            title: "Demo login failed",
-            description: error.message
-          });
-        }
-      })
-      .finally(() => {
-        setIsLoading(false);
+    try {
+      const { error } = await login(demoEmail, demoPassword);
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Demo login failed",
+          description: error.message
+        });
+      }
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Demo login failed",
+        description: err.message
       });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleBiometricLogin = () => {
