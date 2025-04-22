@@ -28,13 +28,18 @@ export const Header = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const filtered = BARANGAYS.filter(brgy => brgy.toLowerCase().includes(search.toLowerCase()));
+  
+  // Determine which logo to use based on the user role
+  const logoSrc = userRole === "resident" 
+    ? "/lovable-uploads/c6dfe8f9-7cde-40b6-9c52-bc142b970182.png" 
+    : "/lovable-uploads/85c8261a-25d6-40a1-ae7a-86c6a423f41f.png";
 
   return (
     <header className="sticky top-0 z-50 w-full">
       <div className="mx-auto max-w-7xl bg-white/80 backdrop-blur-md px-4 py-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-6">
           <Link to="/" className="flex items-center gap-2">
-            <img src="/lovable-uploads/85c8261a-25d6-40a1-ae7a-86c6a423f41f.png" alt="Logo" className="h-8 w-auto" />
+            <img src={logoSrc} alt="Logo" className="h-8 w-auto" />
           </Link>
           <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
             <DropdownMenuTrigger asChild>
@@ -84,7 +89,7 @@ export const Header = () => {
               <Link to="/marketplace">Marketplace</Link>
             </Button>
             <Button variant="ghost" size="sm" asChild>
-              <Link to="/jobs">Jobs</Link>
+              <Link to="/services">Services</Link>
             </Button>
             <Button variant="ghost" size="sm" asChild>
               <Link to="/messages">Messages</Link>
@@ -110,7 +115,7 @@ export const Header = () => {
           )}
 
           <Button asChild variant="ghost" size="icon" className="rounded-full">
-            <Link to="/login">
+            <Link to="/menu">
               <User className="h-5 w-5" />
             </Link>
           </Button>

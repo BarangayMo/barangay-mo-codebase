@@ -17,6 +17,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import Jobs from "./pages/Jobs";
 import Marketplace from "./pages/Marketplace";
+import Services from "./pages/Services";
 import { Toaster } from "@/components/ui/toaster"
 import { ProductDetail, Cart, Checkout, OrderConfirmation, MyOrders } from "./pages/marketplace";
 import Menu from "./pages/Menu";
@@ -43,6 +44,7 @@ function App() {
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/jobs" element={<Jobs />} />
           <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/services" element={<Services />} />
           <Route path="/marketplace/:productId" element={<ProductDetail />} />
           <Route path="/marketplace/cart" element={<Cart />} />
           <Route path="/marketplace/checkout" element={<Checkout />} />
