@@ -1,174 +1,27 @@
 
-import { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, ChevronDown, MapPin, User } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+import { Bell, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Input } from "@/components/ui/input";
-import { useBarangayData } from "@/hooks/use-barangay-data";
+import { HeaderLogo } from "./header/HeaderLogo";
+import { LocationDropdown } from "./header/LocationDropdown";
+import { DesktopNavItems } from "./header/DesktopNavItems";
 import { ProfileMenu } from "./ProfileMenu";
 
 export const Header = () => {
-  const { isAuthenticated, userRole } = useAuth();
+  const { isAuthenticated } = useAuth();
   const isMobile = useIsMobile();
-  const navigate = useNavigate();
-  const { pathname } = useLocation();
-  const [location, setLocation] = useState("Select Barangay");
-  const [search, setSearch] = useState("");
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  
-  const { barangays, isLoading, error } = useBarangayData();
-  
-  const filtered = barangays?.filter(brgy => 
-    brgy.toLowerCase().includes(search.toLowerCase())
-  ) || [];
-
-  const getHomeRoute = () => {
-    switch (userRole) {
-      case "official":
-        return "/official-dashboard";
-      case "superadmin":
-        return "/admin";
-      case "resident":
-        return "/resident-home";
-      default:
-        return "/";
-    }
-  };
-  
-  const getDashboardRoute = () => {
-    switch (userRole) {
-      case "official":
-        return "/official-dashboard";
-      case "superadmin":
-        return "/admin";
-      case "resident":
-        return "/resident-home";
-      default:
-        return "/";
-    }
-  };
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md shadow-sm">
       <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-6">
-          <Link to="/" className="flex items-center gap-2">
-            <img 
-              src={userRole === "resident" ? "/lovable-uploads/6960369f-3a6b-4d57-ab0f-f7db77f16152.png" : "/lovable-uploads/141c2a56-35fc-4123-a51f-358481e0f167.png"} 
-              alt="Logo" 
-              className="h-8 w-auto" 
-            />
-          </Link>
-          <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="flex items-center gap-2"
-              >
-                <MapPin className="h-4 w-4 shrink-0" />
-                <span className="truncate max-w-[100px]">{location}</span>
-                <ChevronDown className="h-3 w-3 opacity-50" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-[240px]">
-              <div className="p-2">
-                <Input
-                  placeholder="Search barangay..."
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  className="mb-2"
-                />
-                <div className="max-h-40 overflow-y-auto">
-                  {isLoading ? (
-                    <div className="p-2 text-center text-sm text-muted-foreground">Loading...</div>
-                  ) : error ? (
-                    <div className="p-2 text-center text-sm text-red-500">{error}</div>
-                  ) : filtered.length > 0 ? (
-                    filtered.map(brgy => (
-                      <DropdownMenuItem
-                        key={brgy}
-                        onClick={() => {
-                          setLocation(brgy);
-                          setDropdownOpen(false);
-                          setSearch("");
-                        }}
-                      >
-                        {brgy}
-                      </DropdownMenuItem>
-                    ))
-                  ) : (
-                    <div className="p-2 text-center text-sm text-muted-foreground">
-                      No barangay found
-                    </div>
-                  )}
-                </div>
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <HeaderLogo />
+          <LocationDropdown />
         </div>
 
-        {!isMobile && (
-          <div className="hidden md:flex items-center space-x-4">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              asChild
-              className={pathname === "/" ? (userRole === "resident" ? "text-[#1a237e]" : "text-[#ea384c]") : ""}
-            >
-              <Link to="/">Home</Link>
-            </Button>
-            
-            {isAuthenticated && (
-              <Button 
-                size="sm" 
-                asChild
-                className={`bg-gradient-to-r ${
-                  userRole === "resident" 
-                    ? "from-[#1a237e] to-[#534bae]" 
-                    : "from-[#ea384c] to-[#ff6b78]"
-                } text-white hover:opacity-90 transition-opacity`}
-              >
-                <Link to={getDashboardRoute()}>Dashboard</Link>
-              </Button>
-            )}
-            
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              asChild
-              className={pathname === "/marketplace" ? "text-[#1a237e]" : ""}
-            >
-              <Link to="/marketplace">Marketplace</Link>
-            </Button>
-            
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              asChild
-              className={pathname === "/services" ? "text-[#1a237e]" : ""}
-            >
-              <Link to="/services">Services</Link>
-            </Button>
-            
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              asChild
-              className={pathname === "/messages" ? "text-[#1a237e]" : ""}
-            >
-              <Link to="/messages">Messages</Link>
-            </Button>
-          </div>
-        )}
+        <DesktopNavItems />
 
         <div className="flex items-center gap-2">
           {isAuthenticated ? (
