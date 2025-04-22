@@ -1,15 +1,9 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight, Briefcase, MapPin, ShieldCheck, Users, ShoppingCart, Star } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { Badge } from "@/components/ui/badge";
 
-const Index = () => {
-  const isMobile = useIsMobile();
-  const currentYear = new Date().getFullYear();
-  
+export default function Index() {
   return (
     <Layout>
       <div className="w-full -mt-4">
@@ -19,7 +13,7 @@ const Index = () => {
           />
           <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/70 to-black/80" />
           
-          <div className="relative z-10 w-full mx-auto px-4 md:px-6 py-12 md:py-16">
+          <div className="relative z-10 w-full mx-auto max-w-7xl px-4 py-8 text-white">
             <div className="w-full max-w-7xl mx-auto">
               <div className="flex flex-col md:flex-row items-center justify-between gap-8">
                 <div className="w-full md:w-1/2 text-center md:text-left">
@@ -167,6 +161,4 @@ const Index = () => {
       </div>
     </Layout>
   );
-};
-
-export default Index;
+}
