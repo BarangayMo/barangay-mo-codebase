@@ -1,3 +1,4 @@
+
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Layout } from "@/components/layout/Layout";
 import { ShoppingCart, Briefcase, FileText } from "lucide-react";
@@ -19,9 +20,8 @@ export default function ResidentHome() {
       <Helmet>
         <title>Resident Dashboard - Barangay Management System</title>
       </Helmet>
-      <div className="min-h-screen pt-16 bg-[url('/lovable-uploads/3bcad0e5-aa2f-4884-81a8-36d1329e8503.png')] bg-cover bg-fixed overflow-hidden relative">
-        <div
-          className="absolute inset-0 bg-black/70" />
+      <div className="min-h-screen pt-16 bg-[url('/lovable-uploads/68c299d5-1cba-4b7e-836b-500597ae21a1.png')] bg-cover bg-fixed overflow-hidden relative">
+        <div className="absolute inset-0 bg-black/70" />
         
         <div className="relative z-10 h-full px-4 pt-6 max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-4">

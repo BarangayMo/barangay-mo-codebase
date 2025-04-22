@@ -21,24 +21,20 @@ export function LocationDropdown() {
     brgy?.toLowerCase().includes(search.toLowerCase())
   ) || [];
 
-  useEffect(() => {
-    console.log("LocationDropdown rendered with barangays:", barangays);
-  }, [barangays]);
-
   return (
     <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
       <DropdownMenuTrigger asChild>
         <Button 
           variant="ghost" 
           size="sm" 
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 min-w-[150px]"
         >
           <MapPin className="h-4 w-4 shrink-0" />
           <span className="truncate max-w-[100px]">{location}</span>
-          <ChevronDown className="h-3 w-3 opacity-50" />
+          <ChevronDown className="h-3 w-3 opacity-50 ml-auto" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-[240px]">
+      <DropdownMenuContent className="w-[280px]">
         <div className="p-2">
           <Input
             placeholder="Search barangay..."
@@ -46,9 +42,9 @@ export function LocationDropdown() {
             onChange={e => setSearch(e.target.value)}
             className="mb-2"
           />
-          <div className="max-h-[200px] overflow-y-auto">
+          <div className="max-h-[300px] overflow-y-auto">
             {isLoading ? (
-              <div className="p-2 text-center text-sm text-muted-foreground">Loading...</div>
+              <div className="p-2 text-center text-sm text-muted-foreground">Loading barangays...</div>
             ) : error ? (
               <div className="p-2 text-center text-sm text-red-500">{error}</div>
             ) : filtered.length > 0 ? (
@@ -70,6 +66,11 @@ export function LocationDropdown() {
               </div>
             )}
           </div>
+          {!isLoading && barangays.length > 0 && (
+            <div className="mt-2 text-xs text-muted-foreground text-center border-t pt-2">
+              {barangays.length} barangays available
+            </div>
+          )}
         </div>
       </DropdownMenuContent>
     </DropdownMenu>

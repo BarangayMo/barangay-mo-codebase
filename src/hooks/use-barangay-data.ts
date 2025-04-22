@@ -14,7 +14,8 @@ export const useBarangayData = () => {
         const { data, error } = await supabase
           .from('Barangays')
           .select('BARANGAY')
-          .order('BARANGAY');
+          .order('BARANGAY')
+          .limit(50); // Limiting to 50 results for better performance
         
         if (error) {
           console.error("Supabase error:", error);
