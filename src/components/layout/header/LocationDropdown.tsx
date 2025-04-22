@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MapPin, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,10 +16,14 @@ export function LocationDropdown() {
   const [search, setSearch] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const { barangays, isLoading, error } = useBarangayData();
-  
+
   const filtered = barangays?.filter(brgy => 
-    brgy.toLowerCase().includes(search.toLowerCase())
+    brgy?.toLowerCase().includes(search.toLowerCase())
   ) || [];
+
+  useEffect(() => {
+    console.log("LocationDropdown rendered with barangays:", barangays);
+  }, [barangays]);
 
   return (
     <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>

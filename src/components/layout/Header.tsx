@@ -36,7 +36,7 @@ export const Header = () => {
 
         <DesktopNavItems />
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {isAuthenticated ? (
             <>
               {!isMobile && (
@@ -47,25 +47,27 @@ export const Header = () => {
                     userRole === "resident" 
                       ? "from-[#1a237e] to-[#534bae]" 
                       : "from-[#ea384c] to-[#ff6b78]"
-                  } text-white hover:opacity-90 transition-opacity mr-2`}
+                  } text-white hover:opacity-90 transition-opacity`}
                 >
                   <Link to={getDashboardRoute()}>Dashboard</Link>
                 </Button>
               )}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative"
-                asChild
-              >
-                <Link to="/notifications">
-                  <Bell className="h-5 w-5" />
-                  <span className="absolute -top-1 -right-1 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center bg-[#ea384c]">
-                    3
-                  </span>
-                </Link>
-              </Button>
-              {!isMobile && <ProfileMenu />}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative"
+                  asChild
+                >
+                  <Link to="/notifications">
+                    <Bell className="h-5 w-5" />
+                    <span className="absolute -top-1 -right-1 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center bg-[#ea384c]">
+                      3
+                    </span>
+                  </Link>
+                </Button>
+                {!isMobile && <ProfileMenu />}
+              </div>
               {isMobile && (
                 <Button asChild variant="ghost" size="icon" className="rounded-full">
                   <Link to="/menu">
