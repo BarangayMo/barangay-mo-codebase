@@ -8,8 +8,20 @@ export const MobileNavbar = () => {
   const { pathname } = useLocation();
   const { userRole } = useAuth();
 
+  const getHomeRoute = () => {
+    switch (userRole) {
+      case "official":
+        return "/official-dashboard";
+      case "superadmin":
+        return "/admin";
+      case "resident":
+      default:
+        return "/resident-home";
+    }
+  };
+
   const navItems = [
-    { icon: Home, path: "/resident-home", label: "Home" },
+    { icon: Home, path: getHomeRoute(), label: "Home" },
     { icon: MessageSquare, path: "/messages", label: "Messages" },
     { icon: ShoppingCart, path: "/marketplace", label: "Market" },
     { icon: LifeBuoy, path: "/services", label: "Services" },

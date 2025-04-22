@@ -14,9 +14,9 @@ const Index = () => {
       <div className="w-full -mt-4">
         <section className="relative w-full">
           <div 
-            className="absolute inset-0 bg-[url('/lovable-uploads/4518dea5-fdcd-47c6-9214-af65e586da1c.png')] bg-cover bg-center"
+            className="absolute inset-0 bg-[url('/lovable-uploads/fa30049b-4ece-4af8-be62-8bcf25007193.png')] bg-cover bg-center"
           />
-          <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/60 to-black/70" />
+          <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/30 to-black/40" />
           
           <div className="relative z-10 w-full mx-auto px-4 md:px-6 py-12 md:py-16">
             <div className="w-full max-w-7xl mx-auto">

@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,7 +7,14 @@ import { ArrowLeft, User, Mail, Lock, MapPin, Phone } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
 export default function Register() {
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 768px)");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    navigate(`/verify?phone=${encodeURIComponent(phoneNumber)}`);
+  };
 
   if (isMobile) {
     return (
@@ -29,7 +35,7 @@ export default function Register() {
           <p className="text-gray-600">Join your barangay's digital community</p>
         </div>
 
-        <form className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="fullname" className="text-gray-700">Full Name</Label>
             <div className="relative">
@@ -62,6 +68,8 @@ export default function Register() {
               <Input
                 id="phone"
                 type="tel"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
                 placeholder="+63 999 123 4567"
                 className="pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
               />
@@ -123,7 +131,6 @@ export default function Register() {
     );
   }
 
-  // Desktop version
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#e4ecfc] via-[#fff] to-[#fbedda] px-4 py-8">
       <div className="max-w-md w-full bg-white shadow-xl rounded-2xl p-6 md:p-8">
@@ -136,7 +143,7 @@ export default function Register() {
         </h1>
         <p className="text-gray-500 mb-6">Join your barangay's digital community</p>
         
-        <form className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="fullname-desktop" className="text-gray-700">Full Name</Label>
             <div className="relative">
@@ -169,6 +176,8 @@ export default function Register() {
               <Input
                 id="phone-desktop"
                 type="tel"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
                 placeholder="+63 999 123 4567"
                 className="pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
               />

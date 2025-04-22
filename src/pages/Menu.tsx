@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -34,13 +33,12 @@ import {
 import { Eye } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
-// Define the missing variables
 const appVersion = "1.0.0";
 const currentYear = new Date().getFullYear();
 
 const Menu = () => {
   const { user, logout, userRole } = useAuth();
-  const rbiProgress = 65; // This should come from your user data
+  const rbiProgress = 65;
 
   const handleLogout = () => {
     logout();
@@ -83,34 +81,40 @@ const Menu = () => {
   return (
     <Layout>
       <div className="container max-w-lg mx-auto p-4">
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4 mb-4">
-              <Avatar className="h-16 w-16">
+        <Card className="mb-6 overflow-hidden">
+          <div className="relative h-32 bg-gradient-to-r from-blue-600 to-blue-400">
+            <div className="absolute -bottom-12 left-6">
+              <Avatar className="h-24 w-24 ring-4 ring-white">
                 <AvatarImage src="/lovable-uploads/07f9ee00-178f-4302-85d8-83a44b75bb9d.png" alt={user?.name} />
                 <AvatarFallback>{user?.name?.[0] || "U"}</AvatarFallback>
               </Avatar>
-              <div className="flex-1">
+            </div>
+          </div>
+          
+          <CardContent className="pt-16 pb-6">
+            <div className="flex justify-between items-start">
+              <div>
                 <h2 className="text-xl font-semibold">{user?.name || "User"}</h2>
-                <p className="text-gray-500">{user?.email || "No email provided"}</p>
-                <div className="mt-2 space-y-2">
-                  <Link to="/resident-profile" className="flex items-center text-sm text-blue-600 hover:underline">
-                    <Eye className="w-4 h-4 mr-1" />
-                    View Public Profile
-                  </Link>
-                  {rbiProgress < 100 && (
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">RBI Completion</span>
-                        <span className="font-medium">{rbiProgress}%</span>
-                      </div>
-                      <Progress value={rbiProgress} className="h-2" />
-                      <Link to="/rbi-registration" className="text-xs text-red-500 hover:underline">
-                        Complete your RBI Registration
-                      </Link>
+                <p className="text-gray-500 text-sm">{user?.email || "No email provided"}</p>
+              </div>
+              <div className="flex flex-col items-end gap-2">
+                <Link to="/resident-profile" className="text-sm text-blue-600 hover:underline flex items-center gap-1">
+                  <Eye className="w-4 h-4" /> View Profile
+                </Link>
+                {rbiProgress < 100 && (
+                  <div className="text-right">
+                    <div className="flex items-center justify-end gap-2 text-sm mb-1">
+                      <span className="text-gray-600">RBI Status</span>
+                      <span className="font-medium">{rbiProgress}%</span>
                     </div>
-                  )}
-                </div>
+                    <div className="w-32">
+                      <Progress value={rbiProgress} className="h-1.5" />
+                    </div>
+                    <Link to="/rbi-registration" className="text-xs text-red-500 hover:underline mt-1 inline-block">
+                      Complete Registration
+                    </Link>
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>
