@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/layout/Layout";
 import { DashboardStats } from "@/components/officials/DashboardStats";
 import { BudgetAllocationChart } from "@/components/officials/BudgetAllocationChart";
@@ -53,11 +52,13 @@ const OfficialsDashboard = () => {
           </div>
         </div>
 
-        <DashboardStats />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 max-w-6xl mx-auto">
+          <DashboardStats />
+        </div>
 
-        <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="w-full overflow-x-auto">
-            <div className="min-w-[300px]">
+        <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
+          <div className="w-full">
+            <div className="bg-white rounded-xl shadow-sm p-6">
               <BudgetAllocationChart />
             </div>
           </div>

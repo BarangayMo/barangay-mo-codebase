@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Input } from "@/components/ui/input";
 import { useBarangayData } from "@/hooks/use-barangay-data";
+import { ProfileMenu } from "./ProfileMenu";
 
 export const Header = () => {
   const { isAuthenticated, userRole } = useAuth();
@@ -154,11 +155,14 @@ export const Header = () => {
                   </span>
                 </Link>
               </Button>
-              <Button asChild variant="ghost" size="icon" className="rounded-full">
-                <Link to="/menu">
-                  <User className="h-5 w-5" />
-                </Link>
-              </Button>
+              {!isMobile && <ProfileMenu />}
+              {isMobile && (
+                <Button asChild variant="ghost" size="icon" className="rounded-full">
+                  <Link to="/menu">
+                    <User className="h-5 w-5" />
+                  </Link>
+                </Button>
+              )}
             </>
           ) : (
             <div className="flex items-center gap-2">

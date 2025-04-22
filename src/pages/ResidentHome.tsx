@@ -15,17 +15,11 @@ export default function ResidentHome() {
 
   return (
     <Layout>
-      <div
-        className="min-h-screen pt-16 bg-fixed overflow-hidden"
-        style={{
-          backgroundImage: 'url("/lovable-uploads/8edfe2c4-9d93-473b-a70d-95304b5cc20d.png")',
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-        <div className="absolute inset-0 bg-black/70" />
+      <div className="min-h-screen pt-16 bg-fixed overflow-hidden relative">
+        <div
+          className="absolute inset-0 bg-black/70" />
         
-        <div className="relative z-10 h-full px-4 pt-6">
+        <div className="relative z-10 h-full px-4 pt-6 max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <img src="/placeholder.svg" alt="Profile" className="rounded-full w-14 h-14 border-2 border-green-400" />
@@ -77,7 +71,7 @@ export default function ResidentHome() {
                 <Link to="/services">More Services →</Link>
               </Button>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-3 max-w-4xl">
               {quickActions.map((action, index) => (
                 <Link 
                   key={index}
@@ -91,7 +85,7 @@ export default function ResidentHome() {
             </div>
           </div>
 
-          <div>
+          <div className="max-w-4xl">
             <div className="text-white font-semibold mb-2 text-lg">Announcements</div>
             <div className="rounded-2xl bg-white/20 backdrop-blur-xl p-4 mb-2">
               <div className="flex items-center gap-2 mb-1">
