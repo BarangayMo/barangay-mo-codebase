@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Bell, ChevronDown, MapPin, User } from "lucide-react";
 import {
@@ -20,26 +20,26 @@ const BARANGAYS = [
 ];
 
 export const Header = () => {
-  const { isAuthenticated, userRole, logout } = useAuth();
+  const { isAuthenticated, userRole } = useAuth();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [location, setLocation] = useState("Select Barangay");
   const [search, setSearch] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const filtered = BARANGAYS.filter(brgy => brgy.toLowerCase().includes(search.toLowerCase()));
-  
-  // Determine which logo to use based on the user role
-  const logoSrc = userRole === "resident" 
-    ? "/lovable-uploads/c6dfe8f9-7cde-40b6-9c52-bc142b970182.png" 
-    : "/lovable-uploads/85c8261a-25d6-40a1-ae7a-86c6a423f41f.png";
 
   return (
     <header className="sticky top-0 z-50 w-full">
       <div className="mx-auto max-w-7xl bg-white/80 backdrop-blur-md px-4 py-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-6">
           <Link to="/" className="flex items-center gap-2">
-            <img src={logoSrc} alt="Logo" className="h-8 w-auto" />
+            <img 
+              src={userRole === "resident" ? "/lovable-uploads/6960369f-3a6b-4d57-ab0f-f7db77f16152.png" : "/lovable-uploads/141c2a56-35fc-4123-a51f-358481e0f167.png"} 
+              alt="Logo" 
+              className="h-8 w-auto" 
+            />
           </Link>
           <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
             <DropdownMenuTrigger asChild>
@@ -82,18 +82,22 @@ export const Header = () => {
 
         {!isMobile && (
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/">Home</Link>
-            </Button>
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/marketplace">Marketplace</Link>
-            </Button>
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/services">Services</Link>
-            </Button>
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/messages">Messages</Link>
-            </Button>
+            {[
+              { path: "/", label: "Home" },
+              { path: "/marketplace", label: "Marketplace" },
+              { path: "/services", label: "Services" },
+              { path: "/messages", label: "Messages" }
+            ].map(item => (
+              <Button 
+                key={item.path}
+                variant="ghost" 
+                size="sm" 
+                asChild
+                className={pathname === item.path ? (userRole === "resident" ? "text-[#1a237e]" : "text-[#ea384c]") : ""}
+              >
+                <Link to={item.path}>{item.label}</Link>
+              </Button>
+            ))}
           </div>
         )}
 

@@ -1,6 +1,8 @@
-
+import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 import { 
   ShoppingCart, 
   FileText, 
@@ -98,18 +100,35 @@ const services = [
 ];
 
 const Services = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredServices = services.filter(service => 
+    service.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    service.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Community Services</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-bold mb-4">Community Services</h1>
+          <div className="relative max-w-md mx-auto mb-8">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+            <Input
+              type="text"
+              placeholder="Search services..."
+              className="pl-10 w-full"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <p className="text-muted-foreground text-center">
             Access essential services provided by your barangay
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {services.map((service) => (
+          {filteredServices.map((service) => (
             <Card 
               key={service.id} 
               className="overflow-hidden hover:shadow-md transition-shadow border-t-4"

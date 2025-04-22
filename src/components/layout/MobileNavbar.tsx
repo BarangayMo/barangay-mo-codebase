@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { Home, MessageSquare, ShoppingBag, Menu } from "lucide-react";
+import { Home, MessageSquare, service, Menu } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
@@ -11,8 +11,8 @@ export const MobileNavbar = () => {
   const navItems = [
     { icon: Home, path: "/", label: "Home" },
     { icon: MessageSquare, path: "/messages", label: "Messages" },
-    { icon: ShoppingBag, path: "/services", label: "Services" },
-    { icon: ShoppingBag, path: "/marketplace", label: "Market" }
+    { icon: service, path: "/services", label: "Services" },
+    { icon: Menu, path: "/menu", label: "Menu" }
   ];
 
   return (
@@ -29,8 +29,8 @@ export const MobileNavbar = () => {
                 "h-6 w-6 transition-colors",
                 pathname === path 
                   ? userRole === "resident" 
-                    ? "text-resident" 
-                    : "text-official"
+                    ? "text-[#1a237e]" 
+                    : "text-[#ea384c]"
                   : "text-black"
               )} 
             />
@@ -38,19 +38,14 @@ export const MobileNavbar = () => {
               "text-xs mt-1",
               pathname === path 
                 ? userRole === "resident"
-                  ? "text-resident font-medium"
-                  : "text-official font-medium"
+                  ? "text-[#1a237e] font-medium"
+                  : "text-[#ea384c] font-medium"
                 : "text-black"
             )}>
               {label}
             </span>
           </Link>
         ))}
-
-        <Link to="/menu" className="flex flex-col items-center p-2">
-          <Menu className="h-6 w-6" />
-          <span className="text-xs mt-1">Menu</span>
-        </Link>
       </div>
     </nav>
   );
