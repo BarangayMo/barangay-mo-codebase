@@ -5,8 +5,17 @@ import { motion } from "framer-motion";
 
 export default function Welcome() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-between bg-[url('/lovable-uploads/ff070f6f-052b-4610-8558-8465dab10d31.png')] bg-cover bg-center">
-      <div className="w-full min-h-screen bg-gradient-to-t from-black/70 via-black/40 to-black/50 flex flex-col items-center justify-between p-6">
+    <div 
+      className="min-h-screen flex flex-col items-center justify-between relative"
+      style={{
+        backgroundImage: "url('/lovable-uploads/ff070f6f-052b-4610-8558-8465dab10d31.png')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/50" />
+      <div className="relative w-full min-h-screen flex flex-col items-center justify-between p-6">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
