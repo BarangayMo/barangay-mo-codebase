@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
@@ -69,7 +68,19 @@ export default function Index() {
                     
                     <div className="flex items-center gap-2 whitespace-nowrap">
                       <MapPin className="w-4 h-4 text-white/80" />
-                      <span className="text-white/80 text-sm">100+ Barangays</span>
+                      <span className="text-white/80 text-sm">42,045 barangays</span>
+                    </div>
+                    <div className="flex items-center gap-2 whitespace-nowrap">
+                      <Users className="w-4 h-4 text-white/80" />
+                      <span className="text-white/80 text-sm">1,489 municipalities</span>
+                    </div>
+                    <div className="flex items-center gap-2 whitespace-nowrap">
+                      <MapPin className="w-4 h-4 text-white/80" />
+                      <span className="text-white/80 text-sm">145 cities</span>
+                    </div>
+                    <div className="flex items-center gap-2 whitespace-nowrap">
+                      <MapPin className="w-4 h-4 text-white/80" />
+                      <span className="text-white/80 text-sm">81 provinces</span>
                     </div>
                   </div>
                 </div>
