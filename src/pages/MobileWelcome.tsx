@@ -8,7 +8,7 @@ export default function Welcome() {
     <div 
       className="min-h-screen flex flex-col items-center justify-between relative"
       style={{
-        backgroundImage: "url('/lovable-uploads/ff070f6f-052b-4610-8558-8465dab10d31.png')",
+        backgroundImage: "url('/lovable-uploads/11eb99e0-b95c-4479-aa9e-5bdbf0fff238.png')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
