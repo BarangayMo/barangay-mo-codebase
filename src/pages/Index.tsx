@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight, Briefcase, MapPin, ShieldCheck, Users, ShoppingCart, Star } from "lucide-react";
@@ -12,7 +13,7 @@ const Index = () => {
   return (
     <Layout>
       <div className="w-full -mt-4">
-        <section className="relative w-full">
+        <section className="relative w-full min-h-[85vh] flex items-center">
           <div 
             className="absolute inset-0 bg-[url('https://static.wixstatic.com/media/b17ef9_9db19658a9df45e79d0727344ed3b6a3~mv2.jpg')] bg-cover bg-center"
           />

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -43,8 +42,8 @@ export const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full">
-      <div className="mx-auto max-w-7xl bg-white/80 backdrop-blur-md px-4 py-3 flex items-center justify-between shadow-sm">
+    <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md shadow-sm">
+      <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-6">
           <Link to="/" className="flex items-center gap-2">
             <img 
