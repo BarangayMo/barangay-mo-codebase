@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Eye } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+
+// Define the missing variables
+const appVersion = "1.0.0";
+const currentYear = new Date().getFullYear();
 
 const Menu = () => {
   const { user, logout, userRole } = useAuth();
