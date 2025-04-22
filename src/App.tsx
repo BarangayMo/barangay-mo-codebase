@@ -1,3 +1,4 @@
+
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { ThemeProvider } from "./components/theme-provider";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -24,17 +25,17 @@ import { ProductDetail, Cart, Checkout, OrderConfirmation, MyOrders } from "./pa
 import Menu from "./pages/Menu";
 import Phone from "./pages/Phone";
 import Verify from "./pages/Verify";
-import { useDynamicFavicon } from "./hooks/use-dynamic-favicon";
+import FaviconManager from "./components/FaviconManager";
 
 function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
-  useDynamicFavicon();
   
   return (
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <AuthProvider navigate={navigate} currentPath={location.pathname}>
+        <FaviconManager />
         <ScrollToTop />
         <Routes>
           <Route path="/" element={isMobile ? <MobileWelcome /> : <Index />} />
