@@ -23,7 +23,6 @@ import Menu from "./pages/Menu";
 import Welcome from "./pages/Welcome";
 import Phone from "./pages/Phone";
 import Verify from "./pages/Verify";
-import { SupabaseWarning } from "./components/ui/supabase-warning";
 
 function App() {
   const navigate = useNavigate();
@@ -32,7 +31,6 @@ function App() {
   return (
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <AuthProvider navigate={navigate} currentPath={location.pathname}>
-        <SupabaseWarning />
         <Routes>
           <Route path="/" element={<Welcome />} />
           <Route path="/phone" element={<Phone />} />

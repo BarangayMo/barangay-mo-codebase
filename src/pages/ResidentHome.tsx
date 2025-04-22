@@ -1,8 +1,9 @@
 
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Layout } from "@/components/layout/Layout";
-import { ShoppingCart, Briefcase, Users, FileText, Heart, FileSearch, ClipboardCheck } from "lucide-react";
+import { ShoppingCart, Briefcase, Users, FileText, Heart, FileSearch, ClipboardCheck, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 export default function ResidentHome() {
   const isMobile = useIsMobile();
@@ -13,14 +14,12 @@ export default function ResidentHome() {
     { icon: Users, label: "Community", path: "/community" },
     { icon: FileText, label: "Documents", path: "/services/documents" },
     { icon: Heart, label: "Healthcare", path: "/services/healthcare" },
-    { icon: FileSearch, label: "Permits", path: "/services/permits" },
-    { icon: ClipboardCheck, label: "Clearance", path: "/services/clearance" }
   ];
 
   return (
     <Layout>
       <div
-        className="fixed inset-0 min-h-screen pt-16 bg-fixed"
+        className="min-h-screen pt-16 bg-fixed"
         style={{
           backgroundImage: 'url("/lovable-uploads/c18ab531-de58-47d3-a486-6d9882bc2559.png")',
           backgroundSize: "cover",
@@ -71,7 +70,9 @@ export default function ResidentHome() {
           </div>
 
           <div className="mb-8">
-            <div className="text-white font-semibold mb-4 text-lg">Quick Actions</div>
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-white font-semibold text-lg">Quick Actions</div>
+            </div>
             <div className="grid grid-cols-3 gap-3">
               {quickActions.map((action, index) => (
                 <Link 
@@ -83,6 +84,18 @@ export default function ResidentHome() {
                   <span className="text-white text-sm font-medium text-center px-2">{action.label}</span>
                 </Link>
               ))}
+            </div>
+            <div className="mt-4 flex justify-center">
+              <Button 
+                asChild 
+                variant="outline"
+                className="border-white text-white hover:bg-white/30 hover:text-white"
+              >
+                <Link to="/services" className="flex items-center gap-2">
+                  More Services
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
             </div>
           </div>
 

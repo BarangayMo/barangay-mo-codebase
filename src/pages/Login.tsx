@@ -157,6 +157,45 @@ export default function Login() {
           </Button>
         </form>
         
+        {/* Auto-login options for mobile */}
+        <div className="mt-6 space-y-4">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-gray-300"></span>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">demo logins</span>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => handleLogin("resident")}
+              className="text-emerald-600 border-emerald-200"
+            >
+              Resident
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => handleLogin("official")}
+              className="text-red-600 border-red-200"  
+            >
+              Official
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => handleLogin("superadmin")}
+              className="text-blue-600 border-blue-200"
+            >
+              Admin
+            </Button>
+          </div>
+        </div>
+        
         <div className="mt-8 text-center">
           <p className="text-gray-600">
             Don't have an account?{" "}
