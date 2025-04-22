@@ -1,13 +1,13 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { Header } from "./Header";
 import { MobileNavbar } from "./MobileNavbar";
 import { DesktopSidebar } from "./DesktopSidebar";
 import { Footer } from "./Footer";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ReactNode } from "react";
+import { ReactNode, Suspense } from "react";
 import { cn } from "@/lib/utils";
 import { useLocation } from "react-router-dom";
+import { LoadingScreen } from "../ui/loading";
 
 interface LayoutProps {
   children: ReactNode;
@@ -32,9 +32,11 @@ export const Layout = ({ children }: LayoutProps) => {
         <Header />
         <main className={cn(
           "flex-grow",
-          isMobile ? "pb-20" : "" // Removed p-5 padding
+          isMobile ? "pb-20" : ""
         )}>
-          {children}
+          <Suspense fallback={<LoadingScreen />}>
+            {children}
+          </Suspense>
         </main>
         {isMobile && <MobileNavbar />}
         <Footer />
@@ -42,4 +44,3 @@ export const Layout = ({ children }: LayoutProps) => {
     </div>
   );
 };
-
