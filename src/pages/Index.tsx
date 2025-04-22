@@ -1,9 +1,13 @@
+
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { ArrowRight, Briefcase, MapPin, ShieldCheck, Users, ShoppingCart, Star } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 
 export default function Index() {
+  const currentYear = new Date().getFullYear();
+  
   return (
     <Layout>
       <div className="w-full -mt-4">
