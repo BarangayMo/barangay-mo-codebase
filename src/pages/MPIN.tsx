@@ -52,7 +52,7 @@ export default function MPIN() {
                 {slots.map((slot, index) => (
                   <InputOTPSlot
                     key={index}
-                    index={index} {/* Added the required index prop here */}
+                    index={index} 
                     {...slot}
                     className="w-10 h-12 text-lg border-2 border-white/20 bg-white/10 backdrop-blur-sm text-white rounded-xl focus:border-white/40 transition-colors"
                   />
