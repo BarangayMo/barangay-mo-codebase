@@ -15,6 +15,7 @@ import HealthDetailsForm from "@/components/rbi/HealthDetailsForm";
 import HousingDetailsForm from "@/components/rbi/HousingDetailsForm";
 import BeneficiaryDetailsForm from "@/components/rbi/BeneficiaryDetailsForm";
 import RbiReview from "@/components/rbi/RbiReview";
+import { LoadingScreen } from "@/components/ui/loading";
 
 // Define step types
 type Step = {
@@ -28,6 +29,7 @@ export default function RbiRegistration() {
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   // Define steps
   const steps: Step[] = [
@@ -47,15 +49,23 @@ export default function RbiRegistration() {
   
   const handleNext = () => {
     if (currentStep < steps.length) {
-      setCurrentStep(currentStep + 1);
-      window.scrollTo(0, 0);
+      setIsLoading(true);
+      setTimeout(() => {
+        setCurrentStep(currentStep + 1);
+        window.scrollTo(0, 0);
+        setIsLoading(false);
+      }, 500);
     }
   };
   
   const handlePrevious = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-      window.scrollTo(0, 0);
+      setIsLoading(true);
+      setTimeout(() => {
+        setCurrentStep(currentStep - 1);
+        window.scrollTo(0, 0);
+        setIsLoading(false);
+      }, 500);
     }
   };
   
@@ -77,6 +87,7 @@ export default function RbiRegistration() {
   
   return (
     <Layout>
+      {isLoading && <LoadingScreen />}
       <div className="max-w-3xl mx-auto px-4 py-8">
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">

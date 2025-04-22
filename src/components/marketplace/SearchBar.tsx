@@ -13,7 +13,8 @@ interface SearchBarProps {
 export function SearchBar({ search, setSearch }: SearchBarProps) {
   const { userRole } = useAuth();
   
-  const bgColor = userRole === "resident" ? "bg-blue-600" : "bg-red-600";
+  // Default to blue if userRole is undefined
+  const bgColor = !userRole || userRole === "resident" ? "bg-blue-600" : "bg-red-600";
   
   return (
     <div className={cn("sticky top-16 z-40 md:hidden", bgColor)}>

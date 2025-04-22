@@ -23,11 +23,11 @@ export const Header = () => {
   const [search, setSearch] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   
-  const { barangays, isLoading } = useBarangayData();
+  const { barangays, isLoading, error } = useBarangayData();
   
-  const filtered = barangays.filter(brgy => 
+  const filtered = barangays?.filter(brgy => 
     brgy.toLowerCase().includes(search.toLowerCase())
-  );
+  ) || [];
 
   return (
     <header className="sticky top-0 z-50 w-full">
@@ -63,6 +63,8 @@ export const Header = () => {
                 <div className="max-h-40 overflow-y-auto">
                   {isLoading ? (
                     <div className="p-2 text-center text-sm text-muted-foreground">Loading...</div>
+                  ) : error ? (
+                    <div className="p-2 text-center text-sm text-red-500">{error}</div>
                   ) : filtered.length > 0 ? (
                     filtered.map(brgy => (
                       <DropdownMenuItem
