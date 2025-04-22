@@ -12,23 +12,12 @@ const Index = () => {
   return (
     <Layout>
       <div className="w-full -mt-4">
-        {/* Hero Section - Full width */}
         <section className="relative w-full">
-          {/* Dark gradient background */}
           <div 
-            className="absolute inset-0 bg-[url('/lovable-uploads/8e29a7c5-dd91-46ca-be5e-3bb8f718b8e9.png')] bg-cover bg-center"
+            className="absolute inset-0 bg-[url('/lovable-uploads/4518dea5-fdcd-47c6-9214-af65e586da1c.png')] bg-cover bg-center"
           />
+          <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/60 to-black/70" />
           
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#1A1F2C]/90 via-[#403E43]/90 to-[#0EA5E9]/90 animate-gradient-x" />
-          
-          {/* Glassmorphism elements */}
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute top-20 left-20 w-72 h-72 bg-white/5 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-20 right-20 w-96 h-96 bg-[#0EA5E9]/10 rounded-full blur-3xl animate-pulse delay-1000" />
-            <div className="absolute top-1/2 left-1/3 w-48 h-48 bg-[#1EAEDB]/10 rounded-full blur-2xl animate-pulse delay-700" />
-          </div>
-
           <div className="relative z-10 w-full mx-auto px-4 md:px-6 py-12 md:py-16">
             <div className="w-full max-w-7xl mx-auto">
               <div className="flex flex-col md:flex-row items-center justify-between gap-8">

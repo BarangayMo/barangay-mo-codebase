@@ -30,12 +30,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Eye } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 const Menu = () => {
   const { user, logout, userRole } = useAuth();
-  const appVersion = "1.0.0";
-  const currentYear = new Date().getFullYear();
-  const rbiStatus = "incomplete"; // This should come from your user data
+  const rbiProgress = 65; // This should come from your user data
 
   const handleLogout = () => {
     logout();
@@ -80,7 +80,7 @@ const Menu = () => {
       <div className="container max-w-lg mx-auto p-4">
         <Card className="mb-6">
           <CardContent className="p-6">
-            <div className="flex items-center gap-4 mb-2">
+            <div className="flex items-center gap-4 mb-4">
               <Avatar className="h-16 w-16">
                 <AvatarImage src="/lovable-uploads/07f9ee00-178f-4302-85d8-83a44b75bb9d.png" alt={user?.name} />
                 <AvatarFallback>{user?.name?.[0] || "U"}</AvatarFallback>
@@ -88,13 +88,24 @@ const Menu = () => {
               <div className="flex-1">
                 <h2 className="text-xl font-semibold">{user?.name || "User"}</h2>
                 <p className="text-gray-500">{user?.email || "No email provided"}</p>
-                {rbiStatus === "incomplete" && (
-                  <Link to="/rbi-registration">
-                    <Button variant="outline" size="sm" className="mt-2 text-red-500 border-red-500 hover:bg-red-50">
-                      Complete RBI Registration
-                    </Button>
+                <div className="mt-2 space-y-2">
+                  <Link to="/resident-profile" className="flex items-center text-sm text-blue-600 hover:underline">
+                    <Eye className="w-4 h-4 mr-1" />
+                    View Public Profile
                   </Link>
-                )}
+                  {rbiProgress < 100 && (
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">RBI Completion</span>
+                        <span className="font-medium">{rbiProgress}%</span>
+                      </div>
+                      <Progress value={rbiProgress} className="h-2" />
+                      <Link to="/rbi-registration" className="text-xs text-red-500 hover:underline">
+                        Complete your RBI Registration
+                      </Link>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </CardContent>

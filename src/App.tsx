@@ -1,6 +1,10 @@
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { ThemeProvider } from "./components/theme-provider";
 import { AuthProvider } from "./contexts/AuthContext";
+import { ScrollToTop } from "./components/ScrollToTop";
+import { Toaster } from "@/components/ui/toaster";
+import { useIsMobile } from "@/hooks/use-mobile";
+import MobileWelcome from "./pages/MobileWelcome";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -16,24 +20,23 @@ import NotFound from "./pages/NotFound";
 import Jobs from "./pages/Jobs";
 import Marketplace from "./pages/Marketplace";
 import Services from "./pages/Services";
-import { Toaster } from "@/components/ui/toaster"
 import { ProductDetail, Cart, Checkout, OrderConfirmation, MyOrders } from "./pages/marketplace";
 import Menu from "./pages/Menu";
 import Welcome from "./pages/Welcome";
 import Phone from "./pages/Phone";
 import Verify from "./pages/Verify";
-import { ScrollToTop } from "./components/ScrollToTop";
 
 function App() {
   const navigate = useNavigate();
   const location = useLocation();
+  const isMobile = useIsMobile();
   
   return (
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <AuthProvider navigate={navigate} currentPath={location.pathname}>
         <ScrollToTop />
         <Routes>
-          <Route path="/" element={<Welcome />} />
+          <Route path="/" element={isMobile ? <MobileWelcome /> : <Index />} />
           <Route path="/phone" element={<Phone />} />
           <Route path="/verify" element={<Verify />} />
           <Route path="/" element={<Index />} />

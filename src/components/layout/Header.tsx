@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, ChevronDown, MapPin, User, MessageCircle } from "lucide-react";
+import { Bell, ChevronDown, MapPin, User } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,12 +30,12 @@ export const Header = () => {
 
   const getHomeRoute = () => {
     switch (userRole) {
-      case "resident":
-        return "/resident-home";
       case "official":
         return "/official-dashboard";
       case "superadmin":
         return "/admin";
+      case "resident":
+        return "/resident-home";
       default:
         return "/";
     }
@@ -147,10 +147,10 @@ export const Header = () => {
                 className="relative"
                 asChild
               >
-                <Link to="/messages">
-                  <MessageCircle className="h-5 w-5" />
+                <Link to="/notifications">
+                  <Bell className="h-5 w-5" />
                   <span className="absolute -top-1 -right-1 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center bg-[#ea384c]">
-                    5
+                    3
                   </span>
                 </Link>
               </Button>

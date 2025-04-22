@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -38,10 +37,8 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const isMobile = useMediaQuery("(max-width: 768px)");
 
-  // Demo: clicking any auto-login logs in user as given role
   const handleLogin = (role: UserRole) => {
     login(role);
-    // after logging in, go to correct page
     switch(role) {
       case "official":
         navigate("/official-dashboard");
@@ -56,10 +53,8 @@ export default function Login() {
     }
   };
 
-  // Manual login simulation: just demo error for illustration
   const submitLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // For demo, trigger error if wrong password provided.
     if (password !== "password123") {
       setError("The password entered is wrong!");
       return;
@@ -69,7 +64,6 @@ export default function Login() {
   };
 
   const handleBiometricLogin = () => {
-    // Simulate biometric authentication
     setTimeout(() => {
       handleLogin("resident");
     }, 1000);
@@ -157,7 +151,6 @@ export default function Login() {
           </Button>
         </form>
         
-        {/* Auto-login options for mobile */}
         <div className="mt-6 space-y-4">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
@@ -168,7 +161,7 @@ export default function Login() {
             </div>
           </div>
           
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <Button 
               variant="outline" 
               size="sm"
@@ -185,14 +178,6 @@ export default function Login() {
             >
               Official
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => handleLogin("superadmin")}
-              className="text-blue-600 border-blue-200"
-            >
-              Admin
-            </Button>
           </div>
         </div>
         
@@ -208,11 +193,9 @@ export default function Login() {
     );
   }
 
-  // Desktop view
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#F9F9FB] px-4 py-10">
       <div className="w-full max-w-5xl rounded-3xl bg-white shadow-2xl flex flex-col md:flex-row overflow-hidden border-2 border-[#e0e2ec] scale-100 md:scale-100">
-        {/* Left - Brand panel */}
         <div className="hidden md:flex flex-col w-1/2 bg-[#528462] text-white p-12 justify-between gap-8" style={{ background: "linear-gradient(120deg, #39bc90 40%, #72d1de 100%)" }}>
           <div>
             <div className="text-xl font-bold mb-8 tracking-widest">SMART BARANGAY</div>
@@ -222,7 +205,6 @@ export default function Login() {
             </div>
           </div>
           <div className="mt-auto flex flex-col gap-3">
-            {/* Review section */}
             <div className="rounded-2xl bg-white/[.16] p-5 backdrop-blur text-base drop-shadow flex items-center gap-3">
               <img src={REVIEWS[0].avatar} alt="" className="w-12 h-12 rounded-full border-2 border-white/60 flex-shrink-0" />
               <div>
@@ -240,7 +222,6 @@ export default function Login() {
             </div>
           </div>
         </div>
-        {/* Right - Login panel */}
         <div className="flex-1 bg-white flex flex-col justify-center px-8 py-12 md:px-12 md:py-16">
           <div className="w-full max-w-md mx-auto">
             <div className="mb-6 text-2xl font-bold text-[#23263a]">Login</div>
@@ -283,7 +264,6 @@ export default function Login() {
                 Sign In
               </Button>
             </form>
-            {/* Autologin quick-options */}
             <div className="mt-8">
               <div className="flex items-center space-x-4 text-center text-xs mb-2 text-muted">or quick login as:</div>
               <div className="flex gap-2 flex-wrap">
@@ -313,7 +293,6 @@ export default function Login() {
                 </Button>
               </div>
             </div>
-            {/* Reviews at bottom for mobile */}
             <div className="mt-8 md:hidden">
               <div className="rounded-2xl bg-[#f5f7ff] p-3 flex items-center gap-3">
                 <img src={REVIEWS[1].avatar} alt="" className="w-10 h-10 rounded-full flex-shrink-0" />
