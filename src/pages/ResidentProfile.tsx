@@ -1,4 +1,3 @@
-
 import { ArrowLeft, MoreHorizontal, ShoppingCart, Briefcase, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -43,7 +42,7 @@ export default function ResidentProfile() {
             <div className="relative">
               <img 
                 src={avatarPhoto} 
-                alt="Avatar" 
+                alt="Profile" 
                 className="w-32 h-32 rounded-full border-[5px] border-white object-cover shadow-xl" 
               />
             </div>

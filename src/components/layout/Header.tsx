@@ -10,8 +10,21 @@ import { DesktopNavItems } from "./header/DesktopNavItems";
 import { ProfileMenu } from "./ProfileMenu";
 
 export const Header = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, userRole } = useAuth();
   const isMobile = useIsMobile();
+
+  const getDashboardRoute = () => {
+    switch (userRole) {
+      case "official":
+        return "/official-dashboard";
+      case "superadmin":
+        return "/admin";
+      case "resident":
+        return "/resident-home";
+      default:
+        return "/";
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md shadow-sm">
@@ -26,6 +39,19 @@ export const Header = () => {
         <div className="flex items-center gap-2">
           {isAuthenticated ? (
             <>
+              {!isMobile && (
+                <Button 
+                  size="sm" 
+                  asChild
+                  className={`bg-gradient-to-r ${
+                    userRole === "resident" 
+                      ? "from-[#1a237e] to-[#534bae]" 
+                      : "from-[#ea384c] to-[#ff6b78]"
+                  } text-white hover:opacity-90 transition-opacity mr-2`}
+                >
+                  <Link to={getDashboardRoute()}>Dashboard</Link>
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="icon"

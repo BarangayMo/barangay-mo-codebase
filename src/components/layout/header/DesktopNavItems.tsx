@@ -31,20 +31,6 @@ export function DesktopNavItems() {
         <Link to="/">Home</Link>
       </Button>
       
-      {isAuthenticated && (
-        <Button 
-          size="sm" 
-          asChild
-          className={`bg-gradient-to-r ${
-            userRole === "resident" 
-              ? "from-[#1a237e] to-[#534bae]" 
-              : "from-[#ea384c] to-[#ff6b78]"
-          } text-white hover:opacity-90 transition-opacity`}
-        >
-          <Link to={getDashboardRoute()}>Dashboard</Link>
-        </Button>
-      )}
-      
       <Button 
         variant="ghost" 
         size="sm" 
