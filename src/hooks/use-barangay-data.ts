@@ -12,15 +12,15 @@ export const useBarangayData = () => {
       try {
         const { data, error } = await supabase
           .from('Barangays')
-          .select('Barangay')
-          .order('Barangay');
+          .select('BARANGAY')
+          .order('BARANGAY');
         
         if (error) {
           throw error;
         }
         
         if (data) {
-          const uniqueBarangays = [...new Set(data.map(item => item.Barangay))];
+          const uniqueBarangays = [...new Set(data.map(item => item.BARANGAY))];
           setBarangays(uniqueBarangays);
         }
       } catch (err) {
