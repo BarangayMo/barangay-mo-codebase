@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 
 export default function Welcome() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-between bg-[url('/lovable-uploads/cb76a9c2-601a-44e1-8e60-f06f33d0b261.png')] bg-cover bg-center">
+    <div className="min-h-screen flex flex-col items-center justify-between bg-[url('/lovable-uploads/5ddb568d-aef1-4968-aeb4-ce37c2bf4434.png')] bg-cover bg-center">
       <div className="w-full min-h-screen bg-gradient-to-t from-black/80 via-black/50 to-black/60 flex flex-col items-center justify-between p-6">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
@@ -21,7 +21,7 @@ export default function Welcome() {
         </motion.div>
         
         <motion.div 
-          className="text-center space-y-6 px-4 py-6 rounded-xl bg-black/40 backdrop-blur-sm"
+          className="text-center space-y-6"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.6 }}
@@ -36,16 +36,21 @@ export default function Welcome() {
         </motion.div>
 
         <motion.div 
-          className="w-full max-w-md mb-6"
+          className="w-full max-w-md space-y-4 mb-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.9 }}
         >
-          <Link to="/phone">
+          <Link to="/login">
             <Button className="w-full h-14 text-lg font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl">
-              Let's Get Started
+              Login
             </Button>
           </Link>
+          <div className="text-center">
+            <Link to="/register" className="text-white hover:underline">
+              Don't have an account yet? Register
+            </Link>
+          </div>
         </motion.div>
       </div>
     </div>

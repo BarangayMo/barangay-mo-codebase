@@ -2,6 +2,8 @@
 import { Input } from "@/components/ui/input";
 import { Search, ShoppingCart } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
 
 interface SearchBarProps {
   search: string;
@@ -9,8 +11,12 @@ interface SearchBarProps {
 }
 
 export function SearchBar({ search, setSearch }: SearchBarProps) {
+  const { userRole } = useAuth();
+  
+  const bgColor = userRole === "resident" ? "bg-blue-600" : "bg-red-600";
+  
   return (
-    <div className="sticky top-16 z-40 bg-resident md:hidden">
+    <div className={cn("sticky top-16 z-40 md:hidden", bgColor)}>
       <div className="flex items-center gap-3 p-4">
         <div className="flex-1 relative">
           <Input

@@ -6,6 +6,8 @@ import { UserRole } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate, Link } from "react-router-dom";
+import { Fingerprint } from "lucide-react";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 const REVIEWS = [
   {
@@ -34,6 +36,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   // Demo: clicking any auto-login logs in user as given role
   const handleLogin = (role: UserRole) => {
@@ -65,6 +68,108 @@ export default function Login() {
     handleLogin("resident");
   };
 
+  const handleBiometricLogin = () => {
+    // Simulate biometric authentication
+    setTimeout(() => {
+      handleLogin("resident");
+    }, 1000);
+  };
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-white p-6">
+        <div className="mb-6">
+          <Link to="/" className="text-blue-600 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+            </svg>
+            Back
+          </Link>
+        </div>
+
+        <div className="text-center mb-8">
+          <img 
+            src="/lovable-uploads/6960369f-3a6b-4d57-ab0f-f7db77f16152.png" 
+            alt="Logo" 
+            className="h-16 w-auto mx-auto" 
+          />
+          <h1 className="text-2xl font-bold mt-4">Welcome Back</h1>
+          <p className="text-gray-600">Log in to your account</p>
+        </div>
+
+        <form className="space-y-5" onSubmit={submitLogin}>
+          <div>
+            <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="name@email.com"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              className="mt-1 text-base"
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className={`mt-1 text-base ${error ? "border-red-400 ring-2 ring-red-100" : ""}`}
+              required
+            />
+            {error && (
+              <div className="text-xs text-red-600 mt-2">{error}</div>
+            )}
+          </div>
+          <div className="text-right">
+            <Link to="/forgot-password" className="text-sm text-blue-600">
+              Forgot password?
+            </Link>
+          </div>
+          <Button
+            type="submit"
+            className="w-full font-semibold text-base mt-2 bg-emerald-600 hover:bg-emerald-700 transition"
+          >
+            Sign In
+          </Button>
+          
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-gray-300"></span>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">or</span>
+            </div>
+          </div>
+          
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full flex items-center justify-center gap-2"
+            onClick={handleBiometricLogin}
+          >
+            <Fingerprint className="w-5 h-5" />
+            Sign in with Biometrics
+          </Button>
+        </form>
+        
+        <div className="mt-8 text-center">
+          <p className="text-gray-600">
+            Don't have an account?{" "}
+            <Link to="/register" className="text-blue-600 font-medium">
+              Register
+            </Link>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop view
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#F9F9FB] px-4 py-10">
       <div className="w-full max-w-5xl rounded-3xl bg-white shadow-2xl flex flex-col md:flex-row overflow-hidden border-2 border-[#e0e2ec] scale-100 md:scale-100">
@@ -106,9 +211,9 @@ export default function Login() {
             </div>
             <form className="space-y-6" onSubmit={submitLogin}>
               <div>
-                <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+                <Label htmlFor="desktop-email" className="text-sm font-medium">Email</Label>
                 <Input
-                  id="email"
+                  id="desktop-email"
                   type="email"
                   placeholder="name@email.com"
                   value={email}
@@ -118,9 +223,9 @@ export default function Login() {
                 />
               </div>
               <div>
-                <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+                <Label htmlFor="desktop-password" className="text-sm font-medium">Password</Label>
                 <Input
-                  id="password"
+                  id="desktop-password"
                   type="password"
                   placeholder="••••••••"
                   value={password}

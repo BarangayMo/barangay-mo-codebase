@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Bell, ChevronDown, MapPin, User } from "lucide-react";
@@ -12,12 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Input } from "@/components/ui/input";
-
-const BARANGAYS = [
-  "Batasan Hills", "Commonwealth", "Holy Spirit", "Bagong Silangan",
-  "Payatas", "Tandang Sora", "Matandang Balara", "Sauyo", "Bagbag",
-  "Greater Lagro", "Kaligayahan", "Pasong Putik"
-];
+import { useBarangayData } from "@/hooks/use-barangay-data";
 
 export const Header = () => {
   const { isAuthenticated, userRole } = useAuth();
@@ -27,8 +22,12 @@ export const Header = () => {
   const [location, setLocation] = useState("Select Barangay");
   const [search, setSearch] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
-
-  const filtered = BARANGAYS.filter(brgy => brgy.toLowerCase().includes(search.toLowerCase()));
+  
+  const { barangays, isLoading } = useBarangayData();
+  
+  const filtered = barangays.filter(brgy => 
+    brgy.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <header className="sticky top-0 z-50 w-full">
@@ -62,18 +61,26 @@ export const Header = () => {
                   className="mb-2"
                 />
                 <div className="max-h-40 overflow-y-auto">
-                  {filtered.map(brgy => (
-                    <DropdownMenuItem
-                      key={brgy}
-                      onClick={() => {
-                        setLocation(brgy);
-                        setDropdownOpen(false);
-                        setSearch("");
-                      }}
-                    >
-                      {brgy}
-                    </DropdownMenuItem>
-                  ))}
+                  {isLoading ? (
+                    <div className="p-2 text-center text-sm text-muted-foreground">Loading...</div>
+                  ) : filtered.length > 0 ? (
+                    filtered.map(brgy => (
+                      <DropdownMenuItem
+                        key={brgy}
+                        onClick={() => {
+                          setLocation(brgy);
+                          setDropdownOpen(false);
+                          setSearch("");
+                        }}
+                      >
+                        {brgy}
+                      </DropdownMenuItem>
+                    ))
+                  ) : (
+                    <div className="p-2 text-center text-sm text-muted-foreground">
+                      No barangay found
+                    </div>
+                  )}
                 </div>
               </div>
             </DropdownMenuContent>

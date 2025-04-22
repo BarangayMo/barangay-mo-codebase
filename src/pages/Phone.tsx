@@ -14,7 +14,6 @@ import { motion } from "framer-motion";
 
 export default function Phone() {
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [countryCode, setCountryCode] = useState("+63");
   const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -68,31 +67,16 @@ export default function Phone() {
           transition={{ duration: 0.5, delay: 0.6 }}
         >
           <div className="flex gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2 w-[100px] justify-between pl-2 pr-3">
-                  <img
-                    src="/lovable-uploads/69289dcf-6417-4971-9806-b93b578586d6.png"
-                    alt="Philippines Flag"
-                    className="h-5 w-5"
-                  />
-                  <span>{countryCode}</span>
-                  <ChevronDown className="h-4 w-4 opacity-50" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setCountryCode("+63")}>
-                  <div className="flex items-center gap-2">
-                    <img
-                      src="/lovable-uploads/69289dcf-6417-4971-9806-b93b578586d6.png"
-                      alt="Philippines Flag"
-                      className="h-5 w-5"
-                    />
-                    <span>+63 Philippines</span>
-                  </div>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="w-[100px]">
+              <Button variant="outline" className="w-full h-10 flex items-center gap-2 justify-between pl-2 pr-3">
+                <img
+                  src="/lovable-uploads/69289dcf-6417-4971-9806-b93b578586d6.png"
+                  alt="Philippines Flag"
+                  className="h-5 w-5"
+                />
+                <span>+63</span>
+              </Button>
+            </div>
             <Input
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}

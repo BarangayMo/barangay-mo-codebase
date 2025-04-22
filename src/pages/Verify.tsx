@@ -35,7 +35,7 @@ export default function Verify() {
       // Simulate API call
       setTimeout(() => {
         setIsLoading(false);
-        navigate("/mpin");
+        navigate("/rbi-registration");
       }, 1000);
     }
   };
@@ -97,13 +97,13 @@ export default function Verify() {
               value={otp}
               onChange={setOtp}
               render={({ slots }) => (
-                <InputOTPGroup className="gap-4">
+                <InputOTPGroup className="gap-2 md:gap-4">
                   {slots.map((slot, index) => (
                     <InputOTPSlot
                       key={index}
                       index={index}
                       {...slot}
-                      className="w-16 h-16 text-2xl border-2 rounded-lg"
+                      className="w-16 h-16 text-2xl border-2 border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-emerald-500"
                     />
                   ))}
                 </InputOTPGroup>
