@@ -20,7 +20,7 @@ export default function ResidentHome() {
       <Helmet>
         <title>Resident Dashboard - Barangay Management System</title>
       </Helmet>
-      <div className="min-h-screen pt-16 bg-[url('/lovable-uploads/3fd6a9de-cbb3-4911-aa3f-6e6150043bb1.png')] bg-cover bg-fixed overflow-hidden relative">
+      <div className="min-h-screen pt-16 bg-[url('https://static.wixstatic.com/media/b17ef9_2fba412130514c60a718736b8cc42bf6~mv2.jpg')] bg-cover bg-fixed overflow-hidden relative">
         <div className="absolute inset-0 bg-black/70" />
         
         <div className="relative z-10 h-full px-4 pt-6 max-w-6xl mx-auto">
