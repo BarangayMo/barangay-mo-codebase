@@ -40,7 +40,7 @@ export function MessageChat() {
           <ArrowLeft className="w-5 h-5" />
         </button>
         <Avatar>
-          <AvatarImage src="/lovable-uploads/0e6d46d6-90b2-473d-821d-885d4c894632.png" alt="Shane Martinez" />
+          <AvatarImage src="/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png" alt="Shane Martinez" />
           <AvatarFallback>SM</AvatarFallback>
         </Avatar>
         <div className="flex-1">

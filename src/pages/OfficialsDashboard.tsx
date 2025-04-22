@@ -15,7 +15,7 @@ const OfficialsDashboard = () => {
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <Avatar className="h-20 w-20 border-4 border-white">
-                <AvatarImage src="/lovable-uploads/07f9ee00-178f-4302-85d8-83a44b75bb9d.png" />
+                <AvatarImage src="/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png" />
                 <AvatarFallback>BM</AvatarFallback>
               </Avatar>
               <div>
@@ -74,6 +74,6 @@ const OfficialsDashboard = () => {
       </div>
     </Layout>
   );
-};
+}
 
 export default OfficialsDashboard;
