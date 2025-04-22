@@ -1,3 +1,4 @@
+
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Layout } from "@/components/layout/Layout";
 import { ShoppingCart, Briefcase, Users } from "lucide-react";
@@ -32,28 +33,25 @@ export default function ResidentHome() {
             </div>
           </div>
 
-          <div className="rounded-2xl bg-white/20 backdrop-blur-xl shadow-lg px-5 py-4 mb-6 flex flex-row items-center justify-between text-white">
-            <div>
-              <div className="font-semibold text-lg">Barangay New Cabalan</div>
-              <div className="text-xs uppercase opacity-90 mt-1">
-                City of Olongapo, Zambales
+          <div className="rounded-2xl bg-white/20 backdrop-blur-xl shadow-lg px-5 py-4 mb-6">
+            <div className="font-semibold text-lg text-white">Barangay New Cabalan</div>
+            <div className="text-xs uppercase opacity-90 mt-1 text-white">
+              City of Olongapo, Zambales
+            </div>
+            <div className="flex justify-between mt-4">
+              <div className="text-center">
+                <div className="text-xl font-bold text-white">35,000</div>
+                <div className="text-xs text-white">Population</div>
               </div>
-              <div className="flex gap-6 mt-4">
-                <div>
-                  <div className="text-xl font-bold">35,000</div>
-                  <div className="text-xs">Population</div>
-                </div>
-                <div>
-                  <div className="text-xl font-bold">14</div>
-                  <div className="text-xs">Puroks</div>
-                </div>
-                <div>
-                  <div className="text-xl font-bold">45</div>
-                  <div className="text-xs">Years</div>
-                </div>
+              <div className="text-center">
+                <div className="text-xl font-bold text-white">14</div>
+                <div className="text-xs text-white">Puroks</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xl font-bold text-white">45</div>
+                <div className="text-xs text-white">Years</div>
               </div>
             </div>
-            <img src="/lovable-uploads/2cc58007-fc42-44a8-80a5-ef6765602013.png" alt="Brgy icon" className="rounded-full w-12 h-12 border ml-4 hidden sm:block" />
           </div>
 
           <div>

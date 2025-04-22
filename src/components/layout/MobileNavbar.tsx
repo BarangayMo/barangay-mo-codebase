@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { Home, MessageSquare, Layers, Menu } from "lucide-react";
+import { Home, MessageSquare, ShoppingCart, Menu } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
@@ -9,9 +9,9 @@ export const MobileNavbar = () => {
   const { userRole } = useAuth();
 
   const navItems = [
-    { icon: Home, path: "/", label: "Home" },
+    { icon: Home, path: "/resident-home", label: "Home" },
     { icon: MessageSquare, path: "/messages", label: "Messages" },
-    { icon: Layers, path: "/services", label: "Services" },
+    { icon: ShoppingCart, path: "/marketplace", label: "Market" },
     { icon: Menu, path: "/menu", label: "Menu" }
   ];
 
