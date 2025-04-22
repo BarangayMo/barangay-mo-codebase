@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { MapPin, ChevronDown, Loader } from "lucide-react";
+import { MapPin, ChevronDown, Loader, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,7 +16,7 @@ export function LocationDropdown() {
   const [location, setLocation] = useState("Select Barangay");
   const [search, setSearch] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const { barangays, isLoading, error } = useBarangayData();
+  const { barangays, isLoading, error, refetch } = useBarangayData();
 
   const filtered = barangays?.filter(brgy => 
     brgy?.toLowerCase().includes(search.toLowerCase())
@@ -61,7 +61,19 @@ export function LocationDropdown() {
                 ))}
               </div>
             ) : error ? (
-              <div className="p-2 text-center text-sm text-red-500">{error}</div>
+              <div className="p-4 flex flex-col items-center justify-center gap-2 text-center">
+                <MapPin className="h-8 w-8 text-red-500" />
+                <p className="text-sm text-red-500">{error}</p>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => refetch()}
+                  className="mt-2"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Try Again
+                </Button>
+              </div>
             ) : filtered.length > 0 ? (
               filtered.map(brgy => (
                 <DropdownMenuItem
@@ -76,8 +88,22 @@ export function LocationDropdown() {
                 </DropdownMenuItem>
               ))
             ) : (
-              <div className="p-2 text-center text-sm text-muted-foreground">
-                {search ? "No matching barangay found" : "No barangays available"}
+              <div className="p-4 flex flex-col items-center justify-center gap-2 text-center">
+                <MapPin className="h-8 w-8 text-gray-400" />
+                <p className="text-sm text-muted-foreground">
+                  {search ? "No matching barangay found" : "No barangays available"}
+                </p>
+                {!search && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => refetch()}
+                    className="mt-2"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Refresh List
+                  </Button>
+                )}
               </div>
             )}
           </div>
