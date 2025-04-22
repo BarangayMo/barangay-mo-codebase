@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -35,12 +36,14 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const isMobile = useMediaQuery("(max-width: 768px)");
   const { toast } = useToast();
 
   const submitLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setLoginError(null);
     
     try {
       const { error } = await login(email, password);
@@ -51,6 +54,7 @@ export default function Login() {
           title: "Login failed",
           description: error.message
         });
+        setLoginError(error.message);
       }
     } catch (err) {
       toast({
@@ -58,14 +62,52 @@ export default function Login() {
         title: "Login failed",
         description: "An unexpected error occurred"
       });
+      setLoginError("An unexpected error occurred");
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleDemoLogin = (role: "resident" | "official" | "superadmin") => {
+    setIsLoading(true);
+    let demoEmail, demoPassword;
+    
+    switch (role) {
+      case "resident":
+        demoEmail = "resident@example.com";
+        demoPassword = "password123";
+        break;
+      case "official":
+        demoEmail = "official@example.com";
+        demoPassword = "password123";
+        break;
+      case "superadmin":
+        demoEmail = "admin@example.com";
+        demoPassword = "password123";
+        break;
+    }
+    
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+    
+    login(demoEmail, demoPassword)
+      .then(({ error }) => {
+        if (error) {
+          toast({
+            variant: "destructive",
+            title: "Demo login failed",
+            description: error.message
+          });
+        }
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
   const handleBiometricLogin = () => {
     setTimeout(() => {
-      handleLogin("resident");
+      handleDemoLogin("resident");
     }, 1000);
   };
 
@@ -112,11 +154,11 @@ export default function Login() {
               placeholder="••••••••"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className={`mt-1 text-base ${error ? "border-red-400 ring-2 ring-red-100" : ""}`}
+              className={`mt-1 text-base ${loginError ? "border-red-400 ring-2 ring-red-100" : ""}`}
               required
             />
-            {error && (
-              <div className="text-xs text-red-600 mt-2">{error}</div>
+            {loginError && (
+              <div className="text-xs text-red-600 mt-2">{loginError}</div>
             )}
           </div>
           <div className="text-right">
@@ -166,7 +208,7 @@ export default function Login() {
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => handleLogin("resident")}
+              onClick={() => handleDemoLogin("resident")}
               className="text-emerald-600 border-emerald-200"
             >
               Resident
@@ -174,7 +216,7 @@ export default function Login() {
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => handleLogin("official")}
+              onClick={() => handleDemoLogin("official")}
               className="text-red-600 border-red-200"  
             >
               Official
@@ -251,11 +293,11 @@ export default function Login() {
                   placeholder="••••••••"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className={`mt-1 text-base ${error ? "border-red-400 ring-2 ring-red-100" : ""}`}
+                  className={`mt-1 text-base ${loginError ? "border-red-400 ring-2 ring-red-100" : ""}`}
                   required
                 />
-                {error && (
-                  <div className="text-xs text-red-600 mt-2">{error}</div>
+                {loginError && (
+                  <div className="text-xs text-red-600 mt-2">{loginError}</div>
                 )}
               </div>
               <Button
@@ -272,7 +314,7 @@ export default function Login() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => handleLogin("resident")}
+                  onClick={() => handleDemoLogin("resident")}
                   className="text-[#2da94f] bg-[#f0fbe9] hover:bg-[#c3edcb]/80 border border-[#b8e7be]"
                 >
                   Resident Demo
@@ -280,7 +322,7 @@ export default function Login() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => handleLogin("official")}
+                  onClick={() => handleDemoLogin("official")}
                   className="text-[#c11f3c] bg-[#fbeaed] hover:bg-[#f2ced4]/80 border border-[#ebb5c2]"
                 >
                   Official Demo
@@ -288,7 +330,7 @@ export default function Login() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => handleLogin("superadmin")}
+                  onClick={() => handleDemoLogin("superadmin")}
                   className="text-[#3c41ff] bg-[#eef0fe] hover:bg-[#d5d7f9] border border-[#b1b7f0]"
                 >
                   Super Admin Demo

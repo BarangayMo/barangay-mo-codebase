@@ -1,11 +1,11 @@
 
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
-import { User, Session } from "@supabase/supabase-js";
+import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 export type UserRole = "resident" | "official" | "superadmin" | null;
 
-interface User {
+interface UserData {
   name: string;
   email?: string;
   avatar?: string;
@@ -14,7 +14,7 @@ interface User {
 interface AuthContextType {
   isAuthenticated: boolean;
   userRole: UserRole;
-  user: User | null;
+  user: UserData | null;
   login: (email: string, password: string) => Promise<{ error: Error | null }>;
   register: (email: string, password: string, userData: any) => Promise<{ error: Error | null }>;
   logout: (navigateToPath?: string) => void;
@@ -38,7 +38,7 @@ export const AuthProvider = ({
 }: AuthProviderProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState<UserRole>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserData | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [rbiCompleted, setRbiCompleted] = useState(false);
 
