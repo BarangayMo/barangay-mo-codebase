@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -42,12 +41,12 @@ const Menu = () => {
     logout();
   };
 
-  // Define menu items with categories
   const menuCategories = [
     {
       title: "Main",
       items: [
         { icon: Home, label: "Home", path: "/" },
+        { icon: User, label: "Public Profile", path: "/resident-profile" },
         { icon: ShoppingCart, label: "My Cart", path: "/marketplace/cart" },
         { icon: Briefcase, label: "My Jobs", path: "/jobs" },
       ]

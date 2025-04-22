@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, ChevronDown, MapPin, User } from "lucide-react";
+import { Bell, ChevronDown, MapPin, User, MessageCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +27,19 @@ export const Header = () => {
   const filtered = barangays?.filter(brgy => 
     brgy.toLowerCase().includes(search.toLowerCase())
   ) || [];
+
+  const getHomeRoute = () => {
+    switch (userRole) {
+      case "resident":
+        return "/resident-home";
+      case "official":
+        return "/official-dashboard";
+      case "superadmin":
+        return "/admin";
+      default:
+        return "/";
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full">
@@ -91,47 +103,64 @@ export const Header = () => {
 
         {!isMobile && (
           <div className="hidden md:flex items-center space-x-4">
-            {[
-              { path: "/", label: "Home" },
-              { path: "/marketplace", label: "Marketplace" },
-              { path: "/services", label: "Services" },
-              { path: "/messages", label: "Messages" }
-            ].map(item => (
-              <Button 
-                key={item.path}
-                variant="ghost" 
-                size="sm" 
-                asChild
-                className={pathname === item.path ? (userRole === "resident" ? "text-[#1a237e]" : "text-[#ea384c]") : ""}
-              >
-                <Link to={item.path}>{item.label}</Link>
-              </Button>
-            ))}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              asChild
+              className={pathname === getHomeRoute() ? (userRole === "resident" ? "text-[#1a237e]" : "text-[#ea384c]") : ""}
+            >
+              <Link to={getHomeRoute()}>Home</Link>
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              asChild
+              className={pathname === "/marketplace" ? "text-[#1a237e]" : ""}
+            >
+              <Link to="/marketplace">Marketplace</Link>
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              asChild
+              className={pathname === "/services" ? "text-[#1a237e]" : ""}
+            >
+              <Link to="/services">Services</Link>
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              asChild
+              className={pathname === "/messages" ? "text-[#1a237e]" : ""}
+            >
+              <Link to="/messages">Messages</Link>
+            </Button>
           </div>
         )}
 
         <div className="flex items-center gap-2">
           {isAuthenticated && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative"
-              asChild
-            >
-              <Link to="/notifications">
-                <Bell className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center bg-[#ea384c]">
-                  3
-                </span>
-              </Link>
-            </Button>
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative"
+                asChild
+              >
+                <Link to="/messages">
+                  <MessageCircle className="h-5 w-5" />
+                  <span className="absolute -top-1 -right-1 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center bg-[#ea384c]">
+                    5
+                  </span>
+                </Link>
+              </Button>
+              <Button asChild variant="ghost" size="icon" className="rounded-full">
+                <Link to="/menu">
+                  <User className="h-5 w-5" />
+                </Link>
+              </Button>
+            </>
           )}
-
-          <Button asChild variant="ghost" size="icon" className="rounded-full">
-            <Link to="/menu">
-              <User className="h-5 w-5" />
-            </Link>
-          </Button>
         </div>
       </div>
     </header>

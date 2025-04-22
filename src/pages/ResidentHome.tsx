@@ -1,7 +1,6 @@
-
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Layout } from "@/components/layout/Layout";
-import { ShoppingCart, Briefcase, Users, FileText, Heart, FileSearch, ClipboardCheck, ArrowRight } from "lucide-react";
+import { ShoppingCart, Briefcase, FileText, Heart, FileSearch, ClipboardCheck, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
@@ -11,22 +10,20 @@ export default function ResidentHome() {
   const quickActions = [
     { icon: ShoppingCart, label: "Market", path: "/marketplace" },
     { icon: Briefcase, label: "Jobs", path: "/jobs" },
-    { icon: Users, label: "Community", path: "/community" },
     { icon: FileText, label: "Documents", path: "/services/documents" },
-    { icon: Heart, label: "Healthcare", path: "/services/healthcare" },
   ];
 
   return (
     <Layout>
       <div
-        className="min-h-screen pt-16 bg-fixed"
+        className="min-h-screen pt-16 bg-fixed overflow-hidden"
         style={{
-          backgroundImage: 'url("/lovable-uploads/c18ab531-de58-47d3-a486-6d9882bc2559.png")',
+          backgroundImage: 'url("/lovable-uploads/8edfe2c4-9d93-473b-a70d-95304b5cc20d.png")',
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
       >
-        <div className="absolute inset-0 bg-black/60" />
+        <div className="absolute inset-0 bg-black/70" />
         
         <div className="relative z-10 h-full px-4 pt-6">
           <div className="flex items-center justify-between mb-4">
@@ -69,9 +66,16 @@ export default function ResidentHome() {
             </div>
           </div>
 
-          <div className="mb-8">
+          <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
               <div className="text-white font-semibold text-lg">Quick Actions</div>
+              <Button 
+                asChild 
+                variant="ghost"
+                className="text-white hover:text-white hover:bg-white/10"
+              >
+                <Link to="/services">More Services →</Link>
+              </Button>
             </div>
             <div className="grid grid-cols-3 gap-3">
               {quickActions.map((action, index) => (
@@ -84,18 +88,6 @@ export default function ResidentHome() {
                   <span className="text-white text-sm font-medium text-center px-2">{action.label}</span>
                 </Link>
               ))}
-            </div>
-            <div className="mt-4 flex justify-center">
-              <Button 
-                asChild 
-                variant="outline"
-                className="border-white text-white hover:bg-white/30 hover:text-white"
-              >
-                <Link to="/services" className="flex items-center gap-2">
-                  More Services
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
             </div>
           </div>
 

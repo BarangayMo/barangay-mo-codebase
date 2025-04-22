@@ -1,4 +1,3 @@
-
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { ThemeProvider } from "./components/theme-provider";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -23,6 +22,7 @@ import Menu from "./pages/Menu";
 import Welcome from "./pages/Welcome";
 import Phone from "./pages/Phone";
 import Verify from "./pages/Verify";
+import { ScrollToTop } from "./components/ScrollToTop";
 
 function App() {
   const navigate = useNavigate();
@@ -31,6 +31,7 @@ function App() {
   return (
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <AuthProvider navigate={navigate} currentPath={location.pathname}>
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<Welcome />} />
           <Route path="/phone" element={<Phone />} />
