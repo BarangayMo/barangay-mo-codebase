@@ -1,4 +1,7 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { User, Session } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 
 export type UserRole = "resident" | "official" | "superadmin" | null;
 
@@ -12,10 +15,12 @@ interface AuthContextType {
   isAuthenticated: boolean;
   userRole: UserRole;
   user: User | null;
-  login: (role: UserRole) => void;
+  login: (email: string, password: string) => Promise<{ error: Error | null }>;
+  register: (email: string, password: string, userData: any) => Promise<{ error: Error | null }>;
   logout: (navigateToPath?: string) => void;
   rbiCompleted: boolean;
   setRbiCompleted: (completed: boolean) => void;
+  session: Session | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -34,48 +39,107 @@ export const AuthProvider = ({
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [rbiCompleted, setRbiCompleted] = useState(false);
 
-  const login = (role: UserRole) => {
-    setIsAuthenticated(true);
-    setUserRole(role);
-    setUser({
-      name: role === "resident" ? "John Resident" : 
-            role === "official" ? "Maria Official" : "Admin User"
+  useEffect(() => {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setIsAuthenticated(!!session);
+        setUser(session?.user ? {
+          name: session.user.email || '',
+          email: session.user.email,
+        } : null);
+
+        // For demo purposes, setting role based on email domain
+        // In a real app, you'd fetch this from your profiles table
+        if (session?.user?.email) {
+          if (session.user.email.includes('official')) {
+            setUserRole('official');
+          } else if (session.user.email.includes('admin')) {
+            setUserRole('superadmin');
+          } else {
+            setUserRole('resident');
+          }
+        } else {
+          setUserRole(null);
+        }
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setIsAuthenticated(!!session);
+      setUser(session?.user ? {
+        name: session.user.email || '',
+        email: session.user.email,
+      } : null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const login = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     });
     
-    if (role === "resident" && !rbiCompleted && navigate) {
-      navigate("/rbi-registration");
+    if (!error && navigate) {
+      navigate("/resident-home");
     }
+
+    return { error };
   };
 
-  const logout = (navigateToPath?: string) => {
-    setIsAuthenticated(false);
-    setUserRole(null);
-    setUser(null);
+  const register = async (email: string, password: string, userData: any) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          first_name: userData.firstName,
+          last_name: userData.lastName,
+        }
+      }
+    });
+
+    if (!error && navigate) {
+      navigate("/verify");
+    }
+
+    return { error };
+  };
+
+  const logout = async (navigateToPath?: string) => {
+    const { error } = await supabase.auth.signOut();
     
-    if (navigate) {
-      const publicPaths = ["/", "/about", "/contact", "/privacy", "/terms"];
-      if (navigateToPath) {
-        navigate(navigateToPath);
-      } else if (publicPaths.includes(currentPath)) {
-        navigate("/");
-      } else {
-        navigate("/login");
+    if (!error) {
+      setIsAuthenticated(false);
+      setUserRole(null);
+      setUser(null);
+      
+      if (navigate) {
+        navigate(navigateToPath || "/login");
       }
     }
   };
 
-  const value = { 
-    isAuthenticated, 
-    userRole, 
-    user, 
-    login, 
+  const value = {
+    isAuthenticated,
+    userRole,
+    user,
+    login,
+    register,
     logout,
     rbiCompleted,
-    setRbiCompleted 
+    setRbiCompleted,
+    session
   };
-  
+
   return (
     <AuthContext.Provider value={value}>
       {children}

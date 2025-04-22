@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { UserRole } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate, Link } from "react-router-dom";
 import { Fingerprint } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { useToast } from "@/components/ui/use-toast";
 
 const REVIEWS = [
   {
@@ -34,33 +34,33 @@ export default function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const isMobile = useMediaQuery("(max-width: 768px)");
+  const { toast } = useToast();
 
-  const handleLogin = (role: UserRole) => {
-    login(role);
-    switch(role) {
-      case "official":
-        navigate("/official-dashboard");
-        break;
-      case "superadmin":
-        navigate("/admin");
-        break;
-      case "resident":
-      default:
-        navigate("/resident-home");
-        break;
-    }
-  };
-
-  const submitLogin = (e: React.FormEvent) => {
+  const submitLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password !== "password123") {
-      setError("The password entered is wrong!");
-      return;
+    setIsLoading(true);
+    
+    try {
+      const { error } = await login(email, password);
+      
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Login failed",
+          description: error.message
+        });
+      }
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: "An unexpected error occurred"
+      });
+    } finally {
+      setIsLoading(false);
     }
-    setError(null);
-    handleLogin("resident");
   };
 
   const handleBiometricLogin = () => {
@@ -127,8 +127,9 @@ export default function Login() {
           <Button
             type="submit"
             className="w-full font-semibold text-base mt-2 bg-emerald-600 hover:bg-emerald-700 transition"
+            disabled={isLoading}
           >
-            Sign In
+            {isLoading ? "Signing in..." : "Sign In"}
           </Button>
           
           <div className="relative">
@@ -260,8 +261,9 @@ export default function Login() {
               <Button
                 type="submit"
                 className="w-full font-semibold text-base mt-2 bg-[#34b98a] hover:bg-[#268d68] transition"
+                disabled={isLoading}
               >
-                Sign In
+                {isLoading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
             <div className="mt-8">

@@ -1,19 +1,64 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, User, Mail, Lock, MapPin, Phone } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function Register() {
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    firstName: "",
+    lastName: "",
+    phoneNumber: "",
+    barangay: ""
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const { register } = useAuth();
+  const { toast } = useToast();
   const isMobile = useMediaQuery("(max-width: 768px)");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate(`/verify?phone=${encodeURIComponent(phoneNumber)}`);
+    setIsLoading(true);
+
+    try {
+      const { error } = await register(
+        formData.email,
+        formData.password,
+        {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          phoneNumber: formData.phoneNumber,
+          barangay: formData.barangay
+        }
+      );
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Registration failed",
+          description: error.message
+        });
+      }
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Registration failed",
+        description: "An unexpected error occurred"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   if (isMobile) {
@@ -43,6 +88,9 @@ export default function Register() {
                 id="fullname"
                 type="text"
                 placeholder="Juan Dela Cruz"
+                name="firstName"
+                value={formData.firstName}
+                onChange={handleInputChange}
                 className="pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
               />
               <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -56,6 +104,9 @@ export default function Register() {
                 id="email"
                 type="email"
                 placeholder="juan.delacruz@example.com"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
                 className="pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
               />
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -68,8 +119,9 @@ export default function Register() {
               <Input
                 id="phone"
                 type="tel"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
+                name="phoneNumber"
+                value={formData.phoneNumber}
+                onChange={handleInputChange}
                 placeholder="+63 999 123 4567"
                 className="pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
               />
@@ -83,6 +135,9 @@ export default function Register() {
               <Input
                 id="barangay"
                 type="text"
+                name="barangay"
+                value={formData.barangay}
+                onChange={handleInputChange}
                 placeholder="Select your barangay"
                 className="pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
               />
@@ -97,6 +152,9 @@ export default function Register() {
                 id="password"
                 type="password"
                 placeholder="●●●●●●●●"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
                 className="pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
               />
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -115,7 +173,7 @@ export default function Register() {
             type="submit"
             className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg py-3 transition font-medium text-base"
           >
-            Register Account
+            {isLoading ? "Registering..." : "Register Account"}
           </Button>
         </form>
         
@@ -151,6 +209,9 @@ export default function Register() {
                 id="fullname-desktop"
                 type="text"
                 placeholder="Juan Dela Cruz"
+                name="firstName"
+                value={formData.firstName}
+                onChange={handleInputChange}
                 className="pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
               />
               <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -164,6 +225,9 @@ export default function Register() {
                 id="email-desktop"
                 type="email"
                 placeholder="juan.delacruz@example.com"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
                 className="pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
               />
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -176,8 +240,9 @@ export default function Register() {
               <Input
                 id="phone-desktop"
                 type="tel"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
+                name="phoneNumber"
+                value={formData.phoneNumber}
+                onChange={handleInputChange}
                 placeholder="+63 999 123 4567"
                 className="pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
               />
@@ -191,6 +256,9 @@ export default function Register() {
               <Input
                 id="barangay-desktop"
                 type="text"
+                name="barangay"
+                value={formData.barangay}
+                onChange={handleInputChange}
                 placeholder="Select your barangay"
                 className="pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
               />
@@ -205,6 +273,9 @@ export default function Register() {
                 id="password-desktop"
                 type="password"
                 placeholder="●●●●●●●●"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
                 className="pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
               />
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -223,7 +294,7 @@ export default function Register() {
             type="submit"
             className="w-full bg-blue-600 hover:bg-blue-700 font-inter text-white rounded-lg py-3 transition font-medium text-base"
           >
-            Register Account
+            {isLoading ? "Registering..." : "Register Account"}
           </Button>
         </form>
         
