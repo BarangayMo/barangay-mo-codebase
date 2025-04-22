@@ -1,4 +1,3 @@
-
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { ThemeProvider } from "./components/theme-provider";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -21,6 +20,9 @@ import Services from "./pages/Services";
 import { Toaster } from "@/components/ui/toaster"
 import { ProductDetail, Cart, Checkout, OrderConfirmation, MyOrders } from "./pages/marketplace";
 import Menu from "./pages/Menu";
+import Welcome from "./pages/Welcome";
+import Phone from "./pages/Phone";
+import Verify from "./pages/Verify";
 
 function App() {
   const navigate = useNavigate();
@@ -30,6 +32,9 @@ function App() {
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <AuthProvider navigate={navigate} currentPath={location.pathname}>
         <Routes>
+          <Route path="/" element={<Welcome />} />
+          <Route path="/phone" element={<Phone />} />
+          <Route path="/verify" element={<Verify />} />
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
