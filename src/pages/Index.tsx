@@ -51,8 +51,8 @@ export default function Index() {
                     </Button>
                   </div>
                   
-                  <div className="mt-8 flex items-center flex-nowrap justify-center md:justify-start overflow-x-auto pb-2 gap-6">
-                    <div className="flex items-center gap-2 whitespace-nowrap">
+                  <div className="mt-8 flex flex-col items-start gap-3 justify-center md:justify-start">
+                    <div className="flex items-center gap-2">
                       <div className="flex">
                         {[1, 2, 3, 4, 5].map((_, i) => (
                           <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -61,26 +61,16 @@ export default function Index() {
                       <span className="text-white/80 text-sm">5.0 Rating</span>
                     </div>
                     
-                    <div className="flex items-center gap-2 whitespace-nowrap">
+                    <div className="flex items-center gap-2">
                       <Users className="w-4 h-4 text-white/80" />
                       <span className="text-white/80 text-sm">10k+ Users</span>
                     </div>
                     
-                    <div className="flex items-center gap-2 whitespace-nowrap">
-                      <MapPin className="w-4 h-4 text-white/80" />
-                      <span className="text-white/80 text-sm">42,045 barangays</span>
-                    </div>
-                    <div className="flex items-center gap-2 whitespace-nowrap">
-                      <Users className="w-4 h-4 text-white/80" />
-                      <span className="text-white/80 text-sm">1,489 municipalities</span>
-                    </div>
-                    <div className="flex items-center gap-2 whitespace-nowrap">
-                      <MapPin className="w-4 h-4 text-white/80" />
-                      <span className="text-white/80 text-sm">145 cities</span>
-                    </div>
-                    <div className="flex items-center gap-2 whitespace-nowrap">
-                      <MapPin className="w-4 h-4 text-white/80" />
-                      <span className="text-white/80 text-sm">81 provinces</span>
+                    <div className="flex flex-col gap-1.5 mt-1">
+                      <p className="text-white/90 text-sm">Serving 42,045 barangays across the Philippines</p>
+                      <p className="text-white/90 text-sm">Supporting 1,489 municipalities with digital solutions</p>
+                      <p className="text-white/90 text-sm">Connected with 145 cities nationwide</p>
+                      <p className="text-white/90 text-sm">Present in all 81 provinces of the country</p>
                     </div>
                   </div>
                 </div>

@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,10 +57,19 @@ export const AuthProvider = ({
         if (session?.user?.email) {
           if (session.user.email.includes('official')) {
             setUserRole('official');
+            if (navigate && event === 'SIGNED_IN') {
+              navigate('/official-dashboard');
+            }
           } else if (session.user.email.includes('admin')) {
             setUserRole('superadmin');
+            if (navigate && event === 'SIGNED_IN') {
+              navigate('/admin');
+            }
           } else {
             setUserRole('resident');
+            if (navigate && event === 'SIGNED_IN') {
+              navigate('/resident-home');
+            }
           }
         } else {
           setUserRole(null);
@@ -77,10 +85,21 @@ export const AuthProvider = ({
         name: session.user.email || '',
         email: session.user.email,
       } : null);
+      
+      // Check the role on initial load
+      if (session?.user?.email) {
+        if (session.user.email.includes('official')) {
+          setUserRole('official');
+        } else if (session.user.email.includes('admin')) {
+          setUserRole('superadmin');
+        } else {
+          setUserRole('resident');
+        }
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   const login = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
@@ -88,9 +107,7 @@ export const AuthProvider = ({
       password,
     });
     
-    if (!error && navigate) {
-      navigate("/resident-home");
-    }
+    // Navigation is handled in the onAuthStateChange event
 
     return { error };
   };

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,6 +31,19 @@ export const Header = () => {
   ) || [];
 
   const getHomeRoute = () => {
+    switch (userRole) {
+      case "official":
+        return "/official-dashboard";
+      case "superadmin":
+        return "/admin";
+      case "resident":
+        return "/resident-home";
+      default:
+        return "/";
+    }
+  };
+  
+  const getDashboardRoute = () => {
     switch (userRole) {
       case "official":
         return "/official-dashboard";
@@ -108,10 +122,22 @@ export const Header = () => {
               variant="ghost" 
               size="sm" 
               asChild
-              className={pathname === getHomeRoute() ? (userRole === "resident" ? "text-[#1a237e]" : "text-[#ea384c]") : ""}
+              className={pathname === "/" ? (userRole === "resident" ? "text-[#1a237e]" : "text-[#ea384c]") : ""}
             >
-              <Link to={getHomeRoute()}>Home</Link>
+              <Link to="/">Home</Link>
             </Button>
+            
+            {isAuthenticated && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                asChild
+                className={pathname === getDashboardRoute() ? (userRole === "resident" ? "text-[#1a237e]" : "text-[#ea384c]") : ""}
+              >
+                <Link to={getDashboardRoute()}>Dashboard</Link>
+              </Button>
+            )}
+            
             <Button 
               variant="ghost" 
               size="sm" 
@@ -120,6 +146,7 @@ export const Header = () => {
             >
               <Link to="/marketplace">Marketplace</Link>
             </Button>
+            
             <Button 
               variant="ghost" 
               size="sm" 
@@ -128,6 +155,7 @@ export const Header = () => {
             >
               <Link to="/services">Services</Link>
             </Button>
+            
             <Button 
               variant="ghost" 
               size="sm" 

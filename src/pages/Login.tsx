@@ -7,6 +7,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Fingerprint } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useToast } from "@/components/ui/use-toast";
+import { demoLogin } from "@/utils/demo-auth";
 
 const REVIEWS = [
   {
@@ -69,25 +70,9 @@ export default function Login() {
 
   const handleDemoLogin = async (role: "resident" | "official" | "superadmin") => {
     setIsLoading(true);
-    let demoEmail, demoPassword;
-    
-    switch (role) {
-      case "resident":
-        demoEmail = "resident@example.com";
-        demoPassword = "password123";
-        break;
-      case "official":
-        demoEmail = "official@example.com";
-        demoPassword = "password123";
-        break;
-      case "superadmin":
-        demoEmail = "admin@example.com";
-        demoPassword = "password123";
-        break;
-    }
     
     try {
-      const { error } = await login(demoEmail, demoPassword);
+      const { error } = await demoLogin(role);
       if (error) {
         toast({
           variant: "destructive",
