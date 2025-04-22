@@ -6,7 +6,7 @@ import { MobileNavbar } from "@/components/layout/MobileNavbar";
 
 export default function ResidentProfile() {
   const coverPhoto = "/lovable-uploads/c7d7f7a8-491d-49f1-910c-bb4dd5a85996.png";
-  const avatarPhoto = "https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?auto=format&fit=facearea&w=300&q=80";
+  const avatarPhoto = "/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png";
   const name = "Kim Parkinson";
   const username = "theunderdog";
   const verified = true;

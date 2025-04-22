@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -60,7 +61,7 @@ export const Header = () => {
                 className="flex items-center gap-2"
               >
                 <MapPin className="h-4 w-4 shrink-0" />
-                <span className="truncate">{location}</span>
+                <span className="truncate max-w-[100px]">{location}</span>
                 <ChevronDown className="h-3 w-3 opacity-50" />
               </Button>
             </DropdownMenuTrigger>
@@ -139,7 +140,7 @@ export const Header = () => {
         )}
 
         <div className="flex items-center gap-2">
-          {isAuthenticated && (
+          {isAuthenticated ? (
             <>
               <Button
                 variant="ghost"
@@ -160,6 +161,15 @@ export const Header = () => {
                 </Link>
               </Button>
             </>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/login">Login</Link>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/register">Register</Link>
+              </Button>
+            </div>
           )}
         </div>
       </div>

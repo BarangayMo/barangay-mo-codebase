@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -33,12 +34,11 @@ import {
 import { Eye } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
-const appVersion = "1.0.0";
-const currentYear = new Date().getFullYear();
-
 const Menu = () => {
   const { user, logout, userRole } = useAuth();
   const rbiProgress = 65;
+  const appVersion = "1.0.0";
+  const currentYear = new Date().getFullYear();
 
   const handleLogout = () => {
     logout();
@@ -85,7 +85,7 @@ const Menu = () => {
           <div className="relative h-32 bg-gradient-to-r from-blue-600 to-blue-400">
             <div className="absolute -bottom-12 left-6">
               <Avatar className="h-24 w-24 ring-4 ring-white">
-                <AvatarImage src="/lovable-uploads/07f9ee00-178f-4302-85d8-83a44b75bb9d.png" alt={user?.name} />
+                <AvatarImage src="/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png" alt={user?.name} />
                 <AvatarFallback>{user?.name?.[0] || "U"}</AvatarFallback>
               </Avatar>
             </div>

@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 export default function Welcome() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-between bg-[url('/lovable-uploads/5ddb568d-aef1-4968-aeb4-ce37c2bf4434.png')] bg-cover bg-center">
-      <div className="w-full min-h-screen bg-gradient-to-t from-black/80 via-black/50 to-black/60 flex flex-col items-center justify-between p-6">
+      <div className="w-full min-h-screen bg-gradient-to-t from-black/70 via-black/40 to-black/50 flex flex-col items-center justify-between p-6">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
