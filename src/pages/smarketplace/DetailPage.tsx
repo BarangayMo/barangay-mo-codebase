@@ -12,7 +12,9 @@ import {
   Pencil,
   Check,
   X,
-  ChevronRight
+  ChevronRight,
+  Star,
+  Printer
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
@@ -94,7 +96,7 @@ const DetailPage: React.FC<DetailPageProps> = ({ type = 'generic' }) => {
           joined: '2024-08-15',
           commission: '10%',
           categories: ['Groceries', 'Fresh Produce', 'Organic'],
-          products: [
+          productItems: [
             { id: 'P001', name: 'Organic Rice (5kg)', stock: 125, price: '₱350', sales: 58 },
             { id: 'P012', name: 'Organic Brown Rice (5kg)', stock: 89, price: '₱380', sales: 42 },
             { id: 'P024', name: 'Fresh Vegetables Bundle', stock: 15, price: '₱450', sales: 37 }
@@ -590,9 +592,6 @@ const DetailPage: React.FC<DetailPageProps> = ({ type = 'generic' }) => {
         );
     }
   };
-  
-  // Import the Star icon for products and reviews
-  import { Star, Printer } from "lucide-react";
 
   return (
     <Layout>
@@ -614,4 +613,3 @@ const DetailPage: React.FC<DetailPageProps> = ({ type = 'generic' }) => {
 };
 
 export default DetailPage;
-

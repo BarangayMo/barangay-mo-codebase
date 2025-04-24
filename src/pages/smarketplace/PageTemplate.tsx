@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,13 +18,15 @@ import {
 } from "@/components/ui/tabs";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Link } from "react-router-dom";
+import { ReactNode } from "react";
 
 interface PageTemplateProps {
   title: string;
   description: string;
   children?: React.ReactNode;
   hasTabs?: boolean;
-  tabItems?: {icon: React.ReactNode; label: string; value: string}[];
+  tabItems?: {icon: ReactNode; label: string; value: string}[];
 }
 
 const PageTemplate: React.FC<PageTemplateProps> = ({ 
@@ -40,7 +41,6 @@ const PageTemplate: React.FC<PageTemplateProps> = ({
     { icon: null, label: "Archived", value: "archived" }
   ]
 }) => {
-  // Generate sample data based on the title
   const generateSampleData = () => {
     if (title.toLowerCase().includes("product")) {
       return [
@@ -88,7 +88,6 @@ const PageTemplate: React.FC<PageTemplateProps> = ({
       ];
     }
     else {
-      // Default data for other pages
       return [
         { id: '001', name: 'Item 1', category: 'Category A', status: 'Active', date: '2025-04-20' },
         { id: '002', name: 'Item 2', category: 'Category B', status: 'Pending', date: '2025-04-21' },
@@ -101,7 +100,6 @@ const PageTemplate: React.FC<PageTemplateProps> = ({
 
   const sampleData = generateSampleData();
 
-  // Dynamic column headers based on the first row of data
   const getHeaders = () => {
     if (sampleData && sampleData.length > 0) {
       return Object.keys(sampleData[0]);
@@ -128,7 +126,7 @@ const PageTemplate: React.FC<PageTemplateProps> = ({
               {Object.values(row).map((value, i) => (
                 <TableCell key={i}>
                   <Link to={`${window.location.pathname}/${row.id}`}>
-                    {value}
+                    {String(value)}
                   </Link>
                 </TableCell>
               ))}
@@ -206,8 +204,5 @@ const PageTemplate: React.FC<PageTemplateProps> = ({
     </Layout>
   );
 };
-
-// For TypeScript compatibility
-import { Link } from "react-router-dom";
 
 export default PageTemplate;
