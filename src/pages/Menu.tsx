@@ -6,10 +6,48 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { LanguageSelector } from "@/components/layout/LanguageSelector";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Avatar } from "@/components/ui/avatar";
+
+// Translation dictionary for all text in the component
+const translations = {
+  en: {
+    menu: "Menu",
+    language: "Language",
+    languageHint: "Select your preferred language",
+    settingsTitle: "Settings and Preferences",
+    profile: "My Profile",
+    settings: "Settings",
+    notifications: "Notifications",
+    activities: "Activities",
+    messages: "Messages",
+    dashboard: "Dashboard",
+    dashboardHint: "Access your dashboard",
+    logout: "Logout",
+  },
+  fil: {
+    menu: "Menu",
+    language: "Wika / Language",
+    languageHint: "Piliin ang inyong gustong wika",
+    settingsTitle: "Mga Setting at Preferences",
+    profile: "Aking Profile",
+    settings: "Mga Setting",
+    notifications: "Mga Notification",
+    activities: "Mga Aktibidad",
+    messages: "Mga Mensahe",
+    dashboard: "Dashboard",
+    dashboardHint: "Access your dashboard",
+    logout: "Mag-logout",
+  }
+};
 
 export const Menu = () => {
   const navigate = useNavigate();
-  const { logout, userRole } = useAuth();
+  const { logout, userRole, user } = useAuth();
+  const { language } = useLanguage();
+  
+  // Select the appropriate translations based on language
+  const t = translations[language];
 
   const handleLogout = () => {
     logout();
@@ -18,27 +56,27 @@ export const Menu = () => {
 
   const menuItems = [
     {
-      title: "Aking Profile",
+      title: t.profile,
       icon: <UserCircle className="w-5 h-5" />,
       href: "/resident-profile",
     },
     {
-      title: "Mga Setting",
+      title: t.settings,
       icon: <Settings className="w-5 h-5" />,
       href: "/settings",
     },
     {
-      title: "Mga Notification",
+      title: t.notifications,
       icon: <Bell className="w-5 h-5" />,
       href: "/notifications",
     },
     {
-      title: "Mga Aktibidad",
+      title: t.activities,
       icon: <Clock className="w-5 h-5" />,
       href: "/activities",
     },
     {
-      title: "Mga Mensahe",
+      title: t.messages,
       icon: <MessageSquare className="w-5 h-5" />,
       href: "/messages",
     },
@@ -46,18 +84,33 @@ export const Menu = () => {
 
   return (
     <div className="container max-w-md mx-auto p-4 min-h-screen">
-      <h1 className="text-2xl font-bold text-center mb-6">Menu</h1>
+      <h1 className="text-2xl font-bold text-center mb-6">{t.menu}</h1>
+
+      {/* Profile Card */}
+      {user && (
+        <Card className="p-4 mb-6">
+          <div className="flex items-center gap-4">
+            <Avatar className="h-14 w-14">
+              <UserCircle className="h-12 w-12" />
+            </Avatar>
+            <div>
+              <h2 className="text-lg font-semibold">{user.firstName} {user.lastName}</h2>
+              <p className="text-sm text-gray-500">{user.email}</p>
+            </div>
+          </div>
+        </Card>
+      )}
 
       <Card className="p-4 mb-6">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-lg font-semibold">Wika / Language</h2>
+          <h2 className="text-lg font-semibold">{t.language}</h2>
           <LanguageSelector />
         </div>
-        <p className="text-sm text-gray-500">Piliin ang inyong gustong wika</p>
+        <p className="text-sm text-gray-500">{t.languageHint}</p>
       </Card>
 
       <Card className="p-4 mb-6">
-        <h2 className="text-lg font-semibold mb-4">Mga Setting at Preferences</h2>
+        <h2 className="text-lg font-semibold mb-4">{t.settingsTitle}</h2>
         <div className="space-y-2">
           {menuItems.map((item) => (
             <Button
@@ -77,9 +130,9 @@ export const Menu = () => {
 
       {userRole && (
         <Card className="p-4 mb-6">
-          <h2 className="text-lg font-semibold mb-2">Dashboard</h2>
+          <h2 className="text-lg font-semibold mb-2">{t.dashboard}</h2>
           <p className="text-sm text-gray-500 mb-4">
-            Access your {userRole} dashboard
+            {t.dashboardHint}
           </p>
           <Button
             className="w-full"
@@ -93,7 +146,7 @@ export const Menu = () => {
               )
             }
           >
-            Go to Dashboard
+            {t.dashboard}
           </Button>
         </Card>
       )}
@@ -106,7 +159,7 @@ export const Menu = () => {
         onClick={handleLogout}
       >
         <LogOut className="mr-2 h-5 w-5" />
-        Mag-logout
+        {t.logout}
       </Button>
     </div>
   );
