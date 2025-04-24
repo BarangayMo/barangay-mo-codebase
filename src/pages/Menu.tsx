@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -33,6 +32,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Eye } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { LanguageSelector } from "@/components/layout/LanguageSelector";
 
 const Menu = () => {
   const { user, logout, userRole } = useAuth();
@@ -59,6 +59,17 @@ const Menu = () => {
       items: [
         { icon: Settings, label: "Settings", path: "/settings" },
         { icon: UserPlus, label: "Add a Member", path: "/add-member" },
+      ]
+    },
+    {
+      title: "Language",
+      items: [
+        {
+          icon: Globe,
+          label: "Language",
+          path: "#",
+          component: LanguageSelector
+        }
       ]
     },
     {
@@ -124,14 +135,24 @@ const Menu = () => {
           {menuCategories.map((category, index) => (
             <div key={index} className="space-y-2">
               <h3 className="text-sm font-medium text-gray-500 px-2">{category.title}</h3>
-              {category.items.map((item, itemIndex) => (
-                <Link key={itemIndex} to={item.path}>
-                  <Button variant="ghost" className="w-full justify-start text-base h-12 hover:bg-gray-100">
-                    <item.icon className="mr-3 h-5 w-5 text-gray-500" />
-                    <span>{item.label}</span>
-                  </Button>
-                </Link>
-              ))}
+              {category.items.map((item, itemIndex) => {
+                if (item.component) {
+                  const Component = item.component;
+                  return (
+                    <div key={itemIndex} className="px-2 py-1">
+                      <Component />
+                    </div>
+                  );
+                }
+                return (
+                  <Link key={itemIndex} to={item.path}>
+                    <Button variant="ghost" className="w-full justify-start text-base h-12 hover:bg-gray-100">
+                      <item.icon className="mr-3 h-5 w-5 text-gray-500" />
+                      <span>{item.label}</span>
+                    </Button>
+                  </Link>
+                );
+              })}
             </div>
           ))}
           

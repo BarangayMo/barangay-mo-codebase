@@ -8,6 +8,7 @@ import { HeaderLogo } from "./header/HeaderLogo";
 import { LocationDropdown } from "./header/LocationDropdown";
 import { DesktopNavItems } from "./header/DesktopNavItems";
 import { ProfileMenu } from "./ProfileMenu";
+import { LanguageSelector } from "./LanguageSelector";
 
 export const Header = () => {
   const { isAuthenticated, userRole } = useAuth();
@@ -40,17 +41,20 @@ export const Header = () => {
           {isAuthenticated ? (
             <>
               {!isMobile && (
-                <Button 
-                  size="sm" 
-                  asChild
-                  className={`bg-gradient-to-r ${
-                    userRole === "resident" 
-                      ? "from-[#1a237e] to-[#534bae]" 
-                      : "from-[#ea384c] to-[#ff6b78]"
-                  } text-white hover:opacity-90 transition-opacity`}
-                >
-                  <Link to={getDashboardRoute()}>Dashboard</Link>
-                </Button>
+                <>
+                  <Button 
+                    size="sm" 
+                    asChild
+                    className={`bg-gradient-to-r ${
+                      userRole === "resident" 
+                        ? "from-[#1a237e] to-[#534bae]" 
+                        : "from-[#ea384c] to-[#ff6b78]"
+                    } text-white hover:opacity-90 transition-opacity`}
+                  >
+                    <Link to={getDashboardRoute()}>Dashboard</Link>
+                  </Button>
+                  <LanguageSelector />
+                </>
               )}
               <div className="flex items-center gap-2">
                 <Button
@@ -78,6 +82,7 @@ export const Header = () => {
             </>
           ) : (
             <div className="flex items-center gap-2">
+              {!isMobile && <LanguageSelector />}
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/login">Login</Link>
               </Button>
@@ -90,4 +95,4 @@ export const Header = () => {
       </div>
     </header>
   );
-};
+}
