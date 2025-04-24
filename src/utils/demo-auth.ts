@@ -5,15 +5,15 @@ export const demoLogin = async (role: 'official' | 'resident' | 'superadmin') =>
   // These credentials should match exactly what's in the Supabase auth system
   const credentials = {
     official: {
-      email: 'official@barangaymo.ph',
+      email: 'demo.official@smartbarangay.ph',
       password: 'demo123456'
     },
     resident: {
-      email: 'resident@barangaymo.ph',
+      email: 'demo.resident@smartbarangay.ph',
       password: 'demo123456'
     },
     superadmin: {
-      email: 'admin@barangaymo.ph',
+      email: 'ademo.admin@smartbarangay.ph',
       password: 'demo123456'
     }
   };
