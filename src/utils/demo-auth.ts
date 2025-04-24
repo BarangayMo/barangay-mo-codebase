@@ -13,7 +13,7 @@ export const demoLogin = async (role: 'official' | 'resident' | 'superadmin') =>
       password: 'demo123456'
     },
     superadmin: {
-      email: 'ademo.admin@smartbarangay.ph',
+      email: 'demo.admin@smartbarangay.ph',
       password: 'demo123456'
     }
   };
