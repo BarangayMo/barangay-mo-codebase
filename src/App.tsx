@@ -26,6 +26,9 @@ import Phone from "./pages/Phone";
 import Verify from "./pages/Verify";
 import FaviconManager from "./components/FaviconManager";
 import Contact from "./pages/Contact";
+import About from "./pages/About";
+import Features from "./pages/Features";
+import Careers from "./pages/Careers";
 
 function App() {
   const navigate = useNavigate();
@@ -61,6 +64,9 @@ function App() {
           <Route path="/marketplace/orders" element={<MyOrders />} />
           <Route path="/menu" element={<Menu />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/features" element={<Features />} />
+          <Route path="/careers" element={<Careers />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Toaster />

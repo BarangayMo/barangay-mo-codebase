@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Facebook, Twitter, Linkedin } from "lucide-react";
 
@@ -10,20 +11,26 @@ export const Footer = () => {
         <div className="grid grid-cols-5 gap-8">
           <div className="col-span-2">
             <Link to="/" className="text-xl font-bold font-outfit">
-              Smart Barangay
+              Barangay Mo
             </Link>
             <p className="mt-4 text-sm text-gray-500">
-              ©{currentYear} Smart Barangay. All rights reserved.
+              ©{currentYear} Barangay Mo. Lahat ng karapatan ay nakalaan.
             </p>
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-gray-900">Products</h3>
+            <h3 className="text-sm font-semibold text-gray-900">Serbisyo</h3>
             <ul className="mt-4 space-y-3">
-              {['Product', 'Pricing', 'Log in', 'Request access', 'Partnerships'].map((item) => (
-                <li key={item}>
-                  <Link to="#" className="text-sm text-gray-500 hover:text-gray-900">
-                    {item}
+              {[
+                ['Mga Produkto', '/products'],
+                ['Presyo', '/pricing'],
+                ['Mag-login', '/login'],
+                ['Humiling ng Access', '/request-access'],
+                ['Partnerships', '/partnerships']
+              ].map(([label, path]) => (
+                <li key={path}>
+                  <Link to={path} className="text-sm text-gray-500 hover:text-gray-900">
+                    {label}
                   </Link>
                 </li>
               ))}
@@ -31,12 +38,17 @@ export const Footer = () => {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-gray-900">About us</h3>
+            <h3 className="text-sm font-semibold text-gray-900">Tungkol sa Amin</h3>
             <ul className="mt-4 space-y-3">
-              {['About Barangay Mo', 'Contact us', 'Features', 'Careers'].map((item) => (
-                <li key={item}>
-                  <Link to="#" className="text-sm text-gray-500 hover:text-gray-900">
-                    {item}
+              {[
+                ['Tungkol sa Barangay Mo', '/about'],
+                ['Makipag-ugnayan', '/contact'],
+                ['Mga Features', '/features'],
+                ['Careers', '/careers']
+              ].map(([label, path]) => (
+                <li key={path}>
+                  <Link to={path} className="text-sm text-gray-500 hover:text-gray-900">
+                    {label}
                   </Link>
                 </li>
               ))}
@@ -44,9 +56,9 @@ export const Footer = () => {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-gray-900">Get in touch</h3>
-            <p className="mt-4 text-sm text-gray-500">Questions or feedback?</p>
-            <p className="text-sm text-gray-500">We'd love to hear from you</p>
+            <h3 className="text-sm font-semibold text-gray-900">Makipag-ugnayan</h3>
+            <p className="mt-4 text-sm text-gray-500">May mga tanong o feedback?</p>
+            <p className="text-sm text-gray-500">Gusto naming marinig ang inyong saloobin</p>
             <div className="flex gap-4 mt-4">
               <Link to="#" className="text-gray-400 hover:text-gray-500">
                 <Facebook className="h-5 w-5" />
