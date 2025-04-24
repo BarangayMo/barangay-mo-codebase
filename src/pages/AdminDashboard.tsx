@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { LayoutDashboard, Users, ShoppingBag, Package, BarChart as BarChartIcon, ArrowUp, ArrowDown, User, Clock, Zap } from "lucide-react";
+import { LayoutDashboard, Users, ShoppingBag, Package, BarChartIcon, ArrowUp, ArrowDown, User, Clock, Zap } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { AdminLayout } from "@/components/layout/AdminLayout";
@@ -160,12 +161,14 @@ const AdminDashboard = () => {
                 <CardDescription>Daily sales performance</CardDescription>
               </div>
               <div>
-                <TabsList>
-                  <TabsTrigger value="today" onClick={() => setDateRange('today')}>Today</TabsTrigger>
-                  <TabsTrigger value="week" onClick={() => setDateRange('week')} className="bg-primary/5 text-primary">Week</TabsTrigger>
-                  <TabsTrigger value="month" onClick={() => setDateRange('month')}>Month</TabsTrigger>
-                  <TabsTrigger value="quarter" onClick={() => setDateRange('quarter')}>Quarter</TabsTrigger>
-                </TabsList>
+                <Tabs defaultValue="week">
+                  <TabsList>
+                    <TabsTrigger value="today" onClick={() => setDateRange('today')}>Today</TabsTrigger>
+                    <TabsTrigger value="week" onClick={() => setDateRange('week')}>Week</TabsTrigger>
+                    <TabsTrigger value="month" onClick={() => setDateRange('month')}>Month</TabsTrigger>
+                    <TabsTrigger value="quarter" onClick={() => setDateRange('quarter')}>Quarter</TabsTrigger>
+                  </TabsList>
+                </Tabs>
               </div>
             </div>
           </CardHeader>
