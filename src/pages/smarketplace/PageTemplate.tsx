@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,7 @@ import {
   TabsTrigger, 
   TabsContent 
 } from "@/components/ui/tabs";
-import { Search } from "lucide-react";
+import { Search, Plus, Filter, ArrowDownUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { ReactNode } from "react";
@@ -109,37 +110,42 @@ const PageTemplate: React.FC<PageTemplateProps> = ({
 
   const renderTable = () => {
     return (
-      <Table>
-        <TableHeader>
-          <TableRow>
-            {getHeaders().map(header => (
-              <TableHead key={header} className="capitalize">
-                {header.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-              </TableHead>
-            ))}
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {sampleData.map((row, index) => (
-            <TableRow key={index} className="cursor-pointer hover:bg-gray-50">
-              {Object.values(row).map((value, i) => (
-                <TableCell key={i}>
-                  <Link to={`${window.location.pathname}/${row.id}`}>
-                    {String(value)}
-                  </Link>
-                </TableCell>
+      <div className="overflow-x-auto rounded-lg border">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/40">
+              {getHeaders().map(header => (
+                <TableHead key={header} className="capitalize font-medium">
+                  <div className="flex items-center gap-1">
+                    {header.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                    <ArrowDownUp className="h-3 w-3 text-muted-foreground/70" />
+                  </div>
+                </TableHead>
               ))}
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm">View</Button>
-                  <Button variant="outline" size="sm">Edit</Button>
-                </div>
-              </TableCell>
+              <TableHead>Actions</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {sampleData.map((row, index) => (
+              <TableRow key={index} className="hover:bg-gray-50">
+                {Object.values(row).map((value, i) => (
+                  <TableCell key={i}>
+                    <Link to={`${window.location.pathname}/${row.id}`} className="hover:text-primary">
+                      {String(value)}
+                    </Link>
+                  </TableCell>
+                ))}
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" className="h-8 px-2">View</Button>
+                    <Button variant="outline" size="sm" className="h-8 px-2">Edit</Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     );
   };
 
@@ -158,32 +164,37 @@ const PageTemplate: React.FC<PageTemplateProps> = ({
           <CardHeader>
             <div className="flex flex-col md:flex-row justify-between gap-4 md:items-center">
               <CardTitle>{title}</CardTitle>
-              <div className="flex gap-2">
-                <div className="relative w-full md:w-auto">
+              <div className="flex flex-wrap gap-2">
+                <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input className="pl-10 md:w-[200px]" placeholder={`Search ${title.toLowerCase()}`} />
+                  <Input className="pl-10 w-full md:w-[200px]" placeholder={`Search ${title.toLowerCase()}`} />
                 </div>
-                <Button>Add New</Button>
+                <Button variant="outline" size="icon" className="h-10 w-10">
+                  <Filter className="h-4 w-4" />
+                </Button>
+                <Button className="gap-1">
+                  <Plus className="h-4 w-4" />
+                  <span>Add New</span>
+                </Button>
               </div>
             </div>
           </CardHeader>
           <CardContent>
             {hasTabs ? (
               <Tabs defaultValue="all" className="w-full">
-                <TabsList className="mb-4 border-b w-full rounded-none bg-transparent h-auto p-0 flex-wrap">
-                  {tabItems.map((item) => (
-                    <TabsTrigger 
-                      key={item.value}
-                      value={item.value}
-                      className="py-3 px-5 rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:font-bold"
-                    >
-                      <div className="flex items-center gap-2">
-                        {item.icon}
-                        <span>{item.label}</span>
-                      </div>
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
+                <div className="border-b mb-6">
+                  <TabsList className="w-full justify-start">
+                    {tabItems.map((item) => (
+                      <TabsTrigger 
+                        key={item.value}
+                        value={item.value}
+                      >
+                        {item.icon && <span className="mr-1">{item.icon}</span>}
+                        {item.label}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </div>
                 <TabsContent value="all">
                   {children || renderTable()}
                 </TabsContent>

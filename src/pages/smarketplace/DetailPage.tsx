@@ -1,98 +1,189 @@
-
+import { useState } from "react";
+import { useParams, Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
+import { Helmet } from "react-helmet";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Helmet } from "react-helmet";
-import { useParams, Link } from "react-router-dom";
 import { 
   ArrowLeft,
-  Edit,
-  Trash,
-  ExternalLink,
+  MoreHorizontal,
+  Download,
   Pencil,
   Check,
   X,
   ChevronRight,
   Star,
-  Printer
+  Printer,
+  Activity,
+  FileText,
+  Settings,
+  MessageSquare,
+  Clock,
+  BarChart,
+  Tag,
+  Truck,
+  ShieldCheck,
+  Plus
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface DetailPageProps {
-  type: 'product' | 'order' | 'vendor' | 'customer' | 'review' | 'generic';
+  type: 'product' | 'order' | 'vendor';
 }
 
-const DetailPage: React.FC<DetailPageProps> = ({ type = 'generic' }) => {
-  const { id } = useParams<{ id: string }>();
+const DetailPage = ({ type }: DetailPageProps) => {
+  const { id } = useParams();
+  const [isEditing, setIsEditing] = useState(false);
   
-  // Mock data based on type and ID
+  const getTitle = () => {
+    switch (type) {
+      case 'product':
+        return `Product ${id}`;
+      case 'order':
+        return `Order ${id}`;
+      case 'vendor':
+        return `Vendor ${id}`;
+      default:
+        return `Item ${id}`;
+    }
+  };
+
   const getData = () => {
     switch (type) {
       case 'product':
         return {
+          id: id || 'P001',
           name: 'Organic Rice (5kg)',
+          description: 'Premium organic rice grown without pesticides from local farms.',
           category: 'Groceries',
+          subcategory: 'Grains & Rice',
           price: '₱350',
-          status: 'Active',
-          vendor: 'Green Farms',
           stock: 125,
-          description: 'Organically grown rice from local farmers. Pesticide-free and sustainably harvested.',
           sku: 'RICE-ORG-5KG',
-          dateAdded: '2025-03-15',
-          variants: ['2kg', '5kg', '10kg'],
-          images: ['rice1.jpg', 'rice2.jpg', 'rice3.jpg'],
-          attributes: {
-            'Origin': 'Ifugao, Philippines',
-            'Type': 'White Rice',
-            'Organic': 'Yes',
-            'Weight': '5kg'
-          }
-        };
-      case 'order':
-        return {
-          orderNumber: 'ORD-2521',
-          customer: 'Maria Santos',
-          date: '2025-04-20',
-          status: 'Delivered',
-          total: '₱1,250',
-          items: [
-            { name: 'Organic Rice (5kg)', quantity: 2, price: '₱350', subtotal: '₱700' },
-            { name: 'Coconut Soap', quantity: 3, price: '₱85', subtotal: '₱255' },
-            { name: 'Dried Mango', quantity: 1, price: '₱220', subtotal: '₱220' }
+          barcode: '9501234567890',
+          vendor: 'Green Farms Co-op',
+          status: 'Active',
+          dateAdded: '2025-01-15',
+          lastUpdated: '2025-04-10',
+          ratings: {
+            average: 4.8,
+            count: 58
+          },
+          variants: [
+            { id: 'V001', name: '2kg Pack', price: '₱150', stock: 87 },
+            { id: 'V002', name: '10kg Pack', price: '₱680', stock: 32 }
           ],
-          shipping: {
-            method: 'Standard Delivery',
-            address: '123 Main St, Quezon City, Metro Manila',
-            cost: '₱75'
+          images: [
+            '/placeholder.svg',
+            '/placeholder.svg',
+            '/placeholder.svg'
+          ],
+          sales: {
+            total: '₱20,300',
+            units: 58,
+            lastMonth: '₱8,750'
           },
-          payment: {
-            method: 'GCash',
-            status: 'Paid',
-            reference: 'GC-87654321'
+          attributes: {
+            weight: '5kg',
+            color: 'White',
+            organic: 'Yes',
+            packaging: 'Eco-friendly'
           },
-          timeline: [
-            { date: '2025-04-20 15:30', status: 'Delivered', note: 'Package received by customer' },
-            { date: '2025-04-19 10:15', status: 'Out for Delivery', note: 'With courier (J. Reyes)' },
-            { date: '2025-04-18 14:20', status: 'Shipped', note: 'Package left warehouse' },
-            { date: '2025-04-17 09:45', status: 'Processing', note: 'Order verified and packed' },
-            { date: '2025-04-16 16:30', status: 'Payment Received', note: 'Via GCash' },
-            { date: '2025-04-16 16:28', status: 'Order Placed', note: 'Online via mobile app' }
+          reviews: [
+            { id: 'R001', customer: 'Maria S.', rating: 5, comment: 'Excellent quality rice!', date: '2025-03-28' },
+            { id: 'R002', customer: 'Juan C.', rating: 4, comment: 'Good product, but packaging could be better.', date: '2025-03-15' }
           ]
         };
+      
+      case 'order':
+        return {
+          id: id || 'ORD-2521',
+          customer: {
+            name: 'Maria Santos',
+            email: 'maria@example.com',
+            phone: '+63 912 345 6789',
+            avatar: '/placeholder.svg'
+          },
+          date: '2025-04-20',
+          status: 'Delivered',
+          paymentStatus: 'Paid',
+          paymentMethod: 'Credit Card',
+          total: '₱1,250',
+          subtotal: '₱1,150',
+          shipping: '₱100',
+          tax: '₱0',
+          items: [
+            { id: 'P001', name: 'Organic Rice (5kg)', quantity: 2, price: '₱350', total: '₱700' },
+            { id: 'P003', name: 'Coconut Soap', quantity: 3, price: '₱85', total: '₱255' },
+            { id: 'P004', name: 'Dried Mango', quantity: 2, price: '₱220', total: '₱440' }
+          ],
+          timeline: [
+            { status: 'Order Placed', date: '2025-04-20 08:23:15', note: 'Customer placed order' },
+            { status: 'Payment Confirmed', date: '2025-04-20 08:25:30', note: 'Payment via Credit Card' },
+            { status: 'Processing', date: '2025-04-20 09:45:12', note: 'Order sent to vendor' },
+            { status: 'Shipped', date: '2025-04-21 14:30:00', note: 'Package in transit via LBC Express #12345' },
+            { status: 'Delivered', date: '2025-04-22 15:15:45', note: 'Signed by recipient' }
+          ],
+          shippingAddress: {
+            name: 'Maria Santos',
+            line1: '123 Sampaguita St.',
+            line2: 'Barangay San Isidro',
+            city: 'Makati City',
+            province: 'Metro Manila',
+            postal: '1234'
+          },
+          billingAddress: {
+            name: 'Maria Santos',
+            line1: '123 Sampaguita St.',
+            line2: 'Barangay San Isidro',
+            city: 'Makati City',
+            province: 'Metro Manila',
+            postal: '1234'
+          }
+        };
+      
       case 'vendor':
         return {
+          id: id || 'V001',
           name: 'Green Farms Co-op',
-          products: 32,
+          email: 'contact@greenfarms.coop',
+          phone: '+63 912 345 6789',
+          contactPerson: 'Antonio Reyes',
+          logo: '/placeholder.svg',
           status: 'Verified',
-          rating: '4.8',
-          sales: '₱325,650',
-          contact: {
-            name: 'Juan Dela Cruz',
-            email: 'greenfarmsph@example.com',
-            phone: '+63 912 345 6789'
+          rating: 4.8,
+          totalSales: '₱325,650',
+          address: {
+            line1: '456 Rice Field Road',
+            line2: 'Barangay Maunlad',
+            city: 'San Pablo City',
+            province: 'Laguna',
+            postal: '4000'
           },
-          address: 'Barangay Mapagkawanggawa, San Mateo, Rizal',
+          bankInfo: {
+            bank: 'Barangay Bank',
+            accountName: 'Green Farms Cooperative',
+            accountNumber: '•••• •••• •••• 1234',
+            routingCode: '••••••••'
+          },
           joined: '2024-08-15',
           commission: '10%',
           categories: ['Groceries', 'Fresh Produce', 'Organic'],
@@ -101,512 +192,758 @@ const DetailPage: React.FC<DetailPageProps> = ({ type = 'generic' }) => {
             { id: 'P012', name: 'Organic Brown Rice (5kg)', stock: 89, price: '₱380', sales: 42 },
             { id: 'P024', name: 'Fresh Vegetables Bundle', stock: 15, price: '₱450', sales: 37 }
           ],
-          payments: {
-            method: 'Bank Transfer',
-            account: 'Banco de Oro',
-            schedule: 'Weekly (Monday)'
+          payouts: [
+            { id: 'PAY001', date: '2025-03-30', amount: '₱45,230', status: 'Completed' },
+            { id: 'PAY002', date: '2025-02-28', amount: '₱39,780', status: 'Completed' },
+            { id: 'PAY003', date: '2025-01-30', amount: '₱52,450', status: 'Completed' }
+          ],
+          performance: {
+            ordersCompleted: 258,
+            ordersCancelled: 12,
+            returnsRate: '3.5%',
+            averageRating: 4.8,
+            responseTime: '1.2 hours'
           }
         };
-      case 'customer':
-        return {
-          name: 'Maria Santos',
-          email: 'mariasantos@example.com',
-          phone: '+63 917 123 4567',
-          joined: '2024-10-15',
-          status: 'Active',
-          orders: 12,
-          spending: '₱25,350',
-          address: '456 Mabini St., Makati City, Metro Manila',
-          birthdate: '1985-06-12',
-          loyaltyPoints: 256,
-          recentOrders: [
-            { id: 'ORD-2521', date: '2025-04-20', status: 'Delivered', total: '₱1,250' },
-            { id: 'ORD-2489', date: '2025-04-05', status: 'Delivered', total: '₱3,450' },
-            { id: 'ORD-2435', date: '2025-03-22', status: 'Delivered', total: '₱780' }
-          ],
-          wishlist: [
-            { id: 'P045', name: 'Handcrafted Bamboo Chair', price: '₱4,500' },
-            { id: 'P102', name: 'Filipino Coffee Gift Set', price: '₱1,200' }
-          ]
-        };
       default:
-        return {
-          name: `Item ${id}`,
-          status: 'Active',
-          category: 'General',
-          dateAdded: '2025-04-01'
-        };
+        return { id };
     }
   };
   
   const data = getData();
-  const title = getTitle();
   
-  function getTitle() {
-    if (type === 'product') return 'Product Details';
-    if (type === 'order') return 'Order Details';
-    if (type === 'vendor') return 'Vendor Details';
-    if (type === 'customer') return 'Customer Details';
-    if (type === 'review') return 'Review Details';
-    return 'Item Details';
-  }
+  const getBackPath = () => {
+    switch (type) {
+      case 'product':
+        return '/admin/smarketplace/products/all';
+      case 'order':
+        return '/admin/smarketplace/orders/all';
+      case 'vendor':
+        return '/admin/smarketplace/vendors/directory';
+      default:
+        return '/admin/smarketplace';
+    }
+  };
   
-  const getBreadcrumbs = () => {
-    const segments = window.location.pathname.split('/').filter(Boolean);
-    const basePath = segments.slice(0, segments.length-1).join('/');
-    
-    return (
-      <div className="flex items-center text-sm text-gray-500 mb-4">
-        <Link to={`/${basePath}`} className="flex items-center hover:text-blue-600">
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Back to {type === 'generic' ? 'List' : `${type.charAt(0).toUpperCase() + type.slice(1)}s`}
-        </Link>
-      </div>
-    );
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'active':
+      case 'delivered':
+      case 'completed':
+      case 'verified':
+      case 'paid':
+        return 'bg-green-500';
+      case 'pending':
+      case 'processing':
+      case 'pending review':
+      case 'pending payment':
+        return 'bg-yellow-500';
+      case 'cancelled':
+      case 'inactive':
+      case 'failed':
+        return 'bg-red-500';
+      case 'shipped':
+      case 'in transit':
+        return 'bg-blue-500';
+      default:
+        return 'bg-gray-500';
+    }
   };
-
-  const renderProductDetail = () => {
-    const product = data as any;
-    
-    return (
-      <>
-        <div className="flex flex-col md:flex-row gap-6">
-          <div className="w-full md:w-1/3">
-            <Card>
-              <CardContent className="p-4">
-                <div className="aspect-square bg-gray-100 rounded-md flex items-center justify-center mb-4">
-                  <span className="text-gray-400">Product Image</span>
-                </div>
-                <div className="flex gap-2 mt-2">
-                  {Array(3).fill(0).map((_, i) => (
-                    <div key={i} className="w-16 h-16 bg-gray-100 rounded-md flex items-center justify-center">
-                      <span className="text-xs text-gray-400">{i+1}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          
-          <div className="w-full md:w-2/3">
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <CardTitle>{product.name}</CardTitle>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
-                      <Pencil className="h-4 w-4 mr-1" /> Edit
-                    </Button>
-                    <Button variant="destructive" size="sm">
-                      <Trash className="h-4 w-4 mr-1" /> Delete
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Tabs defaultValue="details">
-                  <TabsList className="mb-4 border-b w-full rounded-none bg-transparent h-auto p-0">
-                    <TabsTrigger 
-                      value="details"
-                      className="py-3 px-5 rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:font-bold"
-                    >
-                      Details
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="variants"
-                      className="py-3 px-5 rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:font-bold"
-                    >
-                      Variants
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="inventory"
-                      className="py-3 px-5 rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:font-bold"
-                    >
-                      Inventory
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="reviews"
-                      className="py-3 px-5 rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:font-bold"
-                    >
-                      Reviews
-                    </TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="details">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Price</p>
-                        <p className="font-medium">{product.price}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Category</p>
-                        <p>{product.category}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Vendor</p>
-                        <p>{product.vendor}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">SKU</p>
-                        <p>{product.sku}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Status</p>
-                        <p>
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            {product.status}
-                          </span>
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Date Added</p>
-                        <p>{product.dateAdded}</p>
-                      </div>
-                      <div className="col-span-2">
-                        <p className="text-sm font-medium text-gray-500">Description</p>
-                        <p className="mt-1">{product.description}</p>
-                      </div>
-                    </div>
-                    
-                    <Separator className="my-6" />
-                    
-                    <div>
-                      <h3 className="font-medium mb-3">Attributes</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
-                        {Object.entries(product.attributes).map(([key, value]) => (
-                          <div key={key} className="flex justify-between border-b pb-2">
-                            <span className="text-gray-600">{key}</span>
-                            <span>{String(value)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="variants">
-                    <div className="space-y-4">
-                      <div className="flex justify-between">
-                        <h3 className="font-medium">Product Variants</h3>
-                        <Button size="sm">Add Variant</Button>
-                      </div>
-                      
-                      <div className="border rounded-md">
-                        {product.variants.map((variant: string, index: number) => (
-                          <div key={index} className={`flex items-center justify-between p-4 ${index !== 0 ? 'border-t' : ''}`}>
-                            <div>
-                              <p className="font-medium">{variant}</p>
-                              <p className="text-sm text-gray-500">SKU: RICE-ORG-{variant.toUpperCase()}</p>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button variant="ghost" size="sm">Edit</Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="inventory">
-                    <div className="space-y-4">
-                      <div className="flex justify-between">
-                        <h3 className="font-medium">Inventory Management</h3>
-                        <Button size="sm">Update Stock</Button>
-                      </div>
-                      
-                      <Card>
-                        <CardContent className="p-6">
-                          <div className="flex flex-col md:flex-row justify-between gap-6">
-                            <div className="text-center">
-                              <p className="text-gray-500">Current Stock</p>
-                              <p className="text-2xl font-bold">{product.stock}</p>
-                            </div>
-                            <Separator orientation="vertical" className="hidden md:block" />
-                            <div className="text-center">
-                              <p className="text-gray-500">Reserved</p>
-                              <p className="text-2xl font-bold">12</p>
-                            </div>
-                            <Separator orientation="vertical" className="hidden md:block" />
-                            <div className="text-center">
-                              <p className="text-gray-500">Available</p>
-                              <p className="text-2xl font-bold">{product.stock - 12}</p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                      
-                      <div>
-                        <h4 className="font-medium mb-2">Recent Stock Updates</h4>
-                        <div className="border rounded-md divide-y">
-                          <div className="p-4 flex justify-between">
-                            <div>
-                              <p className="font-medium">Stock Added</p>
-                              <p className="text-sm text-gray-500">2025-04-20</p>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-medium text-green-600">+50 units</p>
-                              <p className="text-sm text-gray-500">By: Admin</p>
-                            </div>
-                          </div>
-                          <div className="p-4 flex justify-between">
-                            <div>
-                              <p className="font-medium">Stock Added</p>
-                              <p className="text-sm text-gray-500">2025-04-10</p>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-medium text-green-600">+75 units</p>
-                              <p className="text-sm text-gray-500">By: Admin</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="reviews">
-                    <div className="space-y-4">
-                      <div className="flex justify-between">
-                        <div>
-                          <h3 className="font-medium">Customer Reviews</h3>
-                          <p className="text-sm text-gray-500">Average Rating: 4.5/5 (12 reviews)</p>
-                        </div>
-                        <Button size="sm" variant="outline">Export Reviews</Button>
-                      </div>
-                      
-                      <div className="space-y-4">
-                        <div className="border rounded-md p-4">
-                          <div className="flex justify-between mb-2">
-                            <div className="flex items-center">
-                              <div className="flex">
-                                {Array(5).fill(0).map((_, i) => (
-                                  <Star key={i} className={`h-4 w-4 ${i < 5 ? 'text-yellow-400' : 'text-gray-200'}`} fill={i < 5 ? 'currentColor' : 'none'} />
-                                ))}
-                              </div>
-                              <span className="ml-2 font-medium">Maria S.</span>
-                            </div>
-                            <div className="text-sm text-gray-500">2025-04-15</div>
-                          </div>
-                          <p>Excellent quality rice! Very clean and tastes great. Will definitely buy again.</p>
-                          <div className="flex justify-end mt-2 gap-2">
-                            <Button size="sm" variant="ghost">Reply</Button>
-                            <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-50">Remove</Button>
-                          </div>
-                        </div>
-                        
-                        <div className="border rounded-md p-4">
-                          <div className="flex justify-between mb-2">
-                            <div className="flex items-center">
-                              <div className="flex">
-                                {Array(5).fill(0).map((_, i) => (
-                                  <Star key={i} className={`h-4 w-4 ${i < 4 ? 'text-yellow-400' : 'text-gray-200'}`} fill={i < 4 ? 'currentColor' : 'none'} />
-                                ))}
-                              </div>
-                              <span className="ml-2 font-medium">Juan C.</span>
-                            </div>
-                            <div className="text-sm text-gray-500">2025-04-12</div>
-                          </div>
-                          <p>Good rice overall, but the packaging could be improved. The rice itself is of high quality though.</p>
-                          <div className="flex justify-end mt-2 gap-2">
-                            <Button size="sm" variant="ghost">Reply</Button>
-                            <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-50">Remove</Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </>
-    );
-  };
-
-  const renderOrderDetail = () => {
-    const order = data as any;
-    
-    return (
-      <>
-        <Card className="mb-6">
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle>Order #{order.orderNumber}</CardTitle>
-                <p className="text-sm text-gray-500 mt-1">Placed on {order.date}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
-                  order.status === 'Processing' ? 'bg-blue-100 text-blue-800' :
-                  order.status === 'Shipped' ? 'bg-purple-100 text-purple-800' :
-                  'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {order.status}
-                </span>
-                <Button variant="outline">Update Status</Button>
-                <Button variant="outline">
-                  <Printer className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <h3 className="font-medium mb-2">Customer Information</h3>
-                <p>{order.customer}</p>
-                <p className="text-sm text-gray-500">Customer since 2024</p>
-                <div className="mt-2">
-                  <Button variant="link" className="p-0 h-auto text-sm">
-                    View Customer Profile
-                  </Button>
-                </div>
-              </div>
-              <div>
-                <h3 className="font-medium mb-2">Shipping Address</h3>
-                <p>{order.shipping.address}</p>
-                <p className="text-sm text-gray-500 mt-1">Method: {order.shipping.method}</p>
-                <p className="text-sm text-gray-500">Cost: {order.shipping.cost}</p>
-              </div>
-              <div>
-                <h3 className="font-medium mb-2">Payment Information</h3>
-                <p>Method: {order.payment.method}</p>
-                <p className="text-sm text-gray-500 mt-1">Status: {order.payment.status}</p>
-                <p className="text-sm text-gray-500">Reference: {order.payment.reference}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Order Items</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="border rounded-md overflow-hidden">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b bg-gray-50">
-                        <th className="py-3 px-4 text-left">Item</th>
-                        <th className="py-3 px-4 text-left">Quantity</th>
-                        <th className="py-3 px-4 text-left">Price</th>
-                        <th className="py-3 px-4 text-left">Subtotal</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {order.items.map((item: any, index: number) => (
-                        <tr key={index} className="border-b">
-                          <td className="py-4 px-4">{item.name}</td>
-                          <td className="py-4 px-4">{item.quantity}</td>
-                          <td className="py-4 px-4">{item.price}</td>
-                          <td className="py-4 px-4">{item.subtotal}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                
-                <div className="mt-6 flex justify-end">
-                  <div className="w-full max-w-xs">
-                    <div className="flex justify-between py-2">
-                      <span>Subtotal:</span>
-                      <span>₱1,175</span>
-                    </div>
-                    <div className="flex justify-between py-2">
-                      <span>Shipping:</span>
-                      <span>{order.shipping.cost}</span>
-                    </div>
-                    <div className="flex justify-between py-2 border-t border-dashed font-medium">
-                      <span>Total:</span>
-                      <span>{order.total}</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          
-          <div>
-            <Card>
-              <CardHeader>
-                <CardTitle>Order Timeline</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {order.timeline.map((event: any, index: number) => (
-                    <div key={index} className="relative pl-6">
-                      {index !== order.timeline.length - 1 && (
-                        <div className="absolute left-2 top-4 h-full w-px bg-gray-200"></div>
-                      )}
-                      <div className="absolute left-0 top-1.5 h-4 w-4 rounded-full bg-blue-500"></div>
-                      <div>
-                        <p className="font-medium">{event.status}</p>
-                        <p className="text-sm text-gray-500">{event.date}</p>
-                        {event.note && (
-                          <p className="text-sm mt-1">{event.note}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </>
-    );
-  };
-
+  
   const renderContent = () => {
     switch (type) {
       case 'product':
-        return renderProductDetail();
-      case 'order':
-        return renderOrderDetail();
-      default:
         return (
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle>{data.name || `Item ${id}`}</CardTitle>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm">Edit</Button>
-                  <Button variant="outline" size="sm">Delete</Button>
+          <div>
+            <div className="flex flex-col-reverse md:flex-row gap-6 mb-6">
+              <div className="flex-1">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg font-medium">Product Information</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Name</p>
+                        <p className="text-base">{data.name}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">SKU</p>
+                        <p className="text-base">{data.sku}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Category</p>
+                        <p className="text-base">{data.category} / {data.subcategory}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Price</p>
+                        <p className="text-base font-semibold">{data.price}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Stock</p>
+                        <p className="text-base">{data.stock} units</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Vendor</p>
+                        <p className="text-base">{data.vendor}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4">
+                      <p className="text-sm font-medium text-gray-500 mb-1">Description</p>
+                      <p className="text-sm">{data.description}</p>
+                    </div>
+                    
+                    <div className="mt-4">
+                      <p className="text-sm font-medium text-gray-500 mb-1">Attributes</p>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {Object.entries(data.attributes).map(([key, value]) => (
+                          <Badge key={key} variant="outline" className="bg-gray-50">
+                            {key}: {value}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg font-medium">Sales Information</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-500">Total Sales</span>
+                          <span className="font-semibold">{data.sales.total}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-500">Units Sold</span>
+                          <span>{data.sales.units}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-500">Last Month</span>
+                          <span>{data.sales.lastMonth}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg font-medium">Ratings & Reviews</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <div className="flex">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star
+                                key={star}
+                                size={16}
+                                fill={star <= Math.floor(data.ratings.average) ? "gold" : "none"}
+                                stroke={star <= Math.floor(data.ratings.average) ? "gold" : "currentColor"}
+                              />
+                            ))}
+                          </div>
+                          <span className="font-bold">{data.ratings.average}</span>
+                          <span className="text-sm text-gray-500">({data.ratings.count} reviews)</span>
+                        </div>
+                        
+                        <div className="border-t pt-2 mt-2">
+                          <p className="text-sm font-medium">Recent Reviews:</p>
+                          {data.reviews.map((review) => (
+                            <div key={review.id} className="border-b pb-2 pt-2">
+                              <div className="flex justify-between">
+                                <span className="text-sm font-medium">{review.customer}</span>
+                                <div className="flex items-center">
+                                  {[1, 2, 3, 4, 5].map((star) => (
+                                    <Star
+                                      key={star}
+                                      size={12}
+                                      fill={star <= review.rating ? "gold" : "none"}
+                                      stroke={star <= review.rating ? "gold" : "currentColor"}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                              <p className="text-xs text-gray-500">{review.date}</p>
+                              <p className="text-sm mt-1">{review.comment}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <p>Detail information for {data.name || `item ${id}`}</p>
-              <div className="mt-4 grid grid-cols-2 gap-4">
-                {Object.entries(data).map(([key, value]) => (
-                  <div key={key}>
-                    <p className="text-sm font-medium text-gray-500">{key}</p>
-                    <p>{String(value)}</p>
-                  </div>
-                ))}
+              
+              <div className="w-full md:w-1/3">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg font-medium">Product Images</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 gap-4">
+                      {data.images.map((image, index) => (
+                        <div key={index} className="aspect-square rounded-md border overflow-hidden">
+                          <img 
+                            src={image} 
+                            alt={`${data.name} - Image ${index + 1}`}
+                            className="object-cover w-full h-full"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            
+            <Card className="mb-6">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium">Product Variants</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Stock</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {data.variants.map((variant) => (
+                      <TableRow key={variant.id}>
+                        <TableCell>{variant.id}</TableCell>
+                        <TableCell>{variant.name}</TableCell>
+                        <TableCell>{variant.price}</TableCell>
+                        <TableCell>{variant.stock}</TableCell>
+                        <TableCell>
+                          <Button variant="outline" size="sm">Edit</Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
         );
+        
+      case 'order':
+        return (
+          <div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <Card className="md:col-span-2">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg font-medium">Order Summary</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-4 mb-4">
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={data.customer.avatar} alt={data.customer.name} />
+                      <AvatarFallback>{data.customer.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium">{data.customer.name}</p>
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <p>{data.customer.email}</p>
+                        <span>•</span>
+                        <p>{data.customer.phone}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Order Date</p>
+                      <p>{data.date}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Payment Method</p>
+                      <p>{data.paymentMethod}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Total</p>
+                      <p className="font-bold">{data.total}</p>
+                    </div>
+                  </div>
+                  
+                  <Separator className="my-4" />
+                  
+                  <div className="space-y-4 mb-6">
+                    <p className="font-medium">Order Items</p>
+                    {data.items.map((item) => (
+                      <div key={item.id} className="flex justify-between items-center py-2 border-b">
+                        <div>
+                          <p>{item.name}</p>
+                          <p className="text-sm text-gray-500">{item.quantity} x {item.price}</p>
+                        </div>
+                        <p className="font-medium">{item.total}</p>
+                      </div>
+                    ))}
+                    
+                    <div className="pt-4">
+                      <div className="flex justify-between">
+                        <p className="text-sm text-gray-500">Subtotal</p>
+                        <p>{data.subtotal}</p>
+                      </div>
+                      <div className="flex justify-between py-1">
+                        <p className="text-sm text-gray-500">Shipping</p>
+                        <p>{data.shipping}</p>
+                      </div>
+                      <div className="flex justify-between pt-2 border-t mt-2">
+                        <p className="font-medium">Total</p>
+                        <p className="font-bold">{data.total}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="font-medium mb-1">Shipping Address</p>
+                      <div className="text-sm">
+                        <p>{data.shippingAddress.name}</p>
+                        <p>{data.shippingAddress.line1}</p>
+                        {data.shippingAddress.line2 && <p>{data.shippingAddress.line2}</p>}
+                        <p>{data.shippingAddress.city}, {data.shippingAddress.province}</p>
+                        <p>{data.shippingAddress.postal}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="font-medium mb-1">Billing Address</p>
+                      <div className="text-sm">
+                        <p>{data.billingAddress.name}</p>
+                        <p>{data.billingAddress.line1}</p>
+                        {data.billingAddress.line2 && <p>{data.billingAddress.line2}</p>}
+                        <p>{data.billingAddress.city}, {data.billingAddress.province}</p>
+                        <p>{data.billingAddress.postal}</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg font-medium">Order Status</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col gap-2">
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Status</p>
+                        <div className="flex items-center gap-2">
+                          <span className={`w-2 h-2 rounded-full ${getStatusColor(data.status)}`}></span>
+                          <p className="font-medium">{data.status}</p>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Payment</p>
+                        <div className="flex items-center gap-2">
+                          <span className={`w-2 h-2 rounded-full ${getStatusColor(data.paymentStatus)}`}></span>
+                          <p>{data.paymentStatus}</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      <Button variant="outline" className="gap-2">
+                        <Printer size={16} />
+                        Print Invoice
+                      </Button>
+                      <Button variant="outline" className="gap-2">
+                        <Download size={16} />
+                        Download
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg font-medium">Order Timeline</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {data.timeline.map((event, index) => (
+                        <div key={index} className="relative pl-6 pb-4">
+                          {index < data.timeline.length - 1 && (
+                            <div className="absolute top-2 left-[7px] h-full w-[2px] bg-gray-200"></div>
+                          )}
+                          <div className={`absolute top-1 left-0 w-3.5 h-3.5 rounded-full border-2 border-white ${getStatusColor(event.status)}`}></div>
+                          <p className="text-sm font-medium">{event.status}</p>
+                          <p className="text-xs text-gray-500">{event.date}</p>
+                          <p className="text-xs mt-1">{event.note}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        );
+        
+      case 'vendor':
+        return (
+          <div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <Card className="md:col-span-2">
+                <CardHeader className="pb-2">
+                  <div className="flex items-start justify-between">
+                    <CardTitle className="text-lg font-medium">Vendor Profile</CardTitle>
+                    <Badge className={`${getStatusColor(data.status)} text-white`}>{data.status}</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-4 mb-6">
+                    <Avatar className="h-16 w-16">
+                      <AvatarImage src={data.logo} alt={data.name} />
+                      <AvatarFallback>{data.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="text-xl font-medium">{data.name}</h3>
+                      <div className="flex items-center gap-2 text-sm">
+                        <div className="flex">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              size={14}
+                              fill={star <= Math.floor(data.rating) ? "gold" : "none"}
+                              stroke={star <= Math.floor(data.rating) ? "gold" : "currentColor"}
+                            />
+                          ))}
+                        </div>
+                        <p>{data.rating} rating</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Contact Person</p>
+                      <p>{data.contactPerson}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Email</p>
+                      <p>{data.email}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Phone</p>
+                      <p>{data.phone}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Joined</p>
+                      <p>{data.joined}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <p className="font-medium mb-1">Address</p>
+                      <div className="text-sm">
+                        <p>{data.address.line1}</p>
+                        {data.address.line2 && <p>{data.address.line2}</p>}
+                        <p>{data.address.city}, {data.address.province}</p>
+                        <p>{data.address.postal}</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <p className="font-medium mb-1">Categories</p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {data.categories.map((category) => (
+                          <Badge key={category} variant="secondary">
+                            {category}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg font-medium">Vendor Performance</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Total Sales</p>
+                      <p className="text-2xl font-bold">{data.totalSales}</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Orders Completed</p>
+                        <p className="font-bold">{data.performance.ordersCompleted}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Orders Cancelled</p>
+                        <p className="font-bold">{data.performance.ordersCancelled}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Returns Rate</p>
+                        <p className="font-bold">{data.performance.returnsRate}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Response Time</p>
+                        <p className="font-bold">{data.performance.responseTime}</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Commission Rate</p>
+                      <p className="font-bold">{data.commission}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <Card className="mb-6">
+              <CardHeader className="pb-2">
+                <div className="flex items-start justify-between">
+                  <CardTitle className="text-lg font-medium">Products</CardTitle>
+                  <Button variant="outline" size="sm" className="gap-1">
+                    <Plus size={14} />
+                    Add Product
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Stock</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Sales</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {data.productItems.map((product) => (
+                      <TableRow key={product.id}>
+                        <TableCell>{product.id}</TableCell>
+                        <TableCell>{product.name}</TableCell>
+                        <TableCell>{product.stock}</TableCell>
+                        <TableCell>{product.price}</TableCell>
+                        <TableCell>{product.sales}</TableCell>
+                        <TableCell>
+                          <Button variant="outline" size="sm">View</Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium">Payment Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="mb-4">
+                  <p className="text-sm font-medium text-gray-500 mb-1">Banking Details</p>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <p className="text-gray-500">Bank</p>
+                      <p>{data.bankInfo.bank}</p>
+                    </div>
+                    <div className="flex justify-between">
+                      <p className="text-gray-500">Account Name</p>
+                      <p>{data.bankInfo.accountName}</p>
+                    </div>
+                    <div className="flex justify-between">
+                      <p className="text-gray-500">Account Number</p>
+                      <p>{data.bankInfo.accountNumber}</p>
+                    </div>
+                    <div className="flex justify-between">
+                      <p className="text-gray-500">Routing Code</p>
+                      <p>{data.bankInfo.routingCode}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <Separator className="my-4" />
+                
+                <p className="text-sm font-medium mb-2">Recent Payouts</p>
+                <div className="space-y-2">
+                  {data.payouts.map((payout) => (
+                    <div key={payout.id} className="flex justify-between items-center py-2 border-b">
+                      <div>
+                        <p className="font-medium">{payout.date}</p>
+                        <p className="text-xs text-gray-500">ID: {payout.id}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold">{payout.amount}</p>
+                        <Badge variant="outline" className={payout.status === 'Completed' ? 'text-green-600' : 'text-yellow-600'}>
+                          {payout.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      
+      default:
+        return <div>No data found</div>;
+    }
+  };
+
+  const getDetailTabs = () => {
+    switch (type) {
+      case 'product':
+        return [
+          { icon: <Tag size={16} />, label: "Details", value: "details" },
+          { icon: <BarChart size={16} />, label: "Analytics", value: "analytics" },
+          { icon: <Star size={16} />, label: "Reviews", value: "reviews" },
+          { icon: <Settings size={16} />, label: "Settings", value: "settings" },
+        ];
+      case 'order':
+        return [
+          { icon: <FileText size={16} />, label: "Details", value: "details" },
+          { icon: <Clock size={16} />, label: "Timeline", value: "timeline" },
+          { icon: <MessageSquare size={16} />, label: "Messages", value: "messages" },
+          { icon: <Settings size={16} />, label: "Settings", value: "settings" },
+        ];
+      case 'vendor':
+        return [
+          { icon: <User size={16} />, label: "Profile", value: "details" },
+          { icon: <ShoppingBag size={16} />, label: "Products", value: "products" },
+          { icon: <Truck size={16} />, label: "Orders", value: "orders" },
+          { icon: <Activity size={16} />, label: "Performance", value: "performance" },
+          { icon: <ShieldCheck size={16} />, label: "Verification", value: "verification" },
+        ];
+      default:
+        return [
+          { icon: <FileText size={16} />, label: "Details", value: "details" },
+          { icon: <Settings size={16} />, label: "Settings", value: "settings" },
+        ];
     }
   };
 
   return (
     <Layout>
       <Helmet>
-        <title>{title} - Smarketplace Admin</title>
+        <title>{getTitle()} - Smarketplace Admin - Barangay Mo</title>
       </Helmet>
       <div className="container py-8">
-        {getBreadcrumbs()}
-        
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold mb-2">{title}</h1>
-          <p className="text-gray-600">View and manage detailed information</p>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Button variant="ghost" asChild className="p-1 h-auto">
+                <Link to={getBackPath()}>
+                  <ArrowLeft className="h-4 w-4" />
+                </Link>
+              </Button>
+              <p className="text-sm text-gray-500">
+                Back to {type === 'product' ? 'Products' : type === 'order' ? 'Orders' : 'Vendors'}
+              </p>
+            </div>
+            <h1 className="text-2xl font-bold">{getTitle()}</h1>
+          </div>
+          
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => setIsEditing(!isEditing)}
+            >
+              {isEditing ? (
+                <>
+                  <X className="h-4 w-4" />
+                  <span>Cancel</span>
+                </>
+              ) : (
+                <>
+                  <Pencil className="h-4 w-4" />
+                  <span>Edit</span>
+                </>
+              )}
+            </Button>
+            
+            {isEditing && (
+              <Button className="gap-2">
+                <Check className="h-4 w-4" />
+                <span>Save Changes</span>
+              </Button>
+            )}
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem>
+                  <Download className="mr-2 h-4 w-4" />
+                  <span>Download</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Printer className="mr-2 h-4 w-4" />
+                  <span>Print</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-red-600">
+                  <X className="mr-2 h-4 w-4" />
+                  <span>Delete</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
         
-        {renderContent()}
+        <Card>
+          <CardContent className="p-6">
+            <Tabs defaultValue="details" className="w-full">
+              <div className="border-b mb-6">
+                <TabsList className="w-full justify-start">
+                  {getDetailTabs().map((tab) => (
+                    <TabsTrigger key={tab.value} value={tab.value}>
+                      {tab.icon}
+                      {tab.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </div>
+              
+              <TabsContent value="details">
+                {renderContent()}
+              </TabsContent>
+              
+              {getDetailTabs().slice(1).map((tab) => (
+                <TabsContent key={tab.value} value={tab.value}>
+                  <div className="flex flex-col items-center justify-center py-16">
+                    <div className="p-4 rounded-full bg-gray-100">
+                      {tab.icon}
+                    </div>
+                    <h3 className="mt-4 text-lg font-medium">
+                      {tab.label} Coming Soon
+                    </h3>
+                    <p className="text-gray-500 text-center max-w-md mt-2">
+                      This feature is currently in development and will be available soon.
+                    </p>
+                  </div>
+                </TabsContent>
+              ))}
+            </Tabs>
+          </CardContent>
+        </Card>
       </div>
     </Layout>
   );
