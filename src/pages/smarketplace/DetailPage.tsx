@@ -1,7 +1,21 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet";
-import { Package, User, ShoppingBag, ArrowLeft, ExternalLink, Users, Calendar, FileText, Clock, Settings } from "lucide-react";
+import { 
+  Package, 
+  User, 
+  ShoppingBag, 
+  ArrowLeft, 
+  ExternalLink, 
+  Users, 
+  Calendar, 
+  FileText, 
+  Clock, 
+  Settings,
+  ShoppingCart,
+  DollarSign,
+  Star
+} from "lucide-react";
 import { TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +25,6 @@ import { ModernTabs, TabItem } from "@/components/dashboard/ModernTabs";
 import { DashboardBreadcrumb } from "@/components/dashboard/Breadcrumb";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 
-// Mock data for different entity types
 const mockProductData = {
   id: "prod-12345",
   name: "Organic Farm Fresh Eggs",
@@ -128,7 +141,6 @@ const mockCustomerData = {
   ]
 };
 
-// Define tab items for each entity type
 const productTabItems: TabItem[] = [
   { value: "details", label: "Details", icon: <FileText className="h-4 w-4" /> },
   { value: "inventory", label: "Inventory", icon: <Package className="h-4 w-4" /> },
@@ -157,7 +169,6 @@ const customerTabItems: TabItem[] = [
   { value: "settings", label: "Settings", icon: <Settings className="h-4 w-4" /> }
 ];
 
-// Status badge component
 const StatusBadge = ({ status }: { status: string }) => {
   let color = "";
   
@@ -188,16 +199,13 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
-// Main detail page component
 const DetailPage = ({ type }: { type: "product" | "order" | "vendor" | "customer" }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   
-  // Determine which mock data to use based on type
   useEffect(() => {
-    // Simulate API call with a timeout
     const timeout = setTimeout(() => {
       let entityData;
       switch (type) {
@@ -223,7 +231,6 @@ const DetailPage = ({ type }: { type: "product" | "order" | "vendor" | "customer
     return () => clearTimeout(timeout);
   }, [type]);
   
-  // Get correct tab items based on entity type
   const getTabItems = () => {
     switch (type) {
       case "product":
@@ -239,7 +246,6 @@ const DetailPage = ({ type }: { type: "product" | "order" | "vendor" | "customer
     }
   };
   
-  // Get entity name for display
   const getEntityName = () => {
     if (!data) return '';
     
@@ -257,13 +263,11 @@ const DetailPage = ({ type }: { type: "product" | "order" | "vendor" | "customer
     }
   };
   
-  // Get entity status
   const getEntityStatus = () => {
     if (!data) return '';
     return data.status;
   };
   
-  // Get the appropriate icon
   const getEntityIcon = () => {
     switch (type) {
       case "product":
@@ -279,7 +283,6 @@ const DetailPage = ({ type }: { type: "product" | "order" | "vendor" | "customer
     }
   };
   
-  // Get entity-specific breadcrumb items
   const getBreadcrumbItems = () => {
     const parentLabel = 
       type === "product" ? "Products" :
@@ -308,7 +311,6 @@ const DetailPage = ({ type }: { type: "product" | "order" | "vendor" | "customer
     ];
   };
   
-  // Get page title
   const getPageTitle = () => {
     switch (type) {
       case "product":
@@ -324,7 +326,6 @@ const DetailPage = ({ type }: { type: "product" | "order" | "vendor" | "customer
     }
   };
 
-  // Handle back button click
   const handleBack = () => {
     switch (type) {
       case "product":
@@ -344,7 +345,6 @@ const DetailPage = ({ type }: { type: "product" | "order" | "vendor" | "customer
     }
   };
   
-  // Render loading state
   if (loading) {
     return (
       <div className="container py-8">
@@ -383,7 +383,6 @@ const DetailPage = ({ type }: { type: "product" | "order" | "vendor" | "customer
       </div>
 
       <ModernTabs defaultValue={getTabItems()[0].value} items={getTabItems()}>
-        {/* Product Detail Tabs */}
         {type === "product" && (
           <>
             <TabsContent value="details">
@@ -541,7 +540,6 @@ const DetailPage = ({ type }: { type: "product" | "order" | "vendor" | "customer
           </>
         )}
 
-        {/* Order Detail Tabs */}
         {type === "order" && (
           <>
             <TabsContent value="overview">
@@ -796,7 +794,6 @@ const DetailPage = ({ type }: { type: "product" | "order" | "vendor" | "customer
           </>
         )}
 
-        {/* Vendor Detail Tabs */}
         {type === "vendor" && (
           <>
             <TabsContent value="overview">
@@ -958,7 +955,6 @@ const DetailPage = ({ type }: { type: "product" | "order" | "vendor" | "customer
           </>
         )}
         
-        {/* Customer Detail Tabs */}
         {type === "customer" && (
           <>
             <TabsContent value="overview">
