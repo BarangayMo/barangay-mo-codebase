@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -34,6 +33,57 @@ export const DesktopSidebar = () => {
       ...prev,
       [sectionId]: !prev[sectionId]
     }));
+  };
+
+  const isActive = (path: string) => 
+    pathname === path || pathname.startsWith(`${path}/`);
+
+  const renderNestedMenu = (items, level = 0, parentPath = '') => {
+    return items.map((item) => {
+      const isItemActive = isActive(item.path);
+      const hasSubmenu = item.submenu && item.submenu.length > 0;
+      const sectionId = item.path;
+      const isOpen = openSections[sectionId] || false;
+      
+      return (
+        <div key={item.path} className={cn("w-full", level > 0 ? "pl-4" : "")}>
+          {hasSubmenu ? (
+            <Collapsible
+              open={isOpen}
+              onOpenChange={() => toggleSection(sectionId)}
+              className="w-full"
+            >
+              <CollapsibleTrigger className="flex w-full items-center justify-between p-2 text-sm hover:bg-gray-100 rounded-lg">
+                <div className="flex items-center gap-3">
+                  {item.icon && <item.icon className="h-4 w-4" />}
+                  <span>{item.title}</span>
+                </div>
+                <ChevronDown className="h-4 w-4" />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="pl-2 pr-2 pb-2 border-l-2 border-gray-200 ml-2 mt-1">
+                  {renderNestedMenu(item.submenu, level + 1, item.path)}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          ) : (
+            <Link
+              to={item.path}
+              className={cn(
+                "flex items-center gap-3 p-2 text-sm rounded-lg",
+                isItemActive
+                  ? "bg-blue-50 text-blue-600"
+                  : "hover:bg-gray-100"
+              )}
+            >
+              {level > 0 && <span className="text-gray-400">↳</span>}
+              {item.icon && <item.icon className="h-4 w-4" />}
+              <span>{item.title}</span>
+            </Link>
+          )}
+        </div>
+      );
+    });
   };
 
   const mainMenuItems = [
@@ -193,57 +243,6 @@ export const DesktopSidebar = () => {
       path: "/admin/settings"
     }
   ];
-
-  const renderNestedMenu = (items, level = 0, parentPath = '') => {
-    return items.map((item) => {
-      const isActive = isActive(item.path);
-      const hasSubmenu = item.submenu && item.submenu.length > 0;
-      const sectionId = item.path;
-      const isOpen = openSections[sectionId] || false;
-      
-      return (
-        <div key={item.path} className={cn("w-full", level > 0 ? "pl-4" : "")}>
-          {hasSubmenu ? (
-            <Collapsible
-              open={isOpen}
-              onOpenChange={() => toggleSection(sectionId)}
-              className="w-full"
-            >
-              <CollapsibleTrigger className="flex w-full items-center justify-between p-2 text-sm hover:bg-gray-100 rounded-lg">
-                <div className="flex items-center gap-3">
-                  {item.icon && <item.icon className="h-4 w-4" />}
-                  <span>{item.title}</span>
-                </div>
-                <ChevronDown className="h-4 w-4" />
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="pl-2 pr-2 pb-2 border-l-2 border-gray-200 ml-2 mt-1">
-                  {renderNestedMenu(item.submenu, level + 1, item.path)}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-          ) : (
-            <Link
-              to={item.path}
-              className={cn(
-                "flex items-center gap-3 p-2 text-sm rounded-lg",
-                isActive
-                  ? "bg-blue-50 text-blue-600"
-                  : "hover:bg-gray-100"
-              )}
-            >
-              {level > 0 && <span className="text-gray-400">↳</span>}
-              {item.icon && <item.icon className="h-4 w-4" />}
-              <span>{item.title}</span>
-            </Link>
-          )}
-        </div>
-      );
-    });
-  };
-
-  const isActive = (path: string) => 
-    pathname === path || pathname.startsWith(`${path}/`);
 
   return (
     <div className="hidden md:block w-64 min-h-screen bg-white border-r fixed top-0 left-0 pt-16 pb-6">
