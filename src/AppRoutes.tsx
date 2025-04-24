@@ -1,37 +1,37 @@
 
 import { Route, Routes } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
-import { Index } from "@/pages/Index";
-import { Login } from "@/pages/Login";
-import { Register } from "@/pages/Register";
-import { Verify } from "@/pages/Verify";
-import { MPIN } from "@/pages/MPIN";
-import { Phone } from "@/pages/Phone";
-import { ResidentHome } from "@/pages/ResidentHome";
-import { OfficialsDashboard } from "@/pages/OfficialsDashboard";
-import { AdminDashboard } from "@/pages/AdminDashboard";
-import { Notifications } from "@/pages/Notifications";
-import { Settings } from "@/pages/Settings";
-import { Menu } from "@/pages/Menu";
-import { Messages } from "@/pages/Messages";
-import { ResidentProfile } from "@/pages/ResidentProfile";
-import { MobileWelcome } from "@/pages/MobileWelcome";
-import { RbiRegistration } from "@/pages/RbiRegistration";
-import { NotFound } from "@/pages/NotFound";
-import { Services } from "@/pages/Services";
-import { Marketplace } from "@/pages/Marketplace";
-import { Jobs } from "@/pages/Jobs";
-import { Contact } from "@/pages/Contact";
-import { About } from "@/pages/About";
-import { Features } from "@/pages/Features";
-import { Careers } from "@/pages/Careers";
+import Index from "@/pages/Index";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import Verify from "@/pages/Verify";
+import MPIN from "@/pages/MPIN";
+import Phone from "@/pages/Phone";
+import ResidentHome from "@/pages/ResidentHome";
+import OfficialsDashboard from "@/pages/OfficialsDashboard";
+import AdminDashboard from "@/pages/AdminDashboard";
+import Notifications from "@/pages/Notifications";
+import Settings from "@/pages/Settings";
+import Menu from "@/pages/Menu";
+import Messages from "@/pages/Messages";
+import ResidentProfile from "@/pages/ResidentProfile";
+import MobileWelcome from "@/pages/MobileWelcome";
+import RbiRegistration from "@/pages/RbiRegistration";
+import NotFound from "@/pages/NotFound";
+import Services from "@/pages/Services";
+import Marketplace from "@/pages/Marketplace";
+import Jobs from "@/pages/Jobs";
+import Contact from "@/pages/Contact";
+import About from "@/pages/About";
+import Features from "@/pages/Features";
+import Careers from "@/pages/Careers";
 
 // Marketplace routes
-import { ProductDetail } from "@/pages/marketplace/ProductDetail";
-import { Cart } from "@/pages/marketplace/Cart";
-import { Checkout } from "@/pages/marketplace/Checkout";
-import { OrderConfirmation } from "@/pages/marketplace/OrderConfirmation";
-import { MyOrders } from "@/pages/marketplace/MyOrders";
+import ProductDetail from "@/pages/marketplace/ProductDetail";
+import Cart from "@/pages/marketplace/Cart";
+import Checkout from "@/pages/marketplace/Checkout";
+import OrderConfirmation from "@/pages/marketplace/OrderConfirmation";
+import MyOrders from "@/pages/marketplace/MyOrders";
 
 export function AppRoutes() {
   return (
