@@ -33,7 +33,10 @@ export const Layout = ({ children, hideHeader = false, hideFooter = false }: Lay
     return () => clearTimeout(timer);
   }, [pathname]);
 
-  const showSidebar = isAuthenticated && pathname === "/admin" && !isMobile && userRole === "superadmin";
+  const showSidebar = isAuthenticated && 
+    (pathname.startsWith("/admin") || pathname.includes("smarketplace")) && 
+    !isMobile && 
+    userRole === "superadmin";
 
   // Determine which skeleton to show based on the current route
   const renderSkeleton = () => {

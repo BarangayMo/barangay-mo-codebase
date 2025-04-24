@@ -1,3 +1,4 @@
+
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -46,7 +47,7 @@ export const DesktopSidebar = () => {
       const isOpen = openSections[sectionId] || false;
       
       return (
-        <div key={item.path} className={cn("w-full", level > 0 ? "pl-4" : "")}>
+        <div key={item.path} className={cn("w-full", level > 0 ? "" : "")}>
           {hasSubmenu ? (
             <Collapsible
               open={isOpen}
@@ -58,7 +59,7 @@ export const DesktopSidebar = () => {
                   {item.icon && <item.icon className="h-4 w-4" />}
                   <span>{item.title}</span>
                 </div>
-                <ChevronDown className="h-4 w-4" />
+                <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "transform rotate-180")} />
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <div className="pl-2 pr-2 pb-2 border-l-2 border-gray-200 ml-2 mt-1">
@@ -76,7 +77,7 @@ export const DesktopSidebar = () => {
                   : "hover:bg-gray-100"
               )}
             >
-              {level > 0 && <span className="text-gray-400">↳</span>}
+              {level > 0 && <span className="text-gray-400 mr-1 ml-0">↳</span>}
               {item.icon && <item.icon className="h-4 w-4" />}
               <span>{item.title}</span>
             </Link>
@@ -247,7 +248,7 @@ export const DesktopSidebar = () => {
   return (
     <div className="hidden md:block w-64 min-h-screen bg-white border-r fixed top-0 left-0 pt-16 pb-6">
       <div className="flex flex-col h-full">
-        <div className="flex-1 px-3 py-2 overflow-y-auto">
+        <div className="flex-1 px-3 py-2 overflow-y-auto max-h-[calc(100vh-80px)]">
           <div className="space-y-1">
             {mainMenuItems.map((item) => {
               const hasSubmenu = item.submenu && item.submenu.length > 0;
@@ -267,7 +268,7 @@ export const DesktopSidebar = () => {
                           <item.icon className="h-4 w-4" />
                           <span>{item.title}</span>
                         </div>
-                        <ChevronDown className="h-4 w-4" />
+                        <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "transform rotate-180")} />
                       </CollapsibleTrigger>
                       <CollapsibleContent>
                         <div className="pl-2 pr-2 pb-2">
