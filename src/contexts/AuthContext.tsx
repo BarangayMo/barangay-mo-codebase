@@ -8,6 +8,8 @@ interface UserData {
   name: string;
   email?: string;
   avatar?: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 interface AuthContextType {
@@ -42,7 +44,6 @@ export const AuthProvider = ({
   const [rbiCompleted, setRbiCompleted] = useState(false);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
@@ -52,8 +53,6 @@ export const AuthProvider = ({
           email: session.user.email,
         } : null);
 
-        // For demo purposes, setting role based on email domain
-        // In a real app, you'd fetch this from your profiles table
         if (session?.user?.email) {
           if (session.user.email.includes('official')) {
             setUserRole('official');
@@ -77,7 +76,6 @@ export const AuthProvider = ({
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setIsAuthenticated(!!session);
@@ -86,7 +84,6 @@ export const AuthProvider = ({
         email: session.user.email,
       } : null);
       
-      // Check the role on initial load
       if (session?.user?.email) {
         if (session.user.email.includes('official')) {
           setUserRole('official');
@@ -107,8 +104,6 @@ export const AuthProvider = ({
       password,
     });
     
-    // Navigation is handled in the onAuthStateChange event
-
     return { error };
   };
 

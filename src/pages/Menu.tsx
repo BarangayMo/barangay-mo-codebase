@@ -94,7 +94,9 @@ export const Menu = () => {
               <UserCircle className="h-12 w-12" />
             </Avatar>
             <div>
-              <h2 className="text-lg font-semibold">{user.firstName} {user.lastName}</h2>
+              <h2 className="text-lg font-semibold">
+                {user.firstName || user.name} {user.lastName || ''}
+              </h2>
               <p className="text-sm text-gray-500">{user.email}</p>
             </div>
           </div>
