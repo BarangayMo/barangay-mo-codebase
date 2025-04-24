@@ -23,7 +23,9 @@ import {
   Tag,
   Truck,
   ShieldCheck,
-  Plus
+  Plus,
+  User,
+  ShoppingBag
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
@@ -46,7 +48,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface DetailPageProps {
-  type: 'product' | 'order' | 'vendor';
+  type: 'product' | 'order' | 'vendor' | 'customer';
 }
 
 const DetailPage = ({ type }: DetailPageProps) => {
@@ -61,6 +63,8 @@ const DetailPage = ({ type }: DetailPageProps) => {
         return `Order ${id}`;
       case 'vendor':
         return `Vendor ${id}`;
+      case 'customer':
+        return `Customer ${id}`;
       default:
         return `Item ${id}`;
     }
@@ -205,6 +209,42 @@ const DetailPage = ({ type }: DetailPageProps) => {
             responseTime: '1.2 hours'
           }
         };
+      
+      case 'customer':
+        return {
+          id: id || 'C001',
+          name: 'Maria Santos',
+          email: 'maria@example.com',
+          phone: '+63 912 345 6789',
+          avatar: '/placeholder.svg',
+          status: 'Active',
+          joined: '2024-10-15',
+          orders: 12,
+          totalSpending: '₱25,350',
+          lastOrder: '2025-04-10',
+          address: {
+            line1: '123 Sampaguita St.',
+            line2: 'Barangay San Isidro',
+            city: 'Makati City',
+            province: 'Metro Manila',
+            postal: '1234'
+          },
+          preferences: {
+            paymentMethod: 'Credit Card',
+            notifications: true,
+            newsletter: true
+          },
+          recentActivity: [
+            { type: 'order', date: '2025-04-10', description: 'Placed Order #ORD-2521', amount: '₱1,250' },
+            { type: 'review', date: '2025-04-08', description: 'Reviewed "Organic Rice (5kg)"', rating: 5 },
+            { type: 'order', date: '2025-03-22', description: 'Placed Order #ORD-2498', amount: '₱2,430' }
+          ],
+          orderHistory: [
+            { id: 'ORD-2521', date: '2025-04-10', status: 'Delivered', total: '₱1,250', items: 3 },
+            { id: 'ORD-2498', date: '2025-03-22', status: 'Delivered', total: '₱2,430', items: 5 },
+            { id: 'ORD-2442', date: '2025-02-15', status: 'Delivered', total: '₱980', items: 2 }
+          ]
+        };
       default:
         return { id };
     }
@@ -220,6 +260,8 @@ const DetailPage = ({ type }: DetailPageProps) => {
         return '/admin/smarketplace/orders/all';
       case 'vendor':
         return '/admin/smarketplace/vendors/directory';
+      case 'customer':
+        return '/admin/smarketplace/customers/all';
       default:
         return '/admin/smarketplace';
     }
@@ -799,6 +841,140 @@ const DetailPage = ({ type }: DetailPageProps) => {
           </div>
         );
       
+      case 'customer':
+        return (
+          <div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <Card className="md:col-span-2">
+                <CardHeader className="pb-2">
+                  <div className="flex items-start justify-between">
+                    <CardTitle className="text-lg font-medium">Customer Profile</CardTitle>
+                    <Badge className={`${getStatusColor(data.status)} text-white`}>{data.status}</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-4 mb-6">
+                    <Avatar className="h-16 w-16">
+                      <AvatarImage src={data.avatar} alt={data.name} />
+                      <AvatarFallback>{data.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="text-xl font-medium">{data.name}</h3>
+                      <div className="flex items-center gap-2 text-sm">
+                        <div className="flex">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              size={14}
+                              fill={star <= Math.floor(data.rating) ? "gold" : "none"}
+                              stroke={star <= Math.floor(data.rating) ? "gold" : "currentColor"}
+                            />
+                          ))}
+                        </div>
+                        <p>{data.rating} rating</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Joined</p>
+                      <p>{data.joined}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Orders</p>
+                      <p>{data.orders}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Total Spending</p>
+                      <p className="font-bold">{data.totalSpending}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Last Order</p>
+                      <p>{data.lastOrder}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <p className="font-medium mb-1">Address</p>
+                      <div className="text-sm">
+                        <p>{data.address.line1}</p>
+                        {data.address.line2 && <p>{data.address.line2}</p>}
+                        <p>{data.address.city}, {data.address.province}</p>
+                        <p>{data.address.postal}</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <p className="font-medium mb-1">Preferences</p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        <Badge variant="outline" className={data.preferences.notifications ? 'text-green-600' : 'text-gray-500'}>
+                          Notifications
+                        </Badge>
+                        <Badge variant="outline" className={data.preferences.newsletter ? 'text-green-600' : 'text-gray-500'}>
+                          Newsletter
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg font-medium">Recent Activity</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {data.recentActivity.map((activity) => (
+                      <div key={activity.type} className="flex justify-between items-center py-2 border-b">
+                        <div>
+                          <p className="font-medium">{activity.type}</p>
+                          <p className="text-sm text-gray-500">{activity.date}</p>
+                        </div>
+                        <p className="font-bold">{activity.amount}</p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <Card className="mb-6">
+              <CardHeader className="pb-2">
+                <div className="flex items-start justify-between">
+                  <CardTitle className="text-lg font-medium">Order History</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Total</TableHead>
+                      <TableHead>Items</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {data.orderHistory.map((order) => (
+                      <TableRow key={order.id}>
+                        <TableCell>{order.id}</TableCell>
+                        <TableCell>{order.date}</TableCell>
+                        <TableCell>{order.status}</TableCell>
+                        <TableCell>{order.total}</TableCell>
+                        <TableCell>{order.items}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      
       default:
         return <div>No data found</div>;
     }
@@ -828,6 +1004,14 @@ const DetailPage = ({ type }: DetailPageProps) => {
           { icon: <Activity size={16} />, label: "Performance", value: "performance" },
           { icon: <ShieldCheck size={16} />, label: "Verification", value: "verification" },
         ];
+      case 'customer':
+        return [
+          { icon: <User size={16} />, label: "Profile", value: "details" },
+          { icon: <ShoppingBag size={16} />, label: "Orders", value: "orders" },
+          { icon: <MessageSquare size={16} />, label: "Messages", value: "messages" },
+          { icon: <Star size={16} />, label: "Reviews", value: "reviews" },
+          { icon: <Settings size={16} />, label: "Preferences", value: "preferences" },
+        ];
       default:
         return [
           { icon: <FileText size={16} />, label: "Details", value: "details" },
@@ -851,7 +1035,7 @@ const DetailPage = ({ type }: DetailPageProps) => {
                 </Link>
               </Button>
               <p className="text-sm text-gray-500">
-                Back to {type === 'product' ? 'Products' : type === 'order' ? 'Orders' : 'Vendors'}
+                Back to {type === 'product' ? 'Products' : type === 'order' ? 'Orders' : type === 'vendor' ? 'Vendors' : 'Customers'}
               </p>
             </div>
             <h1 className="text-2xl font-bold">{getTitle()}</h1>
