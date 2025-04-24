@@ -1,4 +1,3 @@
-
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { ThemeProvider } from "./components/theme-provider";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -26,6 +25,7 @@ import Menu from "./pages/Menu";
 import Phone from "./pages/Phone";
 import Verify from "./pages/Verify";
 import FaviconManager from "./components/FaviconManager";
+import Contact from "./pages/Contact";
 
 function App() {
   const navigate = useNavigate();
@@ -60,6 +60,7 @@ function App() {
           <Route path="/marketplace/order-confirmation" element={<OrderConfirmation />} />
           <Route path="/marketplace/orders" element={<MyOrders />} />
           <Route path="/menu" element={<Menu />} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Toaster />
