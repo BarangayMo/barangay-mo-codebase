@@ -7,14 +7,18 @@ import { Toaster } from "@/components/ui/sonner";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import FaviconManager from "@/components/FaviconManager";
 import { AppRoutes } from "./AppRoutes";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const queryClient = new QueryClient();
 
 function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <AuthProvider>
+        <AuthProvider navigate={navigate} currentPath={location.pathname}>
           <LanguageProvider>
             <ScrollToTop />
             <FaviconManager />

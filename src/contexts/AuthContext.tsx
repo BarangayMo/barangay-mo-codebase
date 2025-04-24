@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,53 +45,81 @@ export const AuthProvider = ({
   const [rbiCompleted, setRbiCompleted] = useState(false);
 
   useEffect(() => {
+    console.log("Setting up auth state change listener");
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log("Auth state changed:", event, session?.user?.email);
+        
         setSession(session);
         setIsAuthenticated(!!session);
-        setUser(session?.user ? {
-          name: session.user.email || '',
-          email: session.user.email,
-        } : null);
-
-        if (session?.user?.email) {
-          if (session.user.email.includes('official')) {
-            setUserRole('official');
-            if (navigate && event === 'SIGNED_IN') {
-              navigate('/official-dashboard');
+        
+        if (session?.user) {
+          const userData = {
+            name: session.user.email || '',
+            email: session.user.email,
+            firstName: session.user.user_metadata?.first_name,
+            lastName: session.user.user_metadata?.last_name,
+          };
+          
+          setUser(userData);
+          
+          if (session.user.email) {
+            let role: UserRole = "resident";
+            
+            if (session.user.email.includes('official')) {
+              role = 'official';
+            } else if (session.user.email.includes('admin')) {
+              role = 'superadmin';
             }
-          } else if (session.user.email.includes('admin')) {
-            setUserRole('superadmin');
+            
+            setUserRole(role);
+            
             if (navigate && event === 'SIGNED_IN') {
-              navigate('/admin');
+              const redirectPath = role === 'official' 
+                ? '/official-dashboard' 
+                : role === 'superadmin' 
+                  ? '/admin' 
+                  : '/resident-home';
+                
+              console.log("Redirecting to:", redirectPath);
+              navigate(redirectPath);
             }
           } else {
-            setUserRole('resident');
-            if (navigate && event === 'SIGNED_IN') {
-              navigate('/resident-home');
-            }
+            setUserRole(null);
           }
         } else {
+          setUser(null);
           setUserRole(null);
         }
       }
     );
 
+    // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Initial session check:", session?.user?.email);
+      
       setSession(session);
       setIsAuthenticated(!!session);
-      setUser(session?.user ? {
-        name: session.user.email || '',
-        email: session.user.email,
-      } : null);
       
-      if (session?.user?.email) {
-        if (session.user.email.includes('official')) {
-          setUserRole('official');
-        } else if (session.user.email.includes('admin')) {
-          setUserRole('superadmin');
-        } else {
-          setUserRole('resident');
+      if (session?.user) {
+        const userData = {
+          name: session.user.email || '',
+          email: session.user.email,
+          firstName: session.user.user_metadata?.first_name,
+          lastName: session.user.user_metadata?.last_name,
+        };
+        
+        setUser(userData);
+        
+        if (session.user.email) {
+          if (session.user.email.includes('official')) {
+            setUserRole('official');
+          } else if (session.user.email.includes('admin')) {
+            setUserRole('superadmin');
+          } else {
+            setUserRole('resident');
+          }
         }
       }
     });
@@ -99,10 +128,17 @@ export const AuthProvider = ({
   }, [navigate]);
 
   const login = async (email: string, password: string) => {
+    console.log("Login attempt:", email);
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+    
+    if (error) {
+      console.error("Login error:", error.message);
+    } else {
+      console.log("Login successful");
+    }
     
     return { error };
   };

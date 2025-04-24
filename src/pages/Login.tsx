@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -70,28 +71,49 @@ export default function Login() {
 
   const handleDemoLogin = async (role: "resident" | "official" | "superadmin") => {
     setIsLoading(true);
+    setLoginError(null);
     
     try {
+      toast({
+        title: "Demo login",
+        description: `Signing in as ${role}...`,
+      });
+      
       const { error } = await demoLogin(role);
+      
       if (error) {
+        console.error("Demo login error:", error);
         toast({
           variant: "destructive",
           title: "Demo login failed",
           description: error.message
         });
+        setLoginError(error.message);
+      } else {
+        toast({
+          title: "Success!",
+          description: `Logged in as ${role}`,
+        });
       }
     } catch (err: any) {
+      console.error("Unexpected demo login error:", err);
       toast({
         variant: "destructive",
         title: "Demo login failed",
-        description: err.message
+        description: err.message || "An unexpected error occurred"
       });
+      setLoginError(err.message || "An unexpected error occurred");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleBiometricLogin = () => {
+    toast({
+      title: "Biometric login",
+      description: "Using biometrics to log you in...",
+    });
+    
     setTimeout(() => {
       handleDemoLogin("resident");
     }, 1000);
