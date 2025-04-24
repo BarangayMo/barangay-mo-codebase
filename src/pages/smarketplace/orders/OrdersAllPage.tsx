@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Package, Check, Clock, AlertCircle, ShoppingCart, Search, Filter, Calendar } from "lucide-react";
 import { DashboardPageHeader } from "@/components/dashboard/PageHeader";
@@ -26,6 +25,41 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
+type OrderStatus = 'processing' | 'shipping' | 'delivered' | 'cancelled' | 'refunded';
+
+const orderTimelineData = [
+  {
+    orderId: "ORD-7829",
+    date: "Today, 10:30 AM",
+    steps: [
+      { status: 'processing' as OrderStatus, label: 'Order Placed', date: 'Today, 10:30 AM', isCompleted: true, isCurrent: false },
+      { status: 'processing' as OrderStatus, label: 'Processing', date: 'Today, 11:45 AM', isCompleted: true, isCurrent: true },
+      { status: 'shipping' as OrderStatus, label: 'Shipped', date: '', isCompleted: false, isCurrent: false },
+      { status: 'delivered' as OrderStatus, label: 'Delivered', date: '', isCompleted: false, isCurrent: false },
+    ]
+  },
+  {
+    orderId: "ORD-7823",
+    date: "Yesterday, 3:15 PM",
+    steps: [
+      { status: 'processing' as OrderStatus, label: 'Order Placed', date: 'Yesterday, 3:15 PM', isCompleted: true, isCurrent: false },
+      { status: 'processing' as OrderStatus, label: 'Processing', date: 'Yesterday, 4:30 PM', isCompleted: true, isCurrent: false },
+      { status: 'shipping' as OrderStatus, label: 'Shipped', date: 'Today, 9:00 AM', isCompleted: true, isCurrent: true },
+      { status: 'delivered' as OrderStatus, label: 'Delivered', date: '', isCompleted: false, isCurrent: false },
+    ]
+  },
+  {
+    orderId: "ORD-7814",
+    date: "Apr 21, 2025",
+    steps: [
+      { status: 'processing' as OrderStatus, label: 'Order Placed', date: 'Apr 21, 2025', isCompleted: true, isCurrent: false },
+      { status: 'processing' as OrderStatus, label: 'Processing', date: 'Apr 21, 2025', isCompleted: true, isCurrent: false },
+      { status: 'shipping' as OrderStatus, label: 'Shipped', date: 'Apr 22, 2025', isCompleted: true, isCurrent: false },
+      { status: 'delivered' as OrderStatus, label: 'Delivered', date: 'Apr 23, 2025', isCompleted: true, isCurrent: true },
+    ]
+  },
+];
+
 const OrdersAllPage = () => {
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -45,39 +79,6 @@ const OrdersAllPage = () => {
     { icon: <Check className="h-4 w-4" />, label: "Completed", value: "completed" },
     { icon: <AlertCircle className="h-4 w-4" />, label: "Issues", value: "issues" },
     { icon: <ShoppingCart className="h-4 w-4" />, label: "Abandoned", value: "abandoned" }
-  ];
-
-  const orderTimelineData = [
-    {
-      orderId: "ORD-7829",
-      date: "Today, 10:30 AM",
-      steps: [
-        { status: 'processing', label: 'Order Placed', date: 'Today, 10:30 AM', isCompleted: true, isCurrent: false },
-        { status: 'processing', label: 'Processing', date: 'Today, 11:45 AM', isCompleted: true, isCurrent: true },
-        { status: 'shipping', label: 'Shipped', date: '', isCompleted: false, isCurrent: false },
-        { status: 'delivered', label: 'Delivered', date: '', isCompleted: false, isCurrent: false },
-      ]
-    },
-    {
-      orderId: "ORD-7823",
-      date: "Yesterday, 3:15 PM",
-      steps: [
-        { status: 'processing', label: 'Order Placed', date: 'Yesterday, 3:15 PM', isCompleted: true, isCurrent: false },
-        { status: 'processing', label: 'Processing', date: 'Yesterday, 4:30 PM', isCompleted: true, isCurrent: false },
-        { status: 'shipping', label: 'Shipped', date: 'Today, 9:00 AM', isCompleted: true, isCurrent: true },
-        { status: 'delivered', label: 'Delivered', date: '', isCompleted: false, isCurrent: false },
-      ]
-    },
-    {
-      orderId: "ORD-7814",
-      date: "Apr 21, 2025",
-      steps: [
-        { status: 'processing', label: 'Order Placed', date: 'Apr 21, 2025', isCompleted: true, isCurrent: false },
-        { status: 'processing', label: 'Processing', date: 'Apr 21, 2025', isCompleted: true, isCurrent: false },
-        { status: 'shipping', label: 'Shipped', date: 'Apr 22, 2025', isCompleted: true, isCurrent: false },
-        { status: 'delivered', label: 'Delivered', date: 'Apr 23, 2025', isCompleted: true, isCurrent: true },
-      ]
-    },
   ];
 
   const orderTableData = [

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet";
@@ -442,34 +441,33 @@ const DetailPage = ({ type }: { type: "product" | "order" | "vendor" | "customer
                 
                 <div className="flex flex-col gap-4">
                   <StatsCard 
-                    title="Price"
-                    value={`₱${data.price}`}
-                    icon={<ShoppingBag className="h-5 w-5 text-green-500" />}
-                    iconClassName="bg-green-50"
+                    title="Total Sales"
+                    value="485"
+                    icon={<ShoppingCart className="h-5 w-5 text-blue-500" />}
+                    iconColor="bg-blue-50"
                   />
                   
                   <StatsCard 
-                    title="Current Stock"
-                    value={data.stock}
-                    icon={<Package className="h-5 w-5 text-blue-500" />}
-                    iconClassName="bg-blue-50"
+                    title="Revenue"
+                    value={`₱${data.price * 485}`}
+                    icon={<DollarSign className="h-5 w-5 text-green-500" />}
+                    iconColor="bg-green-50"
                   />
                   
                   <StatsCard 
                     title="Rating"
                     value={`${data.rating}/5`}
-                    description={`Based on ${data.reviews} reviews`}
-                    icon={<Users className="h-5 w-5 text-purple-500" />}
-                    iconClassName="bg-purple-50"
+                    icon={<Star className="h-5 w-5 text-amber-500" />}
+                    iconColor="bg-amber-50"
+                    change={{ value: 12, isPositive: true }}
                   />
                   
                   <StatsCard 
-                    title="Monthly Sales"
-                    value={data.sales.monthly}
-                    description={`${data.sales.weekly} this week`}
-                    trend={{ value: 12.5, isPositive: true }}
-                    icon={<Calendar className="h-5 w-5 text-amber-500" />}
-                    iconClassName="bg-amber-50"
+                    title="Stock"
+                    value={data.stock}
+                    icon={<Package className="h-5 w-5 text-purple-500" />}
+                    iconColor="bg-purple-50"
+                    change={{ value: 8, isPositive: false }}
                   />
                 </div>
               </div>
@@ -866,17 +864,17 @@ const DetailPage = ({ type }: { type: "product" | "order" | "vendor" | "customer
                 
                 <div className="flex flex-col gap-4">
                   <StatsCard 
-                    title="Products Listed"
+                    title="Total Products"
                     value={data.productsListed}
-                    icon={<ShoppingBag className="h-5 w-5 text-blue-500" />}
-                    iconClassName="bg-blue-50"
+                    icon={<Package className="h-5 w-5 text-blue-500" />}
+                    iconColor="bg-blue-50"
                   />
                   
                   <StatsCard 
-                    title="Total Sales"
-                    value={`₱${data.totalSales.toLocaleString()}`}
-                    icon={<Package className="h-5 w-5 text-green-500" />}
-                    iconClassName="bg-green-50"
+                    title="Total Revenue"
+                    value={data.totalSales}
+                    icon={<DollarSign className="h-5 w-5 text-green-500" />}
+                    iconColor="bg-green-50"
                     trend={{ value: 8.2, isPositive: true }}
                   />
                   
@@ -884,14 +882,14 @@ const DetailPage = ({ type }: { type: "product" | "order" | "vendor" | "customer
                     title="Commission Rate"
                     value={`${data.commission}%`}
                     icon={<Clock className="h-5 w-5 text-purple-500" />}
-                    iconClassName="bg-purple-50"
+                    iconColor="bg-purple-50"
                   />
                   
                   <StatsCard 
                     title="Rating"
                     value={`${data.rating}/5`}
                     icon={<User className="h-5 w-5 text-amber-500" />}
-                    iconClassName="bg-amber-50"
+                    iconColor="bg-amber-50"
                   />
                   
                   <Card>
@@ -1020,14 +1018,14 @@ const DetailPage = ({ type }: { type: "product" | "order" | "vendor" | "customer
                     title="Total Spent"
                     value={`₱${data.totalSpent.toLocaleString()}`}
                     icon={<ShoppingBag className="h-5 w-5 text-green-500" />}
-                    iconClassName="bg-green-50"
+                    iconColor="bg-green-50"
                   />
                   
                   <StatsCard 
                     title="Total Orders"
                     value={data.totalOrders}
                     icon={<Package className="h-5 w-5 text-blue-500" />}
-                    iconClassName="bg-blue-50"
+                    iconColor="bg-blue-50"
                   />
                   
                   <Card>
@@ -1043,7 +1041,7 @@ const DetailPage = ({ type }: { type: "product" | "order" | "vendor" | "customer
                               <p className="text-sm text-gray-500">{order.date}</p>
                             </div>
                             <div className="text-right">
-                              <p className="font-medium">₱{order.amount}</p>
+                              <p className="font-medium">₱{order.amount.toLocaleString()}</p>
                               <StatusBadge status={order.status} />
                             </div>
                           </div>

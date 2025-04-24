@@ -1,82 +1,79 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Check, Clock, Package, Truck } from "lucide-react";
 
 export type OrderStatus = 'processing' | 'shipping' | 'delivered' | 'cancelled' | 'refunded';
 
-interface TimelineStep {
+export interface TimelineStep {
   status: OrderStatus;
   label: string;
-  date?: string;
+  date: string;
   isCompleted: boolean;
   isCurrent: boolean;
 }
 
-interface TimelineCardProps {
+interface TimelineProps {
   orderId: string;
   date: string;
   steps: TimelineStep[];
-  className?: string;
 }
 
-export function TimelineCard({ orderId, date, steps, className }: TimelineCardProps) {
-  // Get the status badge color based on the current step
-  const getStatusBadge = () => {
-    const currentStep = steps.find(step => step.isCurrent);
-    switch(currentStep?.status) {
+export const TimelineCard = ({ orderId, date, steps }: TimelineProps) => {
+  const getStepIcon = (status: OrderStatus) => {
+    switch(status) {
       case 'processing':
-        return <Badge className="bg-amber-500">Processing</Badge>;
+        return <Clock className="h-5 w-5 text-amber-500" />;
       case 'shipping':
-        return <Badge className="bg-blue-500">Shipping</Badge>;
+        return <Truck className="h-5 w-5 text-blue-500" />;
       case 'delivered':
-        return <Badge className="bg-green-500">Delivered</Badge>;
-      case 'cancelled':
-        return <Badge className="bg-red-500">Cancelled</Badge>;
-      case 'refunded':
-        return <Badge className="bg-purple-500">Refunded</Badge>;
+        return <Check className="h-5 w-5 text-green-500" />;
       default:
-        return <Badge>Unknown</Badge>;
+        return <Package className="h-5 w-5 text-gray-500" />;
     }
   };
 
   return (
-    <Card className={cn("transition-all hover:shadow-md", className)}>
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-base">Order #{orderId}</CardTitle>
-          {getStatusBadge()}
-        </div>
-        <p className="text-sm text-muted-foreground">{date}</p>
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">{orderId}</CardTitle>
+        <p className="text-xs text-muted-foreground">{date}</p>
       </CardHeader>
-      <CardContent>
-        <div className="relative">
-          <div className="absolute left-2.5 top-0 bottom-0 w-0.5 bg-gray-200"></div>
-          
+      <CardContent className="space-y-4">
+        <div className="flex items-center space-x-2">
           {steps.map((step, index) => (
-            <div key={index} className="flex gap-4 mb-4 relative">
+            <div key={index} className="flex-1 flex flex-col items-center">
               <div className={cn(
-                "w-5 h-5 rounded-full mt-1 flex items-center justify-center",
-                step.isCompleted ? "bg-primary" : "bg-gray-200",
-                step.isCurrent ? "ring-2 ring-primary ring-offset-2" : ""
+                "w-8 h-8 rounded-full flex items-center justify-center",
+                step.isCurrent ? "bg-primary ring-2 ring-primary ring-offset-2" : 
+                  step.isCompleted ? "bg-green-100" : "bg-gray-100"
               )}>
-                {step.isCompleted && (
-                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
+                {step.isCompleted ? 
+                  <Check className="h-4 w-4 text-green-600" /> : 
+                  getStepIcon(step.status)
+                }
               </div>
-              <div>
-                <p className={cn(
-                  "font-medium",
-                  step.isCurrent ? "text-primary" : ""
-                )}>{step.label}</p>
-                {step.date && <p className="text-xs text-muted-foreground">{step.date}</p>}
-              </div>
+              <div className="text-xs font-medium mt-1 text-center">{step.label}</div>
+              <div className="text-[10px] text-muted-foreground">{step.date}</div>
             </div>
           ))}
+        </div>
+        
+        <div className="flex items-center space-x-2 justify-between">
+          <div className="w-full h-1 bg-gray-100 relative">
+            {steps.map((step, index) => {
+              const width = 100 / (steps.length - 1) * index;
+              return step.isCompleted && (
+                <div 
+                  key={index}
+                  className="absolute top-0 h-1 bg-green-500 transition-all"
+                  style={{ width: `${width}%` }}
+                />
+              );
+            })}
+          </div>
         </div>
       </CardContent>
     </Card>
   );
-}
+};
