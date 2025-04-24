@@ -16,7 +16,7 @@ export const DesktopLoginView: FC = () => {
       <div className="w-full max-w-5xl rounded-3xl bg-white shadow-2xl flex flex-col md:flex-row overflow-hidden border-2 border-[#e0e2ec] scale-100 md:scale-100">
         <div className="hidden md:flex flex-col w-1/2 bg-[#528462] text-white p-12 justify-between gap-8" style={{ background: "linear-gradient(120deg, #39bc90 40%, #72d1de 100%)" }}>
           <div>
-            <div className="text-xl font-bold mb-8 tracking-widest">SMART BARANGAY</div>
+            <div className="text-xl font-bold mb-8 tracking-widest">BARANGAY MO</div>
             <div className="mt-8">
               <div className="font-extrabold text-4xl leading-tight drop-shadow">Your Community, Smarter</div>
               <div className="opacity-90 mt-6 text-lg">Login to connect with your Barangay. Get updates, manage your RBI, shop, and more—with a modern experience.</div>
