@@ -57,6 +57,17 @@ export function DesktopNavItems() {
       >
         <Link to="/messages">Messages</Link>
       </Button>
+      
+      {userRole === "superadmin" && (
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          asChild
+          className={pathname.startsWith("/admin/smarketplace") ? "text-[#1a237e]" : ""}
+        >
+          <Link to="/admin/smarketplace">Smarketplace</Link>
+        </Button>
+      )}
     </div>
   );
 }
