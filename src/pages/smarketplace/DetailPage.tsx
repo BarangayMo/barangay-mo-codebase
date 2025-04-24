@@ -872,7 +872,7 @@ const DetailPage = ({ type }: { type: "product" | "order" | "vendor" | "customer
                     value={data.totalSales}
                     icon={<DollarSign className="h-5 w-5 text-green-500" />}
                     iconColor="bg-green-50"
-                    trend={{ value: 8.2, isPositive: true }}
+                    change={{ value: 8.2, isPositive: true }}
                   />
                   
                   <StatsCard 
