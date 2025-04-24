@@ -7,47 +7,47 @@ interface StatsCardProps {
   title: string;
   value: string | number;
   icon?: ReactNode;
-  description?: string;
-  trend?: {
+  iconColor?: string;
+  change?: {
     value: number;
     isPositive: boolean;
   };
+  chart?: ReactNode;
   className?: string;
-  iconClassName?: string;
 }
 
-export function StatsCard({
-  title,
-  value,
-  icon,
-  description,
-  trend,
-  className,
-  iconClassName
-}: StatsCardProps) {
+export function StatsCard({ title, value, icon, iconColor = "bg-blue-50", change, chart, className }: StatsCardProps) {
   return (
-    <Card className={cn("overflow-hidden", className)}>
+    <Card className={cn("overflow-hidden transition-all hover:shadow-md", className)}>
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">{title}</p>
-            <p className="text-2xl font-bold mt-1">{value}</p>
-            {description && (
-              <p className="text-xs text-muted-foreground mt-1">{description}</p>
-            )}
-            {trend && (
-              <p className={cn("text-xs mt-2 flex items-center gap-1", 
-                trend.isPositive ? "text-green-500" : "text-red-500")}>
-                {trend.isPositive ? "↑" : "↓"} {Math.abs(trend.value)}%
-              </p>
-            )}
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-muted-foreground">{title}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-2xl font-bold">{value}</p>
+              {change && (
+                <span className={cn(
+                  "text-xs font-medium rounded-full px-1.5 py-0.5 flex items-center",
+                  change.isPositive ? "text-green-600 bg-green-50" : "text-red-600 bg-red-50"
+                )}>
+                  {change.isPositive ? "↑" : "↓"} {Math.abs(change.value)}%
+                </span>
+              )}
+            </div>
           </div>
+
           {icon && (
-            <div className={cn("p-3 rounded-full", iconClassName || "bg-primary/10")}>
+            <div className={cn("p-3 rounded-full", iconColor)}>
               {icon}
             </div>
           )}
         </div>
+
+        {chart && (
+          <div className="mt-4 h-16">
+            {chart}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

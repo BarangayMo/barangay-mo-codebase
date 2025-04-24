@@ -1,6 +1,8 @@
 
 import { ReactNode } from "react";
 import { DashboardBreadcrumb } from "./Breadcrumb";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface PageHeaderProps {
   title: string;
@@ -10,13 +12,20 @@ interface PageHeaderProps {
     href?: string;
   }[];
   action?: ReactNode;
+  actionButton?: {
+    label: string;
+    onClick: () => void;
+    variant?: "default" | "outline" | "secondary" | "destructive" | "ghost";
+    icon?: React.ReactNode;
+  };
 }
 
 export function DashboardPageHeader({
   title,
   description,
   breadcrumbItems,
-  action
+  action,
+  actionButton
 }: PageHeaderProps) {
   return (
     <div className="mb-8">
@@ -29,6 +38,20 @@ export function DashboardPageHeader({
           )}
         </div>
         {action && <div>{action}</div>}
+        {actionButton && (
+          <Button 
+            onClick={actionButton.onClick}
+            variant={actionButton.variant || "default"}
+            className={cn(
+              "transition-all",
+              actionButton.variant === "destructive" ? "hover:bg-red-700" : "",
+              !actionButton.variant || actionButton.variant === "default" ? "hover:bg-primary/90" : ""
+            )}
+          >
+            {actionButton.icon && <span className="mr-2">{actionButton.icon}</span>}
+            {actionButton.label}
+          </Button>
+        )}
       </div>
     </div>
   );

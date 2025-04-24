@@ -14,7 +14,10 @@ import {
   ChartBar,
   Star,
   Cog,
-  Puzzle
+  Puzzle,
+  Home,
+  Store,
+  CreditCard
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -22,12 +25,69 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible"
-import { useState } from "react";
+} from "@/components/ui/collapsible";
+import { useEffect, useState } from "react";
 
 export const DesktopSidebar = () => {
   const { pathname } = useLocation();
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {
+    // Try to load from local storage
+    const savedState = localStorage.getItem("sidebar-state");
+    return savedState ? JSON.parse(savedState) : {};
+  });
+
+  // Find all parent paths of the current pathname
+  useEffect(() => {
+    const pathSegments = pathname.split('/').filter(Boolean);
+    
+    // Build all possible parent paths
+    const parentPaths: string[] = [];
+    for (let i = 1; i <= pathSegments.length; i++) {
+      const path = `/${pathSegments.slice(0, i).join('/')}`;
+      parentPaths.push(path);
+    }
+
+    // Check if any parent paths match our menu items
+    const newOpenSections = { ...openSections };
+    mainMenuItems.forEach(item => {
+      if (parentPaths.includes(item.path)) {
+        newOpenSections[item.path] = true;
+      }
+
+      // Check submenu
+      if (item.submenu) {
+        item.submenu.forEach(subItem => {
+          if (parentPaths.includes(subItem.path)) {
+            newOpenSections[item.path] = true;
+            
+            // If sub-item has its own submenu
+            if (subItem.submenu) {
+              newOpenSections[subItem.path] = true;
+            }
+          }
+
+          // Check deeper submenus
+          if (subItem.submenu) {
+            subItem.submenu.forEach(deepSubItem => {
+              if (parentPaths.includes(deepSubItem.path)) {
+                newOpenSections[item.path] = true;
+                newOpenSections[subItem.path] = true;
+              }
+            });
+          }
+        });
+      }
+    });
+
+    setOpenSections(newOpenSections);
+    
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  // Save to localStorage when openSections changes
+  useEffect(() => {
+    localStorage.setItem("sidebar-state", JSON.stringify(openSections));
+  }, [openSections]);
 
   const toggleSection = (sectionId: string) => {
     setOpenSections(prev => ({
@@ -47,22 +107,31 @@ export const DesktopSidebar = () => {
       const isOpen = openSections[sectionId] || false;
       
       return (
-        <div key={item.path} className={cn("w-full", level > 0 ? "" : "")}>
+        <div key={item.path} className={cn("w-full", level > 0 ? "mb-1" : "mb-1")}>
           {hasSubmenu ? (
             <Collapsible
               open={isOpen}
               onOpenChange={() => toggleSection(sectionId)}
               className="w-full"
             >
-              <CollapsibleTrigger className="flex w-full items-center justify-between p-2 text-sm hover:bg-gray-100 rounded-lg">
+              <CollapsibleTrigger className={cn(
+                "flex w-full items-center justify-between p-2 text-sm hover:bg-gray-100 rounded-lg transition-all",
+                isItemActive && "bg-blue-50 text-blue-600"
+              )}>
                 <div className="flex items-center gap-3">
                   {item.icon && <item.icon className="h-4 w-4" />}
-                  <span>{item.title}</span>
+                  <span className={cn(isItemActive && "font-medium")}>{item.title}</span>
                 </div>
-                <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "transform rotate-180")} />
+                <ChevronDown className={cn(
+                  "h-4 w-4 transition-transform",
+                  isOpen && "transform rotate-180"
+                )} />
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <div className="pl-2 pr-2 pb-2 border-l-2 border-gray-200 ml-2 mt-1">
+                <div className={cn(
+                  "pl-4 border-l-2 border-gray-200 ml-2 mt-1",
+                  level > 0 ? "ml-3" : "ml-2"
+                )}>
                   {renderNestedMenu(item.submenu, level + 1, item.path)}
                 </div>
               </CollapsibleContent>
@@ -71,14 +140,19 @@ export const DesktopSidebar = () => {
             <Link
               to={item.path}
               className={cn(
-                "flex items-center gap-3 p-2 text-sm rounded-lg",
+                "flex items-center gap-3 p-2 text-sm rounded-lg transition-colors",
                 isItemActive
-                  ? "bg-blue-50 text-blue-600"
+                  ? "bg-blue-50 text-blue-600 font-medium"
                   : "hover:bg-gray-100"
               )}
             >
-              {level > 0 && <span className="text-gray-400 mr-1 ml-0">↳</span>}
-              {item.icon && <item.icon className="h-4 w-4" />}
+              {level > 0 ? (
+                <div className="w-4 h-4 flex items-center justify-center">
+                  <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
+                </div>
+              ) : (
+                item.icon && <item.icon className="h-4 w-4" />
+              )}
               <span>{item.title}</span>
             </Link>
           )}
@@ -92,6 +166,60 @@ export const DesktopSidebar = () => {
       title: "Dashboard",
       icon: LayoutDashboard,
       path: "/admin"
+    },
+    {
+      title: "Smarketplace",
+      icon: Store,
+      path: "/admin/smarketplace",
+      submenu: [
+        {
+          title: "Product Management",
+          icon: ShoppingBag,
+          path: "/admin/smarketplace/products",
+          submenu: [
+            { title: "All Products", path: "/admin/smarketplace/products/all" },
+            { title: "Categories", path: "/admin/smarketplace/products/categories" },
+            { title: "Inventory", path: "/admin/smarketplace/products/inventory" }
+          ]
+        },
+        {
+          title: "Orders Management",
+          icon: Package,
+          path: "/admin/smarketplace/orders",
+          submenu: [
+            { title: "All Orders", path: "/admin/smarketplace/orders/all" },
+            { title: "Processing", path: "/admin/smarketplace/orders/processing" },
+            { title: "Completed", path: "/admin/smarketplace/orders/completed" }
+          ]
+        },
+        {
+          title: "Vendor Management",
+          icon: Users,
+          path: "/admin/smarketplace/vendors",
+          submenu: [
+            { title: "All Vendors", path: "/admin/smarketplace/vendors/all" },
+            { title: "Applications", path: "/admin/smarketplace/vendors/applications" }
+          ]
+        },
+        {
+          title: "Customer Management",
+          icon: User,
+          path: "/admin/smarketplace/customers",
+          submenu: [
+            { title: "All Customers", path: "/admin/smarketplace/customers/all" },
+            { title: "VIP Customers", path: "/admin/smarketplace/customers/vip" }
+          ]
+        },
+        {
+          title: "Payouts",
+          icon: CreditCard,
+          path: "/admin/smarketplace/payouts",
+          submenu: [
+            { title: "All Payouts", path: "/admin/smarketplace/payouts/all" },
+            { title: "Vendor Payouts", path: "/admin/smarketplace/payouts/vendors" }
+          ]
+        }
+      ]
     },
     {
       title: "Reports",
@@ -112,133 +240,6 @@ export const DesktopSidebar = () => {
       ]
     },
     {
-      title: "Smarketplace",
-      icon: ShoppingBag,
-      path: "/admin/smarketplace",
-      submenu: [
-        {
-          title: "Product Management",
-          icon: ShoppingBag,
-          path: "/admin/smarketplace/products",
-          submenu: [
-            { title: "All Products", path: "/admin/smarketplace/products/all" },
-            { title: "Categories", path: "/admin/smarketplace/products/categories" },
-            { title: "Variants", path: "/admin/smarketplace/products/variants" },
-            { title: "Slideshow & Media", path: "/admin/smarketplace/products/media" },
-            { title: "Reviews & Ratings", path: "/admin/smarketplace/products/reviews" },
-            { title: "Bulk Upload", path: "/admin/smarketplace/products/bulk-upload" },
-            { title: "Product Settings", path: "/admin/smarketplace/products/settings" },
-          ]
-        },
-        {
-          title: "Orders Management",
-          icon: Package,
-          path: "/admin/smarketplace/orders",
-          submenu: [
-            { title: "All Orders", path: "/admin/smarketplace/orders/all" },
-            { title: "Order Details", path: "/admin/smarketplace/orders/details" },
-            { title: "Order Statuses", path: "/admin/smarketplace/orders/statuses" },
-            { title: "Invoices & Packing", path: "/admin/smarketplace/orders/invoices" },
-            { title: "Abandoned Carts", path: "/admin/smarketplace/orders/abandoned" },
-          ]
-        },
-        {
-          title: "Vendor Management",
-          icon: Users,
-          path: "/admin/smarketplace/vendors",
-          submenu: [
-            { title: "Vendor Directory", path: "/admin/smarketplace/vendors/directory" },
-            { title: "Vendor Products", path: "/admin/smarketplace/vendors/products" },
-            { title: "Payouts & Settlements", path: "/admin/smarketplace/vendors/payouts" },
-            { title: "Commission Setup", path: "/admin/smarketplace/vendors/commission" },
-            { title: "Vendor Applications", path: "/admin/smarketplace/vendors/applications" },
-          ]
-        },
-        {
-          title: "Customer Management",
-          icon: User,
-          path: "/admin/smarketplace/customers",
-          submenu: [
-            { title: "All Customers", path: "/admin/smarketplace/customers/all" },
-            { title: "Purchase History", path: "/admin/smarketplace/customers/history" },
-            { title: "Wishlist & Saved Items", path: "/admin/smarketplace/customers/wishlist" },
-            { title: "Messages & Support", path: "/admin/smarketplace/customers/messages" },
-            { title: "Loyalty Points", path: "/admin/smarketplace/customers/loyalty" },
-          ]
-        },
-        {
-          title: "Shipping & Fulfillment",
-          icon: Truck,
-          path: "/admin/smarketplace/shipping",
-          submenu: [
-            { title: "Shipping Zones", path: "/admin/smarketplace/shipping/zones" },
-            { title: "Vendor-Specific Shipping", path: "/admin/smarketplace/shipping/vendor-specific" },
-            { title: "Delivery Windows", path: "/admin/smarketplace/shipping/delivery-windows" },
-            { title: "Pickup Stations", path: "/admin/smarketplace/shipping/pickup-stations" },
-          ]
-        },
-        {
-          title: "Promotions & Rewards",
-          icon: Gift,
-          path: "/admin/smarketplace/promotions",
-          submenu: [
-            { title: "Discount Codes", path: "/admin/smarketplace/promotions/discount-codes" },
-            { title: "Gift Cards", path: "/admin/smarketplace/promotions/gift-cards" },
-            { title: "Vendor Promotions", path: "/admin/smarketplace/promotions/vendor" },
-            { title: "Loyalty & Rewards", path: "/admin/smarketplace/promotions/loyalty" },
-          ]
-        },
-        {
-          title: "Financials & Reports",
-          icon: ChartBar,
-          path: "/admin/smarketplace/financials",
-          submenu: [
-            { title: "Sales Reports", path: "/admin/smarketplace/financials/sales" },
-            { title: "Platform Revenue", path: "/admin/smarketplace/financials/revenue" },
-            { title: "Refunds & Adjustments", path: "/admin/smarketplace/financials/refunds" },
-            { title: "Tax Settings", path: "/admin/smarketplace/financials/tax" },
-          ]
-        },
-        {
-          title: "Reviews & Moderation",
-          icon: Star,
-          path: "/admin/smarketplace/reviews",
-          submenu: [
-            { title: "Product Reviews", path: "/admin/smarketplace/reviews/products" },
-            { title: "Vendor Reviews", path: "/admin/smarketplace/reviews/vendors" },
-            { title: "Dispute Feedback", path: "/admin/smarketplace/reviews/disputes" },
-          ]
-        },
-        {
-          title: "System Settings",
-          icon: Cog,
-          path: "/admin/smarketplace/settings",
-          submenu: [
-            { title: "Payment Gateways", path: "/admin/smarketplace/settings/payment" },
-            { title: "Roles & Permissions", path: "/admin/smarketplace/settings/roles" },
-            { title: "Language & Currency", path: "/admin/smarketplace/settings/language" },
-            { title: "Legal & Compliance", path: "/admin/smarketplace/settings/legal" },
-          ]
-        },
-        {
-          title: "Optional Add-Ons",
-          icon: Puzzle,
-          path: "/admin/smarketplace/addons",
-          submenu: [
-            { title: "Returns Center", path: "/admin/smarketplace/addons/returns" },
-            { title: "Dispute Resolution", path: "/admin/smarketplace/addons/disputes" },
-            { title: "In-app Messaging", path: "/admin/smarketplace/addons/messaging" },
-            { title: "Product Approval Queue", path: "/admin/smarketplace/addons/approval" },
-            { title: "Vendor Subscriptions", path: "/admin/smarketplace/addons/subscriptions" },
-            { title: "Blog/CMS Articles", path: "/admin/smarketplace/addons/blog" },
-            { title: "Notifications System", path: "/admin/smarketplace/addons/notifications" },
-            { title: "Vendor Performance", path: "/admin/smarketplace/addons/performance" },
-            { title: "Custom Form Builder", path: "/admin/smarketplace/addons/forms" },
-          ]
-        },
-      ]
-    },
-    {
       title: "Settings",
       icon: Settings,
       path: "/admin/settings"
@@ -246,14 +247,21 @@ export const DesktopSidebar = () => {
   ];
 
   return (
-    <div className="hidden md:block w-64 min-h-screen bg-white border-r fixed top-0 left-0 pt-16 pb-6">
+    <div className="hidden md:block w-64 min-h-screen bg-white border-r fixed top-0 left-0 pt-16 pb-6 z-20">
       <div className="flex flex-col h-full">
-        <div className="flex-1 px-3 py-2 overflow-y-auto max-h-[calc(100vh-80px)]">
+        <div className="flex items-center px-4 py-2">
+          <Link to="/" className="flex items-center">
+            <Home className="h-4 w-4 mr-2" />
+            <span className="font-semibold">Home</span>
+          </Link>
+        </div>
+        <div className="flex-1 px-3 py-2 overflow-y-auto max-h-[calc(100vh-80px)] scrollbar-thin scrollbar-thumb-gray-200">
           <div className="space-y-1">
             {mainMenuItems.map((item) => {
               const hasSubmenu = item.submenu && item.submenu.length > 0;
               const sectionId = item.path;
               const isOpen = openSections[sectionId] || false;
+              const isItemActive = isActive(item.path);
               
               return (
                 <div key={item.path} className="w-full">
@@ -263,15 +271,21 @@ export const DesktopSidebar = () => {
                       onOpenChange={() => toggleSection(sectionId)}
                       className="w-full"
                     >
-                      <CollapsibleTrigger className="flex w-full items-center justify-between p-2 text-sm hover:bg-gray-100 rounded-lg">
+                      <CollapsibleTrigger className={cn(
+                        "flex w-full items-center justify-between p-2 text-sm hover:bg-gray-100 rounded-lg transition-all",
+                        isItemActive && !isOpen && "bg-blue-50 text-blue-600"
+                      )}>
                         <div className="flex items-center gap-3">
                           <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
+                          <span className="font-medium">{item.title}</span>
                         </div>
-                        <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "transform rotate-180")} />
+                        <ChevronDown className={cn(
+                          "h-4 w-4 transition-transform",
+                          isOpen && "transform rotate-180"
+                        )} />
                       </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <div className="pl-2 pr-2 pb-2">
+                      <CollapsibleContent className="animate-accordion-down">
+                        <div className="pl-3 pr-2 mt-1 space-y-1">
                           {item.submenu && renderNestedMenu(item.submenu, 1, item.path)}
                         </div>
                       </CollapsibleContent>
@@ -280,14 +294,14 @@ export const DesktopSidebar = () => {
                     <Link
                       to={item.path}
                       className={cn(
-                        "flex items-center gap-3 p-2 text-sm rounded-lg",
+                        "flex items-center gap-3 p-2 text-sm rounded-lg transition-colors",
                         isActive(item.path)
                           ? "bg-blue-50 text-blue-600"
                           : "hover:bg-gray-100"
                       )}
                     >
                       <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
+                      <span className="font-medium">{item.title}</span>
                     </Link>
                   )}
                 </div>
@@ -306,6 +320,9 @@ export const DesktopSidebar = () => {
                 <p className="text-sm font-medium truncate">Need help?</p>
                 <p className="text-xs text-gray-500">Contact support</p>
               </div>
+              <Button variant="ghost" size="sm" className="ml-auto">
+                <Settings className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>

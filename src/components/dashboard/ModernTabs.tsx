@@ -24,14 +24,16 @@ export function ModernTabs({ defaultValue, items, className, children }: ModernT
           <TabsTrigger
             key={item.value}
             value={item.value}
-            className="py-3 px-5 rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:font-bold flex items-center gap-2"
+            className="py-3 px-5 rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:font-bold flex items-center gap-2 transition-all hover:bg-gray-50"
           >
-            {item.icon && <span>{item.icon}</span>}
+            {item.icon && <span className="transition-transform">{item.icon}</span>}
             <span>{item.label}</span>
           </TabsTrigger>
         ))}
       </TabsList>
-      {children}
+      <div className="animate-fade-in">
+        {children}
+      </div>
     </Tabs>
   );
 }
