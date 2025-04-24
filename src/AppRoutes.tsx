@@ -25,6 +25,10 @@ import Contact from "@/pages/Contact";
 import About from "@/pages/About";
 import Features from "@/pages/Features";
 import Careers from "@/pages/Careers";
+import Products from "@/pages/Products";
+import Pricing from "@/pages/Pricing";
+import RequestAccess from "@/pages/RequestAccess";
+import Partnerships from "@/pages/Partnerships";
 
 // Marketplace routes
 import ProductDetail from "@/pages/marketplace/ProductDetail";
@@ -37,47 +41,51 @@ export function AppRoutes() {
   return (
     <Routes>
       {/* Public routes */}
-      <Route path="/" element={<Layout><Index /></Layout>} />
-      <Route path="/login" element={<Layout><Login /></Layout>} />
-      <Route path="/register" element={<Layout><Register /></Layout>} />
-      <Route path="/verify" element={<Layout><Verify /></Layout>} />
-      <Route path="/mpin" element={<Layout><MPIN /></Layout>} />
-      <Route path="/phone" element={<Layout><Phone /></Layout>} />
-      <Route path="/welcome" element={<Layout><MobileWelcome /></Layout>} />
-      <Route path="/contact" element={<Layout><Contact /></Layout>} />
-      <Route path="/about" element={<Layout><About /></Layout>} />
-      <Route path="/features" element={<Layout><Features /></Layout>} />
-      <Route path="/careers" element={<Layout><Careers /></Layout>} />
+      <Route path="/" element={<Index />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/verify" element={<Verify />} />
+      <Route path="/mpin" element={<MPIN />} />
+      <Route path="/phone" element={<Phone />} />
+      <Route path="/welcome" element={<MobileWelcome />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/features" element={<Features />} />
+      <Route path="/careers" element={<Careers />} />
+      <Route path="/products" element={<Products />} />
+      <Route path="/pricing" element={<Pricing />} />
+      <Route path="/request-access" element={<RequestAccess />} />
+      <Route path="/partnerships" element={<Partnerships />} />
       
       {/* Protected resident routes */}
-      <Route path="/resident-home" element={<Layout><ResidentHome /></Layout>} />
-      <Route path="/rbi-registration" element={<Layout><RbiRegistration /></Layout>} />
-      <Route path="/resident-profile" element={<Layout><ResidentProfile /></Layout>} />
+      <Route path="/resident-home" element={<ResidentHome />} />
+      <Route path="/rbi-registration" element={<RbiRegistration />} />
+      <Route path="/resident-profile" element={<ResidentProfile />} />
       
       {/* Protected official routes */}
-      <Route path="/official-dashboard" element={<Layout><OfficialsDashboard /></Layout>} />
+      <Route path="/official-dashboard" element={<OfficialsDashboard />} />
       
       {/* Protected admin routes */}
-      <Route path="/admin" element={<Layout><AdminDashboard /></Layout>} />
+      <Route path="/admin" element={<AdminDashboard />} />
       
       {/* Common protected routes */}
-      <Route path="/notifications" element={<Layout><Notifications /></Layout>} />
-      <Route path="/settings" element={<Layout><Settings /></Layout>} />
-      <Route path="/menu" element={<Layout><Menu /></Layout>} />
-      <Route path="/messages" element={<Layout><Messages /></Layout>} />
-      <Route path="/services" element={<Layout><Services /></Layout>} />
-      <Route path="/jobs" element={<Layout><Jobs /></Layout>} />
+      <Route path="/notifications" element={<Notifications />} />
+      <Route path="/settings" element={<Settings />} />
+      <Route path="/menu" element={<Menu />} />
+      <Route path="/messages" element={<Messages />} />
+      <Route path="/services" element={<Services />} />
+      <Route path="/jobs" element={<Jobs />} />
       
       {/* Marketplace routes */}
-      <Route path="/marketplace" element={<Layout><Marketplace /></Layout>} />
-      <Route path="/marketplace/product/:id" element={<Layout><ProductDetail /></Layout>} />
-      <Route path="/marketplace/cart" element={<Layout><Cart /></Layout>} />
-      <Route path="/marketplace/checkout" element={<Layout><Checkout /></Layout>} />
-      <Route path="/marketplace/order-confirmation" element={<Layout><OrderConfirmation /></Layout>} />
-      <Route path="/marketplace/my-orders" element={<Layout><MyOrders /></Layout>} />
+      <Route path="/marketplace" element={<Marketplace />} />
+      <Route path="/marketplace/product/:id" element={<ProductDetail />} />
+      <Route path="/marketplace/cart" element={<Cart />} />
+      <Route path="/marketplace/checkout" element={<Checkout />} />
+      <Route path="/marketplace/order-confirmation" element={<OrderConfirmation />} />
+      <Route path="/marketplace/my-orders" element={<MyOrders />} />
       
       {/* 404 route */}
-      <Route path="*" element={<Layout><NotFound /></Layout>} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

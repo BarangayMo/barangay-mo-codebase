@@ -13,9 +13,11 @@ import { HomePageSkeleton, MarketplaceSkeleton, MessagesSkeleton } from "../ui/p
 
 interface LayoutProps {
   children: ReactNode;
+  hideHeader?: boolean;
+  hideFooter?: boolean;
 }
 
-export const Layout = ({ children }: LayoutProps) => {
+export const Layout = ({ children, hideHeader = false, hideFooter = false }: LayoutProps) => {
   const { isAuthenticated, userRole } = useAuth();
   const isMobile = useIsMobile();
   const { pathname } = useLocation();
@@ -53,7 +55,7 @@ export const Layout = ({ children }: LayoutProps) => {
           showSidebar ? "md:pl-64" : ""
         )}
       >
-        <Header />
+        {!hideHeader && <Header />}
         <main className={cn(
           "flex-grow",
           isMobile ? "pb-20" : ""
@@ -67,7 +69,7 @@ export const Layout = ({ children }: LayoutProps) => {
           )}
         </main>
         {isMobile && <MobileNavbar />}
-        <Footer />
+        {!hideFooter && <Footer />}
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
@@ -21,7 +22,7 @@ export default function Index() {
               <div className="flex flex-col md:flex-row items-center justify-between gap-8">
                 <div className="w-full md:w-1/2 text-center md:text-left">
                   <Badge className="mb-4 bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-sm">
-                    Beta Version 1.0
+                    Mabuhay! Beta Version 1.0
                   </Badge>
                   
                   <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 text-white font-outfit leading-tight">
@@ -108,7 +109,7 @@ export default function Index() {
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold mb-3 font-outfit">Everything Your Community Needs</h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Smart Barangay provides a comprehensive platform tailored to the needs of Filipino communities.
+                Barangay Mo provides a comprehensive platform tailored to the needs of Filipino communities.
               </p>
             </div>
             
@@ -150,7 +151,7 @@ export default function Index() {
         
         <section className="py-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-[40px] mx-4">
           <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold mb-6 font-outfit">Ready to join your smart barangay?</h2>
+            <h2 className="text-3xl font-bold mb-6 font-outfit">Tara na! Ready to join your barangay?</h2>
             <p className="text-xl mb-8 max-w-2xl mx-auto">
               Get connected with your community, access local services, and stay updated with important announcements.
             </p>
@@ -161,7 +162,7 @@ export default function Index() {
         </section>
 
         <footer className="py-8 text-center text-sm text-gray-500 md:hidden">
-          <p>&copy; {currentYear} Smart Barangay. All rights reserved.</p>
+          <p>&copy; {currentYear} Barangay Mo. All rights reserved.</p>
         </footer>
       </div>
     </Layout>
