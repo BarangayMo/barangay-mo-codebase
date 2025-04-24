@@ -4,15 +4,15 @@ import { supabase } from "@/integrations/supabase/client";
 export const demoLogin = async (role: 'official' | 'resident' | 'superadmin') => {
   const credentials = {
     official: {
-      email: 'demo.official@smartbarangay.ph',
+      email: 'official.demo@barangaymo.ph',
       password: 'demo123456'
     },
     resident: {
-      email: 'demo.resident@smartbarangay.ph',
+      email: 'resident.demo@barangaymo.ph',
       password: 'demo123456'
     },
     superadmin: {
-      email: 'demo.admin@smartbarangay.ph',
+      email: 'admin.demo@barangaymo.ph',
       password: 'demo123456'
     }
   };
