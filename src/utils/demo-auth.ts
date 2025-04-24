@@ -21,15 +21,20 @@ export const demoLogin = async (role: 'official' | 'resident' | 'superadmin') =>
   try {
     const { email, password } = credentials[role];
     console.log(`Attempting demo login for ${role} with email: ${email}`);
-    const response = await supabase.auth.signInWithPassword({ email, password });
+    
+    // Make sure we're using the correct Supabase client
+    const response = await supabase.auth.signInWithPassword({ 
+      email, 
+      password 
+    });
     
     if (response.error) {
       console.error('Demo login error:', response.error.message);
+      return response;
     } else {
-      console.log('Demo login successful');
+      console.log('Demo login successful:', response.data.user?.email);
+      return response;
     }
-    
-    return response;
   } catch (error) {
     console.error('Unexpected error in demo login:', error);
     throw error;

@@ -47,6 +47,7 @@ export const AuthProvider = ({
   useEffect(() => {
     console.log("Setting up auth state change listener");
     
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log("Auth state changed:", event, session?.user?.email);
@@ -65,6 +66,7 @@ export const AuthProvider = ({
           setUser(userData);
           
           if (session.user.email) {
+            // Determine role based on email pattern
             let role: UserRole = "resident";
             
             if (session.user.email.includes('official')) {
@@ -75,6 +77,7 @@ export const AuthProvider = ({
             
             setUserRole(role);
             
+            // Handle redirect after sign in
             if (navigate && event === 'SIGNED_IN') {
               const redirectPath = role === 'official' 
                 ? '/official-dashboard' 
@@ -95,7 +98,7 @@ export const AuthProvider = ({
       }
     );
 
-    // Check for existing session
+    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log("Initial session check:", session?.user?.email);
       
@@ -113,6 +116,7 @@ export const AuthProvider = ({
         setUser(userData);
         
         if (session.user.email) {
+          // Determine role based on email pattern
           if (session.user.email.includes('official')) {
             setUserRole('official');
           } else if (session.user.email.includes('admin')) {
@@ -120,46 +124,67 @@ export const AuthProvider = ({
           } else {
             setUserRole('resident');
           }
+          
+          // Handle redirect for existing session if on login/register page
+          if (navigate && (currentPath === '/login' || currentPath === '/register')) {
+            const redirectPath = session.user.email.includes('official') 
+              ? '/official-dashboard' 
+              : session.user.email.includes('admin') 
+                ? '/admin' 
+                : '/resident-home';
+            
+            console.log("Redirecting existing session to:", redirectPath);
+            navigate(redirectPath);
+          }
         }
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, currentPath]);
 
   const login = async (email: string, password: string) => {
     console.log("Login attempt:", email);
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    
-    if (error) {
-      console.error("Login error:", error.message);
-    } else {
-      console.log("Login successful");
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        console.error("Login error:", error.message);
+        return { error };
+      } else {
+        console.log("Login successful");
+        return { error: null };
+      }
+    } catch (error) {
+      console.error("Unexpected login error:", error);
+      return { error: error as Error };
     }
-    
-    return { error };
   };
 
   const register = async (email: string, password: string, userData: any) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          first_name: userData.firstName,
-          last_name: userData.lastName,
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            first_name: userData.firstName,
+            last_name: userData.lastName,
+          }
         }
+      });
+
+      if (!error && navigate) {
+        navigate("/verify");
       }
-    });
 
-    if (!error && navigate) {
-      navigate("/verify");
+      return { error };
+    } catch (error) {
+      return { error: error as Error };
     }
-
-    return { error };
   };
 
   const logout = async (navigateToPath?: string) => {
@@ -169,6 +194,7 @@ export const AuthProvider = ({
       setIsAuthenticated(false);
       setUserRole(null);
       setUser(null);
+      setSession(null);
       
       if (navigate) {
         navigate(navigateToPath || "/login");
