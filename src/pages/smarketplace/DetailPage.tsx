@@ -573,19 +573,19 @@ const DetailPage: React.FC<DetailPageProps> = ({ type = 'generic' }) => {
                   <Button variant="outline" size="sm">Edit</Button>
                   <Button variant="outline" size="sm">Delete</Button>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <p>Detail information for {data.name || `item ${id}`}</p>
-                <div className="mt-4 grid grid-cols-2 gap-4">
-                  {Object.entries(data).map(([key, value]) => (
-                    <div key={key}>
-                      <p className="text-sm font-medium text-gray-500">{key}</p>
-                      <p>{String(value)}</p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p>Detail information for {data.name || `item ${id}`}</p>
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                {Object.entries(data).map(([key, value]) => (
+                  <div key={key}>
+                    <p className="text-sm font-medium text-gray-500">{key}</p>
+                    <p>{String(value)}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
           </Card>
         );
     }
@@ -614,3 +614,4 @@ const DetailPage: React.FC<DetailPageProps> = ({ type = 'generic' }) => {
 };
 
 export default DetailPage;
+
