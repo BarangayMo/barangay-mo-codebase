@@ -1,13 +1,37 @@
 
 import { useState } from "react";
-import { BarChart, ShoppingBag, Package, Users, DollarSign, ArrowUp, ArrowDown, Calendar, PieChart } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { StatsCard } from "@/components/dashboard/StatsCard";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { DashboardPageHeader } from "@/components/dashboard/PageHeader";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { TabsContent, Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { StatsCard } from "@/components/dashboard/StatsCard";
+import { 
+  ShoppingBag, 
+  Package, 
+  Users, 
+  CreditCard, 
+  TrendingUp, 
+  TrendingDown,
+  ArrowUp,
+  ArrowDown
+} from "lucide-react";
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  AreaChart,
+  Area
+} from 'recharts';
 import {
   Table,
   TableBody,
@@ -17,123 +41,124 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import {
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer,
-  PieChart as RechartsPieChart,
-  Pie,
-  Cell,
-  AreaChart,
-  Area
-} from 'recharts';
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const SmarketplaceOverview = () => {
-  const [dateRange, setDateRange] = useState<'today' | 'week' | 'month'>('week');
+  const [dateRange, setDateRange] = useState<'today' | 'week' | 'month' | 'quarter'>('week');
   
-  // Sample data
-  const revenueData = [
-    { name: 'Jan', value: 45000 },
-    { name: 'Feb', value: 52000 },
-    { name: 'Mar', value: 48000 },
-    { name: 'Apr', value: 61000 },
-    { name: 'May', value: 55000 },
-    { name: 'Jun', value: 67000 },
-    { name: 'Jul', value: 72000 },
+  const salesData = [
+    { name: 'Apr 18', sales: 18500, orders: 12 },
+    { name: 'Apr 19', sales: 12500, orders: 8 },
+    { name: 'Apr 20', sales: 15000, orders: 10 },
+    { name: 'Apr 21', sales: 22000, orders: 15 },
+    { name: 'Apr 22', sales: 19500, orders: 13 },
+    { name: 'Apr 23', sales: 24000, orders: 18 },
+    { name: 'Apr 24', sales: 25000, orders: 20 },
   ];
-
+  
   const categoryData = [
-    { name: 'Organic Food', value: 35 },
-    { name: 'Crafts', value: 25 },
-    { name: 'Eco Products', value: 20 },
-    { name: 'Others', value: 20 },
+    { name: 'Electronics', value: 35, color: '#3b82f6' },
+    { name: 'Clothing', value: 25, color: '#10b981' },
+    { name: 'Home Goods', value: 20, color: '#8b5cf6' },
+    { name: 'Food', value: 15, color: '#f59e0b' },
+    { name: 'Other', value: 5, color: '#6b7280' },
   ];
   
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
-
-  const recentTransactions = [
-    { id: "TRX-7829", vendor: "Green Farms Co-op", date: "Today, 10:30 AM", amount: "₱2,347.00", status: "completed" },
-    { id: "TRX-7823", vendor: "Local Crafts", date: "Yesterday, 3:15 PM", amount: "₱1,200.50", status: "pending" },
-    { id: "TRX-7814", vendor: "Eco Friends PH", date: "Apr 21, 2025", amount: "₱3,756.25", status: "completed" },
-    { id: "TRX-7810", vendor: "Tropical Treats", date: "Apr 20, 2025", amount: "₱980.75", status: "failed" },
+  const vendorData = [
+    { name: 'Green Farms Co-op', value: 45, change: 5 },
+    { name: 'Local Crafts', value: 28, change: 2 },
+    { name: 'Eco Friends PH', value: 15, change: -2 },
+    { name: 'Tropical Treats', value: 12, change: 1 },
   ];
 
-  const topVendors = [
-    { id: 1, name: "Green Farms Co-op", sales: "₱24,500", products: 32, growth: 12 },
-    { id: 2, name: "Local Crafts", sales: "₱18,720", products: 24, growth: 8 },
-    { id: 3, name: "Eco Friends PH", sales: "₱12,430", products: 18, growth: -3 },
-    { id: 4, name: "Tropical Treats", sales: "₱10,890", products: 15, growth: 5 },
+  const topProducts = [
+    { id: 1, name: "Organic Rice (5kg)", sales: 245, price: "₱425.00", stock: 58 },
+    { id: 2, name: "Bamboo Toothbrush", sales: 189, price: "₱120.00", stock: 176 },
+    { id: 3, name: "Handwoven Basket", sales: 153, price: "₱350.00", stock: 42 },
+    { id: 4, name: "Coconut Bowl Set", sales: 142, price: "₱480.00", stock: 23 },
   ];
 
-  const getStatusBadge = (status: string) => {
-    switch(status) {
-      case 'completed':
-        return <Badge className="bg-green-500">Completed</Badge>;
-      case 'pending':
-        return <Badge className="bg-amber-500">Pending</Badge>;
-      case 'failed':
-        return <Badge className="bg-red-500">Failed</Badge>;
-      default:
-        return <Badge>Unknown</Badge>;
-    }
-  };
+  const recentVendorActivity = [
+    { 
+      id: 1, 
+      vendor: "Green Farms Co-op", 
+      action: "added new product", 
+      product: "Organic Black Rice (1kg)",
+      time: "20 minutes ago",
+      avatar: ""
+    },
+    { 
+      id: 2, 
+      vendor: "Local Crafts", 
+      action: "updated inventory", 
+      product: "Handwoven Placemat",
+      time: "45 minutes ago",
+      avatar: ""
+    },
+    { 
+      id: 3, 
+      vendor: "Eco Friends PH", 
+      action: "changed price for", 
+      product: "Reusable Produce Bags",
+      time: "1 hour ago",
+      avatar: ""
+    },
+    { 
+      id: 4, 
+      vendor: "Tropical Treats", 
+      action: "added promotion for", 
+      product: "Dried Mango Pack",
+      time: "2 hours ago",
+      avatar: ""
+    },
+  ];
 
   return (
-    <AdminLayout title="Marketplace Overview">
+    <AdminLayout title="Smarketplace Overview">
       <DashboardPageHeader
         title="Marketplace Overview"
-        description="Key metrics and performance of your marketplace"
+        description="Analytics and insights for your marketplace"
         breadcrumbItems={[
           { label: "Dashboard", href: "/admin" },
           { label: "Smarketplace", href: "/admin/smarketplace" },
           { label: "Overview" }
         ]}
-        actionButton={{
-          label: "Generate Report",
-          onClick: () => console.log("Generate report"),
-          icon: <Calendar className="h-4 w-4" />
-        }}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatsCard 
           title="Total Revenue"
-          value="₱325,750"
-          change={{ value: 15, isPositive: true }}
-          icon={<DollarSign className="h-5 w-5 text-green-500" />}
-          iconColor="bg-green-50"
+          value="₱125,650"
+          change={{ value: 12, isPositive: true }}
+          icon={<CreditCard className="h-5 w-5 text-blue-500" />}
           chart={
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={revenueData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                <Area type="monotone" dataKey="value" stroke="#22c55e" fill="#22c55e20" strokeWidth={2} />
-              </AreaChart>
+              <LineChart data={salesData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                <Line type="monotone" dataKey="sales" stroke="#3b82f6" strokeWidth={2} dot={false} />
+              </LineChart>
             </ResponsiveContainer>
           }
         />
         <StatsCard 
-          title="Active Vendors"
-          value="58"
-          change={{ value: 12, isPositive: true }}
-          icon={<Users className="h-5 w-5 text-blue-500" />}
-          iconColor="bg-blue-50"
+          title="Total Orders"
+          value="324"
+          change={{ value: 8, isPositive: true }}
+          icon={<Package className="h-5 w-5 text-green-500" />}
+          iconColor="bg-green-50"
         />
         <StatsCard 
-          title="Total Products"
-          value="1,245"
-          change={{ value: 8, isPositive: true }}
-          icon={<ShoppingBag className="h-5 w-5 text-purple-500" />}
+          title="Active Vendors"
+          value="58"
+          change={{ value: 3, isPositive: true }}
+          icon={<Users className="h-5 w-5 text-purple-500" />}
           iconColor="bg-purple-50"
         />
         <StatsCard 
-          title="Orders Today"
-          value="124"
-          change={{ value: 4, isPositive: true }}
-          icon={<Package className="h-5 w-5 text-amber-500" />}
+          title="Active Listings"
+          value="1,246"
+          change={{ value: 15, isPositive: true }}
+          icon={<ShoppingBag className="h-5 w-5 text-amber-500" />}
           iconColor="bg-amber-50"
         />
       </div>
@@ -143,8 +168,8 @@ const SmarketplaceOverview = () => {
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Revenue Overview</CardTitle>
-                <CardDescription>Monthly revenue performance</CardDescription>
+                <CardTitle>Sales Performance</CardTitle>
+                <CardDescription>Revenue and orders over time</CardDescription>
               </div>
               <div>
                 <Tabs defaultValue="week">
@@ -152,6 +177,7 @@ const SmarketplaceOverview = () => {
                     <TabsTrigger value="today" onClick={() => setDateRange('today')}>Today</TabsTrigger>
                     <TabsTrigger value="week" onClick={() => setDateRange('week')}>Week</TabsTrigger>
                     <TabsTrigger value="month" onClick={() => setDateRange('month')}>Month</TabsTrigger>
+                    <TabsTrigger value="quarter" onClick={() => setDateRange('quarter')}>Quarter</TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>
@@ -159,13 +185,15 @@ const SmarketplaceOverview = () => {
           </CardHeader>
           <CardContent className="pt-4">
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={revenueData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+              <AreaChart data={salesData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                <YAxis axisLine={false} tickLine={false} tickFormatter={(value) => `₱${value/1000}K`} />
-                <Tooltip formatter={(value) => [`₱${value}`, 'Revenue']} />
+                <YAxis yAxisId="left" axisLine={false} tickLine={false} tickFormatter={(value) => `₱${value/1000}K`} />
+                <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} />
+                <Tooltip />
                 <Legend />
-                <Area type="monotone" dataKey="value" stroke="#3b82f6" fill="#3b82f620" strokeWidth={2} name="Revenue (₱)" />
+                <Area yAxisId="left" type="monotone" dataKey="sales" stroke="#3b82f6" fill="#93c5fd" strokeWidth={2} name="Sales (₱)" />
+                <Area yAxisId="right" type="monotone" dataKey="orders" stroke="#10b981" fill="#6ee7b7" strokeWidth={2} name="Orders" />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
@@ -173,118 +201,130 @@ const SmarketplaceOverview = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Sales by Category</CardTitle>
-            <CardDescription>Distribution across product categories</CardDescription>
+            <CardTitle>Category Distribution</CardTitle>
+            <CardDescription>Products by category</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="h-[230px] flex items-center justify-center">
-              <ResponsiveContainer width="100%" height="100%">
-                <RechartsPieChart>
+          <CardContent className="pt-0">
+            <div className="flex justify-center">
+              <ResponsiveContainer width="100%" height={220}>
+                <PieChart>
                   <Pie
                     data={categoryData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={2}
-                    dataKey="value"
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                     labelLine={false}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
                   >
                     {categoryData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => [`${value}%`, 'Percentage']} />
-                </RechartsPieChart>
+                  <Tooltip formatter={(value) => [`${value}%`, 'Market Share']} />
+                  <Legend />
+                </PieChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
         <Card>
           <CardHeader>
-            <CardTitle>Recent Transactions</CardTitle>
-            <CardDescription>Latest financial activities in your marketplace</CardDescription>
+            <CardTitle>Top Vendors</CardTitle>
+            <CardDescription>By sales volume</CardDescription>
           </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Vendor</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentTransactions.map((tx) => (
-                  <TableRow key={tx.id} className="hover:bg-gray-50 transition-colors">
-                    <TableCell className="font-medium">{tx.id}</TableCell>
-                    <TableCell>{tx.vendor}</TableCell>
-                    <TableCell>{tx.date}</TableCell>
-                    <TableCell>{tx.amount}</TableCell>
-                    <TableCell>{getStatusBadge(tx.status)}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <div className="p-4 border-t text-center">
-              <Button variant="outline">View All Transactions</Button>
+          <CardContent className="pt-0">
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={vendorData} layout="vertical" margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f0f0f0" />
+                <XAxis type="number" axisLine={false} tickLine={false} domain={[0, 100]} hide />
+                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} width={100} />
+                <Tooltip formatter={(value) => [`${value}%`, 'Market Share']} />
+                <Bar dataKey="value" fill="#8884d8" radius={[0, 4, 4, 0]} barSize={20} />
+              </BarChart>
+            </ResponsiveContainer>
+            <div className="mt-4 space-y-3">
+              {vendorData.map((vendor, index) => (
+                <div key={index} className="flex justify-between items-center">
+                  <p className="text-sm">{vendor.name}</p>
+                  <div className="flex items-center">
+                    <span className="font-medium mr-2">{vendor.value}%</span>
+                    {vendor.change > 0 && (
+                      <span className="text-xs text-green-600">
+                        <ArrowUp className="h-3 w-3 inline" /> {vendor.change}%
+                      </span>
+                    )}
+                    {vendor.change < 0 && (
+                      <span className="text-xs text-red-600">
+                        <ArrowDown className="h-3 w-3 inline" /> {Math.abs(vendor.change)}%
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Top Performing Vendors</CardTitle>
-            <CardDescription>Vendors with highest sales this month</CardDescription>
+            <CardTitle>Top Products</CardTitle>
+            <CardDescription>Best selling items</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Vendor</TableHead>
-                  <TableHead>Sales</TableHead>
-                  <TableHead>Products</TableHead>
-                  <TableHead>Growth</TableHead>
+                  <TableHead>Product</TableHead>
+                  <TableHead className="text-right">Sales</TableHead>
+                  <TableHead className="text-right">Price</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {topVendors.map((vendor) => (
-                  <TableRow key={vendor.id} className="hover:bg-gray-50 transition-colors">
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback>{vendor.name.substring(0, 2)}</AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium">{vendor.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{vendor.sales}</TableCell>
-                    <TableCell>{vendor.products}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        {vendor.growth > 0 ? (
-                          <span className="text-green-600 flex items-center">
-                            <ArrowUp className="h-3 w-3 mr-1" /> {vendor.growth}%
-                          </span>
-                        ) : (
-                          <span className="text-red-600 flex items-center">
-                            <ArrowDown className="h-3 w-3 mr-1" /> {Math.abs(vendor.growth)}%
-                          </span>
-                        )}
-                      </div>
-                    </TableCell>
+                {topProducts.map((product) => (
+                  <TableRow key={product.id} className="hover:bg-gray-50 transition-colors">
+                    <TableCell className="font-medium">{product.name}</TableCell>
+                    <TableCell className="text-right">{product.sales}</TableCell>
+                    <TableCell className="text-right">{product.price}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
             <div className="p-4 border-t text-center">
-              <Button variant="outline">View All Vendors</Button>
+              <Button variant="outline">View All Products</Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Vendor Activity</CardTitle>
+            <CardDescription>Recent vendor actions</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {recentVendorActivity.map((activity) => (
+              <div key={activity.id} className="flex items-start gap-4">
+                <Avatar>
+                  <AvatarImage src={activity.avatar} />
+                  <AvatarFallback>{activity.vendor.substring(0, 2).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-sm">
+                    <span className="font-medium">{activity.vendor}</span>
+                    {" "}{activity.action}{" "}
+                    <span className="font-medium text-primary">{activity.product}</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {activity.time}
+                  </p>
+                </div>
+              </div>
+            ))}
+            <div className="pt-4 border-t text-center">
+              <Button variant="outline">View All Activity</Button>
             </div>
           </CardContent>
         </Card>
