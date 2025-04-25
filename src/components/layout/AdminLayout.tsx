@@ -51,9 +51,7 @@ export const AdminLayout = ({
                 <img alt="Logo" className="h-8 w-8" src="/lovable-uploads/4dd4bcf0-747b-4dfd-bdfe-159cabf43926.jpg" />
                 {!isSidebarCollapsed && <span className="ml-2 text-lg font-semibold"></span>}
               </Link>
-              {!isSidebarCollapsed && <Button variant="ghost" size="icon" onClick={() => setIsSidebarCollapsed(true)} className="h-7 w-7 transition-opacity">
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>}
+              {!isSidebarCollapsed}
             </div>
 
             <div className="flex-1 overflow-hidden">
