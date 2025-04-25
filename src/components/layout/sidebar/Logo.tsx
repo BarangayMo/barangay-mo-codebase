@@ -9,7 +9,7 @@ export const Logo = () => {
         alt="Logo" 
         className="h-8 w-8" 
       />
-      <span className="ml-2 text-lg font-semibold">Barangay System</span>
+      <span className="ml-2 text-lg font-semibold">Barangay Mo Admin</span>
     </Link>
   );
 };

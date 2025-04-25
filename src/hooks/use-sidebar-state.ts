@@ -23,13 +23,30 @@ export const useSidebarState = () => {
 
     const newOpenSections = { ...openSections };
     let currentActiveSection = activeSection;
+    let found = false;
+    
+    // Function to check if the current pathname is the Dashboard path
+    // and only set it as active when it's exactly the dashboard path
+    const isDashboardPath = (path: string) => {
+      const dashboardPath = "/admin";
+      return path === dashboardPath && pathname === dashboardPath;
+    };
     
     const checkMenuItems = (items: any[]) => {
       items.forEach(group => {
         group.items.forEach((item: any) => {
-          if (parentPaths.includes(item.path)) {
+          // Special case for Dashboard - only set it as active if the path exactly matches
+          if (isDashboardPath(item.path)) {
+            currentActiveSection = item.path;
+            found = true;
+            return;
+          }
+          
+          // For other menu items, the usual logic applies
+          if (parentPaths.includes(item.path) && item.path !== "/admin") {
             newOpenSections[item.path] = true;
             currentActiveSection = item.path;
+            found = true;
             
             if (item.submenu) {
               item.submenu.forEach((subItem: any) => {
@@ -54,8 +71,11 @@ export const useSidebarState = () => {
     };
 
     checkMenuItems(sidebarMenuItems);
-    setOpenSections(newOpenSections);
-    setActiveSection(currentActiveSection);
+    
+    if (found || pathname === "/admin") {
+      setOpenSections(newOpenSections);
+      setActiveSection(currentActiveSection);
+    }
   }, [pathname]);
 
   useEffect(() => {

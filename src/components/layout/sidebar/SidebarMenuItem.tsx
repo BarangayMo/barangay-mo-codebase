@@ -47,7 +47,7 @@ export function SidebarMenuItem({
       <Collapsible 
         open={isOpen} 
         onOpenChange={() => {}}
-        className="w-full transition-all duration-200"
+        className="w-full transition-all duration-300"
       >
         <CollapsibleTrigger asChild>
           <SidebarMenuButton
@@ -56,9 +56,9 @@ export function SidebarMenuItem({
               setActiveSection(item.path);
             }}
             className={cn(
-              "flex w-full items-center justify-between px-3 py-2 text-sm hover:bg-gray-100 rounded-lg transition-all",
-              isActive && !isOpen && "bg-blue-50 text-blue-600",
-              isOpen && "bg-gray-100",
+              "flex w-full items-center justify-between px-3 py-2 text-sm hover:bg-gray-100 rounded-lg transition-all duration-200",
+              isActive && !isOpen && "bg-blue-50 text-blue-600 font-medium",
+              isOpen && "bg-gray-100 font-medium",
               isCollapsed && "px-0 justify-center"
             )}
           >
@@ -86,7 +86,7 @@ export function SidebarMenuItem({
                 </div>
               )}
               {!isCollapsed && <span className={cn(
-                "text-sm",
+                "text-sm whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]",
                 (isActive || isOpen) && "font-medium"
               )}>{item.title}</span>}
             </div>
@@ -104,9 +104,13 @@ export function SidebarMenuItem({
         {!isCollapsed && (
           <CollapsibleContent className="animate-accordion-down overflow-hidden transition-all duration-300">
             <div className={cn(
-              "pl-4 border-l border-gray-200 ml-3 mt-1 space-y-1",
+              "pl-4 relative border-l border-gray-200 ml-5 mt-1 space-y-1",
               level > 0 && "ml-4"
             )}>
+              {/* Visual connector line for active submenu */}
+              {isOpen && (
+                <div className="absolute top-0 -left-0.5 w-0.5 h-full bg-blue-400 rounded-full" />
+              )}
               <SidebarMenu>
                 {item.submenu.map((subItem: any) => (
                   <SidebarMenuItemBase key={subItem.path}>
@@ -134,13 +138,18 @@ export function SidebarMenuItem({
       to={item.path}
       onClick={() => setActiveSection(item.path)}
       className={cn(
-        "flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors",
+        "flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-200",
         isActive
           ? "bg-blue-50 text-blue-600 font-medium"
           : "hover:bg-gray-100",
-        isCollapsed && "justify-center px-0"
+        isCollapsed && "justify-center px-0",
+        level > 0 && "relative"
       )}
     >
+      {level > 0 && isActive && (
+        <div className="absolute -left-[18px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-blue-500" />
+      )}
+      
       {level > 0 && !isCollapsed ? (
         <div className="w-5 h-5 flex items-center justify-center">
           <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
@@ -166,7 +175,7 @@ export function SidebarMenuItem({
           </div>
         )
       )}
-      {!isCollapsed && <span className="text-sm">{item.title}</span>}
+      {!isCollapsed && <span className="text-sm whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]">{item.title}</span>}
     </Link>
   );
 }

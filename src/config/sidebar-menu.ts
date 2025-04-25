@@ -26,7 +26,7 @@ export const sidebarMenuItems = [
             path: "/admin/smarketplace/overview",
           },
           {
-            title: "Product Management",
+            title: "Products",
             icon: ShoppingBag,
             path: "/admin/smarketplace/products",
             submenu: [
@@ -36,7 +36,7 @@ export const sidebarMenuItems = [
             ]
           },
           {
-            title: "Orders Management",
+            title: "Orders",
             icon: Package,
             path: "/admin/smarketplace/orders",
             submenu: [
@@ -46,21 +46,21 @@ export const sidebarMenuItems = [
             ]
           },
           {
-            title: "Vendor Management",
+            title: "Vendors",
             icon: Users,
             path: "/admin/smarketplace/vendors",
             submenu: [
-              { title: "All Vendors", path: "/admin/smarketplace/vendors/all" },
+              { title: "Directory", path: "/admin/smarketplace/vendors/all" },
               { title: "Applications", path: "/admin/smarketplace/vendors/applications" }
             ]
           },
           {
-            title: "Customer Management",
+            title: "Customers",
             icon: User,
             path: "/admin/smarketplace/customers",
             submenu: [
-              { title: "All Customers", path: "/admin/smarketplace/customers/all" },
-              { title: "VIP Customers", path: "/admin/smarketplace/customers/vip" }
+              { title: "Directory", path: "/admin/smarketplace/customers/all" },
+              { title: "VIP", path: "/admin/smarketplace/customers/vip" }
             ]
           }
         ]
@@ -75,12 +75,12 @@ export const sidebarMenuItems = [
         icon: FileText,
         path: "/admin/reports",
         submenu: [
-          { title: "Financial Reports", path: "/admin/reports/financial" },
-          { title: "Activity Logs", path: "/admin/reports/activity" },
+          { title: "Financial", path: "/admin/reports/financial" },
+          { title: "Activity", path: "/admin/reports/activity" },
         ]
       },
       {
-        title: "User Management",
+        title: "Users",
         icon: Users,
         path: "/admin/users",
         submenu: [
