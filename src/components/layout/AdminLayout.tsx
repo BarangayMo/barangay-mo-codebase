@@ -1,4 +1,3 @@
-
 import { ReactNode, useEffect, useState } from "react";
 import { EnhancedSidebar } from "./EnhancedSidebar";
 import { cn } from "@/lib/utils";
@@ -15,7 +14,8 @@ import {
   MessageSquare,
   Search,
   Plus,
-  Command
+  Command,
+  ChevronDown
 } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Link, useNavigate } from "react-router-dom";
@@ -238,7 +238,6 @@ export const AdminLayout = ({ children, title }: AdminLayoutProps) => {
             <title>{title} - Barangay Mo Admin</title>
           </Helmet>
 
-          {/* New Dashboard Header */}
           <header className="sticky top-0 z-10 bg-white border-b shadow-sm">
             <div className="flex items-center justify-between h-16 px-4">
               <div className="relative w-64">
