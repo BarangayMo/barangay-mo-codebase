@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -47,7 +46,7 @@ export function SidebarMenuItem({
       <Collapsible 
         open={isOpen} 
         onOpenChange={() => {}}
-        className="w-full transition-all duration-300"
+        className="w-full transition-all duration-300 ease-in-out"
       >
         <CollapsibleTrigger asChild>
           <SidebarMenuButton
@@ -56,7 +55,7 @@ export function SidebarMenuItem({
               setActiveSection(item.path);
             }}
             className={cn(
-              "flex w-full items-center justify-between px-3 py-2 text-sm hover:bg-gray-100 rounded-lg transition-all duration-200",
+              "flex w-full items-center justify-between px-3 py-2 text-sm hover:bg-gray-100 rounded-lg transition-all duration-300 ease-in-out",
               isActive && !isOpen && "bg-blue-50 text-blue-600 font-medium",
               isOpen && "bg-gray-100 font-medium",
               isCollapsed && "px-0 justify-center"
@@ -93,24 +92,20 @@ export function SidebarMenuItem({
             {!isCollapsed && (
               <div className="flex items-center">
                 {isOpen ? (
-                  <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+                  <ChevronDown className="h-4 w-4 transition-transform duration-300 ease-in-out" />
                 ) : (
-                  <ChevronRight className="h-4 w-4 transition-transform duration-200" />
+                  <ChevronRight className="h-4 w-4 transition-transform duration-300 ease-in-out" />
                 )}
               </div>
             )}
           </SidebarMenuButton>
         </CollapsibleTrigger>
         {!isCollapsed && (
-          <CollapsibleContent className="animate-accordion-down overflow-hidden transition-all duration-300">
+          <CollapsibleContent className="animate-accordion-down transition-all duration-300 ease-in-out">
             <div className={cn(
               "pl-4 relative border-l border-gray-200 ml-5 mt-1 space-y-1",
               level > 0 && "ml-4"
             )}>
-              {/* Visual connector line for active submenu */}
-              {isOpen && (
-                <div className="absolute top-0 -left-0.5 w-0.5 h-full bg-blue-400 rounded-full" />
-              )}
               <SidebarMenu>
                 {item.submenu.map((subItem: any) => (
                   <SidebarMenuItemBase key={subItem.path}>
@@ -145,35 +140,25 @@ export function SidebarMenuItem({
         isCollapsed && "justify-center px-0",
         level > 0 && "relative"
       )}
-    >
-      {level > 0 && isActive && (
-        <div className="absolute -left-[18px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-blue-500" />
-      )}
-      
-      {level > 0 && !isCollapsed ? (
-        <div className="w-5 h-5 flex items-center justify-center">
-          <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
+    >      
+      {item.icon && (
+        <div className={cn(
+          "flex items-center justify-center w-5 h-5",
+          isCollapsed && "w-10 h-10"
+        )}>
+          {isCollapsed ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <item.icon className="h-4 w-4" />
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                {item.title}
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <item.icon className="h-4 w-4" />
+          )}
         </div>
-      ) : (
-        item.icon && (
-          <div className={cn(
-            "flex items-center justify-center w-5 h-5",
-            isCollapsed && "w-10 h-10"
-          )}>
-            {isCollapsed ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <item.icon className="h-4 w-4" />
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  {item.title}
-                </TooltipContent>
-              </Tooltip>
-            ) : (
-              <item.icon className="h-4 w-4" />
-            )}
-          </div>
-        )
       )}
       {!isCollapsed && <span className="text-sm whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]">{item.title}</span>}
     </Link>

@@ -1,4 +1,3 @@
-
 import { ReactNode, useEffect, useState } from "react";
 import { EnhancedSidebar } from "./EnhancedSidebar";
 import { cn } from "@/lib/utils";
@@ -31,6 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -68,7 +68,7 @@ export const AdminLayout = ({ children, title }: AdminLayoutProps) => {
           isSidebarCollapsed ? "w-16" : "w-64"
         )}>
           <div className="flex flex-col h-full">
-            <div className="flex items-center justify-between h-16 px-4 border-b">
+            <div className="flex items-center justify-center h-16 px-4 border-b">
               <Link to="/" className={cn(
                 "flex items-center",
                 isSidebarCollapsed ? "justify-center w-full" : "justify-start"
@@ -100,14 +100,41 @@ export const AdminLayout = ({ children, title }: AdminLayoutProps) => {
 
             {isSidebarCollapsed && (
               <div className="absolute -right-3 top-1/2 transform -translate-y-1/2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setIsSidebarCollapsed(false)}
-                  className="rounded-full h-6 w-6 border bg-white shadow-md"
-                >
-                  <ChevronRight className="h-3 w-3" />
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setIsSidebarCollapsed(false)}
+                      className="rounded-full h-6 w-6 border bg-white shadow-md transition-transform duration-300 ease-in-out"
+                    >
+                      <ChevronRight className="h-3 w-3" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    Expand Menu
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            )}
+
+            {!isSidebarCollapsed && (
+              <div className="absolute -right-3 top-1/2 transform -translate-y-1/2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setIsSidebarCollapsed(true)}
+                      className="rounded-full h-6 w-6 border bg-white shadow-md transition-transform duration-300 ease-in-out"
+                    >
+                      <ChevronLeft className="h-3 w-3" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    Collapse Menu
+                  </TooltipContent>
+                </Tooltip>
               </div>
             )}
 
