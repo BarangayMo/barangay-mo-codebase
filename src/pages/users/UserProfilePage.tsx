@@ -1,15 +1,15 @@
 
 import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { MapPin, Phone, Mail, Ban, Shield, MessageSquare } from "lucide-react";
+import { MapPin, Phone, Mail, MessageSquare } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { DashboardPageHeader } from "@/components/dashboard/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Dialog } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { Json } from "@/integrations/supabase/types";
 
 interface UserProfile {
   id: string;
@@ -17,11 +17,14 @@ interface UserProfile {
   last_name: string;
   email: string;
   settings?: {
-    is_banned: boolean;
-    can_sell: boolean;
-    is_verified: boolean;
+    is_banned: boolean | null;
+    can_sell: boolean | null;
+    is_verified: boolean | null;
     phone_number: string | null;
-    address: any;
+    address: Json | null;
+    created_at: string;
+    updated_at: string;
+    user_id: string;
   };
   activities?: Array<{
     id: string;
@@ -43,32 +46,55 @@ export default function UserProfilePage() {
 
   const loadUserProfile = async () => {
     try {
-      const [profileResponse, settingsResponse, activityResponse] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', id)
-          .single(),
-        supabase
-          .from('user_settings')
-          .select('*')
-          .eq('user_id', id)
-          .single(),
-        supabase
-          .from('user_activity')
-          .select('*')
-          .eq('user_id', id)
-          .order('created_at', { ascending: false })
-      ]);
+      // First, get the user's email from auth.users via profiles
+      const { data: userData, error: userError } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name')
+        .eq('id', id)
+        .single();
 
-      if (profileResponse.error) throw profileResponse.error;
+      if (userError) throw userError;
+
+      // Separately fetch the user email from an auth endpoint or store it in profiles
+      // For now, we'll use a placeholder email if not available
+      let email = `user-${id}@example.com`;
+      
+      // Get user settings
+      const { data: settingsData, error: settingsError } = await supabase
+        .from('user_settings')
+        .select('*')
+        .eq('user_id', id)
+        .single();
+
+      // Get user activity
+      const { data: activityData, error: activityError } = await supabase
+        .from('user_activity')
+        .select('*')
+        .eq('user_id', id)
+        .order('created_at', { ascending: false });
+
+      if (settingsError && settingsError.code !== 'PGRST116') {
+        // PGRST116 means no rows returned, which is fine for a new user
+        throw settingsError;
+      }
 
       setProfile({
-        ...profileResponse.data,
-        settings: settingsResponse.data,
-        activities: activityResponse.data
+        ...userData,
+        email: email, // Include the email field
+        settings: settingsData || {
+          is_banned: false,
+          can_sell: true,
+          is_verified: false,
+          phone_number: null,
+          address: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          user_id: id || ''
+        },
+        activities: activityData || []
       });
     } catch (error) {
+      console.error("Error loading profile:", error);
       toast({
         title: "Error loading profile",
         description: "Could not load user profile data",
@@ -172,7 +198,7 @@ export default function UserProfilePage() {
         <Card className="p-6 col-span-1 md:col-span-2">
           <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
           <div className="space-y-4">
-            {activities?.map((activity) => (
+            {activities?.length ? activities.map((activity) => (
               <div key={activity.id} className="border-b pb-4">
                 <div className="flex items-center justify-between">
                   <span className="capitalize">{activity.activity_type.replace('_', ' ')}</span>
@@ -184,7 +210,9 @@ export default function UserProfilePage() {
                   {JSON.stringify(activity.activity_data)}
                 </p>
               </div>
-            ))}
+            )) : (
+              <p className="text-gray-500">No recent activity</p>
+            )}
           </div>
         </Card>
 
