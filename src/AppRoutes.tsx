@@ -39,11 +39,23 @@ import MyOrders from "@/pages/marketplace/MyOrders";
 
 // Smarketplace routes
 import SmarketplaceIndex from "@/pages/smarketplace/SmarketplaceIndex";
+import SmarketplaceOverview from "@/pages/smarketplace/SmarketplaceOverview";
 import ProductsAllPage from "@/pages/smarketplace/products/ProductsAllPage";
 import CategoriesPage from "@/pages/smarketplace/products/CategoriesPage";
 import OrdersAllPage from "@/pages/smarketplace/orders/OrdersAllPage";
 import CustomersAllPage from "@/pages/smarketplace/customers/CustomersAllPage";
 import VendorsAllPage from "@/pages/smarketplace/vendors/VendorsAllPage";
+
+// Reports routes
+import FinancialReportsPage from "@/pages/reports/FinancialReportsPage";
+import ActivityLogsPage from "@/pages/reports/ActivityLogsPage";
+
+// User Management routes
+import ResidentsPage from "@/pages/users/ResidentsPage";
+import OfficialsPage from "@/pages/users/OfficialsPage";
+
+// Settings routes
+import SettingsPage from "@/pages/admin/SettingsPage";
 
 export function AppRoutes() {
   return (
@@ -78,6 +90,7 @@ export function AppRoutes() {
       
       {/* Smarketplace admin routes */}
       <Route path="/admin/smarketplace" element={<SmarketplaceIndex />} />
+      <Route path="/admin/smarketplace/overview" element={<SmarketplaceOverview />} />
       <Route path="/admin/smarketplace/products/all" element={<ProductsAllPage />} />
       <Route path="/admin/smarketplace/products/categories" element={<CategoriesPage />} />
       <Route path="/admin/smarketplace/products/inventory" element={<ProductsAllPage />} />
@@ -87,6 +100,17 @@ export function AppRoutes() {
       <Route path="/admin/smarketplace/vendors/all" element={<VendorsAllPage />} />
       <Route path="/admin/smarketplace/customers/all" element={<CustomersAllPage />} />
       <Route path="/admin/smarketplace/customers/vip" element={<CustomersAllPage />} />
+      
+      {/* Reports routes */}
+      <Route path="/admin/reports/financial" element={<FinancialReportsPage />} />
+      <Route path="/admin/reports/activity" element={<ActivityLogsPage />} />
+      
+      {/* User Management routes */}
+      <Route path="/admin/users/residents" element={<ResidentsPage />} />
+      <Route path="/admin/users/officials" element={<OfficialsPage />} />
+      
+      {/* Settings routes */}
+      <Route path="/admin/settings" element={<SettingsPage />} />
       
       {/* Common protected routes */}
       <Route path="/notifications" element={<Notifications />} />
