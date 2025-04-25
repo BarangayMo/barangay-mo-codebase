@@ -34,6 +34,30 @@ interface UserProfile {
   }>;
 }
 
+// Helper function to safely display address information
+const formatAddress = (address: Json | null): string => {
+  if (!address) return '';
+  
+  // Check if address is an object with street and city properties
+  if (typeof address === 'object' && address !== null && !Array.isArray(address)) {
+    const addressObj = address as Record<string, unknown>;
+    const street = addressObj.street;
+    const city = addressObj.city;
+    
+    if (street && city) {
+      return `${street}, ${city}`;
+    } else if (street) {
+      return `${street}`;
+    } else if (city) {
+      return `${city}`;
+    }
+  }
+  
+  // If it's not an object or doesn't have the expected properties,
+  // just return the string representation
+  return String(address);
+};
+
 export default function UserProfilePage() {
   const { id } = useParams();
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -187,7 +211,7 @@ export default function UserProfilePage() {
               {settings?.address && (
                 <div className="flex items-center gap-2 text-sm">
                   <MapPin className="w-4 h-4" />
-                  <span>{settings.address.street}, {settings.address.city}</span>
+                  <span>{formatAddress(settings.address)}</span>
                 </div>
               )}
             </div>
