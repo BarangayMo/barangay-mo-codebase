@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { LayoutDashboard, Users, ShoppingBag, Package, BarChart, ArrowUp, ArrowDown, User, Clock, Zap } from "lucide-react";
+import { LayoutDashboard, Users, ShoppingBag, Package, BarChartIcon, ArrowUp, ArrowDown, User, Clock, Zap } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { AdminLayout } from "@/components/layout/AdminLayout";
@@ -120,7 +119,7 @@ const AdminDashboard = () => {
           title="Total Revenue"
           value="₱125,650"
           change={{ value: 12, isPositive: true }}
-          icon={<BarChart className="h-5 w-5 text-blue-500" />}
+          icon={<BarChartIcon className="h-5 w-5 text-blue-500" />}
           chart={
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={salesData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
