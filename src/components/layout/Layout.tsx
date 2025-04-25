@@ -57,12 +57,10 @@ export const Layout = ({ children, hideHeader = false, hideFooter = false }: Lay
     <SidebarProvider>
       <div className="flex min-h-screen bg-gray-50 w-full overflow-x-hidden">
         {showSidebar && <DesktopSidebar />}
-        <div
-          className={cn(
-            "flex flex-col min-h-screen w-full",
-            showSidebar ? "md:pl-64" : ""
-          )}
-        >
+        <div className={cn(
+          "flex flex-col min-h-screen w-full",
+          showSidebar ? "md:pl-64" : ""
+        )}>
           {!hideHeader && <Header />}
           <main className={cn(
             "flex-grow",
