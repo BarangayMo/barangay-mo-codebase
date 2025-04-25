@@ -48,7 +48,7 @@ export const AdminLayout = ({
           <div className="flex flex-col h-full">
             <div className="flex items-center justify-center h-16 px-4 border-b">
               <Link to="/" className={cn("flex items-center", isSidebarCollapsed ? "justify-center w-full" : "justify-start")}>
-                <img src="/lovable-uploads/d6bf0909-f59b-42dc-8d79-b45a400a1081.png" alt="Logo" className="h-8 w-8" />
+                <img alt="Logo" className="h-8 w-8" src="/lovable-uploads/4dd4bcf0-747b-4dfd-bdfe-159cabf43926.jpg" />
                 {!isSidebarCollapsed && <span className="ml-2 text-lg font-semibold"></span>}
               </Link>
               {!isSidebarCollapsed && <Button variant="ghost" size="icon" onClick={() => setIsSidebarCollapsed(true)} className="h-7 w-7 transition-opacity">
