@@ -1,3 +1,4 @@
+
 import { Route, Routes } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import Index from "@/pages/Index";
@@ -54,8 +55,9 @@ import ResidentsPage from "@/pages/users/ResidentsPage";
 import OfficialsPage from "@/pages/users/OfficialsPage";
 import UserProfilePage from "@/pages/users/UserProfilePage";
 
-// Settings routes
+// Admin routes
 import SettingsPage from "@/pages/admin/SettingsPage";
+import MessagesPage from "@/pages/admin/MessagesPage";
 
 export function AppRoutes() {
   return (
@@ -100,6 +102,10 @@ export function AppRoutes() {
       <Route path="/admin/smarketplace/vendors/all" element={<VendorsAllPage />} />
       <Route path="/admin/smarketplace/customers/all" element={<CustomersAllPage />} />
       <Route path="/admin/smarketplace/customers/vip" element={<CustomersAllPage />} />
+      
+      {/* Messages route */}
+      <Route path="/admin/messages" element={<MessagesPage />} />
+      <Route path="/admin/messages/:id" element={<MessagesPage />} />
       
       {/* Reports routes */}
       <Route path="/admin/reports/financial" element={<FinancialReportsPage />} />

@@ -1,5 +1,5 @@
 
-import { Home, ShoppingBag, Package, User, Users, FileText, Settings, BarChart, Store } from "lucide-react";
+import { Home, ShoppingBag, Package, User, Users, FileText, Settings, BarChart, Store, MessageSquare } from "lucide-react";
 
 export const sidebarMenuItems = [
   {
@@ -64,6 +64,16 @@ export const sidebarMenuItems = [
             ]
           }
         ]
+      }
+    ]
+  },
+  {
+    groupLabel: "Communication",
+    items: [
+      {
+        title: "Messaging",
+        icon: MessageSquare,
+        path: "/admin/messages",
       }
     ]
   },

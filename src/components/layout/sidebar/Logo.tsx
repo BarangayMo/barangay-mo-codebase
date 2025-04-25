@@ -5,9 +5,9 @@ export const Logo = () => {
   return (
     <Link to="/" className="flex items-center justify-center p-2">
       <img 
-        src="/lovable-uploads/d6bf0909-f59b-42dc-8d79-b45a400a1081.png" 
+        src="/lovable-uploads/bd0f61d0-eeec-48d3-bbb1-348d45dda847.png" 
         alt="Admin Dashboard" 
-        className="h-10 w-10"
+        className="h-10"
       />
     </Link>
   );

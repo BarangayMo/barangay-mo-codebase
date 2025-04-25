@@ -57,7 +57,7 @@ export function SidebarMenuItem({
               setActiveSection(item.path);
             }}
             className={cn(
-              "flex w-full items-center justify-between px-3 py-2 text-sm hover:bg-gray-100 rounded-lg transition-all duration-300 ease-in-out",
+              "flex w-full items-center justify-between px-3 py-1.5 text-sm hover:bg-gray-100 rounded-lg transition-all duration-300 ease-in-out", // Reduced py from 2 to 1.5
               isActive && !isOpen && "bg-blue-50 text-blue-600 font-medium",
               isOpen && "bg-gray-100 font-medium",
               isCollapsed && "px-0 justify-center"
@@ -93,6 +93,9 @@ export function SidebarMenuItem({
             </div>
             {!isCollapsed && (
               <div className="flex items-center">
+                {item.title === "Orders" && (
+                  <Badge variant="secondary" className="mr-2 px-1.5 py-0.5 text-xs">3</Badge>
+                )}
                 {isOpen ? (
                   <ChevronDown className="h-4 w-4 transition-transform duration-300 ease-in-out" />
                 ) : (
@@ -105,7 +108,7 @@ export function SidebarMenuItem({
         {!isCollapsed && (
           <CollapsibleContent className="animate-accordion-down transition-all duration-300 ease-in-out">
             <div className={cn(
-              "pl-4 relative border-l border-gray-200 ml-5 mt-1 space-y-1",
+              "pl-4 relative border-l border-gray-200 ml-5 mt-1 space-y-0.5", // Reduced space-y from 1 to 0.5
               level > 0 && "ml-4"
             )}>
               <SidebarMenu>
@@ -135,7 +138,7 @@ export function SidebarMenuItem({
       to={item.path}
       onClick={() => setActiveSection(item.path)}
       className={cn(
-        "flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-200",
+        "flex items-center gap-3 px-3 py-1.5 text-sm rounded-lg transition-all duration-200", // Reduced py from 2 to 1.5
         isActive
           ? "bg-blue-50 text-blue-600 font-medium"
           : "hover:bg-gray-100",
@@ -162,7 +165,14 @@ export function SidebarMenuItem({
           )}
         </div>
       )}
-      {!isCollapsed && <span className="text-sm whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]">{item.title}</span>}
+      {!isCollapsed && (
+        <div className="flex items-center justify-between flex-1">
+          <span className="text-sm whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]">{item.title}</span>
+          {item.title === "Orders" && (
+            <Badge variant="secondary" className="px-1.5 py-0.5 text-xs">3</Badge>
+          )}
+        </div>
+      )}
     </Link>
   );
 }
