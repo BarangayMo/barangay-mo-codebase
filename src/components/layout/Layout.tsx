@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { Header } from "./Header";
 import { MobileNavbar } from "./MobileNavbar";
@@ -10,7 +9,6 @@ import { cn } from "@/lib/utils";
 import { useLocation } from "react-router-dom";
 import { LoadingScreen } from "../ui/loading";
 import { HomePageSkeleton, MarketplaceSkeleton, MessagesSkeleton } from "../ui/page-skeleton";
-import { SidebarProvider } from "@/components/ui/sidebar";
 
 interface LayoutProps {
   children: ReactNode;
@@ -53,13 +51,9 @@ export const Layout = ({ children, hideHeader = false, hideFooter = false }: Lay
     }
   };
 
-  const content = (
-    <>
-      {showSidebar && (
-        <SidebarProvider>
-          <DesktopSidebar />
-        </SidebarProvider>
-      )}
+  return (
+    <div className="flex min-h-screen bg-gray-50 w-full overflow-x-hidden">
+      {showSidebar && <DesktopSidebar />}
       <div
         className={cn(
           "flex flex-col min-h-screen w-full",
@@ -82,12 +76,6 @@ export const Layout = ({ children, hideHeader = false, hideFooter = false }: Lay
         {isMobile && <MobileNavbar />}
         {shouldShowFooter && <Footer />}
       </div>
-    </>
-  );
-
-  return (
-    <div className="flex min-h-screen bg-gray-50 w-full overflow-x-hidden">
-      {content}
     </div>
   );
 };
