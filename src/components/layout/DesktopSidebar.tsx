@@ -27,6 +27,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useEffect, useState } from "react";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 export const DesktopSidebar = () => {
   const { pathname } = useLocation();
@@ -247,86 +248,88 @@ export const DesktopSidebar = () => {
   ];
 
   return (
-    <div className="hidden md:block w-64 min-h-screen bg-white border-r fixed top-0 left-0 pt-16 pb-6 z-20">
-      <div className="flex flex-col h-full">
-        <div className="flex items-center px-4 py-2">
-          <Link to="/" className="flex items-center">
-            <Home className="h-4 w-4 mr-2" />
-            <span className="font-semibold">Home</span>
-          </Link>
-        </div>
-        <div className="flex-1 px-3 py-2 overflow-y-auto max-h-[calc(100vh-80px)] scrollbar-thin scrollbar-thumb-gray-200">
-          <div className="space-y-1">
-            {mainMenuItems.map((item) => {
-              const hasSubmenu = item.submenu && item.submenu.length > 0;
-              const sectionId = item.path;
-              const isOpen = openSections[sectionId] || false;
-              const isItemActive = isActive(item.path);
-              
-              return (
-                <div key={item.path} className="w-full">
-                  {hasSubmenu ? (
-                    <Collapsible
-                      open={isOpen}
-                      onOpenChange={() => toggleSection(sectionId)}
-                      className="w-full"
-                    >
-                      <CollapsibleTrigger className={cn(
-                        "flex w-full items-center justify-between p-2 text-sm hover:bg-gray-100 rounded-lg transition-all",
-                        isItemActive && !isOpen && "bg-blue-50 text-blue-600"
-                      )}>
-                        <div className="flex items-center gap-3">
-                          <item.icon className="h-4 w-4" />
-                          <span className="font-medium">{item.title}</span>
-                        </div>
-                        <ChevronDown className={cn(
-                          "h-4 w-4 transition-transform",
-                          isOpen && "transform rotate-180"
-                        )} />
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="animate-accordion-down">
-                        <div className="pl-3 pr-2 mt-1 space-y-1">
-                          {item.submenu && renderNestedMenu(item.submenu, 1, item.path)}
-                        </div>
-                      </CollapsibleContent>
-                    </Collapsible>
-                  ) : (
-                    <Link
-                      to={item.path}
-                      className={cn(
-                        "flex items-center gap-3 p-2 text-sm rounded-lg transition-colors",
-                        isActive(item.path)
-                          ? "bg-blue-50 text-blue-600"
-                          : "hover:bg-gray-100"
-                      )}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      <span className="font-medium">{item.title}</span>
-                    </Link>
-                  )}
-                </div>
-              );
-            })}
+    <SidebarProvider>
+      <div className="hidden md:block w-64 min-h-screen bg-white border-r fixed top-0 left-0 pt-16 pb-6 z-20">
+        <div className="flex flex-col h-full">
+          <div className="flex items-center px-4 py-2">
+            <Link to="/" className="flex items-center">
+              <Home className="h-4 w-4 mr-2" />
+              <span className="font-semibold">Home</span>
+            </Link>
           </div>
-        </div>
-        
-        <div className="px-3 mt-auto">
-          <div className="rounded-lg bg-gray-50 p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                <Users className="w-4 h-4 text-blue-600" />
+          <div className="flex-1 px-3 py-2 overflow-y-auto max-h-[calc(100vh-80px)] scrollbar-thin scrollbar-thumb-gray-200">
+            <div className="space-y-1">
+              {mainMenuItems.map((item) => {
+                const hasSubmenu = item.submenu && item.submenu.length > 0;
+                const sectionId = item.path;
+                const isOpen = openSections[sectionId] || false;
+                const isItemActive = isActive(item.path);
+                
+                return (
+                  <div key={item.path} className="w-full">
+                    {hasSubmenu ? (
+                      <Collapsible
+                        open={isOpen}
+                        onOpenChange={() => toggleSection(sectionId)}
+                        className="w-full"
+                      >
+                        <CollapsibleTrigger className={cn(
+                          "flex w-full items-center justify-between p-2 text-sm hover:bg-gray-100 rounded-lg transition-all",
+                          isItemActive && !isOpen && "bg-blue-50 text-blue-600"
+                        )}>
+                          <div className="flex items-center gap-3">
+                            <item.icon className="h-4 w-4" />
+                            <span className="font-medium">{item.title}</span>
+                          </div>
+                          <ChevronDown className={cn(
+                            "h-4 w-4 transition-transform",
+                            isOpen && "transform rotate-180"
+                          )} />
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="animate-accordion-down">
+                          <div className="pl-3 pr-2 mt-1 space-y-1">
+                            {item.submenu && renderNestedMenu(item.submenu, 1, item.path)}
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    ) : (
+                      <Link
+                        to={item.path}
+                        className={cn(
+                          "flex items-center gap-3 p-2 text-sm rounded-lg transition-colors",
+                          isActive(item.path)
+                            ? "bg-blue-50 text-blue-600"
+                            : "hover:bg-gray-100"
+                        )}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span className="font-medium">{item.title}</span>
+                      </Link>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          
+          <div className="px-3 mt-auto">
+            <div className="rounded-lg bg-gray-50 p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                  <Users className="w-4 h-4 text-blue-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">Need help?</p>
+                  <p className="text-xs text-gray-500">Contact support</p>
+                </div>
+                <Button variant="ghost" size="sm" className="ml-auto">
+                  <Settings className="h-4 w-4" />
+                </Button>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">Need help?</p>
-                <p className="text-xs text-gray-500">Contact support</p>
-              </div>
-              <Button variant="ghost" size="sm" className="ml-auto">
-                <Settings className="h-4 w-4" />
-              </Button>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };

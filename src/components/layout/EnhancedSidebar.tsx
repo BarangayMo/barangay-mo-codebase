@@ -7,6 +7,7 @@ import {
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuItem as SidebarMenuItemBase,
+  SidebarProvider,
 } from "@/components/ui/sidebar";
 import { sidebarMenuItems } from "@/config/sidebar-menu";
 import { useSidebarState } from "@/hooks/use-sidebar-state";
@@ -20,27 +21,28 @@ export const EnhancedSidebar = ({ isCollapsed = false }: EnhancedSidebarProps) =
   const { openSections, toggleSection } = useSidebarState();
 
   return (
-    <Sidebar>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {sidebarMenuItems.map((item) => (
-                <SidebarMenuItemBase key={item.path}>
-                  <SidebarMenuItem
-                    item={item}
-                    isCollapsed={isCollapsed}
-                    openSections={openSections}
-                    onToggle={toggleSection}
-                  />
-                </SidebarMenuItemBase>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>
+    <SidebarProvider>
+      <Sidebar>
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {sidebarMenuItems.map((item) => (
+                  <SidebarMenuItemBase key={item.path}>
+                    <SidebarMenuItem
+                      item={item}
+                      isCollapsed={isCollapsed}
+                      openSections={openSections}
+                      onToggle={toggleSection}
+                    />
+                  </SidebarMenuItemBase>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+      </Sidebar>
+    </SidebarProvider>
   );
 };
-

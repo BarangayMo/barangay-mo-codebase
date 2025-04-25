@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/contexts/AuthContext";
 import { Header } from "./Header";
 import { MobileNavbar } from "./MobileNavbar";
@@ -9,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { useLocation } from "react-router-dom";
 import { LoadingScreen } from "../ui/loading";
 import { HomePageSkeleton, MarketplaceSkeleton, MessagesSkeleton } from "../ui/page-skeleton";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 interface LayoutProps {
   children: ReactNode;
@@ -52,30 +54,32 @@ export const Layout = ({ children, hideHeader = false, hideFooter = false }: Lay
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50 w-full overflow-x-hidden">
-      {showSidebar && <DesktopSidebar />}
-      <div
-        className={cn(
-          "flex flex-col min-h-screen w-full",
-          showSidebar ? "md:pl-64" : ""
-        )}
-      >
-        {!hideHeader && <Header />}
-        <main className={cn(
-          "flex-grow",
-          isMobile ? "pb-20" : ""
-        )}>
-          {isLoading ? (
-            renderSkeleton()
-          ) : (
-            <Suspense fallback={<LoadingScreen />}>
-              {children}
-            </Suspense>
+    <SidebarProvider>
+      <div className="flex min-h-screen bg-gray-50 w-full overflow-x-hidden">
+        {showSidebar && <DesktopSidebar />}
+        <div
+          className={cn(
+            "flex flex-col min-h-screen w-full",
+            showSidebar ? "md:pl-64" : ""
           )}
-        </main>
-        {isMobile && <MobileNavbar />}
-        {shouldShowFooter && <Footer />}
+        >
+          {!hideHeader && <Header />}
+          <main className={cn(
+            "flex-grow",
+            isMobile ? "pb-20" : ""
+          )}>
+            {isLoading ? (
+              renderSkeleton()
+            ) : (
+              <Suspense fallback={<LoadingScreen />}>
+                {children}
+              </Suspense>
+            )}
+          </main>
+          {isMobile && <MobileNavbar />}
+          {shouldShowFooter && <Footer />}
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
