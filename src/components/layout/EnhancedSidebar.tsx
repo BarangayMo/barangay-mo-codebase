@@ -116,7 +116,7 @@ export const EnhancedSidebar = ({ isCollapsed = false }: EnhancedSidebarProps) =
           {hasSubmenu ? (
             <Collapsible
               open={isOpen}
-              onOpenChange={() => {}} // We'll handle this manually with our toggleSection
+              onOpenChange={() => {}}
               className="w-full"
             >
               <CollapsibleTrigger asChild>
@@ -125,11 +125,29 @@ export const EnhancedSidebar = ({ isCollapsed = false }: EnhancedSidebarProps) =
                   onClick={(e) => toggleSection(sectionId, e)}
                   className={cn(
                     "flex w-full items-center justify-between p-2 text-sm hover:bg-gray-100 rounded-lg transition-all",
-                    isItemActive && "bg-blue-50 text-blue-600"
+                    isItemActive && "bg-blue-50 text-blue-600",
+                    isCollapsed && "px-0 justify-center"
                   )}
                 >
-                  <div className="flex items-center gap-3">
-                    {item.icon && <item.icon className="h-4 w-4" />}
+                  <div className={cn(
+                    "flex items-center gap-3",
+                    isCollapsed && "justify-center"
+                  )}>
+                    {item.icon && (
+                      <div
+                        className={cn(
+                          "relative group",
+                          isCollapsed && "w-10 h-10 flex items-center justify-center"
+                        )}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {isCollapsed && (
+                          <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded hidden group-hover:block whitespace-nowrap">
+                            {item.title}
+                          </div>
+                        )}
+                      </div>
+                    )}
                     {!isCollapsed && <span className={cn(isItemActive && "font-medium")}>{item.title}</span>}
                   </div>
                   {!isCollapsed && (
@@ -155,11 +173,11 @@ export const EnhancedSidebar = ({ isCollapsed = false }: EnhancedSidebarProps) =
             <Link
               to={item.path}
               className={cn(
-                "flex items-center gap-3 p-2 text-sm rounded-lg transition-colors",
+                "flex items-center gap-3 p-2 text-sm rounded-lg transition-colors relative group",
                 isItemActive
                   ? "bg-blue-50 text-blue-600 font-medium"
                   : "hover:bg-gray-100",
-                isCollapsed && "justify-center"
+                isCollapsed && "justify-center px-0"
               )}
             >
               {level > 0 && !isCollapsed ? (
@@ -167,7 +185,19 @@ export const EnhancedSidebar = ({ isCollapsed = false }: EnhancedSidebarProps) =
                   <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
                 </div>
               ) : (
-                item.icon && <item.icon className="h-4 w-4" />
+                item.icon && (
+                  <div className={cn(
+                    "relative",
+                    isCollapsed && "w-10 h-10 flex items-center justify-center"
+                  )}>
+                    <item.icon className="h-4 w-4" />
+                    {isCollapsed && (
+                      <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded hidden group-hover:block whitespace-nowrap">
+                        {item.title}
+                      </div>
+                    )}
+                  </div>
+                )
               )}
               {!isCollapsed && <span>{item.title}</span>}
             </Link>

@@ -1,4 +1,3 @@
-
 import { ReactNode, useEffect, useState } from "react";
 import { EnhancedSidebar } from "./EnhancedSidebar";
 import { cn } from "@/lib/utils";
@@ -38,12 +37,10 @@ export const AdminLayout = ({ children, title }: AdminLayoutProps) => {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
 
-  // Save sidebar state to localStorage
   useEffect(() => {
     localStorage.setItem("sidebar-collapsed", JSON.stringify(isSidebarCollapsed));
   }, [isSidebarCollapsed]);
 
-  // Ensure we're always scrolled to the top when navigating
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -55,9 +52,8 @@ export const AdminLayout = ({ children, title }: AdminLayoutProps) => {
 
   return (
     <div className="flex min-h-screen bg-gray-50 w-full overflow-x-hidden">
-      {/* Desktop Sidebar */}
       <div className={cn(
-        "hidden md:block transition-all duration-300 ease-in-out",
+        "hidden md:block transition-all duration-300 ease-in-out shrink-0",
         isSidebarCollapsed ? "w-16" : "w-64"
       )}>
         <div className={cn(
@@ -65,7 +61,6 @@ export const AdminLayout = ({ children, title }: AdminLayoutProps) => {
           isSidebarCollapsed ? "w-16" : "w-64"
         )}>
           <div className="flex flex-col h-full">
-            {/* Logo area */}
             <div className="flex items-center justify-between h-16 px-4 border-b">
               <Link to="/" className={cn(
                 "flex items-center",
@@ -93,12 +88,10 @@ export const AdminLayout = ({ children, title }: AdminLayoutProps) => {
               </Button>
             </div>
 
-            {/* Sidebar content */}
             <div className="flex-1 overflow-y-auto">
               <EnhancedSidebar isCollapsed={isSidebarCollapsed} />
             </div>
 
-            {/* Toggle collapse button (center) */}
             <div className="absolute -right-3 top-1/2 transform -translate-y-1/2">
               <Button
                 variant="outline"
@@ -114,7 +107,6 @@ export const AdminLayout = ({ children, title }: AdminLayoutProps) => {
               </Button>
             </div>
 
-            {/* User profile card */}
             <div className={cn(
               "border-t p-4",
               isSidebarCollapsed ? "flex justify-center" : ""
@@ -168,7 +160,6 @@ export const AdminLayout = ({ children, title }: AdminLayoutProps) => {
         </div>
       </div>
       
-      {/* Mobile Menu Toggle */}
       <div className="md:hidden fixed top-0 left-0 right-0 bg-white z-20 border-b px-4 py-3 flex items-center">
         <Button 
           variant="ghost" 
@@ -217,7 +208,6 @@ export const AdminLayout = ({ children, title }: AdminLayoutProps) => {
         </DropdownMenu>
       </div>
       
-      {/* Mobile Sidebar Sheet */}
       <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
         <SheetContent side="left" className="p-0">
           <EnhancedSidebar />
@@ -231,7 +221,7 @@ export const AdminLayout = ({ children, title }: AdminLayoutProps) => {
         <Helmet>
           <title>{title} - Smarketplace Admin</title>
         </Helmet>
-        <main className="flex-grow w-full">
+        <main className="flex-1">
           <div className="container mx-auto py-6 pt-16 md:pt-6 px-4 md:px-6">
             {children}
           </div>

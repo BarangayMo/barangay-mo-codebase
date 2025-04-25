@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
@@ -11,13 +10,13 @@ export default function Index() {
   return (
     <Layout>
       <div className="w-full -mt-4">
-        <section className="relative w-full min-h-[85vh] flex items-center">
+        <section className="relative w-full min-h-[90vh] md:min-h-[85vh] flex items-center">
           <div 
             className="absolute inset-0 bg-[url('https://static.wixstatic.com/media/b17ef9_9db19658a9df45e79d0727344ed3b6a3~mv2.jpg')] bg-cover bg-center"
           />
           <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/70 to-black/80" />
           
-          <div className="relative z-10 w-full mx-auto max-w-7xl px-4 py-8 text-white">
+          <div className="relative z-10 w-full mx-auto max-w-7xl px-4 py-12 md:py-8 text-white">
             <div className="w-full max-w-7xl mx-auto">
               <div className="flex flex-col md:flex-row items-center justify-between gap-8">
                 <div className="w-full md:w-1/2 text-center md:text-left">

@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { Header } from "./Header";
 import { MobileNavbar } from "./MobileNavbar";
@@ -22,6 +21,9 @@ export const Layout = ({ children, hideHeader = false, hideFooter = false }: Lay
   const isMobile = useIsMobile();
   const { pathname } = useLocation();
   const [isLoading, setIsLoading] = useState(true);
+
+  // Only show footer on mobile for homepage
+  const shouldShowFooter = !hideFooter && (!isMobile || pathname === '/');
 
   useEffect(() => {
     // Simulate loading for at least 2 seconds when route changes
@@ -72,7 +74,7 @@ export const Layout = ({ children, hideHeader = false, hideFooter = false }: Lay
           )}
         </main>
         {isMobile && <MobileNavbar />}
-        {!hideFooter && <Footer />}
+        {shouldShowFooter && <Footer />}
       </div>
     </div>
   );
