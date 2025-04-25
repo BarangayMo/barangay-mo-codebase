@@ -1,3 +1,4 @@
+
 import { ReactNode, useEffect, useState } from "react";
 import { EnhancedSidebar } from "./EnhancedSidebar";
 import { cn } from "@/lib/utils";
@@ -15,7 +16,7 @@ import {
   Search,
   Plus,
   Command,
-  ChevronDown
+  ChevronDown // Ensure this import is here
 } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Link, useNavigate } from "react-router-dom";
