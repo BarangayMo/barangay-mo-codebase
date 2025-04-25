@@ -231,8 +231,8 @@ export const AdminLayout = ({ children, title }: AdminLayoutProps) => {
         <Helmet>
           <title>{title} - Smarketplace Admin</title>
         </Helmet>
-        <main className="flex-grow">
-          <div className="container py-6 pt-16 md:pt-6">
+        <main className="flex-grow w-full">
+          <div className="container mx-auto py-6 pt-16 md:pt-6 px-4 md:px-6">
             {children}
           </div>
         </main>

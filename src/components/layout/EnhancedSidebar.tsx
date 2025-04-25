@@ -48,10 +48,9 @@ export const EnhancedSidebar = ({ isCollapsed = false }: EnhancedSidebarProps) =
       parentPaths.push(path);
     }
 
-    // Close all sections first
-    const newOpenSections: Record<string, boolean> = {};
+    // Auto-expand relevant menu sections based on current path
+    const newOpenSections = { ...openSections };
     
-    // Then open only the relevant ones
     mainMenuItems.forEach(item => {
       if (parentPaths.includes(item.path)) {
         newOpenSections[item.path] = true;
@@ -91,14 +90,13 @@ export const EnhancedSidebar = ({ isCollapsed = false }: EnhancedSidebarProps) =
     localStorage.setItem("sidebar-state", JSON.stringify(openSections));
   }, [openSections]);
 
-  const toggleSection = (sectionId: string) => {
+  const toggleSection = (sectionId: string, event: React.MouseEvent) => {
+    // Prevent event from bubbling up to parent elements
+    event.stopPropagation();
+    
     setOpenSections(prev => {
-      // Close all other sections
-      const newState: Record<string, boolean> = {};
-      
-      // Toggle the selected section
+      const newState = { ...prev };
       newState[sectionId] = !prev[sectionId];
-      
       return newState;
     });
   };
@@ -106,7 +104,7 @@ export const EnhancedSidebar = ({ isCollapsed = false }: EnhancedSidebarProps) =
   const isActive = (path: string) => 
     pathname === path || pathname.startsWith(`${path}/`);
 
-  const renderNestedMenu = (items, level = 0, parentPath = '') => {
+  const renderNestedMenu = (items: any[], level = 0, parentPath = '') => {
     return items.map((item) => {
       const isItemActive = isActive(item.path);
       const hasSubmenu = item.submenu && item.submenu.length > 0;
@@ -118,23 +116,29 @@ export const EnhancedSidebar = ({ isCollapsed = false }: EnhancedSidebarProps) =
           {hasSubmenu ? (
             <Collapsible
               open={isOpen}
-              onOpenChange={() => toggleSection(sectionId)}
+              onOpenChange={() => {}} // We'll handle this manually with our toggleSection
               className="w-full"
             >
-              <CollapsibleTrigger className={cn(
-                "flex w-full items-center justify-between p-2 text-sm hover:bg-gray-100 rounded-lg transition-all",
-                isItemActive && "bg-blue-50 text-blue-600"
-              )}>
-                <div className="flex items-center gap-3">
-                  {item.icon && <item.icon className="h-4 w-4" />}
-                  {!isCollapsed && <span className={cn(isItemActive && "font-medium")}>{item.title}</span>}
-                </div>
-                {!isCollapsed && (
-                  <ChevronDown className={cn(
-                    "h-4 w-4 transition-transform duration-200",
-                    isOpen && "transform rotate-180"
-                  )} />
-                )}
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  onClick={(e) => toggleSection(sectionId, e)}
+                  className={cn(
+                    "flex w-full items-center justify-between p-2 text-sm hover:bg-gray-100 rounded-lg transition-all",
+                    isItemActive && "bg-blue-50 text-blue-600"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    {item.icon && <item.icon className="h-4 w-4" />}
+                    {!isCollapsed && <span className={cn(isItemActive && "font-medium")}>{item.title}</span>}
+                  </div>
+                  {!isCollapsed && (
+                    <ChevronDown className={cn(
+                      "h-4 w-4 transition-transform duration-200",
+                      isOpen && "transform rotate-180"
+                    )} />
+                  )}
+                </Button>
               </CollapsibleTrigger>
               {!isCollapsed && (
                 <CollapsibleContent className="animate-accordion-down transition-all duration-300">
@@ -288,7 +292,7 @@ export const EnhancedSidebar = ({ isCollapsed = false }: EnhancedSidebarProps) =
   };
 
   return (
-    <div className="px-3 py-2">
+    <div className="px-3 py-2 h-full overflow-y-auto">
       {renderSectionGroups()}
     </div>
   );
