@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/ui/data-table";
+import { formatCurrency } from "@/lib/utils";
 
 interface TopProductsProps {
   products: Array<{
@@ -14,6 +14,38 @@ interface TopProductsProps {
 }
 
 export const TopProducts = ({ products }: TopProductsProps) => {
+  const columns = [
+    {
+      id: 'name',
+      header: 'Product',
+      cell: (product) => (
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center">
+            <img 
+              src={`/placeholder.svg`} 
+              alt={product.name}
+              className="w-8 h-8 object-cover"
+            />
+          </div>
+          <span className="font-medium truncate">{product.name}</span>
+        </div>
+      ),
+      align: 'left' as const,
+    },
+    {
+      id: 'sales',
+      header: 'Sales',
+      cell: (product) => product.sales.toLocaleString(),
+      align: 'right' as const,
+    },
+    {
+      id: 'price',
+      header: 'Price',
+      cell: (product) => formatCurrency(parseFloat(product.price.replace(/[^\d.-]/g, ''))),
+      align: 'right' as const,
+    },
+  ];
+
   return (
     <Card>
       <CardHeader>
@@ -21,27 +53,11 @@ export const TopProducts = ({ products }: TopProductsProps) => {
         <CardDescription>Best selling items</CardDescription>
       </CardHeader>
       <CardContent className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Product</TableHead>
-              <TableHead className="text-right">Sales</TableHead>
-              <TableHead className="text-right">Price</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {products.map((product) => (
-              <TableRow key={product.id} className="hover:bg-gray-50 transition-colors">
-                <TableCell className="font-medium">{product.name}</TableCell>
-                <TableCell className="text-right">{product.sales}</TableCell>
-                <TableCell className="text-right">{product.price}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        <div className="p-4 border-t text-center">
-          <Button variant="outline">View All Products</Button>
-        </div>
+        <DataTable 
+          data={products}
+          columns={columns}
+          showControls={false}
+        />
       </CardContent>
     </Card>
   );
