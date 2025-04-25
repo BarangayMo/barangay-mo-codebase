@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/sidebar";
 import { ChevronDown } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface MenuItemProps {
   item: any;
@@ -53,14 +53,16 @@ export function SidebarMenuItem({
                   isCollapsed && "w-10 h-10 flex items-center justify-center"
                 )}>
                   {isCollapsed ? (
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <item.icon className="h-4 w-4" />
-                      </TooltipTrigger>
-                      <TooltipContent side="right">
-                        {item.title}
-                      </TooltipContent>
-                    </Tooltip>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span><item.icon className="h-4 w-4" /></span>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">
+                          {item.title}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   ) : (
                     <item.icon className="h-4 w-4" />
                   )}
@@ -124,14 +126,16 @@ export function SidebarMenuItem({
             isCollapsed && "w-10 h-10 flex items-center justify-center"
           )}>
             {isCollapsed ? (
-              <Tooltip>
-                <TooltipTrigger>
-                  <item.icon className="h-4 w-4" />
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  {item.title}
-                </TooltipContent>
-              </Tooltip>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span><item.icon className="h-4 w-4" /></span>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    {item.title}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             ) : (
               <item.icon className="h-4 w-4" />
             )}
@@ -142,4 +146,3 @@ export function SidebarMenuItem({
     </Link>
   );
 }
-
