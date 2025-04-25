@@ -1,4 +1,3 @@
-
 import { Route, Routes } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import Index from "@/pages/Index";
@@ -53,6 +52,7 @@ import ActivityLogsPage from "@/pages/reports/ActivityLogsPage";
 // User Management routes
 import ResidentsPage from "@/pages/users/ResidentsPage";
 import OfficialsPage from "@/pages/users/OfficialsPage";
+import UserProfilePage from "@/pages/users/UserProfilePage";
 
 // Settings routes
 import SettingsPage from "@/pages/admin/SettingsPage";
@@ -108,6 +108,7 @@ export function AppRoutes() {
       {/* User Management routes */}
       <Route path="/admin/users/residents" element={<ResidentsPage />} />
       <Route path="/admin/users/officials" element={<OfficialsPage />} />
+      <Route path="/admin/users/:id" element={<UserProfilePage />} />
       
       {/* Settings routes */}
       <Route path="/admin/settings" element={<SettingsPage />} />

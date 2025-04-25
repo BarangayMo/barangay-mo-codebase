@@ -180,6 +180,63 @@ export type Database = {
         }
         Relationships: []
       }
+      user_activity: {
+        Row: {
+          activity_data: Json
+          activity_type: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          activity_data: Json
+          activity_type: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          activity_data?: Json
+          activity_type?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          address: Json | null
+          can_sell: boolean | null
+          created_at: string
+          is_banned: boolean | null
+          is_verified: boolean | null
+          phone_number: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: Json | null
+          can_sell?: boolean | null
+          created_at?: string
+          is_banned?: boolean | null
+          is_verified?: boolean | null
+          phone_number?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: Json | null
+          can_sell?: boolean | null
+          created_at?: string
+          is_banned?: boolean | null
+          is_verified?: boolean | null
+          phone_number?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
