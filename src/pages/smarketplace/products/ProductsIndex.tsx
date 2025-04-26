@@ -1,4 +1,3 @@
-
 import PageTemplate from "../PageTemplate";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -34,7 +33,7 @@ const ProductsIndex = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input placeholder="Search products..." className="pl-10 w-full md:w-64" />
             </div>
-            <Button variant="outline">
+            <Button variant="dashboard">
               <Filter className="h-4 w-4 mr-2" />
               Filter
             </Button>
@@ -83,8 +82,8 @@ const ProductsIndex = () => {
                       </span>
                     </td>
                     <td className="p-3 text-right">
-                      <Button variant="ghost" size="sm">Edit</Button>
-                      <Button variant="ghost" size="sm" className="text-red-500">Delete</Button>
+                      <Button variant="dashboard" size="sm">Edit</Button>
+                      <Button variant="dashboard" size="sm" className="text-red-500">Delete</Button>
                     </td>
                   </tr>
                 ))}

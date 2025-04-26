@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -96,6 +95,18 @@ h1, .font-heading, .font-outfit {
     --resident-light: 122 30% 25%; 
     --resident-dark: 122 50% 25%;
   }
+
+  /* Dashboard Button Variables */
+  --bm-button-padding-vertical: 6px;
+  --bm-button-padding-horizontal: 12px;
+  --bm-button-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --bm-button-font-size: 14px;
+  --bm-button-font-weight: 500;
+  --bm-button-text-color: #202223;
+  --bm-button-bg: #ffffff;
+  --bm-button-border-color: #c4cdd5;
+  --bm-button-border-radius: 10px;
+  --bm-button-hover-bg: #f6f6f7;
 }
 
 @layer base {
@@ -105,5 +116,34 @@ h1, .font-heading, .font-outfit {
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .BarangayMo-Button {
+    @apply inline-flex items-center justify-center;
+    min-height: 70px;
+    min-width: 95px;
+    padding: var(--bm-button-padding-vertical) var(--bm-button-padding-horizontal);
+    font-family: var(--bm-button-font-family);
+    font-size: var(--bm-button-font-size);
+    font-weight: var(--bm-button-font-weight);
+    color: var(--bm-button-text-color);
+    background-color: var(--bm-button-bg);
+    border: 0px solid var(--bm-button-border-color);
+    border-radius: var(--bm-button-border-radius);
+    box-shadow: 0rem -0.0625rem 0rem 0rem #b5b5b5 inset, 
+                0rem 0rem 0rem 0.0625rem rgba(0, 0, 0, 0.1) inset,
+                0rem 0.03125rem 0rem 0.09375rem #ffffff inset;
+    transition: background-color 150ms ease, box-shadow 150ms ease;
+  }
+
+  .BarangayMo-Button:hover {
+    background-color: var(--bm-button-hover-bg);
+    box-shadow: 0px 1px 4px rgba(0, 123, 255, 0.4);
+  }
+
+  .BarangayMo-Button:disabled {
+    @apply bg-muted text-muted-foreground cursor-not-allowed;
   }
 }
