@@ -23,22 +23,22 @@ export function DataTable<T>({ data, columns, showCheckbox = true, showControls 
     <div className="w-full">
       {showControls && (
         <div className="flex justify-end gap-2 mb-4">
-          <Button variant="outline" size="sm" className="rounded-full">
+          <Button variant="outline" size="sm" className="rounded-full px-4 h-9">
             <Settings2 className="h-4 w-4 mr-2" />
             Customize
           </Button>
-          <Button variant="outline" size="sm" className="rounded-full">
+          <Button variant="outline" size="sm" className="rounded-full px-4 h-9">
             <Filter className="h-4 w-4 mr-2" />
             Filter
           </Button>
-          <Button variant="outline" size="sm" className="rounded-full">
+          <Button variant="outline" size="sm" className="rounded-full px-4 h-9">
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
         </div>
       )}
       
-      <div className="rounded-lg border overflow-hidden">
+      <div className="rounded-lg border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -52,7 +52,7 @@ export function DataTable<T>({ data, columns, showCheckbox = true, showControls 
                   <TableHead 
                     key={column.id}
                     className={cn(
-                      "bg-gray-50/50 font-medium text-gray-700",
+                      "bg-white font-medium text-gray-600",
                       column.align === 'right' && "text-right",
                       column.align === 'center' && "text-center"
                     )}
@@ -66,7 +66,7 @@ export function DataTable<T>({ data, columns, showCheckbox = true, showControls 
               {data.map((item, index) => (
                 <TableRow 
                   key={index}
-                  className="hover:bg-gray-50/50 transition-colors"
+                  className="hover:bg-gray-50/50"
                 >
                   {showCheckbox && (
                     <TableCell>
