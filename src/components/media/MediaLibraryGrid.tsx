@@ -8,8 +8,37 @@ import { Download, Trash2, EyeOff, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-export function MediaLibraryGrid({ filters }) {
-  const [selectedImage, setSelectedImage] = useState(null);
+// Define types for our media files and profiles
+interface Profile {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+}
+
+interface MediaFile {
+  id: string;
+  user_id: string;
+  file_url: string;
+  filename: string;
+  category: string;
+  uploaded_at: string;
+  file_size: number;
+  content_type: string;
+}
+
+interface MediaFileWithProfile extends MediaFile {
+  profile: Profile | null;
+}
+
+interface MediaLibraryFilters {
+  user: string | null;
+  category: string | null;
+  startDate: Date | null;
+  endDate: Date | null;
+}
+
+export function MediaLibraryGrid({ filters }: { filters: MediaLibraryFilters }) {
+  const [selectedImage, setSelectedImage] = useState<MediaFileWithProfile | null>(null);
 
   const { data: mediaFiles, isLoading } = useQuery({
     queryKey: ['admin-media-files', filters],
@@ -45,11 +74,11 @@ export function MediaLibraryGrid({ filters }) {
           
         if (profilesError) {
           console.error("Error fetching profiles:", profilesError);
-          return mediaData; // Return media data even if profiles fetch fails
+          return mediaData as MediaFile[]; // Return media data even if profiles fetch fails
         }
         
         // Create a lookup map for profiles
-        const profileMap = {};
+        const profileMap: Record<string, Profile> = {};
         profilesData?.forEach(profile => {
           profileMap[profile.id] = profile;
         });
@@ -58,14 +87,14 @@ export function MediaLibraryGrid({ filters }) {
         return mediaData.map(file => ({
           ...file,
           profile: profileMap[file.user_id] || null
-        }));
+        })) as MediaFileWithProfile[];
       }
       
-      return mediaData || [];
+      return (mediaData || []) as MediaFile[];
     }
   });
 
-  const handleDownload = async (fileUrl, fileName) => {
+  const handleDownload = async (fileUrl: string, fileName: string) => {
     try {
       const { data, error } = await supabase.storage
         .from('user_uploads')
@@ -85,7 +114,7 @@ export function MediaLibraryGrid({ filters }) {
     }
   };
 
-  const handleDelete = async (fileId, fileUrl) => {
+  const handleDelete = async (fileId: string, fileUrl: string) => {
     try {
       // Delete from storage
       const { error: storageError } = await supabase.storage
@@ -115,7 +144,7 @@ export function MediaLibraryGrid({ filters }) {
           <CardContent className="p-4 relative">
             <div 
               className="aspect-square bg-gray-100 flex items-center justify-center cursor-pointer"
-              onClick={() => setSelectedImage(file)}
+              onClick={() => setSelectedImage(file as MediaFileWithProfile)}
             >
               {file.content_type.startsWith('image/') ? (
                 <img 
@@ -131,7 +160,7 @@ export function MediaLibraryGrid({ filters }) {
               <p className="text-sm font-medium truncate">{file.filename}</p>
               <p className="text-xs text-gray-500">{file.category}</p>
               <p className="text-xs text-gray-500">
-                {file.profile?.first_name || 'Unknown'} {file.profile?.last_name || 'User'}
+                {(file as MediaFileWithProfile).profile?.first_name || 'Unknown'} {(file as MediaFileWithProfile).profile?.last_name || 'User'}
               </p>
             </div>
             <div className="absolute top-2 right-2 flex gap-1">
