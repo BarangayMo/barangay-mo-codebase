@@ -127,7 +127,7 @@ export const AdminLayout = ({
             <Menu className="h-5 w-5" />
           </Button>
           <Link to="/" className="mx-auto">
-            <img src="/lovable-uploads/d6bf0909-f59b-42dc-8d79-b45a400a1081.png" alt="Logo" className="h-8 w-8" />
+            <img alt="Logo" className="h-8 w-8" src="/lovable-uploads/13aba568-e026-4cfb-a117-604758fe79f1.jpg" />
           </Link>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
