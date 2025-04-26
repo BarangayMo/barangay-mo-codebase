@@ -8,11 +8,12 @@ interface BreadcrumbProps {
     label: string;
     href?: string;
   }[];
+  className?: string;  // Added className prop
 }
 
-export function DashboardBreadcrumb({ items }: BreadcrumbProps) {
+export function DashboardBreadcrumb({ items, className }: BreadcrumbProps) {
   return (
-    <Breadcrumb className="mb-6">
+    <Breadcrumb className={className || "mb-6"}>
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
