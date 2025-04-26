@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -94,16 +95,6 @@ h1, .font-heading, .font-outfit {
     --resident-foreground: 0 0% 100%;
     --resident-light: 122 30% 25%; 
     --resident-dark: 122 50% 25%;
-  }
-
-  /* Add button focus styles */
-  button:focus {
-    outline: none;
-  }
-  
-  /* Add smooth transitions for buttons */
-  button {
-    transition: all 0.2s ease-in-out;
   }
 }
 
