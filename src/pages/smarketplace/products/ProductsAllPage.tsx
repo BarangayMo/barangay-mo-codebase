@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   ShoppingBag, 
@@ -94,7 +93,8 @@ const ProductsAllPage = () => {
         actionButton={{
           label: "Add Product",
           onClick: () => console.log("Add product clicked"),
-          icon: <PlusCircle className="h-4 w-4" />
+          icon: <PlusCircle className="h-4 w-4" />,
+          variant: "dashboard"
         }}
       />
 
@@ -158,7 +158,7 @@ const ProductsAllPage = () => {
             </SelectContent>
           </Select>
 
-          <Button variant="outline">
+          <Button variant="dashboard">
             <Filter className="h-4 w-4" />
           </Button>
         </div>
