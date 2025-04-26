@@ -1,4 +1,4 @@
-import { Home, ShoppingBag, Package, User, Users, FileText, Settings, BarChart, Store, MessageSquare, Image } from "lucide-react";
+import { Home, ShoppingBag, Package, User, Users, FileText, Settings, BarChart, Store, MessageSquare, Image, Library } from "lucide-react";
 
 export const sidebarMenuItems = [
   {
@@ -101,6 +101,11 @@ export const sidebarMenuItems = [
           { title: "Residents", path: "/admin/users/residents" },
           { title: "Officials", path: "/admin/users/officials" },
         ]
+      },
+      {
+        title: "Media Library",
+        icon: Library,
+        path: "/admin/media-library"
       },
     ]
   },
