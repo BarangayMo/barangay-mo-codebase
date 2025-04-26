@@ -11,7 +11,7 @@ interface MediaFile {
   id: string;
   filename: string;
   alt_text?: string;
-  created_at: string;
+  uploaded_at: string; // Changed from created_at to uploaded_at
   file_size: number;
   references?: number;
 }
@@ -25,7 +25,7 @@ export function MediaLibraryTable() {
       const { data, error } = await supabase
         .from('media_files')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('uploaded_at', { ascending: false }); // Changed from created_at to uploaded_at
 
       if (error) throw error;
       return data as MediaFile[];
@@ -93,7 +93,7 @@ export function MediaLibraryTable() {
                 </div>
               </TableCell>
               <TableCell>{file.alt_text || '—'}</TableCell>
-              <TableCell>{formatDistanceToNow(new Date(file.created_at), { addSuffix: true })}</TableCell>
+              <TableCell>{formatDistanceToNow(new Date(file.uploaded_at), { addSuffix: true })}</TableCell>
               <TableCell>{bytesToSize(file.file_size)}</TableCell>
               <TableCell>{file.references || '—'}</TableCell>
             </TableRow>
