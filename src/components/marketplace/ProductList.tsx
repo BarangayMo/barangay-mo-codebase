@@ -1,6 +1,8 @@
 
 import { ProductCard } from "./ProductCard";
 import { FC } from "react";
+import { Link } from "react-router-dom";
+import { ChevronRight } from "lucide-react";
 
 interface Product {
   id: number;
