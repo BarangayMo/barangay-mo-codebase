@@ -22,8 +22,7 @@ export function MediaLibraryGrid({ filters }) {
         category, 
         uploaded_at, 
         file_size, 
-        content_type,
-        profiles:user_id(first_name, last_name)
+        content_type
       `);
 
       if (filters.user) query = query.eq('user_id', filters.user);
@@ -31,10 +30,38 @@ export function MediaLibraryGrid({ filters }) {
       if (filters.startDate) query = query.gte('uploaded_at', filters.startDate);
       if (filters.endDate) query = query.lte('uploaded_at', filters.endDate);
 
-      const { data, error } = await query.order('uploaded_at', { ascending: false });
+      const { data: mediaData, error } = await query.order('uploaded_at', { ascending: false });
       
       if (error) throw error;
-      return data;
+      
+      // Fetch user profile information separately
+      if (mediaData && mediaData.length > 0) {
+        const userIds = [...new Set(mediaData.map(file => file.user_id))];
+        
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name')
+          .in('id', userIds);
+          
+        if (profilesError) {
+          console.error("Error fetching profiles:", profilesError);
+          return mediaData; // Return media data even if profiles fetch fails
+        }
+        
+        // Create a lookup map for profiles
+        const profileMap = {};
+        profilesData?.forEach(profile => {
+          profileMap[profile.id] = profile;
+        });
+        
+        // Attach profile data to media files
+        return mediaData.map(file => ({
+          ...file,
+          profile: profileMap[file.user_id] || null
+        }));
+      }
+      
+      return mediaData || [];
     }
   });
 
@@ -104,7 +131,7 @@ export function MediaLibraryGrid({ filters }) {
               <p className="text-sm font-medium truncate">{file.filename}</p>
               <p className="text-xs text-gray-500">{file.category}</p>
               <p className="text-xs text-gray-500">
-                {file.profiles?.first_name || 'Unknown'} {file.profiles?.last_name || 'User'}
+                {file.profile?.first_name || 'Unknown'} {file.profile?.last_name || 'User'}
               </p>
             </div>
             <div className="absolute top-2 right-2 flex gap-1">
