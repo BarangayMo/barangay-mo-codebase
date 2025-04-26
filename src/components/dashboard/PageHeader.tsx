@@ -1,5 +1,6 @@
+
 import { ReactNode } from "react";
-import { Breadcrumb } from "./Breadcrumb";
+import { DashboardBreadcrumb as Breadcrumb } from "./Breadcrumb";
 import { Button } from "@/components/ui/button";
 
 interface DashboardPageHeaderProps {
