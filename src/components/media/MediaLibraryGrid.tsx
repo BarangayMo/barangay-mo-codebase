@@ -23,7 +23,7 @@ export function MediaLibraryGrid({ filters }) {
         uploaded_at, 
         file_size, 
         content_type,
-        profiles(first_name, last_name)
+        profiles:user_id(first_name, last_name)
       `);
 
       if (filters.user) query = query.eq('user_id', filters.user);
@@ -104,7 +104,7 @@ export function MediaLibraryGrid({ filters }) {
               <p className="text-sm font-medium truncate">{file.filename}</p>
               <p className="text-xs text-gray-500">{file.category}</p>
               <p className="text-xs text-gray-500">
-                {file.profiles?.first_name} {file.profiles?.last_name}
+                {file.profiles?.first_name || 'Unknown'} {file.profiles?.last_name || 'User'}
               </p>
             </div>
             <div className="absolute top-2 right-2 flex gap-1">

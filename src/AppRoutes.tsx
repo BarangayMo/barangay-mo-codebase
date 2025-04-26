@@ -1,3 +1,4 @@
+
 import { Route, Routes } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import Index from "@/pages/Index";
@@ -29,6 +30,31 @@ import Pricing from "@/pages/Pricing";
 import RequestAccess from "@/pages/RequestAccess";
 import Partnerships from "@/pages/Partnerships";
 import MediaLibraryPage from "@/pages/admin/MediaLibraryPage";
+
+// Import marketplace components
+import SmarketplaceIndex from "@/pages/smarketplace/SmarketplaceIndex";
+import SmarketplaceOverview from "@/pages/smarketplace/SmarketplaceOverview";
+import ProductsAllPage from "@/pages/smarketplace/products/ProductsAllPage";
+import CategoriesPage from "@/pages/smarketplace/products/CategoriesPage";
+import OrdersAllPage from "@/pages/smarketplace/orders/OrdersAllPage";
+import VendorsAllPage from "@/pages/smarketplace/vendors/VendorsAllPage";
+import CustomersAllPage from "@/pages/smarketplace/customers/CustomersAllPage";
+
+// Import report/user pages
+import MessagesPage from "@/pages/admin/MessagesPage";
+import FinancialReportsPage from "@/pages/reports/FinancialReportsPage";
+import ActivityLogsPage from "@/pages/reports/ActivityLogsPage";
+import ResidentsPage from "@/pages/users/ResidentsPage";
+import OfficialsPage from "@/pages/users/OfficialsPage";
+import UserProfilePage from "@/pages/users/UserProfilePage";
+import SettingsPage from "@/pages/admin/SettingsPage";
+
+// Import marketplace customer-facing pages
+import ProductDetail from "@/pages/marketplace/ProductDetail";
+import Cart from "@/pages/marketplace/Cart";
+import Checkout from "@/pages/marketplace/Checkout";
+import OrderConfirmation from "@/pages/marketplace/OrderConfirmation";
+import MyOrders from "@/pages/marketplace/MyOrders";
 
 export function AppRoutes() {
   return (
