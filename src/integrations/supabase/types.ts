@@ -150,6 +150,42 @@ export type Database = {
         }
         Relationships: []
       }
+      media_files: {
+        Row: {
+          category: string
+          content_type: string
+          deleted_at: string | null
+          file_size: number
+          file_url: string
+          filename: string
+          id: string
+          uploaded_at: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          content_type: string
+          deleted_at?: string | null
+          file_size: number
+          file_url: string
+          filename: string
+          id?: string
+          uploaded_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          content_type?: string
+          deleted_at?: string | null
+          file_size?: number
+          file_url?: string
+          filename?: string
+          id?: string
+          uploaded_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           barangay: string | null

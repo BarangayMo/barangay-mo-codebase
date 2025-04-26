@@ -1,4 +1,3 @@
-
 import { Route, Routes } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import Index from "@/pages/Index";
@@ -29,40 +28,11 @@ import Products from "@/pages/Products";
 import Pricing from "@/pages/Pricing";
 import RequestAccess from "@/pages/RequestAccess";
 import Partnerships from "@/pages/Partnerships";
-
-// Marketplace routes
-import ProductDetail from "@/pages/marketplace/ProductDetail";
-import Cart from "@/pages/marketplace/Cart";
-import Checkout from "@/pages/marketplace/Checkout";
-import OrderConfirmation from "@/pages/marketplace/OrderConfirmation";
-import MyOrders from "@/pages/marketplace/MyOrders";
-
-// Smarketplace routes
-import SmarketplaceIndex from "@/pages/smarketplace/SmarketplaceIndex";
-import SmarketplaceOverview from "@/pages/smarketplace/SmarketplaceOverview";
-import ProductsAllPage from "@/pages/smarketplace/products/ProductsAllPage";
-import CategoriesPage from "@/pages/smarketplace/products/CategoriesPage";
-import OrdersAllPage from "@/pages/smarketplace/orders/OrdersAllPage";
-import CustomersAllPage from "@/pages/smarketplace/customers/CustomersAllPage";
-import VendorsAllPage from "@/pages/smarketplace/vendors/VendorsAllPage";
-
-// Reports routes
-import FinancialReportsPage from "@/pages/reports/FinancialReportsPage";
-import ActivityLogsPage from "@/pages/reports/ActivityLogsPage";
-
-// User Management routes
-import ResidentsPage from "@/pages/users/ResidentsPage";
-import OfficialsPage from "@/pages/users/OfficialsPage";
-import UserProfilePage from "@/pages/users/UserProfilePage";
-
-// Admin routes
-import SettingsPage from "@/pages/admin/SettingsPage";
-import MessagesPage from "@/pages/admin/MessagesPage";
+import MediaLibraryPage from "@/pages/admin/MediaLibraryPage";
 
 export function AppRoutes() {
   return (
     <Routes>
-      {/* Public routes */}
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
@@ -79,18 +49,14 @@ export function AppRoutes() {
       <Route path="/request-access" element={<RequestAccess />} />
       <Route path="/partnerships" element={<Partnerships />} />
       
-      {/* Protected resident routes */}
       <Route path="/resident-home" element={<ResidentHome />} />
       <Route path="/rbi-registration" element={<RbiRegistration />} />
       <Route path="/resident-profile" element={<ResidentProfile />} />
       
-      {/* Protected official routes */}
       <Route path="/official-dashboard" element={<OfficialsDashboard />} />
       
-      {/* Protected admin routes */}
       <Route path="/admin" element={<AdminDashboard />} />
       
-      {/* Smarketplace admin routes */}
       <Route path="/admin/smarketplace" element={<SmarketplaceIndex />} />
       <Route path="/admin/smarketplace/overview" element={<SmarketplaceOverview />} />
       <Route path="/admin/smarketplace/products/all" element={<ProductsAllPage />} />
@@ -103,23 +69,18 @@ export function AppRoutes() {
       <Route path="/admin/smarketplace/customers/all" element={<CustomersAllPage />} />
       <Route path="/admin/smarketplace/customers/vip" element={<CustomersAllPage />} />
       
-      {/* Messages route */}
       <Route path="/admin/messages" element={<MessagesPage />} />
       <Route path="/admin/messages/:id" element={<MessagesPage />} />
       
-      {/* Reports routes */}
       <Route path="/admin/reports/financial" element={<FinancialReportsPage />} />
       <Route path="/admin/reports/activity" element={<ActivityLogsPage />} />
       
-      {/* User Management routes */}
       <Route path="/admin/users/residents" element={<ResidentsPage />} />
       <Route path="/admin/users/officials" element={<OfficialsPage />} />
       <Route path="/admin/users/:id" element={<UserProfilePage />} />
       
-      {/* Settings routes */}
       <Route path="/admin/settings" element={<SettingsPage />} />
       
-      {/* Common protected routes */}
       <Route path="/notifications" element={<Notifications />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/menu" element={<Menu />} />
@@ -127,7 +88,6 @@ export function AppRoutes() {
       <Route path="/services" element={<Services />} />
       <Route path="/jobs" element={<Jobs />} />
       
-      {/* Marketplace routes */}
       <Route path="/marketplace" element={<Marketplace />} />
       <Route path="/marketplace/product/:id" element={<ProductDetail />} />
       <Route path="/marketplace/cart" element={<Cart />} />
@@ -135,7 +95,8 @@ export function AppRoutes() {
       <Route path="/marketplace/order-confirmation" element={<OrderConfirmation />} />
       <Route path="/marketplace/my-orders" element={<MyOrders />} />
       
-      {/* 404 route */}
+      <Route path="/admin/media-library" element={<MediaLibraryPage />} />
+      
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
