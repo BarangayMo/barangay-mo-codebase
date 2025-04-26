@@ -164,8 +164,8 @@ export const AdminLayout = ({
             <div className="flex flex-col h-full">
               <div className="flex items-center h-16 px-4 border-b">
                 <Link to="/" className="flex items-center" onClick={() => setIsMobileMenuOpen(false)}>
-                  <img src="/lovable-uploads/d6bf0909-f59b-42dc-8d79-b45a400a1081.png" alt="Logo" className="h-8 w-8" />
-                  <span className="ml-2 text-lg font-semibold">Barangay Mo Admin</span>
+                  <img alt="Logo" src="/lovable-uploads/02005d02-8f81-4c95-be8e-ba9d8eb3e0d1.jpg" className="h-8 w-8" />
+                  
                 </Link>
               </div>
               <div className="flex-1 overflow-hidden">
