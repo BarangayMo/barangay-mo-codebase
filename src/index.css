@@ -122,8 +122,8 @@ h1, .font-heading, .font-outfit {
 @layer components {
   .BarangayMo-Button {
     @apply inline-flex items-center justify-center;
-    // min-height: 70px;
-    min-width: 95px;
+    min-height: auto;
+    min-width: auto;
     padding: var(--bm-button-padding-vertical) var(--bm-button-padding-horizontal);
     font-family: var(--bm-button-font-family);
     font-size: var(--bm-button-font-size);
