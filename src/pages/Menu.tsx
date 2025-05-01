@@ -6,13 +6,16 @@ import {
   ThumbsUp, 
   ToggleRight,
   FileText, 
-  CircleHelp
+  CircleHelp,
+  User,
+  ChevronLeft, 
+  ChevronRight
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { MobileNavbar } from "@/components/layout/MobileNavbar";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { motion } from "framer-motion";
 
 // Translation dictionary for all text in the component
 const translations = {
@@ -27,7 +30,8 @@ const translations = {
     faq: "FAQ",
     privacy: "Data privacy terms",
     terms: "Terms and conditions",
-    logout: "Sign out"
+    logout: "Sign out",
+    profile: "My Profile"
   },
   fil: {
     menu: "Settings",
@@ -40,7 +44,34 @@ const translations = {
     faq: "FAQ",
     privacy: "Mga tuntunin sa privacy ng data",
     terms: "Mga tuntunin at kondisyon",
-    logout: "Mag-sign out"
+    logout: "Mag-sign out",
+    profile: "Aking Profile"
+  }
+};
+
+// Animation variants for page transitions
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { 
+    opacity: 1,
+    transition: { 
+      duration: 0.4,
+      when: "beforeChildren",
+      staggerChildren: 0.1
+    }
+  },
+  exit: {
+    opacity: 0,
+    transition: { duration: 0.3 }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { type: "spring", stiffness: 300, damping: 24 }
   }
 };
 
@@ -63,31 +94,61 @@ export const Menu = () => {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen pb-20">
+    <motion.div 
+      className="bg-gray-50 min-h-screen pb-20"
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      variants={containerVariants}
+    >
       {/* Header */}
-      <div className="px-4 py-4 flex items-center border-b bg-white">
+      <motion.div 
+        className="px-4 py-4 flex items-center border-b bg-white"
+        variants={itemVariants}
+      >
         <button onClick={handleBack} className="mr-4">
           <ChevronLeft className="w-6 h-6" />
         </button>
         <h1 className="text-xl font-bold">{t.menu}</h1>
-      </div>
+      </motion.div>
 
-      <div className="px-4 py-3">
+      <motion.div className="px-4 py-3" variants={itemVariants}>
         <h2 className="text-sm text-gray-500 mb-2">{t.general}</h2>
         
         {/* General Settings Group */}
         <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
+          {/* Profile Item - New */}
+          <motion.div 
+            className="p-4 flex items-center justify-between border-b"
+            variants={itemVariants}
+            whileTap={{ scale: 0.98 }}
+          >
+            <div className="flex items-center">
+              <User className="text-gray-600 w-5 h-5 mr-3" />
+              <p className="font-medium">{t.profile}</p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-gray-400" onClick={() => navigate('/edit-profile')} />
+          </motion.div>
+
           {/* Feedback Item */}
-          <div className="p-4 flex items-center border-b">
+          <motion.div 
+            className="p-4 flex items-center border-b"
+            variants={itemVariants}
+            whileTap={{ scale: 0.98 }}
+          >
             <ThumbsUp className="text-gray-600 w-5 h-5 mr-3" />
             <div>
               <p className="font-medium">{t.feedback}</p>
               <p className="text-sm text-gray-500">{t.feedbackDesc}</p>
             </div>
-          </div>
+          </motion.div>
           
           {/* Switch Themes Item */}
-          <div className="p-4 flex items-center justify-between border-b">
+          <motion.div 
+            className="p-4 flex items-center justify-between border-b"
+            variants={itemVariants}
+            whileTap={{ scale: 0.98 }}
+          >
             <div className="flex items-center">
               <ToggleRight className="text-gray-600 w-5 h-5 mr-3" />
               <p className="font-medium">{t.themes}</p>
@@ -96,50 +157,70 @@ export const Menu = () => {
               checked={theme === "dark"}
               onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
             />
-          </div>
+          </motion.div>
           
           {/* Clear Cache Item */}
-          <div className="p-4 flex items-center border-b">
+          <motion.div 
+            className="p-4 flex items-center border-b"
+            variants={itemVariants}
+            whileTap={{ scale: 0.98 }}
+          >
             <div className="flex items-center flex-1">
               <FileText className="text-gray-600 w-5 h-5 mr-3" />
               <p className="font-medium">{t.cache}</p>
             </div>
-          </div>
+          </motion.div>
           
           {/* FAQ Item */}
-          <div className="p-4 flex items-center justify-between">
+          <motion.div 
+            className="p-4 flex items-center justify-between"
+            variants={itemVariants}
+            whileTap={{ scale: 0.98 }}
+          >
             <div className="flex items-center">
               <CircleHelp className="text-gray-600 w-5 h-5 mr-3" />
               <p className="font-medium">{t.faq}</p>
             </div>
             <ChevronRight className="h-5 w-5 text-gray-400" />
-          </div>
+          </motion.div>
         </div>
         
         {/* Legal Group */}
         <h2 className="text-sm text-gray-500 mb-2">{t.legal}</h2>
         <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
           {/* Privacy Terms Item */}
-          <div className="p-4 flex items-center justify-between border-b">
+          <motion.div 
+            className="p-4 flex items-center justify-between border-b"
+            variants={itemVariants}
+            whileTap={{ scale: 0.98 }}
+          >
             <div className="flex items-center">
               <FileText className="text-gray-600 w-5 h-5 mr-3" />
               <p className="font-medium">{t.privacy}</p>
             </div>
             <ChevronRight className="h-5 w-5 text-gray-400" />
-          </div>
+          </motion.div>
           
           {/* Terms and Conditions Item */}
-          <div className="p-4 flex items-center justify-between">
+          <motion.div 
+            className="p-4 flex items-center justify-between"
+            variants={itemVariants}
+            whileTap={{ scale: 0.98 }}
+          >
             <div className="flex items-center">
               <FileText className="text-gray-600 w-5 h-5 mr-3" />
               <p className="font-medium">{t.terms}</p>
             </div>
             <ChevronRight className="h-5 w-5 text-gray-400" />
-          </div>
+          </motion.div>
         </div>
         
         {/* Sign Out Button */}
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+        <motion.div 
+          className="bg-white rounded-lg shadow-sm overflow-hidden"
+          variants={itemVariants}
+          whileTap={{ scale: 0.98 }}
+        >
           <button 
             onClick={handleLogout}
             className="p-4 flex items-center w-full text-left text-red-600"
@@ -147,11 +228,11 @@ export const Menu = () => {
             <LogOut className="w-5 h-5 mr-3" />
             <p className="font-medium">{t.logout}</p>
           </button>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
       
       <MobileNavbar />
-    </div>
+    </motion.div>
   );
 };
 

@@ -11,12 +11,33 @@ import { useLocation } from "react-router-dom";
 import { LoadingScreen } from "../ui/loading";
 import { HomePageSkeleton, MarketplaceSkeleton, MessagesSkeleton } from "../ui/page-skeleton";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { AnimatePresence, motion } from "framer-motion";
 
 interface LayoutProps {
   children: ReactNode;
   hideHeader?: boolean;
   hideFooter?: boolean;
 }
+
+// Animation variants
+const pageVariants = {
+  initial: { 
+    opacity: 0,
+  },
+  animate: { 
+    opacity: 1,
+    transition: { 
+      duration: 0.3,
+      ease: "easeInOut" 
+    }
+  },
+  exit: { 
+    opacity: 0,
+    transition: { 
+      duration: 0.2 
+    }
+  }
+};
 
 export const Layout = ({ children, hideHeader = false, hideFooter = false }: LayoutProps) => {
   const { isAuthenticated, userRole } = useAuth();
@@ -28,11 +49,11 @@ export const Layout = ({ children, hideHeader = false, hideFooter = false }: Lay
   const shouldShowFooter = !hideFooter && (!isMobile || pathname === '/');
 
   useEffect(() => {
-    // Simulate loading for at least 2 seconds when route changes
+    // Simulate loading for at least 1 second when route changes
     setIsLoading(true);
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 2000);
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, [pathname]);
@@ -70,7 +91,18 @@ export const Layout = ({ children, hideHeader = false, hideFooter = false }: Lay
               renderSkeleton()
             ) : (
               <Suspense fallback={<LoadingScreen />}>
-                {children}
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={pathname}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    variants={pageVariants}
+                    className="w-full h-full"
+                  >
+                    {children}
+                  </motion.div>
+                </AnimatePresence>
               </Suspense>
             )}
           </main>

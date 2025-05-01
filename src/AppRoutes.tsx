@@ -55,6 +55,9 @@ import Checkout from "@/pages/marketplace/Checkout";
 import OrderConfirmation from "@/pages/marketplace/OrderConfirmation";
 import MyOrders from "@/pages/marketplace/MyOrders";
 
+// Import the EditProfile component
+import EditProfile from "./pages/EditProfile";
+
 export function AppRoutes() {
   return (
     <Routes>
@@ -121,6 +124,9 @@ export function AppRoutes() {
       <Route path="/marketplace/my-orders" element={<MyOrders />} />
       
       <Route path="/admin/media-library" element={<MediaLibraryPage />} />
+      
+      {/* Add the EditProfile route */}
+      <Route path="/edit-profile" element={<EditProfile />} />
       
       <Route path="*" element={<NotFound />} />
     </Routes>

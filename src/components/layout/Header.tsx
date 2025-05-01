@@ -82,13 +82,24 @@ export const Header = () => {
             </>
           ) : (
             <div className="flex items-center gap-2">
-              {!isMobile && <LanguageSelector />}
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/login">Login</Link>
-              </Button>
-              <Button variant="outline" size="sm" asChild>
-                <Link to="/register">Register</Link>
-              </Button>
+              {!isMobile && (
+                <>
+                  <LanguageSelector />
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/login">Login</Link>
+                  </Button>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to="/register">Register</Link>
+                  </Button>
+                </>
+              )}
+              {isMobile && (
+                <Button asChild variant="ghost" size="icon" className="rounded-full">
+                  <Link to="/login">
+                    <User className="h-5 w-5" />
+                  </Link>
+                </Button>
+              )}
             </div>
           )}
         </div>
