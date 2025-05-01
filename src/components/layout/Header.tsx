@@ -74,7 +74,7 @@ export const Header = () => {
               </div>
               {isMobile && (
                 <Button asChild variant="ghost" size="icon" className="rounded-full">
-                  <Link to="/menu">
+                  <Link to="/resident-profile">
                     <User className="h-5 w-5" />
                   </Link>
                 </Button>

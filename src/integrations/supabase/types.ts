@@ -243,6 +243,7 @@ export type Database = {
       user_settings: {
         Row: {
           address: Json | null
+          avatar_url: string | null
           can_sell: boolean | null
           created_at: string
           is_banned: boolean | null
@@ -253,6 +254,7 @@ export type Database = {
         }
         Insert: {
           address?: Json | null
+          avatar_url?: string | null
           can_sell?: boolean | null
           created_at?: string
           is_banned?: boolean | null
@@ -263,6 +265,7 @@ export type Database = {
         }
         Update: {
           address?: Json | null
+          avatar_url?: string | null
           can_sell?: boolean | null
           created_at?: string
           is_banned?: boolean | null

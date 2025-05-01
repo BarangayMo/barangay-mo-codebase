@@ -23,9 +23,11 @@ interface LayoutProps {
 const pageVariants = {
   initial: { 
     opacity: 0,
+    x: 10,
   },
   animate: { 
     opacity: 1,
+    x: 0,
     transition: { 
       duration: 0.3,
       ease: "easeInOut" 
@@ -33,6 +35,7 @@ const pageVariants = {
   },
   exit: { 
     opacity: 0,
+    x: -10,
     transition: { 
       duration: 0.2 
     }
@@ -53,7 +56,7 @@ export const Layout = ({ children, hideHeader = false, hideFooter = false }: Lay
     setIsLoading(true);
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 1000);
+    }, 800);
 
     return () => clearTimeout(timer);
   }, [pathname]);

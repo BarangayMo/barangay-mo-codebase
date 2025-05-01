@@ -1,17 +1,20 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useResidentProfile } from "@/hooks/use-resident-profile";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, Calendar, Check, Instagram } from "lucide-react";
+import { ArrowLeft, Calendar, Check, Camera, Mail, Phone, User, MapPin, Save } from "lucide-react";
 import { MobileNavbar } from "@/components/layout/MobileNavbar";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { motion } from "framer-motion";
 import { Helmet } from "react-helmet";
 import { toast } from "sonner";
+import { useProfileImage } from "@/hooks/use-profile-image";
+import { supabase } from "@/integrations/supabase/client";
 
 // Animation variants
 const pageVariants = {
@@ -62,8 +65,10 @@ const itemVariants = {
 
 export default function EditProfile() {
   const navigate = useNavigate();
-  const { profile, isLoading } = useResidentProfile();
-  const { user } = useAuth();
+  const { profile, isLoading, mutate } = useResidentProfile();
+  const { user, session } = useAuth();
+  const { uploadProfileImage, uploading } = useProfileImage();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -71,12 +76,19 @@ export default function EditProfile() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [birthdate, setBirthdate] = useState('');
+  const [bio, setBio] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  
+  const avatarPhoto = profile?.settings?.avatar_url || 
+    `https://api.dicebear.com/7.x/initials/svg?seed=${firstName} ${lastName}` || 
+    "/lovable-uploads/15ae0b1f-4953-4631-bb5f-5243dc03e289.png";
 
   useEffect(() => {
     if (profile) {
       setFirstName(profile.first_name || '');
       setLastName(profile.last_name || '');
       setEmail(profile.email || user?.email || '');
+      setBio(profile.settings?.bio || 'I will inspire 10 million people to do what they love the best they can!');
       // Type-safe access to nested properties with fallbacks
       setUsername(profile.settings?.username || user?.email?.split('@')[0] || '');
       setPhone(profile.settings?.phone_number || '');
@@ -89,16 +101,81 @@ export default function EditProfile() {
     navigate(-1);
   };
 
-  const handleSave = () => {
-    toast.success("Profile changes saved successfully!");
-    // Navigate back after saving
-    setTimeout(() => navigate(-1), 1000);
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
+  };
+  
+  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size should be less than 5MB");
+      return;
+    }
+    
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      toast.error("Please select an image file");
+      return;
+    }
+    
+    const publicUrl = await uploadProfileImage(file);
+    if (publicUrl) {
+      // Update will happen via the mutate function
+    }
+  };
+
+  const handleSave = async () => {
+    if (!session?.user?.id) {
+      toast.error("You must be logged in to update your profile");
+      return;
+    }
+    
+    setIsSaving(true);
+    
+    try {
+      // Update profile information
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          first_name: firstName,
+          last_name: lastName
+        })
+        .eq('id', session.user.id);
+      
+      if (profileError) throw profileError;
+      
+      // Update user settings
+      const { error: settingsError } = await supabase
+        .from('user_settings')
+        .upsert({
+          user_id: session.user.id,
+          username: username,
+          phone_number: phone,
+          bio: bio
+        });
+      
+      if (settingsError) throw settingsError;
+      
+      toast.success("Profile changes saved successfully!");
+      mutate(); // Refresh profile data
+      
+      // Navigate back after saving
+      setTimeout(() => navigate('/resident-profile'), 1000);
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      toast.error("Failed to save profile changes");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Display a loading state while profile data is being fetched
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
@@ -119,14 +196,14 @@ export default function EditProfile() {
       >
         {/* Header */}
         <div className="px-4 py-4 flex items-center justify-between border-b bg-white">
-          <button onClick={handleBack}>
+          <button onClick={handleBack} className="flex items-center">
             <ArrowLeft className="w-6 h-6" />
           </button>
           <h1 className="text-lg font-semibold">Edit Profile</h1>
           <div className="w-6"></div> {/* Empty div for spacing */}
         </div>
 
-        <div className="px-4 py-6">
+        <div className="px-5 py-6 max-w-lg mx-auto">
           {/* Profile Avatar */}
           <motion.div 
             className="flex flex-col items-center mb-8"
@@ -136,72 +213,138 @@ export default function EditProfile() {
             <div className="relative">
               <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
                 <img 
-                  src="public/lovable-uploads/15ae0b1f-4953-4631-bb5f-5243dc03e289.png" 
+                  src={avatarPhoto} 
                   alt="Profile" 
                   className="h-full w-full object-cover"
                 />
               </Avatar>
-              <div className="absolute bottom-0 right-0 bg-blue-600 rounded-full p-1 border-2 border-white">
-                <Instagram className="w-4 h-4 text-white" />
+              <div 
+                className="absolute bottom-0 right-0 bg-blue-600 rounded-full p-1.5 border-2 border-white cursor-pointer"
+                onClick={handleImageClick}
+              >
+                <Camera className="w-4 h-4 text-white" />
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  className="hidden" 
+                  onChange={handleImageChange}
+                  accept="image/*"
+                />
               </div>
+              {uploading && (
+                <div className="absolute inset-0 bg-black/20 rounded-full flex items-center justify-center">
+                  <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              )}
             </div>
+            <p className="text-sm text-gray-500 mt-2">Tap to change profile picture</p>
           </motion.div>
 
-          {/* Detail Information Section */}
+          {/* Personal Information Card */}
           <motion.div 
             className="mb-6"
             custom={1}
             variants={itemVariants}
           >
-            <h2 className="text-base font-medium mb-4">Detail Information</h2>
-            
-            <div className="space-y-4">
-              <Input 
-                value={`${firstName} ${lastName}`} 
-                onChange={(e) => {
-                  const [first, ...rest] = e.target.value.split(' ');
-                  setFirstName(first || '');
-                  setLastName(rest.join(' ') || '');
-                }} 
-                className="border-0 border-b border-gray-200 rounded-none px-0 py-2 focus-visible:ring-0"
-              />
-              
-              <Input 
-                value={username} 
-                onChange={(e) => setUsername(e.target.value)} 
-                className="border-0 border-b border-gray-200 rounded-none px-0 py-2 focus-visible:ring-0"
-              />
-              
-              <div className="flex items-center justify-between border-b border-gray-200 py-2">
-                <Input 
-                  value={email} 
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="border-0 rounded-none px-0 focus-visible:ring-0"
-                />
-                <span className="text-blue-500 text-sm">Verified</span>
-              </div>
-              
-              <div className="flex items-center border-b border-gray-200 py-2">
-                <div className="flex items-center gap-2 w-full">
-                  <div className="flex items-center gap-1">
-                    <div className="w-6 h-4 bg-red-600"></div>
-                    <span>+62</span>
-                    <ArrowLeft className="w-4 h-4 rotate-270" />
-                  </div>
-                  <Input 
-                    value="82275836284" 
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="border-0 rounded-none px-0 focus-visible:ring-0"
-                  />
+            <Card className="mb-5">
+              <CardContent className="p-0">
+                <div className="bg-blue-50 p-4">
+                  <h2 className="text-base font-medium text-blue-900">Personal Information</h2>
                 </div>
-                <span className="text-blue-500 text-sm">Verified</span>
-              </div>
-              
-              <div className="flex items-center justify-between border-b border-gray-200 py-2">
-                <span>{birthdate}</span>
-                <Calendar className="w-5 h-5 text-gray-500" />
-              </div>
-            </div>
+                
+                <div className="p-4 space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-sm text-gray-500 flex items-center gap-1.5">
+                      <User className="w-4 h-4" />
+                      Full Name
+                    </label>
+                    <Input 
+                      value={`${firstName} ${lastName}`} 
+                      onChange={(e) => {
+                        const [first, ...rest] = e.target.value.split(' ');
+                        setFirstName(first || '');
+                        setLastName(rest.join(' ') || '');
+                      }} 
+                      className="border border-gray-200"
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+                  
+                  <div className="space-y-1.5">
+                    <label className="text-sm text-gray-500 flex items-center gap-1.5">
+                      <User className="w-4 h-4" />
+                      Username
+                    </label>
+                    <Input 
+                      value={username} 
+                      onChange={(e) => setUsername(e.target.value)} 
+                      className="border border-gray-200"
+                      placeholder="Enter your username"
+                      prefix="@"
+                    />
+                  </div>
+                  
+                  <div className="space-y-1.5">
+                    <label className="text-sm text-gray-500 flex items-center gap-1.5">
+                      <Mail className="w-4 h-4" />
+                      Email Address
+                    </label>
+                    <div className="flex items-center justify-between border border-gray-200 rounded-md">
+                      <Input 
+                        value={email} 
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="border-0 focus-visible:ring-0"
+                        readOnly
+                        disabled
+                      />
+                      <span className="text-blue-500 text-xs font-medium pr-3">Verified</span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-1.5">
+                    <label className="text-sm text-gray-500 flex items-center gap-1.5">
+                      <Phone className="w-4 h-4" />
+                      Phone Number
+                    </label>
+                    <div className="flex items-center border border-gray-200 rounded-md">
+                      <div className="flex items-center gap-1 px-3 bg-gray-50 border-r border-gray-200 rounded-l-md h-10">
+                        <span className="text-sm">+63</span>
+                      </div>
+                      <Input 
+                        value={phone} 
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="border-0 rounded-l-none focus-visible:ring-0"
+                        placeholder="9xxxxxxxxx"
+                        type="tel"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-1.5">
+                    <label className="text-sm text-gray-500 flex items-center gap-1.5">
+                      <Calendar className="w-4 h-4" />
+                      Date of Birth
+                    </label>
+                    <div className="flex items-center justify-between border border-gray-200 rounded-md p-3">
+                      <span>{birthdate}</span>
+                      <Calendar className="w-5 h-5 text-gray-500" />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-1.5">
+                    <label className="text-sm text-gray-500">
+                      Bio
+                    </label>
+                    <textarea
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      className="w-full border border-gray-200 rounded-md p-3 min-h-[100px] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Tell us about yourself"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </motion.div>
 
           {/* Document Details Section */}
@@ -251,8 +394,19 @@ export default function EditProfile() {
             <Button 
               onClick={handleSave} 
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 rounded-full"
+              disabled={isSaving}
             >
-              Saved Change
+              {isSaving ? (
+                <>
+                  <span className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Changes
+                </>
+              )}
             </Button>
           </motion.div>
         </div>
