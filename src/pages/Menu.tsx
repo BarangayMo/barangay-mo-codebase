@@ -1,50 +1,54 @@
 
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LogOut, UserCircle, Settings, Bell, Clock, MessageSquare, Globe } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { LanguageSelector } from "@/components/layout/LanguageSelector";
+import { 
+  LogOut, 
+  ThumbsUp, 
+  ToggleRight,
+  FileText, 
+  CircleHelp
+} from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Avatar } from "@/components/ui/avatar";
+import { MobileNavbar } from "@/components/layout/MobileNavbar";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 
 // Translation dictionary for all text in the component
 const translations = {
   en: {
-    menu: "Menu",
-    language: "Language",
-    languageHint: "Select your preferred language",
-    settingsTitle: "Settings and Preferences",
-    profile: "My Profile",
-    settings: "Settings",
-    notifications: "Notifications",
-    activities: "Activities",
-    messages: "Messages",
-    dashboard: "Dashboard",
-    dashboardHint: "Access your dashboard",
-    logout: "Logout",
+    menu: "Settings",
+    general: "General",
+    legal: "General", // Keeping as "General" to match the design while maintaining existing translations
+    feedback: "Leave feedback",
+    feedbackDesc: "Let us know how you like the app!",
+    themes: "Switch themes",
+    cache: "Clear cache",
+    faq: "FAQ",
+    privacy: "Data privacy terms",
+    terms: "Terms and conditions",
+    logout: "Sign out"
   },
   fil: {
-    menu: "Menu",
-    language: "Wika / Language",
-    languageHint: "Piliin ang inyong gustong wika",
-    settingsTitle: "Mga Setting at Preferences",
-    profile: "Aking Profile",
-    settings: "Mga Setting",
-    notifications: "Mga Notification",
-    activities: "Mga Aktibidad",
-    messages: "Mga Mensahe",
-    dashboard: "Dashboard",
-    dashboardHint: "Access your dashboard",
-    logout: "Mag-logout",
+    menu: "Settings",
+    general: "Pangkalahatan",
+    legal: "Pangkalahatan",
+    feedback: "Mag-iwan ng feedback",
+    feedbackDesc: "Ipaalam sa amin kung paano mo nagustuhan ang app!",
+    themes: "Palitan ang tema",
+    cache: "I-clear ang cache",
+    faq: "FAQ",
+    privacy: "Mga tuntunin sa privacy ng data",
+    terms: "Mga tuntunin at kondisyon",
+    logout: "Mag-sign out"
   }
 };
 
 export const Menu = () => {
   const navigate = useNavigate();
-  const { logout, userRole, user } = useAuth();
+  const { logout } = useAuth();
   const { language } = useLanguage();
+  const { theme, setTheme } = useTheme();
   
   // Select the appropriate translations based on language
   const t = translations[language];
@@ -54,115 +58,99 @@ export const Menu = () => {
     navigate("/login");
   };
 
-  const menuItems = [
-    {
-      title: t.profile,
-      icon: <UserCircle className="w-5 h-5" />,
-      href: "/resident-profile",
-    },
-    {
-      title: t.settings,
-      icon: <Settings className="w-5 h-5" />,
-      href: "/settings",
-    },
-    {
-      title: t.notifications,
-      icon: <Bell className="w-5 h-5" />,
-      href: "/notifications",
-    },
-    {
-      title: t.activities,
-      icon: <Clock className="w-5 h-5" />,
-      href: "/activities",
-    },
-    {
-      title: t.messages,
-      icon: <MessageSquare className="w-5 h-5" />,
-      href: "/messages",
-    },
-  ];
+  const handleBack = () => {
+    navigate(-1);
+  };
 
   return (
-    <div className="container max-w-md mx-auto p-4 min-h-screen">
-      <h1 className="text-2xl font-bold text-center mb-6">{t.menu}</h1>
+    <div className="bg-gray-50 min-h-screen pb-20">
+      {/* Header */}
+      <div className="px-4 py-4 flex items-center border-b bg-white">
+        <button onClick={handleBack} className="mr-4">
+          <ChevronLeft className="w-6 h-6" />
+        </button>
+        <h1 className="text-xl font-bold">{t.menu}</h1>
+      </div>
 
-      {/* Profile Card */}
-      {user && (
-        <Card className="p-4 mb-6">
-          <div className="flex items-center gap-4">
-            <Avatar className="h-14 w-14">
-              <UserCircle className="h-12 w-12" />
-            </Avatar>
+      <div className="px-4 py-3">
+        <h2 className="text-sm text-gray-500 mb-2">{t.general}</h2>
+        
+        {/* General Settings Group */}
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
+          {/* Feedback Item */}
+          <div className="p-4 flex items-center border-b">
+            <ThumbsUp className="text-gray-600 w-5 h-5 mr-3" />
             <div>
-              <h2 className="text-lg font-semibold">
-                {user.firstName || user.name} {user.lastName || ''}
-              </h2>
-              <p className="text-sm text-gray-500">{user.email}</p>
+              <p className="font-medium">{t.feedback}</p>
+              <p className="text-sm text-gray-500">{t.feedbackDesc}</p>
             </div>
           </div>
-        </Card>
-      )}
-
-      <Card className="p-4 mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-lg font-semibold">{t.language}</h2>
-          <LanguageSelector />
+          
+          {/* Switch Themes Item */}
+          <div className="p-4 flex items-center justify-between border-b">
+            <div className="flex items-center">
+              <ToggleRight className="text-gray-600 w-5 h-5 mr-3" />
+              <p className="font-medium">{t.themes}</p>
+            </div>
+            <Switch
+              checked={theme === "dark"}
+              onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+            />
+          </div>
+          
+          {/* Clear Cache Item */}
+          <div className="p-4 flex items-center border-b">
+            <div className="flex items-center flex-1">
+              <FileText className="text-gray-600 w-5 h-5 mr-3" />
+              <p className="font-medium">{t.cache}</p>
+            </div>
+          </div>
+          
+          {/* FAQ Item */}
+          <div className="p-4 flex items-center justify-between">
+            <div className="flex items-center">
+              <CircleHelp className="text-gray-600 w-5 h-5 mr-3" />
+              <p className="font-medium">{t.faq}</p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-gray-400" />
+          </div>
         </div>
-        <p className="text-sm text-gray-500">{t.languageHint}</p>
-      </Card>
-
-      <Card className="p-4 mb-6">
-        <h2 className="text-lg font-semibold mb-4">{t.settingsTitle}</h2>
-        <div className="space-y-2">
-          {menuItems.map((item) => (
-            <Button
-              key={item.href}
-              variant="ghost"
-              className="w-full justify-start"
-              onClick={() => navigate(item.href)}
-            >
-              <div className="flex items-center">
-                {item.icon}
-                <span className="ml-3">{item.title}</span>
-              </div>
-            </Button>
-          ))}
+        
+        {/* Legal Group */}
+        <h2 className="text-sm text-gray-500 mb-2">{t.legal}</h2>
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
+          {/* Privacy Terms Item */}
+          <div className="p-4 flex items-center justify-between border-b">
+            <div className="flex items-center">
+              <FileText className="text-gray-600 w-5 h-5 mr-3" />
+              <p className="font-medium">{t.privacy}</p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-gray-400" />
+          </div>
+          
+          {/* Terms and Conditions Item */}
+          <div className="p-4 flex items-center justify-between">
+            <div className="flex items-center">
+              <FileText className="text-gray-600 w-5 h-5 mr-3" />
+              <p className="font-medium">{t.terms}</p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-gray-400" />
+          </div>
         </div>
-      </Card>
-
-      {userRole && (
-        <Card className="p-4 mb-6">
-          <h2 className="text-lg font-semibold mb-2">{t.dashboard}</h2>
-          <p className="text-sm text-gray-500 mb-4">
-            {t.dashboardHint}
-          </p>
-          <Button
-            className="w-full"
-            onClick={() => 
-              navigate(
-                userRole === "resident" 
-                  ? "/resident-home" 
-                  : userRole === "official" 
-                    ? "/official-dashboard" 
-                    : "/admin"
-              )
-            }
+        
+        {/* Sign Out Button */}
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <button 
+            onClick={handleLogout}
+            className="p-4 flex items-center w-full text-left text-red-600"
           >
-            {t.dashboard}
-          </Button>
-        </Card>
-      )}
-
-      <Separator className="my-6" />
+            <LogOut className="w-5 h-5 mr-3" />
+            <p className="font-medium">{t.logout}</p>
+          </button>
+        </div>
+      </div>
       
-      <Button 
-        variant="destructive" 
-        className="w-full flex items-center justify-center" 
-        onClick={handleLogout}
-      >
-        <LogOut className="mr-2 h-5 w-5" />
-        {t.logout}
-      </Button>
+      <MobileNavbar />
     </div>
   );
 };
