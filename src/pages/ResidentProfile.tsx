@@ -1,17 +1,28 @@
+
 import { ArrowLeft, MoreHorizontal, ShoppingCart, Briefcase, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { MobileNavbar } from "@/components/layout/MobileNavbar";
 import { Helmet } from "react-helmet";
+import { useResidentProfile } from "@/hooks/use-resident-profile";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function ResidentProfile() {
+  const { profile, isLoading } = useResidentProfile();
+  const { user } = useAuth();
+  
+  // Fallback values
   const coverPhoto = "/lovable-uploads/c7d7f7a8-491d-49f1-910c-bb4dd5a85996.png";
-  const avatarPhoto = "/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png";
-  const name = "Kim Parkinson";
-  const username = "theunderdog";
-  const verified = true;
-  const bio = "I will inspire 10 million people to do what they love the best they can!";
-  const barangay = "New Cabalan, Olongapo City";
+  const avatarPhoto = profile?.settings?.address?.avatar_url || 
+    `https://api.dicebear.com/7.x/initials/svg?seed=${profile?.first_name || ''} ${profile?.last_name || ''}` || 
+    "/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png";
+  
+  const name = profile ? `${profile.first_name} ${profile.last_name}` : user?.name || "Resident";
+  const username = profile?.settings?.username || user?.email?.split('@')[0] || "resident";
+  const verified = profile?.settings?.is_verified || false;
+  const bio = profile?.settings?.bio || "I will inspire 10 million people to do what they love the best they can!";
+  const barangay = profile?.barangay || "New Cabalan, Olongapo City";
 
   return (
     <>
@@ -40,11 +51,15 @@ export default function ResidentProfile() {
           
           <div className="absolute left-1/2 -bottom-16 -translate-x-1/2">
             <div className="relative">
-              <img 
-                src={avatarPhoto} 
-                alt="Profile" 
-                className="w-32 h-32 rounded-full border-[5px] border-white object-cover shadow-xl" 
-              />
+              {isLoading ? (
+                <Skeleton className="w-32 h-32 rounded-full" />
+              ) : (
+                <img 
+                  src={avatarPhoto} 
+                  alt="Profile" 
+                  className="w-32 h-32 rounded-full border-[5px] border-white object-cover shadow-xl" 
+                />
+              )}
             </div>
           </div>
         </div>
@@ -52,19 +67,40 @@ export default function ResidentProfile() {
         <main className="max-w-2xl w-full mx-auto mt-20 p-4">
           <div className="text-center mb-6">
             <div className="flex items-center justify-center gap-1.5 mb-1">
-              <h1 className="text-2xl font-bold text-gray-900">{name}</h1>
-              {verified && (
-                <svg viewBox="0 0 24 24" className="w-5 h-5 text-blue-500" fill="currentColor">
-                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
-                </svg>
+              {isLoading ? (
+                <Skeleton className="h-8 w-48" />
+              ) : (
+                <>
+                  <h1 className="text-2xl font-bold text-gray-900">{name}</h1>
+                  {verified && (
+                    <svg viewBox="0 0 24 24" className="w-5 h-5 text-blue-500" fill="currentColor">
+                      <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+                    </svg>
+                  )}
+                </>
               )}
             </div>
-            <p className="text-gray-500 mb-2">@{username}</p>
+            
+            {isLoading ? (
+              <Skeleton className="h-5 w-32 mx-auto mb-2" />
+            ) : (
+              <p className="text-gray-500 mb-2">@{username}</p>
+            )}
+            
             <div className="flex items-center justify-center text-sm text-gray-500 mb-4">
               <MapPin className="w-4 h-4 mr-1" />
-              {barangay}
+              {isLoading ? (
+                <Skeleton className="h-5 w-40" />
+              ) : (
+                barangay
+              )}
             </div>
-            <p className="text-gray-700 mb-6 max-w-lg mx-auto">{bio}</p>
+            
+            {isLoading ? (
+              <Skeleton className="h-16 w-full max-w-lg mx-auto mb-6" />
+            ) : (
+              <p className="text-gray-700 mb-6 max-w-lg mx-auto">{bio}</p>
+            )}
             
             <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto">
               <Link to="/marketplace">

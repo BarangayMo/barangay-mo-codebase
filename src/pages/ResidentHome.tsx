@@ -5,9 +5,26 @@ import { ShoppingCart, Briefcase, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Helmet } from "react-helmet";
+import { useAuth } from "@/contexts/AuthContext";
+import { useResidentProfile } from "@/hooks/use-resident-profile";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ResidentHome() {
   const isMobile = useIsMobile();
+  const { user } = useAuth();
+  const { profile, isLoading } = useResidentProfile();
+  
+  const firstName = profile?.first_name || user?.firstName || "Resident";
+  const rbiNumber = profile?.settings?.rbi_number || "RBI-3-334-2,297-13";
+  const avatarUrl = profile?.settings?.address?.avatar_url || 
+    `https://api.dicebear.com/7.x/initials/svg?seed=${profile?.first_name || ''} ${profile?.last_name || ''}` ||
+    "/placeholder.svg";
+  
+  const barangayName = profile?.barangay || "Barangay New Cabalan";
+  const barangayLocation = "City of Olongapo, Zambales";
+  const barangayPopulation = "35,000";
+  const barangayPuroks = "14";
+  const barangayAge = "45";
 
   const quickActions = [
     { icon: ShoppingCart, label: "Market", path: "/marketplace" },
@@ -26,10 +43,23 @@ export default function ResidentHome() {
         <div className="relative z-10 h-full px-4 pt-6 max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <img src="/placeholder.svg" alt="Profile" className="rounded-full w-14 h-14 border-2 border-green-400" />
+              {isLoading ? (
+                <Skeleton className="rounded-full w-14 h-14" />
+              ) : (
+                <img src={avatarUrl} alt="Profile" className="rounded-full w-14 h-14 border-2 border-green-400" />
+              )}
               <div>
-                <div className="text-lg text-white font-semibold">Hi! John</div>
-                <div className="text-xs text-white/90">RBI-3-334-2,297-13</div>
+                {isLoading ? (
+                  <>
+                    <Skeleton className="h-6 w-32 mb-1" />
+                    <Skeleton className="h-4 w-24" />
+                  </>
+                ) : (
+                  <>
+                    <div className="text-lg text-white font-semibold">Hi! {firstName}</div>
+                    <div className="text-xs text-white/90">{rbiNumber}</div>
+                  </>
+                )}
               </div>
             </div>
             <div className="rounded-full border-2 border-white p-1">
@@ -44,24 +74,39 @@ export default function ResidentHome() {
           </div>
 
           <div className="rounded-2xl bg-white/20 backdrop-blur-xl shadow-lg px-5 py-4 mb-6">
-            <div className="font-semibold text-lg text-white">Barangay New Cabalan</div>
-            <div className="text-xs uppercase opacity-90 mt-1 text-white">
-              City of Olongapo, Zambales
-            </div>
-            <div className="flex justify-between mt-4">
-              <div className="text-center">
-                <div className="text-xl font-bold text-white">35,000</div>
-                <div className="text-xs text-white">Population</div>
+            {isLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-6 w-48" />
+                <Skeleton className="h-4 w-36" />
+                <div className="h-8"></div>
+                <div className="flex justify-between">
+                  <Skeleton className="h-10 w-20" />
+                  <Skeleton className="h-10 w-20" />
+                  <Skeleton className="h-10 w-20" />
+                </div>
               </div>
-              <div className="text-center">
-                <div className="text-xl font-bold text-white">14</div>
-                <div className="text-xs text-white">Puroks</div>
-              </div>
-              <div className="text-center">
-                <div className="text-xl font-bold text-white">45</div>
-                <div className="text-xs text-white">Years</div>
-              </div>
-            </div>
+            ) : (
+              <>
+                <div className="font-semibold text-lg text-white">{barangayName}</div>
+                <div className="text-xs uppercase opacity-90 mt-1 text-white">
+                  {barangayLocation}
+                </div>
+                <div className="flex justify-between mt-4">
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-white">{barangayPopulation}</div>
+                    <div className="text-xs text-white">Population</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-white">{barangayPuroks}</div>
+                    <div className="text-xs text-white">Puroks</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-white">{barangayAge}</div>
+                    <div className="text-xs text-white">Years</div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="mb-6">
