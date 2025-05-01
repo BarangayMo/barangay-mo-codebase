@@ -19,6 +19,7 @@ export interface UserProfile {
     username?: string; // Adding username property to match the error
     bio?: string; // Adding bio property to match the error
     rbi_number?: string; // Adding rbi_number property to match the error
+    avatar_url?: string | null; // Adding avatar_url property to fix the error
   };
   activities?: UserActivity[];
 }
