@@ -6,6 +6,7 @@ export interface UserProfile {
   first_name: string;
   last_name: string;
   email: string;
+  barangay?: string | null; // Adding barangay property to match the error
   settings?: {
     is_banned: boolean | null;
     can_sell: boolean | null;
@@ -15,6 +16,9 @@ export interface UserProfile {
     created_at: string;
     updated_at: string;
     user_id: string;
+    username?: string; // Adding username property to match the error
+    bio?: string; // Adding bio property to match the error
+    rbi_number?: string; // Adding rbi_number property to match the error
   };
   activities?: UserActivity[];
 }

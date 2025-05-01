@@ -14,14 +14,19 @@ export default function ResidentProfile() {
   
   // Fallback values
   const coverPhoto = "/lovable-uploads/c7d7f7a8-491d-49f1-910c-bb4dd5a85996.png";
-  const avatarPhoto = profile?.settings?.address?.avatar_url || 
-    `https://api.dicebear.com/7.x/initials/svg?seed=${profile?.first_name || ''} ${profile?.last_name || ''}` || 
-    "/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png";
+  // Fix: Type handling for avatar_url in address
+  const avatarPhoto = profile?.settings?.address && typeof profile.settings.address === 'object' 
+    ? (profile.settings.address as any)?.avatar_url
+    : `https://api.dicebear.com/7.x/initials/svg?seed=${profile?.first_name || ''} ${profile?.last_name || ''}` || 
+      "/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png";
   
   const name = profile ? `${profile.first_name} ${profile.last_name}` : user?.name || "Resident";
+  // Fix: Provide fallback for username
   const username = profile?.settings?.username || user?.email?.split('@')[0] || "resident";
   const verified = profile?.settings?.is_verified || false;
+  // Fix: Provide fallback for bio
   const bio = profile?.settings?.bio || "I will inspire 10 million people to do what they love the best they can!";
+  // Fix: Profile.barangay access - now included in UserProfile interface
   const barangay = profile?.barangay || "New Cabalan, Olongapo City";
 
   return (

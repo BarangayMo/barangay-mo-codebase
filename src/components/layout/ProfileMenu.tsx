@@ -23,8 +23,11 @@ export function ProfileMenu() {
   const firstName = profile?.first_name || user?.firstName || '';
   const lastName = profile?.last_name || user?.lastName || '';
   const initials = firstName?.[0] || '' + lastName?.[0] || '';
-  const avatarUrl = profile?.settings?.address?.avatar_url || 
-    `https://api.dicebear.com/7.x/initials/svg?seed=${firstName} ${lastName}`;
+  
+  // Fix type handling for address.avatar_url
+  const avatarUrl = profile?.settings?.address && typeof profile.settings.address === 'object' 
+    ? (profile.settings.address as any)?.avatar_url 
+    : `https://api.dicebear.com/7.x/initials/svg?seed=${firstName} ${lastName}`;
 
   const handleLogout = async () => {
     setIsLoggingOut(true);

@@ -53,6 +53,7 @@ export function useResidentProfile() {
           first_name: profileData.first_name || user?.firstName || '',
           last_name: profileData.last_name || user?.lastName || '',
           email: user?.email || '',
+          barangay: profileData.barangay || '',
           settings: settingsData || undefined,
           activities: activitiesData || []
         });

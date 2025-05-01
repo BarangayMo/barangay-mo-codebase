@@ -15,11 +15,15 @@ export default function ResidentHome() {
   const { profile, isLoading } = useResidentProfile();
   
   const firstName = profile?.first_name || user?.firstName || "Resident";
+  // Fix: Provide fallback for rbi_number
   const rbiNumber = profile?.settings?.rbi_number || "RBI-3-334-2,297-13";
-  const avatarUrl = profile?.settings?.address?.avatar_url || 
-    `https://api.dicebear.com/7.x/initials/svg?seed=${profile?.first_name || ''} ${profile?.last_name || ''}` ||
-    "/placeholder.svg";
+  // Fix: Type handling for avatar_url in address
+  const avatarUrl = profile?.settings?.address && typeof profile.settings.address === 'object'
+    ? (profile.settings.address as any)?.avatar_url
+    : `https://api.dicebear.com/7.x/initials/svg?seed=${profile?.first_name || ''} ${profile?.last_name || ''}` ||
+      "/placeholder.svg";
   
+  // Fix: Profile.barangay access - now included in UserProfile interface
   const barangayName = profile?.barangay || "Barangay New Cabalan";
   const barangayLocation = "City of Olongapo, Zambales";
   const barangayPopulation = "35,000";
