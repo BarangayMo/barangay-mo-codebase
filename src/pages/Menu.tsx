@@ -19,7 +19,7 @@ const translations = {
   en: {
     menu: "Settings",
     general: "General",
-    legal: "General", // Keeping as "General" to match the design while maintaining existing translations
+    legal: "Legal",
     feedback: "Leave feedback",
     feedbackDesc: "Let us know how you like the app!",
     themes: "Switch themes",
@@ -32,7 +32,7 @@ const translations = {
   fil: {
     menu: "Settings",
     general: "Pangkalahatan",
-    legal: "Pangkalahatan",
+    legal: "Legal",
     feedback: "Mag-iwan ng feedback",
     feedbackDesc: "Ipaalam sa amin kung paano mo nagustuhan ang app!",
     themes: "Palitan ang tema",
