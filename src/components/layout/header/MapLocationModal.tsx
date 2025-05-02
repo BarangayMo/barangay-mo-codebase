@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, MapPin, Search, ZoomIn, ZoomOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { getGoogleMapsApiKey } from "@/services/apiKeys";
 
 // Declare Google Maps types
 declare global {
@@ -44,23 +45,19 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
     
     const fetchApiKeyAndLoadMap = async () => {
       try {
-        // Try to get API key from database
-        const { data, error } = await supabase
-          .from('system_api_keys')
-          .select('key_value')
-          .eq('key_name', 'google_maps_javascript_api_key')
-          .single();
+        // Get API key using the service
+        const key = await getGoogleMapsApiKey();
         
-        if (error || !data || !data.key_value) {
-          console.error("Error fetching Google Maps API key:", error);
+        if (!key) {
+          console.error("Error fetching Google Maps API key");
           toast.error("Failed to load map. API key not configured.");
           setIsLoading(false);
           return;
         }
         
         // Save API key to state
-        setApiKey(data.key_value);
-        loadGoogleMaps(data.key_value);
+        setApiKey(key);
+        loadGoogleMaps(key);
       } catch (error) {
         console.error("Error fetching API key:", error);
         toast.error("Failed to load map configuration");
@@ -284,20 +281,20 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[90vw] md:max-w-[700px] max-h-[90vh] overflow-hidden">
-        <DialogHeader>
-          <DialogTitle>Select Your Barangay</DialogTitle>
+      <DialogContent className="sm:max-w-[90vw] md:max-w-[700px] max-h-[90vh] overflow-hidden rounded-xl shadow-lg border-2 border-muted/30">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-xl font-semibold">Select Your Barangay</DialogTitle>
         </DialogHeader>
 
-        <div className="py-4 space-y-4">
-          <div className="flex items-center gap-2">
+        <div className="py-4 space-y-4 px-1">
+          <div className="flex items-center gap-3">
             <div className="relative flex-1">
               <Input
                 placeholder="Search location..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="pr-10"
+                className="pr-10 h-11 rounded-lg border-input/60 focus-visible:ring-primary/30"
               />
               <Button
                 variant="ghost"
@@ -314,22 +311,32 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
               </Button>
             </div>
             
-            <div className="flex items-center gap-1">
-              <Button variant="outline" size="icon" onClick={() => handleZoom('in')}>
-                <ZoomIn className="h-4 w-4" />
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={() => handleZoom('in')}
+                className="rounded-lg h-11 w-11 border-input/60 hover:bg-accent/80"
+              >
+                <ZoomIn className="h-5 w-5" />
               </Button>
-              <Button variant="outline" size="icon" onClick={() => handleZoom('out')}>
-                <ZoomOut className="h-4 w-4" />
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={() => handleZoom('out')}
+                className="rounded-lg h-11 w-11 border-input/60 hover:bg-accent/80"
+              >
+                <ZoomOut className="h-5 w-5" />
               </Button>
             </div>
           </div>
 
           {isLoading ? (
-            <div className="h-[400px] w-full flex items-center justify-center bg-gray-100 rounded-md">
+            <div className="h-[400px] w-full flex items-center justify-center bg-muted/30 rounded-xl">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           ) : !apiKey ? (
-            <div className="h-[400px] w-full flex items-center justify-center bg-gray-100 rounded-md">
+            <div className="h-[400px] w-full flex items-center justify-center bg-muted/30 rounded-xl">
               <div className="text-center p-6">
                 <MapPin className="h-12 w-12 mx-auto mb-4 text-gray-400" />
                 <h3 className="text-lg font-medium mb-2">API Key Not Configured</h3>
@@ -340,24 +347,36 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
             </div>
           ) : (
             <div className="h-[400px] w-full relative">
-              <div ref={mapRef} className="h-full w-full rounded-md" />
+              <div ref={mapRef} className="h-full w-full rounded-xl overflow-hidden border border-input/30 shadow-sm" />
             </div>
           )}
 
-          <div className="flex items-center gap-2">
-            <MapPin className="h-5 w-5 text-blue-500 shrink-0" />
-            <div className="space-y-1">
-              <Label>Selected Location</Label>
-              <p className="text-sm text-muted-foreground">
+          <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-lg border border-input/20">
+            <MapPin className="h-5 w-5 text-primary shrink-0" />
+            <div className="space-y-1 flex-1">
+              <Label className="text-sm font-medium">Selected Location</Label>
+              <p className="text-sm text-muted-foreground font-medium">
                 {selectedLocation?.barangay || 'No location selected'}
               </p>
             </div>
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
-          <Button onClick={handleConfirm} disabled={!selectedLocation}>Confirm Location</Button>
+        <DialogFooter className="sm:justify-between gap-3 pt-2">
+          <Button 
+            variant="outline" 
+            onClick={() => setIsOpen(false)}
+            className="w-full sm:w-auto rounded-lg border-input/60"
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleConfirm} 
+            disabled={!selectedLocation}
+            className="w-full sm:w-auto rounded-lg shadow-[0_4px_10px_rgba(0,0,0,0.1)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] transition-all duration-200 font-medium"
+          >
+            Confirm Location
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
