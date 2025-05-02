@@ -1,8 +1,8 @@
 
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Home } from "lucide-react";
+import { FloatingInput } from "@/components/ui/floating-input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 const HousingDetailsForm = () => {
   return (
@@ -27,10 +27,11 @@ const HousingDetailsForm = () => {
           </RadioGroup>
         </div>
         
-        <div className="space-y-2">
-          <Label htmlFor="headName">Name of the head of the household (Pangalan ng namumuno o head sa tinitirahan)</Label>
-          <Input id="headName" placeholder="Enter name of household head" />
-        </div>
+        <FloatingInput 
+          id="headName" 
+          label="Name of the head of the household" 
+          placeholder="Enter name of household head" 
+        />
         
         <div className="space-y-2">
           <Label className="text-base">Are you renting? (Ikaw ba ay umuupa sa tinitirahan?)</Label>
@@ -60,15 +61,17 @@ const HousingDetailsForm = () => {
           </RadioGroup>
         </div>
         
-        <div className="space-y-2">
-          <Label htmlFor="ownerName">Who is the owner of the residence? (Sino ang may ari ng inuupahan?)</Label>
-          <Input id="ownerName" placeholder="Enter name of the property owner" />
-        </div>
+        <FloatingInput 
+          id="ownerName" 
+          label="Who is the owner of the residence?" 
+          placeholder="Enter name of the property owner" 
+        />
         
-        <div className="space-y-2">
-          <Label htmlFor="companyName">Name of the company (Pangalan ng kumpanya)</Label>
-          <Input id="companyName" placeholder="Enter company name if applicable" />
-        </div>
+        <FloatingInput 
+          id="companyName" 
+          label="Name of the company" 
+          placeholder="Enter company name if applicable" 
+        />
       </div>
     </div>
   );

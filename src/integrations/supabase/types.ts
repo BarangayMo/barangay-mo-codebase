@@ -189,6 +189,7 @@ export type Database = {
       profiles: {
         Row: {
           barangay: string | null
+          "Barangay Reference": string | null
           created_at: string | null
           first_name: string | null
           id: string
@@ -198,6 +199,7 @@ export type Database = {
         }
         Insert: {
           barangay?: string | null
+          "Barangay Reference"?: string | null
           created_at?: string | null
           first_name?: string | null
           id: string
@@ -207,6 +209,7 @@ export type Database = {
         }
         Update: {
           barangay?: string | null
+          "Barangay Reference"?: string | null
           created_at?: string | null
           first_name?: string | null
           id?: string

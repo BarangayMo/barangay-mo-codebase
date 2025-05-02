@@ -1,9 +1,9 @@
 
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Textarea } from "@/components/ui/textarea";
 import { Heart } from "lucide-react";
+import { FloatingInput } from "@/components/ui/floating-input";
+import { FloatingTextarea } from "@/components/ui/floating-textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 const HealthDetailsForm = () => {
   return (
@@ -15,15 +15,19 @@ const HealthDetailsForm = () => {
       
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="height">Height (in cm)</Label>
-            <Input id="height" type="number" placeholder="Enter height in cm" />
-          </div>
+          <FloatingInput 
+            id="height" 
+            label="Height (in cm)" 
+            type="number" 
+            placeholder=" " 
+          />
           
-          <div className="space-y-2">
-            <Label htmlFor="weight">Weight (in kg)</Label>
-            <Input id="weight" type="number" placeholder="Enter weight in kg" />
-          </div>
+          <FloatingInput 
+            id="weight" 
+            label="Weight (in kg)" 
+            type="number" 
+            placeholder=" " 
+          />
         </div>
         
         <div className="space-y-2">
@@ -40,10 +44,11 @@ const HealthDetailsForm = () => {
           </RadioGroup>
         </div>
         
-        <div className="space-y-2">
-          <Label htmlFor="healthCondition">What is your health condition? (Ano ang iyong karamdaman?)</Label>
-          <Textarea id="healthCondition" placeholder="Please describe your health condition" />
-        </div>
+        <FloatingTextarea 
+          id="healthCondition" 
+          label="What is your health condition? (Ano ang iyong karamdaman?)" 
+          placeholder=" " 
+        />
         
         <div className="space-y-2">
           <Label className="text-base">Do you receive barangay assistance for your condition? (May barangay assistance ba sa iyong karamdaman?)</Label>

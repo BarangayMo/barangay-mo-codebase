@@ -1,8 +1,8 @@
 
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { School } from "lucide-react";
+import { FloatingInput } from "@/components/ui/floating-input";
+import { FloatingSelect } from "@/components/ui/floating-select";
+import { SelectItem } from "@/components/ui/select";
 
 const EducationDetailsForm = () => {
   return (
@@ -13,48 +13,40 @@ const EducationDetailsForm = () => {
       </div>
       
       <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="education">Educational Attainment</Label>
-          <Select>
-            <SelectTrigger id="education">
-              <SelectValue placeholder="Select highest education" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="elementary">Elementary</SelectItem>
-              <SelectItem value="highSchool">High School</SelectItem>
-              <SelectItem value="vocational">Vocational</SelectItem>
-              <SelectItem value="college">College</SelectItem>
-              <SelectItem value="masters">Masters</SelectItem>
-              <SelectItem value="doctorate">Doctorate</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <FloatingSelect 
+          id="education" 
+          label="Educational Attainment"
+        >
+          <SelectItem value="elementary">Elementary</SelectItem>
+          <SelectItem value="highSchool">High School</SelectItem>
+          <SelectItem value="vocational">Vocational</SelectItem>
+          <SelectItem value="college">College</SelectItem>
+          <SelectItem value="masters">Masters</SelectItem>
+          <SelectItem value="doctorate">Doctorate</SelectItem>
+        </FloatingSelect>
         
-        <div className="space-y-2">
-          <Label htmlFor="profession">Profession</Label>
-          <Input id="profession" placeholder="Enter your profession" />
-        </div>
+        <FloatingInput 
+          id="profession" 
+          label="Profession" 
+          placeholder=" " 
+        />
         
-        <div className="space-y-2">
-          <Label htmlFor="skills">Skills</Label>
-          <Input id="skills" placeholder="Enter your skills (separated by commas)" />
-        </div>
+        <FloatingInput 
+          id="skills" 
+          label="Skills" 
+          placeholder="Enter your skills (separated by commas)" 
+        />
         
-        <div className="space-y-2">
-          <Label htmlFor="jobStatus">Job Status</Label>
-          <Select>
-            <SelectTrigger id="jobStatus">
-              <SelectValue placeholder="Select job status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="employed">Employed</SelectItem>
-              <SelectItem value="unemployed">Unemployed</SelectItem>
-              <SelectItem value="freelance">Freelance</SelectItem>
-              <SelectItem value="selfEmployed">Self-Employed</SelectItem>
-              <SelectItem value="retired">Retired</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <FloatingSelect 
+          id="jobStatus" 
+          label="Job Status"
+        >
+          <SelectItem value="employed">Employed</SelectItem>
+          <SelectItem value="unemployed">Unemployed</SelectItem>
+          <SelectItem value="freelance">Freelance</SelectItem>
+          <SelectItem value="selfEmployed">Self-Employed</SelectItem>
+          <SelectItem value="retired">Retired</SelectItem>
+        </FloatingSelect>
       </div>
     </div>
   );

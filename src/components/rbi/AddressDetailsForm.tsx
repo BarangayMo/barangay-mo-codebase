@@ -1,8 +1,8 @@
 
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Home } from "lucide-react";
+import { FloatingInput } from "@/components/ui/floating-input";
+import { FloatingSelect } from "@/components/ui/floating-select";
+import { SelectItem } from "@/components/ui/select";
 
 const AddressDetailsForm = () => {
   return (
@@ -14,46 +14,47 @@ const AddressDetailsForm = () => {
       
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="houseNumber">House/Bldg Number</Label>
-            <Input id="houseNumber" placeholder="Enter house or building number" />
-          </div>
+          <FloatingInput 
+            id="houseNumber" 
+            label="House/Bldg Number" 
+            placeholder=" " 
+          />
           
-          <div className="space-y-2">
-            <Label htmlFor="street">Street / Kalye</Label>
-            <Input id="street" placeholder="Enter street name" />
-          </div>
+          <FloatingInput 
+            id="street" 
+            label="Street / Kalye" 
+            placeholder=" " 
+          />
         </div>
         
-        <div className="space-y-2">
-          <Label htmlFor="division">Select Division</Label>
-          <Select>
-            <SelectTrigger id="division">
-              <SelectValue placeholder="Select division" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="division1">Division 1</SelectItem>
-              <SelectItem value="division2">Division 2</SelectItem>
-              <SelectItem value="division3">Division 3</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <FloatingSelect 
+          id="division" 
+          label="Division"
+        >
+          <SelectItem value="division1">Division 1</SelectItem>
+          <SelectItem value="division2">Division 2</SelectItem>
+          <SelectItem value="division3">Division 3</SelectItem>
+        </FloatingSelect>
         
-        <div className="space-y-2">
-          <Label htmlFor="zone">Division/Zone/Sitio/Purok</Label>
-          <Input id="zone" placeholder="Enter zone details" />
-        </div>
+        <FloatingInput 
+          id="zone" 
+          label="Division/Zone/Sitio/Purok" 
+          placeholder=" " 
+        />
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="barangay">Barangay</Label>
-            <Input id="barangay" placeholder="Enter barangay name" />
-          </div>
+          <FloatingInput 
+            id="barangay" 
+            label="Barangay" 
+            placeholder=" " 
+          />
           
-          <div className="space-y-2">
-            <Label htmlFor="residenceSince">Residence Since</Label>
-            <Input id="residenceSince" type="date" />
-          </div>
+          <FloatingInput 
+            id="residenceSince" 
+            label="Residence Since" 
+            type="date" 
+            placeholder=" " 
+          />
         </div>
       </div>
     </div>

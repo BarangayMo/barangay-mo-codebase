@@ -1,7 +1,6 @@
 
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { User } from "lucide-react";
+import { FloatingInput } from "@/components/ui/floating-input";
 
 const PersonalDetailsForm = () => {
   return (
@@ -13,27 +12,31 @@ const PersonalDetailsForm = () => {
       
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="lastName">Last Name</Label>
-            <Input id="lastName" placeholder="Enter your last name" />
-          </div>
+          <FloatingInput 
+            id="lastName" 
+            label="Last Name" 
+            placeholder=" " 
+          />
           
-          <div className="space-y-2">
-            <Label htmlFor="firstName">First Name</Label>
-            <Input id="firstName" placeholder="Enter your first name" />
-          </div>
+          <FloatingInput 
+            id="firstName" 
+            label="First Name" 
+            placeholder=" " 
+          />
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="middleName">Middle Name</Label>
-            <Input id="middleName" placeholder="Enter your middle name" />
-          </div>
+          <FloatingInput 
+            id="middleName" 
+            label="Middle Name" 
+            placeholder=" " 
+          />
           
-          <div className="space-y-2">
-            <Label htmlFor="suffix">Suffix</Label>
-            <Input id="suffix" placeholder="Jr., Sr., III, etc. (optional)" />
-          </div>
+          <FloatingInput 
+            id="suffix" 
+            label="Suffix (Jr., Sr., III, etc.)" 
+            placeholder=" " 
+          />
         </div>
       </div>
     </div>

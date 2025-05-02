@@ -1,8 +1,8 @@
 
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { User } from "lucide-react";
+import { FloatingInput } from "@/components/ui/floating-input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 const ParentDetailsForm = () => {
   return (
@@ -18,27 +18,31 @@ const ParentDetailsForm = () => {
           <h3 className="text-lg font-medium mb-3">Father's Details</h3>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="fatherLastName">Last Name</Label>
-                <Input id="fatherLastName" placeholder="Enter father's last name" />
-              </div>
+              <FloatingInput 
+                id="fatherLastName" 
+                label="Last Name" 
+                placeholder=" " 
+              />
               
-              <div className="space-y-2">
-                <Label htmlFor="fatherFirstName">First Name</Label>
-                <Input id="fatherFirstName" placeholder="Enter father's first name" />
-              </div>
+              <FloatingInput 
+                id="fatherFirstName" 
+                label="First Name" 
+                placeholder=" " 
+              />
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="fatherMiddleName">Middle Name</Label>
-                <Input id="fatherMiddleName" placeholder="Enter father's middle name" />
-              </div>
+              <FloatingInput 
+                id="fatherMiddleName" 
+                label="Middle Name" 
+                placeholder=" " 
+              />
               
-              <div className="space-y-2">
-                <Label htmlFor="fatherSuffix">Suffix</Label>
-                <Input id="fatherSuffix" placeholder="Jr., Sr., III, etc. (optional)" />
-              </div>
+              <FloatingInput 
+                id="fatherSuffix" 
+                label="Suffix (Jr., Sr., III, etc.)" 
+                placeholder=" " 
+              />
             </div>
           </div>
         </div>
@@ -47,27 +51,31 @@ const ParentDetailsForm = () => {
           <h3 className="text-lg font-medium mb-3">Mother's Details</h3>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="motherLastName">Last Name</Label>
-                <Input id="motherLastName" placeholder="Enter mother's last name" />
-              </div>
+              <FloatingInput 
+                id="motherLastName" 
+                label="Last Name" 
+                placeholder=" " 
+              />
               
-              <div className="space-y-2">
-                <Label htmlFor="motherFirstName">First Name</Label>
-                <Input id="motherFirstName" placeholder="Enter mother's first name" />
-              </div>
+              <FloatingInput 
+                id="motherFirstName" 
+                label="First Name" 
+                placeholder=" " 
+              />
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="motherMiddleName">Middle Name</Label>
-                <Input id="motherMiddleName" placeholder="Enter mother's middle name" />
-              </div>
+              <FloatingInput 
+                id="motherMiddleName" 
+                label="Middle Name" 
+                placeholder=" " 
+              />
               
-              <div className="space-y-2">
-                <Label htmlFor="motherLastName">Parent Status</Label>
-                <Input id="parentStatus" placeholder="Married, Separated, etc." />
-              </div>
+              <FloatingInput 
+                id="parentStatus" 
+                label="Parent Status" 
+                placeholder="Married, Separated, etc." 
+              />
             </div>
           </div>
         </div>

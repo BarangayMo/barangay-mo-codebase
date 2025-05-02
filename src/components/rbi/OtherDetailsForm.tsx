@@ -1,9 +1,10 @@
 
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Calendar, Info } from "lucide-react";
+import { FloatingInput } from "@/components/ui/floating-input";
+import { FloatingSelect } from "@/components/ui/floating-select";
+import { SelectItem } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 const OtherDetailsForm = () => {
   return (
@@ -15,16 +16,16 @@ const OtherDetailsForm = () => {
       
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="dateOfBirth">Date of Birth</Label>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <Input id="dateOfBirth" type="date" className="pl-10" />
-            </div>
-          </div>
+          <FloatingInput 
+            id="dateOfBirth" 
+            label="Date of Birth" 
+            type="date" 
+            placeholder=" " 
+            icon={<Calendar className="text-gray-400 w-5 h-5" />}
+          />
           
           <div className="space-y-2">
-            <Label>Sex</Label>
+            <Label className="text-base">Sex</Label>
             <RadioGroup defaultValue="male" className="flex gap-4 pt-2">
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="male" id="male" />
@@ -38,76 +39,74 @@ const OtherDetailsForm = () => {
           </div>
         </div>
         
-        <div className="space-y-2">
-          <Label htmlFor="placeOfBirth">Place of Birth</Label>
-          <Input id="placeOfBirth" placeholder="City, Province, Country" />
+        <FloatingInput 
+          id="placeOfBirth" 
+          label="Place of Birth" 
+          placeholder="City, Province, Country" 
+        />
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FloatingSelect 
+            id="bloodType" 
+            label="Blood Type"
+          >
+            <SelectItem value="A+">A+</SelectItem>
+            <SelectItem value="A-">A-</SelectItem>
+            <SelectItem value="B+">B+</SelectItem>
+            <SelectItem value="B-">B-</SelectItem>
+            <SelectItem value="AB+">AB+</SelectItem>
+            <SelectItem value="AB-">AB-</SelectItem>
+            <SelectItem value="O+">O+</SelectItem>
+            <SelectItem value="O-">O-</SelectItem>
+          </FloatingSelect>
+          
+          <FloatingInput 
+            id="religion" 
+            label="Religion" 
+            placeholder=" " 
+          />
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="bloodType">Blood Type</Label>
-            <Select>
-              <SelectTrigger id="bloodType">
-                <SelectValue placeholder="Select blood type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="A+">A+</SelectItem>
-                <SelectItem value="A-">A-</SelectItem>
-                <SelectItem value="B+">B+</SelectItem>
-                <SelectItem value="B-">B-</SelectItem>
-                <SelectItem value="AB+">AB+</SelectItem>
-                <SelectItem value="AB-">AB-</SelectItem>
-                <SelectItem value="O+">O+</SelectItem>
-                <SelectItem value="O-">O-</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <FloatingSelect 
+            id="civilStatus" 
+            label="Civil Status"
+          >
+            <SelectItem value="single">Single</SelectItem>
+            <SelectItem value="married">Married</SelectItem>
+            <SelectItem value="divorced">Divorced</SelectItem>
+            <SelectItem value="widowed">Widowed</SelectItem>
+            <SelectItem value="separated">Separated</SelectItem>
+          </FloatingSelect>
           
-          <div className="space-y-2">
-            <Label htmlFor="religion">Religion</Label>
-            <Input id="religion" placeholder="Enter your religion" />
-          </div>
+          <FloatingInput 
+            id="contactNumber" 
+            label="Contact Number" 
+            placeholder="+63 XXX XXX XXXX" 
+          />
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="civilStatus">Civil Status</Label>
-            <Select>
-              <SelectTrigger id="civilStatus">
-                <SelectValue placeholder="Select civil status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="single">Single</SelectItem>
-                <SelectItem value="married">Married</SelectItem>
-                <SelectItem value="divorced">Divorced</SelectItem>
-                <SelectItem value="widowed">Widowed</SelectItem>
-                <SelectItem value="separated">Separated</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <FloatingInput 
+            id="email" 
+            label="Email Address" 
+            type="email" 
+            placeholder="your@email.com" 
+          />
           
-          <div className="space-y-2">
-            <Label htmlFor="contactNumber">Contact Number</Label>
-            <Input id="contactNumber" placeholder="+63 XXX XXX XXXX" />
-          </div>
+          <FloatingInput 
+            id="nationality" 
+            label="Nationality" 
+            placeholder=" " 
+            defaultValue="Filipino" 
+          />
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email Address</Label>
-            <Input id="email" type="email" placeholder="your@email.com" />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="nationality">Nationality</Label>
-            <Input id="nationality" placeholder="Enter your nationality" defaultValue="Filipino" />
-          </div>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="eyeColor">Eye Color</Label>
-          <Input id="eyeColor" placeholder="Enter your eye color" />
-        </div>
+        <FloatingInput 
+          id="eyeColor" 
+          label="Eye Color" 
+          placeholder=" " 
+        />
       </div>
     </div>
   );
