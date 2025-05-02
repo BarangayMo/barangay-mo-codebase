@@ -1,1 +1,51 @@
+
+# A string used to distinguish different Supabase projects on the same host. Defaults to the working
+# directory name when running `supabase init`.
 project_id = "lsygeaoqahfryyfvpxrk"
+
+# Config for the API Gateway
+[api]
+# Port to use for the API Gateway
+port = 54321
+# Schemas to expose in your API. Tables, views and stored procedures in this schema will get API
+# endpoints. public and storage are always included.
+schemas = ["public", "storage", "graphql_public"]
+# Extra schemas to add to the search_path of every request. public is always included.
+extra_search_path = ["public", "extensions"]
+# The maximum number of rows returns from a view, table, or stored procedure. Limits payload size
+# for accidental or malicious requests.
+max_rows = 1000
+
+# Configure the Edge Functions
+[functions]
+# If true, function logs will be persisted
+persistent_logging = false
+
+# Configure the Auth setting for the Edge Function get-api-key
+[functions.get-api-key]
+# Ensure JWT verification is enabled for this function
+verify_jwt = true
+
+# Configure the Dashboard
+[inbucket]
+# The inbucket port to use. Defaults to 54324.
+port = 54324
+
+# Configure the Postgres
+[db]
+# The port for your postgres database.
+port = 54322
+# The database major version to use. This has to be the same as your remote database's version.
+major_version = 15
+
+# Configure Storage
+[storage]
+# The port for the storage API
+port = 54323
+
+# Configure Studio
+[studio]
+# Port for the Studio API
+port = 54324
+# External URL for the API Gateway
+api_url = "http://localhost"

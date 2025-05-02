@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { DashboardPageHeader } from "@/components/dashboard/PageHeader";
@@ -18,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { CheckCircle2, CloudUpload, Globe, Mail, Save } from "lucide-react";
+import { ApiKeySettings } from "@/components/admin/settings/ApiKeySettings";
 
 const SettingsPage = () => {
   const [saved, setSaved] = useState(false);
@@ -42,6 +42,7 @@ const SettingsPage = () => {
         <TabsList className="mb-6">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="appearance">Appearance</TabsTrigger>
+          <TabsTrigger value="api-keys">API Keys</TabsTrigger>
           <TabsTrigger value="email">Email</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
@@ -229,6 +230,10 @@ const SettingsPage = () => {
               <Button>Save Changes</Button>
             </CardFooter>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="api-keys">
+          <ApiKeySettings />
         </TabsContent>
 
         <TabsContent value="email">

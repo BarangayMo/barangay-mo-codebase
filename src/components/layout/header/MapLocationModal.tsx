@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, MapPin, Search, ZoomIn, ZoomOut } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 // Declare Google Maps types
 declare global {
@@ -34,13 +35,40 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
   const [selectedLocation, setSelectedLocation] = useState<{ barangay: string; coordinates: { lat: number; lng: number } } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [apiKey, setApiKey] = useState<string | null>(null);
   const mapRef = useRef<HTMLDivElement>(null);
 
   // Load Google Maps API script
   useEffect(() => {
     if (!isOpen) return;
     
-    const loadGoogleMaps = () => {
+    const fetchApiKeyAndLoadMap = async () => {
+      try {
+        // Try to get API key from database
+        const { data, error } = await supabase
+          .from('system_api_keys')
+          .select('key_value')
+          .eq('key_name', 'google_maps_javascript_api_key')
+          .single();
+        
+        if (error || !data || !data.key_value) {
+          console.error("Error fetching Google Maps API key:", error);
+          toast.error("Failed to load map. API key not configured.");
+          setIsLoading(false);
+          return;
+        }
+        
+        // Save API key to state
+        setApiKey(data.key_value);
+        loadGoogleMaps(data.key_value);
+      } catch (error) {
+        console.error("Error fetching API key:", error);
+        toast.error("Failed to load map configuration");
+        setIsLoading(false);
+      }
+    };
+    
+    const loadGoogleMaps = (key: string) => {
       if (window.google?.maps) {
         initializeMap();
         return;
@@ -52,13 +80,13 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
       };
       
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places&callback=initGoogleMapsModal`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places&callback=initGoogleMapsModal`;
       script.async = true;
       script.defer = true;
       document.head.appendChild(script);
     };
     
-    loadGoogleMaps();
+    fetchApiKeyAndLoadMap();
     
     // Cleanup function
     return () => {
@@ -299,6 +327,16 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
           {isLoading ? (
             <div className="h-[400px] w-full flex items-center justify-center bg-gray-100 rounded-md">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : !apiKey ? (
+            <div className="h-[400px] w-full flex items-center justify-center bg-gray-100 rounded-md">
+              <div className="text-center p-6">
+                <MapPin className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                <h3 className="text-lg font-medium mb-2">API Key Not Configured</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Please ask an administrator to configure the Google Maps API key.
+                </p>
+              </div>
             </div>
           ) : (
             <div className="h-[400px] w-full relative">
