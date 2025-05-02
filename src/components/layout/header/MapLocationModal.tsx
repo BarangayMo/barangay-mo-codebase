@@ -14,6 +14,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, MapPin, Search, ZoomIn, ZoomOut } from "lucide-react";
 
+// Declare Google Maps types
+declare global {
+  interface Window {
+    initGoogleMapsModal: () => void;
+  }
+}
+
 interface MapLocationModalProps {
   children: React.ReactNode;
   onLocationSelected: (location: { barangay: string; coordinates: { lat: number; lng: number } }) => void;
@@ -39,15 +46,27 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
         return;
       }
       
+      // Define callback for when Maps API loads
+      window.initGoogleMapsModal = () => {
+        initializeMap();
+      };
+      
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places&callback=initGoogleMapsModal`;
       script.async = true;
       script.defer = true;
-      script.onload = initializeMap;
       document.head.appendChild(script);
     };
     
     loadGoogleMaps();
+    
+    // Cleanup function
+    return () => {
+      if (window.initGoogleMapsModal) {
+        // @ts-ignore - we're intentionally removing the function
+        window.initGoogleMapsModal = undefined;
+      }
+    };
   }, [isOpen]);
 
   const initializeMap = () => {
@@ -138,10 +157,15 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
   };
 
   const reverseGeocode = async (position: { lat: number; lng: number }) => {
+    if (!window.google?.maps) {
+      toast.error("Google Maps API not loaded properly");
+      return;
+    }
+
     try {
       const geocoder = new google.maps.Geocoder();
       geocoder.geocode({ location: position }, (results, status) => {
-        if (status === 'OK' && results && results[0]) {
+        if (status === google.maps.GeocoderStatus.OK && results && results[0]) {
           // Extract the barangay name
           let barangay = '';
           
@@ -189,7 +213,7 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
     const searchWithCountry = `${searchQuery}, Philippines`;
     
     geocoder.geocode({ address: searchWithCountry }, (results, status) => {
-      if (status === 'OK' && results && results[0] && results[0].geometry) {
+      if (status === google.maps.GeocoderStatus.OK && results && results[0] && results[0].geometry) {
         const position = {
           lat: results[0].geometry.location.lat(),
           lng: results[0].geometry.location.lng()
