@@ -6,9 +6,13 @@ import { cn } from "@/lib/utils";
 
 export const MobileNavbar = () => {
   const { pathname } = useLocation();
-  const { userRole } = useAuth();
+  const { userRole, isAuthenticated } = useAuth();
 
   const getHomeRoute = () => {
+    if (!isAuthenticated) {
+      return "/login";
+    }
+    
     switch (userRole) {
       case "official":
         return "/official-dashboard";
@@ -20,9 +24,13 @@ export const MobileNavbar = () => {
     }
   };
 
+  const getMessagesRoute = () => {
+    return isAuthenticated ? "/messages" : "/login";
+  };
+
   const navItems = [
     { icon: Home, path: getHomeRoute(), label: "Home" },
-    { icon: MessageSquare, path: "/messages", label: "Messages" },
+    { icon: MessageSquare, path: getMessagesRoute(), label: "Messages" },
     { icon: ShoppingCart, path: "/marketplace", label: "Market" },
     { icon: LifeBuoy, path: "/services", label: "Services" },
     { icon: Menu, path: "/menu", label: "Menu" }

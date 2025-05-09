@@ -9,7 +9,8 @@ import {
   CircleHelp,
   User,
   ChevronLeft, 
-  ChevronRight
+  ChevronRight,
+  LogIn
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -31,6 +32,7 @@ const translations = {
     privacy: "Data privacy terms",
     terms: "Terms and conditions",
     logout: "Sign out",
+    login: "Sign in",
     profile: "My Profile"
   },
   fil: {
@@ -45,6 +47,7 @@ const translations = {
     privacy: "Mga tuntunin sa privacy ng data",
     terms: "Mga tuntunin at kondisyon",
     logout: "Mag-sign out",
+    login: "Mag-sign in",
     profile: "Aking Profile"
   }
 };
@@ -77,7 +80,7 @@ const itemVariants = {
 
 export const Menu = () => {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, isAuthenticated } = useAuth();
   const { language } = useLanguage();
   const { theme, setTheme } = useTheme();
   
@@ -89,8 +92,20 @@ export const Menu = () => {
     navigate("/login");
   };
 
+  const handleLogin = () => {
+    navigate("/login");
+  };
+
   const handleBack = () => {
     navigate(-1);
+  };
+
+  const handleProfileClick = () => {
+    if (isAuthenticated) {
+      navigate('/resident-profile');
+    } else {
+      navigate('/login');
+    }
   };
 
   return (
@@ -122,12 +137,13 @@ export const Menu = () => {
             className="p-4 flex items-center justify-between border-b"
             variants={itemVariants}
             whileTap={{ scale: 0.98 }}
+            onClick={handleProfileClick}
           >
             <div className="flex items-center">
               <User className="text-gray-600 w-5 h-5 mr-3" />
               <p className="font-medium">{t.profile}</p>
             </div>
-            <ChevronRight className="h-5 w-5 text-gray-400" onClick={() => navigate('/edit-profile')} />
+            <ChevronRight className="h-5 w-5 text-gray-400" />
           </motion.div>
 
           {/* Feedback Item */}
@@ -215,19 +231,29 @@ export const Menu = () => {
           </motion.div>
         </div>
         
-        {/* Sign Out Button */}
+        {/* Sign Out/In Button */}
         <motion.div 
           className="bg-white rounded-lg shadow-sm overflow-hidden"
           variants={itemVariants}
           whileTap={{ scale: 0.98 }}
         >
-          <button 
-            onClick={handleLogout}
-            className="p-4 flex items-center w-full text-left text-red-600"
-          >
-            <LogOut className="w-5 h-5 mr-3" />
-            <p className="font-medium">{t.logout}</p>
-          </button>
+          {isAuthenticated ? (
+            <button 
+              onClick={handleLogout}
+              className="p-4 flex items-center w-full text-left text-red-600"
+            >
+              <LogOut className="w-5 h-5 mr-3" />
+              <p className="font-medium">{t.logout}</p>
+            </button>
+          ) : (
+            <button 
+              onClick={handleLogin}
+              className="p-4 flex items-center w-full text-left text-blue-600"
+            >
+              <LogIn className="w-5 h-5 mr-3" />
+              <p className="font-medium">{t.login}</p>
+            </button>
+          )}
         </motion.div>
       </motion.div>
       

@@ -20,6 +20,14 @@ export function DesktopNavItems() {
     }
   };
 
+  const getHomeRoute = () => {
+    return isAuthenticated ? "/" : "/";
+  };
+
+  const getMessagesRoute = () => {
+    return isAuthenticated ? "/messages" : "/login";
+  };
+
   return (
     <div className="hidden md:flex items-center space-x-4">
       <Button 
@@ -28,7 +36,7 @@ export function DesktopNavItems() {
         asChild
         className={pathname === "/" ? (userRole === "resident" ? "text-[#1a237e]" : "text-[#ea384c]") : ""}
       >
-        <Link to="/">Home</Link>
+        <Link to={getHomeRoute()}>Home</Link>
       </Button>
       
       <Button 
@@ -55,7 +63,7 @@ export function DesktopNavItems() {
         asChild
         className={pathname === "/messages" ? "text-[#1a237e]" : ""}
       >
-        <Link to="/messages">Messages</Link>
+        <Link to={getMessagesRoute()}>Messages</Link>
       </Button>
       
       {userRole === "superadmin" && (
