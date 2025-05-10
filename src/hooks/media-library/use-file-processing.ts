@@ -3,6 +3,10 @@ import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MediaFile } from "./types";
 
+/**
+ * Custom hook for file processing operations in the media library
+ * @returns File processing utility functions
+ */
 export function useFileProcessing() {
   // Helper function to determine bucket name and file path from file_url
   const getBucketAndPath = useCallback((buckets: string[], fileUrl: string) => {
@@ -11,7 +15,6 @@ export function useFileProcessing() {
     
     // If the path starts with a UUID, it's likely the format "userId/filename.ext"
     if (uuidRegex.test(fileUrl)) {
-      console.log(`UUID detected in path, using default bucket for: ${fileUrl}`);
       return { 
         bucketName: "user_uploads", // Default bucket
         filePath: fileUrl // Use full path
@@ -25,7 +28,6 @@ export function useFileProcessing() {
       
       // Check if this matches a known bucket
       if (buckets.length > 0 && buckets.includes(possibleBucket)) {
-        console.log(`Found matching bucket "${possibleBucket}" for: ${fileUrl}`);
         return {
           bucketName: possibleBucket,
           filePath: fileUrl.substring(fileUrl.indexOf("/") + 1)
@@ -34,7 +36,6 @@ export function useFileProcessing() {
     }
     
     // Default fallback
-    console.log(`Using default fallback for: ${fileUrl}`);
     return { 
       bucketName: "user_uploads",
       filePath: fileUrl
@@ -48,42 +49,49 @@ export function useFileProcessing() {
     console.log(`Processing ${dbFiles.length} media files from database`);
     const processedFiles: MediaFile[] = [];
     
-    for (const file of dbFiles) {
-      try {
-        // Determine bucket name and file path
-        const { bucketName, filePath } = getBucketAndPath(bucketNames, file.file_url);
-        
-        // Try to get a signed URL with 7-day expiration for the file
-        const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-          .from(bucketName)
-          .createSignedUrl(filePath, 604800); // 604800 seconds = 7 days
-
-        if (signedUrlError) {
-          console.error(`Error creating signed URL for ${file.filename}:`, signedUrlError);
+    // Process files in batches to improve performance
+    const batchSize = 10;
+    for (let i = 0; i < dbFiles.length; i += batchSize) {
+      const batch = dbFiles.slice(i, i + batchSize);
+      const batchPromises = batch.map(async (file) => {
+        try {
+          // Determine bucket name and file path
+          const { bucketName, filePath } = getBucketAndPath(bucketNames, file.file_url);
           
-          // Still add the file even if we couldn't get a signed URL
-          processedFiles.push({
-            ...file,
-            signedUrl: null,
-            bucket_name: bucketName
-          } as MediaFile);
-          continue;
-        }
+          // Try to get a signed URL with 7-day expiration for the file
+          const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+            .from(bucketName)
+            .createSignedUrl(filePath, 604800); // 604800 seconds = 7 days
 
-        // Add the file with signed URL
-        processedFiles.push({
-          ...file,
-          signedUrl: signedUrlData?.signedUrl || null,
-          bucket_name: bucketName
-        } as MediaFile);
-      } catch (error) {
-        console.error(`Error processing file ${file.filename}:`, error);
-        // Still add the file even if there was an error
-        processedFiles.push({
-          ...file,
-          bucket_name: "user_uploads" // Default fallback
-        } as MediaFile);
-      }
+          if (signedUrlError) {
+            console.error(`Error creating signed URL for ${file.filename}:`, signedUrlError);
+            
+            // Still add the file even if we couldn't get a signed URL
+            return {
+              ...file,
+              signedUrl: null,
+              bucket_name: bucketName
+            } as MediaFile;
+          }
+
+          // Add the file with signed URL
+          return {
+            ...file,
+            signedUrl: signedUrlData?.signedUrl || null,
+            bucket_name: bucketName
+          } as MediaFile;
+        } catch (error) {
+          console.error(`Error processing file ${file.filename}:`, error);
+          // Still add the file even if there was an error
+          return {
+            ...file,
+            bucket_name: "user_uploads" // Default fallback
+          } as MediaFile;
+        }
+      });
+      
+      const batchResults = await Promise.all(batchPromises);
+      processedFiles.push(...batchResults);
     }
     
     return processedFiles;
@@ -113,9 +121,12 @@ export function useFileProcessing() {
         
         console.log(`Found ${files.length} files in bucket ${bucketName}`);
         
-        // Process each file
-        for (const file of files) {
-          if (file.id) { // Skip folders, only process files
+        // Process files in batches for better performance
+        const batchSize = 10;
+        for (let i = 0; i < files.length; i += batchSize) {
+          const batch = files.slice(i, i + batchSize).filter(file => file.id); // Skip folders
+          
+          const batchPromises = batch.map(async (file) => {
             try {
               // Get signed URL
               const { data: signedUrlData } = await supabase.storage
@@ -123,7 +134,7 @@ export function useFileProcessing() {
                 .createSignedUrl(file.name, 604800);
               
               // Construct file object
-              const fileObject: MediaFile = {
+              return {
                 id: file.id, // Use storage object ID
                 filename: file.name,
                 file_url: file.name, // Just using the filename as the URL path
@@ -132,13 +143,15 @@ export function useFileProcessing() {
                 file_size: file.metadata?.size || 0,
                 uploaded_at: file.created_at || new Date().toISOString(),
                 signedUrl: signedUrlData?.signedUrl || null
-              };
-              
-              allFiles.push(fileObject);
+              } as MediaFile;
             } catch (err) {
               console.error(`Error processing file ${file.name}:`, err);
+              return null;
             }
-          }
+          });
+          
+          const batchResults = await Promise.all(batchPromises);
+          allFiles.push(...batchResults.filter(Boolean) as MediaFile[]);
         }
       } catch (err) {
         console.error(`Error processing bucket ${bucketName}:`, err);

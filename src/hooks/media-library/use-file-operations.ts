@@ -2,10 +2,14 @@ import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MediaFile, FileOperation } from "./types";
 import { toast } from "sonner";
+import { useBuckets } from "./use-buckets";
 
 export function useFileOperations(refetch: () => void) {
+  const { buckets } = useBuckets();
+  const bucketNames = buckets.map(b => b.name);
+
   // Extract bucket and path from file URL
-  const getBucketAndPath = useCallback((buckets: string[], fileUrl: string) => {
+  const getBucketAndPath = useCallback((fileUrl: string) => {
     // Check if fileUrl contains user ID format (which indicates full path with bucket)
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\//i;
     
@@ -24,7 +28,7 @@ export function useFileOperations(refetch: () => void) {
       const possibleBucket = parts[0];
       
       // Check if this matches a known bucket
-      if (buckets.length > 0 && buckets.includes(possibleBucket)) {
+      if (bucketNames.length > 0 && bucketNames.includes(possibleBucket)) {
         console.log(`Found matching bucket "${possibleBucket}" for: ${fileUrl}`);
         return {
           bucketName: possibleBucket,
@@ -39,7 +43,7 @@ export function useFileOperations(refetch: () => void) {
       bucketName: "user_uploads",
       filePath: fileUrl
     };
-  }, []);
+  }, [bucketNames]);
 
   // Handle file download
   const handleDownload = useCallback(async (bucketName: string, fileUrl: string, fileName: string, signedUrl?: string): Promise<FileOperation> => {
@@ -58,7 +62,7 @@ export function useFileOperations(refetch: () => void) {
       }
       
       // Otherwise, extract the file path and do a direct download
-      const { filePath } = getBucketAndPath([bucketName], fileUrl);
+      const { filePath } = getBucketAndPath(fileUrl);
 
       const { data, error } = await supabase.storage
         .from(bucketName)
@@ -88,7 +92,7 @@ export function useFileOperations(refetch: () => void) {
   const handleDelete = useCallback(async (fileId: string, bucketName: string, fileUrl: string): Promise<FileOperation> => {
     try {
       // Extract the file path
-      const { filePath } = getBucketAndPath([bucketName], fileUrl);
+      const { filePath } = getBucketAndPath(fileUrl);
 
       // Delete from storage
       const { error: storageError } = await supabase.storage
@@ -132,7 +136,7 @@ export function useFileOperations(refetch: () => void) {
       }
       
       // Extract the file path
-      const { filePath } = getBucketAndPath([bucketName], fileUrl);
+      const { filePath } = getBucketAndPath(fileUrl);
 
       // Generate a signed URL with 7-day expiration for sharing
       const { data, error } = await supabase.storage
