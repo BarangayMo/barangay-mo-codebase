@@ -1,4 +1,5 @@
 
+import { useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatDistanceToNow } from "date-fns";
@@ -30,6 +31,14 @@ export function MediaLibraryTable({
     toggleFileSelection,
     toggleAllFiles
   } = useMediaLibrary(filters, searchQuery);
+
+  // For debugging purposes
+  useEffect(() => {
+    if (files) {
+      console.log("MediaLibraryTable received files:", files.length);
+      console.log("Sample file:", files[0]);
+    }
+  }, [files]);
 
   if (isError) {
     console.error("Query error:", error);

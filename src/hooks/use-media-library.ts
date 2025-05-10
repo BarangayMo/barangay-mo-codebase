@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,6 +25,7 @@ export interface MediaFile {
   file_url: string;
   references?: number;
   signedUrl?: string;
+  category?: string; // Make category optional since it might not be present in all media files
 }
 
 interface MediaLibraryFilters {
@@ -203,31 +205,32 @@ export function useMediaLibrary(
                   ...file,
                   signedUrl: null,
                   bucket_name: bucketName
-                });
+                } as MediaFile); // Cast to MediaFile to ensure type compliance
                 continue;
               }
 
               console.log(`Got signed URL for ${file.filename}: ${signedUrlData?.signedUrl ? 'success' : 'failed'}`);
               
+              // Make sure all required properties exist
               processedFiles.push({
                 ...file,
                 signedUrl: signedUrlData?.signedUrl || null,
                 bucket_name: bucketName
-              });
+              } as MediaFile); // Cast to MediaFile to ensure type compliance
             } catch (error) {
               console.error(`Error processing file ${file.filename}:`, error);
               // Still add the file even if we couldn't get a signed URL
               processedFiles.push({
                 ...file,
                 bucket_name: "user_uploads" // Default fallback
-              });
+              } as MediaFile); // Cast to MediaFile to ensure type compliance
             }
           }
           
           return processedFiles;
         }
         
-        return (dbFiles || []) as MediaFile[];
+        return (dbFiles || []) as MediaFile[]; // Cast to MediaFile[] to ensure type compliance
       } catch (error) {
         console.error("Error in queryFn:", error);
         throw error;
