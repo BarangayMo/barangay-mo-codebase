@@ -26,10 +26,12 @@ interface MediaFile {
   file_size: number;
   content_type: string;
   bucket_name?: string; // Added bucket name field
+  signedUrl?: string;   // Added signedUrl field to fix type error
 }
 
 interface MediaFileWithProfile extends MediaFile {
   profile: Profile | null;
+  signedUrl?: string;   // Added signedUrl field to fix type error
 }
 
 interface MediaLibraryFilters {
