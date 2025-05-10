@@ -2,6 +2,7 @@
 import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MediaFile } from "./types";
+import { toast } from "sonner";
 
 /**
  * Custom hook for file processing operations in the media library
@@ -97,47 +98,94 @@ export function useFileProcessing() {
     return processedFiles;
   }, [getBucketAndPath]);
 
-  // Load files directly from storage buckets
+  // Recursively list all files in a directory
+  const listFilesRecursively = useCallback(async (bucketName: string, path: string = ''): Promise<any[]> => {
+    try {
+      // List all items in the current directory
+      const { data: items, error } = await supabase.storage
+        .from(bucketName)
+        .list(path);
+        
+      if (error) {
+        console.error(`Error listing path ${path} in bucket ${bucketName}:`, error);
+        return [];
+      }
+      
+      if (!items || items.length === 0) return [];
+      
+      // Split items into files and folders
+      const files = items.filter(item => !item.id.endsWith('/')); // Files have IDs
+      const folders = items.filter(item => !item.id); // Folders have no IDs
+      
+      // Process files in current directory
+      const currentDirFiles = files;
+      
+      // Recursively process each subfolder
+      const subfolderPromises = folders.map(async folder => {
+        const subPath = path ? `${path}/${folder.name}` : folder.name;
+        return await listFilesRecursively(bucketName, subPath);
+      });
+      
+      // Wait for all subfolder processing to complete
+      const subfolderResults = await Promise.all(subfolderPromises);
+      
+      // Combine all results
+      return [...currentDirFiles, ...subfolderResults.flat()];
+    } catch (error) {
+      console.error(`Error in recursive listing for ${path} in ${bucketName}:`, error);
+      return [];
+    }
+  }, []);
+
+  // Load files directly from storage buckets with recursive traversal
   const loadFilesFromStorage = useCallback(async (buckets: string[]) => {
     if (!buckets.length) return [];
     
-    console.log(`Loading files directly from ${buckets.length} storage buckets`);
+    console.log(`Loading files from ${buckets.length} storage buckets with recursive traversal`);
     const allFiles: MediaFile[] = [];
     
     // Process each bucket
     for (const bucketName of buckets) {
       try {
-        // List all files in the bucket (root level)
-        const { data: files, error } = await supabase.storage
-          .from(bucketName)
-          .list();
-          
-        if (error) {
-          console.error(`Error listing files in bucket ${bucketName}:`, error);
+        // Get all files recursively
+        const files = await listFilesRecursively(bucketName);
+        
+        if (!files || files.length === 0) {
+          console.log(`No files found in bucket ${bucketName}`);
           continue;
         }
-        
-        if (!files || files.length === 0) continue;
         
         console.log(`Found ${files.length} files in bucket ${bucketName}`);
         
         // Process files in batches for better performance
         const batchSize = 10;
         for (let i = 0; i < files.length; i += batchSize) {
-          const batch = files.slice(i, i + batchSize).filter(file => file.id); // Skip folders
+          const batch = files.slice(i, i + batchSize);
           
           const batchPromises = batch.map(async (file) => {
             try {
+              // Get full path including any parent directories
+              let fullPath = file.name;
+              if (file.metadata?.fullPath) {
+                fullPath = file.metadata.fullPath;
+              }
+              
               // Get signed URL
               const { data: signedUrlData } = await supabase.storage
                 .from(bucketName)
-                .createSignedUrl(file.name, 604800);
+                .createSignedUrl(fullPath, 604800);
+              
+              // Extract filename from path
+              const filename = fullPath.split('/').pop() || fullPath;
+              
+              // Use file.id as id or generate one if not available
+              const fileId = file.id || `${bucketName}-${fullPath.replace(/[\/\.]/g, '-')}`;
               
               // Construct file object
               return {
-                id: file.id, // Use storage object ID
-                filename: file.name,
-                file_url: file.name, // Just using the filename as the URL path
+                id: fileId,
+                filename: filename,
+                file_url: fullPath,
                 bucket_name: bucketName,
                 content_type: file.metadata?.mimetype || 'application/octet-stream',
                 file_size: file.metadata?.size || 0,
@@ -159,7 +207,7 @@ export function useFileProcessing() {
     }
     
     return allFiles;
-  }, []);
+  }, [listFilesRecursively]);
 
   return {
     processMedia,

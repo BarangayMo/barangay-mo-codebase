@@ -1,3 +1,4 @@
+
 import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MediaFile, FileOperation } from "./types";
@@ -8,8 +9,30 @@ export function useFileOperations(refetch: () => void) {
   const { buckets } = useBuckets();
   const bucketNames = buckets.map(b => b.name);
 
-  // Extract bucket and path from file URL
+  // Extract bucket name and path from file_url
   const getBucketAndPath = useCallback((fileUrl: string) => {
+    // Check if the URL is already absolute (starts with http)
+    if (fileUrl.startsWith('http')) {
+      const urlParts = fileUrl.split('/');
+      // Try to extract bucket name from URL path
+      // This is a heuristic and may need to be adjusted based on your actual URL structure
+      for (const bucketName of bucketNames) {
+        const bucketIndex = urlParts.findIndex(part => part === bucketName);
+        if (bucketIndex >= 0 && bucketIndex + 1 < urlParts.length) {
+          return {
+            bucketName,
+            filePath: urlParts.slice(bucketIndex + 1).join('/')
+          };
+        }
+      }
+      
+      // Default to user_uploads if we can't determine the bucket
+      return { 
+        bucketName: "user_uploads",
+        filePath: fileUrl.split('/').pop() || fileUrl // Just use the filename
+      };
+    }
+    
     // Check if fileUrl contains user ID format (which indicates full path with bucket)
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\//i;
     
@@ -107,7 +130,10 @@ export function useFileOperations(refetch: () => void) {
         .delete()
         .eq('id', fileId);
 
-      if (databaseError) throw databaseError;
+      if (databaseError) {
+        console.warn(`File was not in the database or other DB error: ${databaseError.message}`);
+        // Continue without throwing since we've already deleted from storage
+      }
 
       toast.success('File deleted successfully');
       refetch(); // Refresh the media list

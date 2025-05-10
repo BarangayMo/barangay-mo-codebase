@@ -35,12 +35,16 @@ export function useMediaQuery(
       console.log("Available buckets count:", buckets.length);
       
       try {
-        // First fetch media file records from the database
+        // Combined approach: Get files from both database AND storage
+        let allMediaFiles: MediaFile[] = [];
+        
+        // 1. First fetch media file records from the database
         let query = supabase
           .from('media_files')
           .select('*')
           .order('uploaded_at', { ascending: false });
 
+        // Only apply filters if they are set
         if (filters.user) query = query.eq('user_id', filters.user);
         if (filters.category) query = query.eq('category', filters.category);
         if (filters.startDate) query = query.gte('uploaded_at', filters.startDate);
@@ -61,20 +65,33 @@ export function useMediaQuery(
         
         // Process the database files to get signed URLs
         if (dbFiles && dbFiles.length > 0) {
-          return await processMedia(dbFiles, buckets);
+          const processedDbFiles = await processMedia(dbFiles, buckets);
+          allMediaFiles = [...allMediaFiles, ...processedDbFiles];
         }
         
-        // If no files in database, try to load directly from storage
-        if (isAdmin) {
+        // 2. For admins, also load files directly from storage 
+        // This ensures we show ALL files regardless of DB records
+        if (isAdmin && (!filters.user && !filters.category && !filters.startDate && !filters.endDate && !searchQuery)) {
+          console.log("Admin user detected - loading all files from storage buckets");
           const storageFiles = await loadFilesFromStorage(buckets);
+          
           if (storageFiles.length > 0) {
             console.log(`Found ${storageFiles.length} files directly from storage buckets`);
-            return storageFiles;
+            
+            // Remove duplicates by file_url (prefer DB records when there's overlap)
+            const dbFileUrls = new Set(allMediaFiles.map(f => f.file_url));
+            const uniqueStorageFiles = storageFiles.filter(f => !dbFileUrls.has(f.file_url));
+            
+            allMediaFiles = [...allMediaFiles, ...uniqueStorageFiles];
           }
         }
         
-        // Return empty array if no files found
-        return [];
+        console.log(`Total media files to display: ${allMediaFiles.length}`);
+        
+        // Sort by uploaded_at descending
+        return allMediaFiles.sort((a, b) => 
+          new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime()
+        );
       } catch (error) {
         console.error("Error in queryFn:", error);
         throw error;
