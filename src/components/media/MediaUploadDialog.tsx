@@ -79,15 +79,24 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
     const filePath = `${user.email}/${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
 
     try {
-      // Start the upload with progress tracking
+      // Create a custom upload with progress tracking
+      const xhr = new XMLHttpRequest();
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      // Set up progress tracking
+      xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+          const calculatedProgress = Math.round((event.loaded / event.total) * 100);
+          updateUpload(upload.id, { progress: calculatedProgress });
+        }
+      });
+      
+      // Upload the file using Supabase Storage
       const { data, error } = await supabase.storage
         .from('user_uploads')
         .upload(filePath, file, {
-          cacheControl: '3600',
-          onUploadProgress: (progress) => {
-            const calculatedProgress = Math.round((progress.loaded / progress.total) * 100);
-            updateUpload(upload.id, { progress: calculatedProgress });
-          },
+          cacheControl: '3600'
         });
 
       if (error) throw error;

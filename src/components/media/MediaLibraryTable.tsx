@@ -28,7 +28,10 @@ interface MediaLibraryTableProps {
   searchQuery?: string;
 }
 
-export function MediaLibraryTable({ filters = {}, searchQuery = "" }: MediaLibraryTableProps) {
+export function MediaLibraryTable({ 
+  filters = { user: null, category: null, startDate: null, endDate: null }, 
+  searchQuery = "" 
+}: MediaLibraryTableProps) {
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
 
   const { data: files, isLoading } = useQuery({
