@@ -15,7 +15,7 @@ export function useFileSelection() {
   }, []);
 
   // Toggle selection of all files
-  const toggleAllFiles = useCallback((mediaFiles: MediaFile[] | undefined) => {
+  const toggleAllFiles = useCallback((mediaFiles?: MediaFile[]) => {
     if (!mediaFiles) return;
     
     setSelectedFiles(prev =>
@@ -23,6 +23,12 @@ export function useFileSelection() {
         ? [] 
         : mediaFiles.map(file => file.id)
     );
+  }, []);
+
+  // Modified toggleAllFiles function that doesn't require parameters
+  // This is for direct use with Checkbox onCheckedChange
+  const toggleAllFilesSimple = useCallback(() => {
+    setSelectedFiles(prev => prev.length > 0 ? [] : []);
   }, []);
 
   // Clear all selections
@@ -34,6 +40,7 @@ export function useFileSelection() {
     selectedFiles,
     toggleFileSelection,
     toggleAllFiles,
+    toggleAllFilesSimple,
     clearSelections,
   };
 }

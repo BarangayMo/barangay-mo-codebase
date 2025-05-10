@@ -73,7 +73,7 @@ export function MediaLibraryTable({
             <TableHead className="w-12">
               <Checkbox 
                 checked={files && files.length > 0 && selectedFiles.length === files.length}
-                onCheckedChange={toggleAllFiles}
+                onCheckedChange={() => toggleAllFiles()}
               />
             </TableHead>
             <TableHead>File name</TableHead>

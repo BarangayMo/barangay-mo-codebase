@@ -34,7 +34,11 @@ export function useMediaLibrary(
   const { processMedia, loadFilesFromStorage } = useFileProcessing();
   
   // Get file selection state and functions
-  const { selectedFiles, toggleFileSelection, toggleAllFiles } = useFileSelection();
+  const { 
+    selectedFiles, 
+    toggleFileSelection, 
+    toggleAllFilesSimple: toggleAllFiles // Use the parameter-less version
+  } = useFileSelection();
 
   // Query to fetch media files from database and enhance with storage data
   const { 
