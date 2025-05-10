@@ -230,7 +230,11 @@ export function useMediaLibrary(
           return processedFiles;
         }
         
-        return (dbFiles || []) as MediaFile[]; // Cast to MediaFile[] to ensure type compliance
+        // Fix for the TypeScript error - ensure each file has a bucket_name property
+        return (dbFiles || []).map(file => ({
+          ...file,
+          bucket_name: "user_uploads" // Default bucket name for all files
+        })) as MediaFile[];
       } catch (error) {
         console.error("Error in queryFn:", error);
         throw error;
