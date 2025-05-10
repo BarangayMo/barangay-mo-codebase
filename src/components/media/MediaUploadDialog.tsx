@@ -1,7 +1,8 @@
+
 import { useState, useCallback, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { UploadCloud, X, CheckCircle, AlertOctagon, Info, Image, FileText, File } from "lucide-react";
+import { UploadCloud, X, CheckCircle, AlertOctagon, Image, FileText, File } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -116,7 +117,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
       const { error: dbError } = await supabase
         .from('media_files')
         .insert({
-          user_id: userId, // Fix: Use the UUID instead of email
+          user_id: userId,
           category: determineCategory(file.type),
           content_type: file.type,
           filename: file.name,
@@ -200,7 +201,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
     }
   };
 
-  // New function to cancel an ongoing upload
+  // Function to cancel an ongoing upload
   const cancelUpload = (id: string) => {
     const upload = uploads.find(u => u.id === id);
     
@@ -225,7 +226,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-[0_10px_40px_-15px_rgba(0,0,0,0.3)] rounded-xl">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">Upload Media</DialogTitle>
         </DialogHeader>
@@ -235,13 +236,16 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
             <div 
               {...getRootProps()} 
               className={`
-                border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-colors 
+                border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all 
                 flex flex-col items-center justify-center min-h-[300px]
-                ${isDragActive ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-primary'}
+                ${isDragActive 
+                  ? 'border-primary bg-primary/5 shadow-[0_0_0_1px_rgba(59,130,246,0.3),0_0_0_4px_rgba(59,130,246,0.1)]' 
+                  : 'border-gray-300 hover:border-primary hover:shadow-[0_0_0_1px_rgba(59,130,246,0.2),0_0_0_4px_rgba(59,130,246,0.05)]'
+                }
               `}
             >
               <input {...getInputProps()} />
-              <div className="p-6 rounded-full bg-primary/5 mb-6">
+              <div className="p-6 rounded-full bg-primary/5 mb-6 shadow-[0_0_20px_5px_rgba(59,130,246,0.1)]">
                 <UploadCloud className="h-12 w-12 text-primary" />
               </div>
               <h3 className="text-xl font-medium mb-2">
@@ -250,7 +254,11 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
               <p className="text-sm text-gray-500 mb-6 max-w-md">
                 Upload your images, documents, and other files by dropping them here or click to browse your files
               </p>
-              <Button size="lg" variant="default">
+              <Button 
+                size="lg" 
+                variant="default"
+                className="shadow-[0_4px_12px_rgba(59,130,246,0.3),0_2px_6px_rgba(59,130,246,0.1)] hover:shadow-[0_6px_16px_rgba(59,130,246,0.4),0_3px_8px_rgba(59,130,246,0.2)] transition-all duration-200"
+              >
                 Browse Files
               </Button>
             </div>
@@ -270,7 +278,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
                   <div 
                     key={upload.id} 
                     className={`
-                      border rounded-lg p-4 relative transition-all 
+                      border rounded-lg p-4 relative transition-all shadow-sm hover:shadow
                       ${upload.status === 'error' ? 'border-red-300 bg-red-50' : ''}
                       ${upload.status === 'success' ? 'border-green-300 bg-green-50' : ''}
                     `}
@@ -358,7 +366,10 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
                 <div className="flex gap-2">
                   <div {...getRootProps()}>
                     <input {...getInputProps()} />
-                    <Button variant="outline">
+                    <Button 
+                      variant="outline"
+                      className="shadow-sm hover:shadow"
+                    >
                       Add More Files
                     </Button>
                   </div>
@@ -366,6 +377,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
                     disabled={uploads.some(u => u.status === 'uploading')}
                     onClick={handleClose}
                     variant="default"
+                    className="shadow-[0_4px_12px_rgba(59,130,246,0.2),0_2px_6px_rgba(59,130,246,0.1)] hover:shadow-[0_6px_16px_rgba(59,130,246,0.3),0_3px_8px_rgba(59,130,246,0.2)] transition-all duration-200"
                   >
                     {uploads.some(u => u.status === 'uploading') ? 'Uploading...' : 'Done'}
                   </Button>

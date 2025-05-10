@@ -25,6 +25,7 @@ interface MediaFile {
   uploaded_at: string;
   file_size: number;
   content_type: string;
+  bucket_name?: string; // Added bucket name field
 }
 
 interface MediaFileWithProfile extends MediaFile {
@@ -93,22 +94,44 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
           profileMap[profile.id] = profile;
         });
         
-        // Attach profile data to media files
-        return mediaData.map(file => ({
-          ...file,
-          profile: profileMap[file.user_id] || null
-        })) as MediaFileWithProfile[];
+        // Attach profile data to media files and generate signed URLs
+        const filesWithProfiles = await Promise.all(mediaData.map(async file => {
+          // Extract bucket name from file_url (assuming format: "bucket_name/path/to/file")
+          const bucketName = file.file_url.split('/')[0] || 'user_uploads';
+          const filePath = file.file_url.includes('/') 
+            ? file.file_url.substring(file.file_url.indexOf('/') + 1) 
+            : file.file_url;
+          
+          // Get signed URL with 7 day expiration for each file
+          const { data: signedUrlData } = await supabase.storage
+            .from(bucketName)
+            .createSignedUrl(filePath, 604800); // 604800 seconds = 7 days
+          
+          return {
+            ...file,
+            profile: profileMap[file.user_id] || null,
+            signedUrl: signedUrlData?.signedUrl,
+            bucket_name: bucketName
+          };
+        }));
+        
+        return filesWithProfiles as MediaFileWithProfile[];
       }
       
       return (mediaData || []) as MediaFile[];
     }
   });
 
-  const handleDownload = async (fileUrl: string, fileName: string) => {
+  const handleDownload = async (bucketName: string, fileUrl: string, fileName: string) => {
     try {
+      // Extract the file path without bucket prefix
+      const filePath = fileUrl.includes('/') 
+        ? fileUrl.substring(fileUrl.indexOf('/') + 1) 
+        : fileUrl;
+
       const { data, error } = await supabase.storage
-        .from('user_uploads')
-        .download(fileUrl);
+        .from(bucketName)
+        .download(filePath);
 
       if (error) throw error;
 
@@ -126,12 +149,17 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
     }
   };
 
-  const handleDelete = async (fileId: string, fileUrl: string) => {
+  const handleDelete = async (fileId: string, bucketName: string, fileUrl: string) => {
     try {
+      // Extract the file path without bucket prefix
+      const filePath = fileUrl.includes('/') 
+        ? fileUrl.substring(fileUrl.indexOf('/') + 1) 
+        : fileUrl;
+
       // Delete from storage
       const { error: storageError } = await supabase.storage
-        .from('user_uploads')
-        .remove([fileUrl]);
+        .from(bucketName)
+        .remove([filePath]);
 
       if (storageError) throw storageError;
 
@@ -152,11 +180,26 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
     }
   };
 
-  const handleCopyUrl = (fileUrl: string) => {
-    // Get the fully qualified public URL
-    const url = supabase.storage.from('user_uploads').getPublicUrl(fileUrl).data.publicUrl;
-    navigator.clipboard.writeText(url);
-    toast.success('URL copied to clipboard');
+  const handleCopyUrl = async (bucketName: string, fileUrl: string) => {
+    try {
+      // Extract the file path without bucket prefix
+      const filePath = fileUrl.includes('/') 
+        ? fileUrl.substring(fileUrl.indexOf('/') + 1) 
+        : fileUrl;
+
+      // Generate a signed URL with 7-day expiration for sharing
+      const { data, error } = await supabase.storage
+        .from(bucketName)
+        .createSignedUrl(filePath, 604800); // 604800 seconds = 7 days
+      
+      if (error) throw error;
+      
+      navigator.clipboard.writeText(data.signedUrl);
+      toast.success('URL copied to clipboard (expires in 7 days)');
+    } catch (error) {
+      toast.error('Failed to generate URL');
+      console.error('URL generation error:', error);
+    }
   };
 
   const getFileIcon = (contentType: string) => {
@@ -196,8 +239,9 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
     <>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
         {mediaFiles.map((file) => {
-          // Explicitly get the full public URL for each file
-          const fileUrl = supabase.storage.from('user_uploads').getPublicUrl(file.file_url).data.publicUrl;
+          // Use signed URL if available, otherwise fall back to regular public URL
+          const fileUrl = file.signedUrl || 
+            supabase.storage.from(file.bucket_name || 'user_uploads').getPublicUrl(file.file_url).data.publicUrl;
           const fileIcon = getFileIcon(file.content_type);
           
           return (
@@ -209,7 +253,7 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
               <div className="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
                 {file.content_type.startsWith('image/') ? (
                   <img 
-                    src={fileUrl} // Use the full public URL
+                    src={fileUrl} // Use the signed URL
                     alt={file.filename} 
                     className="w-full h-full object-cover"
                     loading="lazy"
@@ -251,7 +295,7 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
         })}
       </div>
 
-      {/* Redesigned Media details dialog */}
+      {/* Media details dialog */}
       {selectedMedia && (
         <Dialog open={!!selectedMedia} onOpenChange={(open) => !open && setSelectedMedia(null)}>
           <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-auto p-0">
@@ -263,7 +307,10 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
               <div className="bg-gray-50 rounded-xl flex items-center justify-center p-4 overflow-hidden">
                 {selectedMedia.content_type.startsWith('image/') ? (
                   <img 
-                    src={supabase.storage.from('user_uploads').getPublicUrl(selectedMedia.file_url).data.publicUrl} 
+                    src={selectedMedia.signedUrl || 
+                      supabase.storage
+                        .from(selectedMedia.bucket_name || 'user_uploads')
+                        .getPublicUrl(selectedMedia.file_url).data.publicUrl} 
                     alt={selectedMedia.filename}
                     className="max-w-full max-h-[350px] object-contain rounded-lg shadow-sm"
                     onError={(e) => {
@@ -310,6 +357,12 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
                       </span>
                     </div>
                     <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Bucket</span>
+                      <span className="text-sm font-medium">
+                        {selectedMedia.bucket_name || "user_uploads"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
                       <span className="text-sm text-gray-500">Uploaded by</span>
                       <span className="text-sm font-medium">
                         {selectedMedia.profile ? 
@@ -323,24 +376,32 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
                 <div className="space-y-3">
                   <Button 
                     variant="outline" 
-                    className="w-full justify-start hover:bg-gray-50 transition-colors rounded-lg h-12"
-                    onClick={() => handleCopyUrl(selectedMedia.file_url)}
+                    className="w-full justify-start hover:bg-gray-50 transition-colors rounded-lg h-12 shadow-sm hover:shadow"
+                    onClick={() => handleCopyUrl(selectedMedia.bucket_name || 'user_uploads', selectedMedia.file_url)}
                   >
-                    <Copy className="mr-3 h-4 w-4" /> Copy URL
+                    <Copy className="mr-3 h-4 w-4" /> Copy URL (7 days)
                   </Button>
                   
                   <Button 
                     variant="outline" 
-                    className="w-full justify-start hover:bg-blue-50 text-blue-600 hover:text-blue-700 transition-colors rounded-lg h-12"
-                    onClick={() => handleDownload(selectedMedia.file_url, selectedMedia.filename)}
+                    className="w-full justify-start hover:bg-blue-50 text-blue-600 hover:text-blue-700 transition-colors rounded-lg h-12 shadow-sm hover:shadow"
+                    onClick={() => handleDownload(
+                      selectedMedia.bucket_name || 'user_uploads', 
+                      selectedMedia.file_url, 
+                      selectedMedia.filename
+                    )}
                   >
                     <Download className="mr-3 h-4 w-4" /> Download
                   </Button>
                   
                   <Button 
                     variant="outline" 
-                    className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors rounded-lg h-12"
-                    onClick={() => handleDelete(selectedMedia.id, selectedMedia.file_url)}
+                    className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors rounded-lg h-12 shadow-sm hover:shadow"
+                    onClick={() => handleDelete(
+                      selectedMedia.id, 
+                      selectedMedia.bucket_name || 'user_uploads', 
+                      selectedMedia.file_url
+                    )}
                   >
                     <Trash2 className="mr-3 h-4 w-4" /> Delete
                   </Button>
