@@ -2,6 +2,7 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export type UserRole = "resident" | "official" | "superadmin" | null;
 
@@ -29,15 +30,13 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 interface AuthProviderProps {
   children: ReactNode;
-  navigate?: (path: string) => void;
-  currentPath?: string;
 }
 
-export const AuthProvider = ({
-  children,
-  navigate,
-  currentPath = "/"
-}: AuthProviderProps) => {
+export const AuthProvider = ({ children }: AuthProviderProps) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const currentPath = location.pathname;
+  
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [user, setUser] = useState<UserData | null>(null);
@@ -78,7 +77,7 @@ export const AuthProvider = ({
             setUserRole(role);
             
             // Handle redirect after sign in
-            if (navigate && event === 'SIGNED_IN') {
+            if (event === 'SIGNED_IN') {
               const redirectPath = role === 'official' 
                 ? '/official-dashboard' 
                 : role === 'superadmin' 
@@ -126,7 +125,7 @@ export const AuthProvider = ({
           }
           
           // Handle redirect for existing session if on login/register page
-          if (navigate && (currentPath === '/login' || currentPath === '/register')) {
+          if (currentPath === '/login' || currentPath === '/register') {
             const redirectPath = session.user.email.includes('official') 
               ? '/official-dashboard' 
               : session.user.email.includes('admin') 
@@ -177,7 +176,7 @@ export const AuthProvider = ({
         }
       });
 
-      if (!error && navigate) {
+      if (!error) {
         navigate("/verify");
       }
 
@@ -196,9 +195,7 @@ export const AuthProvider = ({
       setUser(null);
       setSession(null);
       
-      if (navigate) {
-        navigate(navigateToPath || "/login");
-      }
+      navigate(navigateToPath || "/login");
     }
   };
 
