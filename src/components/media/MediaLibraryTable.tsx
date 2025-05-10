@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatDistanceToNow } from "date-fns";
 import { bytesToSize } from "@/lib/utils";
-import { useMediaLibrary } from "@/hooks/use-media-library";
+import { useMediaLibrary } from "@/hooks";
 
 interface MediaLibraryFilters {
   user: string | null;
