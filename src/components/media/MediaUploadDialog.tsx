@@ -40,7 +40,7 @@ interface FileUpload {
 }
 
 export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUploadDialogProps) {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [uploads, setUploads] = useState<FileUpload[]>([]);
   const [quote, setQuote] = useState(() => UPLOAD_QUOTES[Math.floor(Math.random() * UPLOAD_QUOTES.length)]);
 
@@ -66,7 +66,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
   });
 
   const handleFileUpload = async (upload: FileUpload) => {
-    if (!user) {
+    if (!session?.user) {
       updateUpload(upload.id, { 
         status: 'error', 
         message: 'User authentication required' 
@@ -74,9 +74,12 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
       return;
     }
 
+    // Fix: Use the actual UUID of the user from the session
+    const userId = session.user.id;
+
     const { file } = upload;
     const fileExt = file.name.split('.').pop();
-    const filePath = `${user.email}/${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+    const filePath = `${userId}/${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
 
     try {
       // Create a custom upload with progress tracking
@@ -106,11 +109,11 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
         .from('user_uploads')
         .getPublicUrl(filePath);
 
-      // Save media file metadata to database
+      // Save media file metadata to database, use the user.id (UUID) instead of email
       const { error: dbError } = await supabase
         .from('media_files')
         .insert({
-          user_id: user.email,
+          user_id: userId, // Fix: Use the UUID instead of email
           category: determineCategory(file.type),
           content_type: file.type,
           filename: file.name,
