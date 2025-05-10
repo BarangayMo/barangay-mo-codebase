@@ -2,6 +2,7 @@
 import { Logo } from "./sidebar/Logo";
 import { HelpSection } from "./sidebar/HelpSection";
 import { EnhancedSidebar } from "./EnhancedSidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 export const DesktopSidebar = () => {
   return (

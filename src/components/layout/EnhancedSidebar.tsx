@@ -11,18 +11,14 @@ import {
 import { sidebarMenuItems } from "@/config/sidebar-menu";
 import { useSidebarState } from "@/hooks/use-sidebar-state";
 import { SidebarMenuItem } from "./sidebar/SidebarMenuItem";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 interface EnhancedSidebarProps {
   isCollapsed?: boolean;
-  isOpen?: boolean;
 }
 
-export const EnhancedSidebar = ({ isCollapsed = false, isOpen = true }: EnhancedSidebarProps) => {
+export const EnhancedSidebar = ({ isCollapsed = false }: EnhancedSidebarProps) => {
   const { openSections, toggleSection, activeSection, setActiveSection } = useSidebarState();
-
-  if (!isOpen) {
-    return null;
-  }
 
   return (
     <div className="h-full overflow-hidden">

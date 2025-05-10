@@ -35,7 +35,6 @@ export function useBuckets() {
           
           if (createError) {
             console.error("Error creating default bucket:", createError);
-            toast.warning("No storage buckets found. Please create at least one bucket in the Supabase dashboard.");
           } else {
             console.log("Created default user_uploads bucket");
             // Retry fetching buckets
@@ -48,9 +47,10 @@ export function useBuckets() {
           }
         } catch (createErr) {
           console.error("Exception creating bucket:", createErr);
-          toast.warning("No storage buckets found. Please create at least one bucket in the Supabase dashboard.");
         }
         
+        // Only show warning toast if we're confident there are no buckets
+        toast.warning("No storage buckets found. Please create at least one bucket in the Supabase dashboard.");
         return [];
       }
     } catch (error) {

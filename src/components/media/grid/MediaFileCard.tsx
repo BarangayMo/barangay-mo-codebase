@@ -28,12 +28,9 @@ export function MediaFileCard({ file, onSelect }: MediaFileCardProps) {
     }
   };
 
-  // Get display filename - use filename or fall back to name property
-  const displayFilename = file.filename || file.name;
-  
   // Use signed URL if available
   const fileUrl = file.signedUrl || null;
-  const fileIcon = getFileIcon(file.content_type || file.type || '');
+  const fileIcon = getFileIcon(file.content_type);
   
   return (
     <div 
@@ -41,10 +38,10 @@ export function MediaFileCard({ file, onSelect }: MediaFileCardProps) {
       onClick={() => onSelect(file)}
     >
       <div className="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
-        {(file.content_type?.startsWith('image/') || file.type?.startsWith('image/')) ? (
+        {file.content_type.startsWith('image/') ? (
           <img 
             src={fileUrl} 
-            alt={displayFilename} 
+            alt={file.filename} 
             className="w-full h-full object-cover"
             loading="lazy"
             onError={(e) => {
@@ -57,7 +54,7 @@ export function MediaFileCard({ file, onSelect }: MediaFileCardProps) {
               e.currentTarget.parentElement?.appendChild(icon);
             }}
           />
-        ) : (file.content_type?.startsWith('video/') || file.type?.startsWith('video/')) ? (
+        ) : file.content_type.startsWith('video/') ? (
           <video 
             src={fileUrl}
             className="w-full h-full object-cover"
@@ -74,9 +71,9 @@ export function MediaFileCard({ file, onSelect }: MediaFileCardProps) {
       </div>
       
       <div className="p-2">
-        <p className="text-xs font-medium truncate">{displayFilename}</p>
+        <p className="text-xs font-medium truncate">{file.filename}</p>
         <p className="text-xs text-gray-500 truncate">
-          {new Date(file.uploaded_at || file.lastModified || Date.now()).toLocaleDateString()}
+          {new Date(file.uploaded_at).toLocaleDateString()}
         </p>
       </div>
       
