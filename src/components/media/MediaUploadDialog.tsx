@@ -1,8 +1,8 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { UploadCloud, X } from "lucide-react";
+import { UploadCloud, X, CheckCircle, AlertOctagon, Info, Image, FileText, File } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -198,45 +198,73 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
     setUploads(current => current.filter(upload => upload.id !== id));
   };
 
+  const getFileIcon = (mimeType: string) => {
+    if (mimeType.startsWith('image/')) return <Image className="h-5 w-5 text-blue-500" />;
+    if (mimeType.startsWith('application/pdf')) return <FileText className="h-5 w-5 text-red-500" />;
+    if (mimeType.includes('document')) return <FileText className="h-5 w-5 text-blue-700" />;
+    if (mimeType.includes('sheet')) return <FileText className="h-5 w-5 text-green-600" />;
+    if (mimeType.includes('presentation')) return <FileText className="h-5 w-5 text-orange-500" />;
+    return <File className="h-5 w-5 text-gray-500" />;
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>Upload Media</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">Upload Media</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4">
+        <div className="flex-1 overflow-y-auto p-1">
           {uploads.length === 0 && (
             <div 
               {...getRootProps()} 
-              className={`border-2 border-dashed rounded-lg p-10 text-center cursor-pointer transition-colors ${
-                isDragActive ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-primary'
-              }`}
+              className={`
+                border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-colors 
+                flex flex-col items-center justify-center min-h-[300px]
+                ${isDragActive ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-primary'}
+              `}
             >
               <input {...getInputProps()} />
-              <div className="flex flex-col items-center space-y-3">
-                <UploadCloud className="h-10 w-10 text-gray-400" />
-                <p className="text-sm font-medium">
-                  {isDragActive ? 'Drop files here' : 'Drag & drop files here'}
-                </p>
-                <p className="text-xs text-gray-500">
-                  or click to select files
-                </p>
-                <Button size="sm" variant="secondary" onClick={e => e.stopPropagation()}>
-                  Select Files
-                </Button>
+              <div className="p-6 rounded-full bg-primary/5 mb-6">
+                <UploadCloud className="h-12 w-12 text-primary" />
               </div>
+              <h3 className="text-xl font-medium mb-2">
+                {isDragActive ? 'Drop files here' : 'Drag & drop files here'}
+              </h3>
+              <p className="text-sm text-gray-500 mb-6 max-w-md">
+                Upload your images, documents, and other files by dropping them here or click to browse your files
+              </p>
+              <Button size="lg" variant="default">
+                Browse Files
+              </Button>
             </div>
           )}
           
           {uploads.length > 0 && (
-            <div>
-              <p className="text-sm text-center text-gray-600 italic mb-4">"{quote}"</p>
-              <div className="space-y-4 max-h-80 overflow-y-auto p-1">
+            <div className="space-y-6">
+              <div className="flex flex-col items-center justify-center pb-6 pt-4">
+                <p className="text-lg text-center text-primary font-medium italic mb-2">"{quote}"</p>
+                <p className="text-sm text-gray-500">
+                  {uploads.filter(u => u.status === 'uploading').length} file(s) uploading
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-80 overflow-y-auto p-2">
                 {uploads.map(upload => (
-                  <div key={upload.id} className="border rounded-lg p-3 relative">
-                    <div className="flex justify-between items-center mb-2">
-                      <p className="text-sm font-medium truncate w-4/5">{upload.file.name}</p>
+                  <div 
+                    key={upload.id} 
+                    className={`
+                      border rounded-lg p-4 relative transition-all 
+                      ${upload.status === 'error' ? 'border-red-300 bg-red-50' : ''}
+                      ${upload.status === 'success' ? 'border-green-300 bg-green-50' : ''}
+                    `}
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      {getFileIcon(upload.file.type)}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{upload.file.name}</p>
+                        <p className="text-xs text-gray-500">{Math.round(upload.file.size / 1024)} KB</p>
+                      </div>
                       {upload.status !== 'uploading' && (
                         <Button 
                           variant="ghost" 
@@ -250,47 +278,69 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
                     </div>
                     
                     {upload.status === 'uploading' && (
-                      <>
+                      <div className="space-y-2">
                         <Progress value={upload.progress} className="h-2" />
-                        <p className="text-xs text-gray-500 mt-1">{upload.progress}% complete</p>
-                      </>
+                        <div className="flex justify-between items-center">
+                          <p className="text-xs text-gray-500">Uploading...</p>
+                          <p className="text-xs font-medium">{upload.progress}%</p>
+                        </div>
+                      </div>
                     )}
                     
                     {upload.status === 'error' && (
-                      <div className="text-xs text-red-500 mt-1">
-                        Error: {upload.message}
+                      <div className="flex items-center gap-2 mt-2 text-red-600">
+                        <AlertOctagon className="h-4 w-4" />
+                        <p className="text-xs">{upload.message}</p>
                       </div>
                     )}
                     
                     {upload.status === 'success' && (
-                      <div className="text-xs text-green-500 mt-1">
-                        Upload complete!
+                      <div className="flex items-center gap-2 mt-2 text-green-600">
+                        <CheckCircle className="h-4 w-4" />
+                        <p className="text-xs">Upload complete</p>
                       </div>
                     )}
                   </div>
                 ))}
               </div>
               
-              <div className="flex justify-end mt-4">
+              <div className="flex justify-between pt-4 border-t">
                 <Button
                   variant="outline"
                   onClick={() => {
                     if (uploads.some(u => u.status === 'uploading')) {
-                      setUploads(current => current.filter(u => u.status === 'uploading'));
+                      toast.info("Waiting for uploads to complete");
                       return;
                     }
                     setUploads([]);
                   }}
                   className="mr-2"
-                >
-                  Clear Completed
-                </Button>
-                <Button
                   disabled={uploads.some(u => u.status === 'uploading')}
-                  onClick={handleClose}
                 >
-                  Done
+                  Clear All
                 </Button>
+
+                {isDragActive && (
+                  <div className="flex-1 flex items-center justify-center">
+                    <p className="text-sm font-medium text-primary">Drop files to upload</p>
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <div {...getRootProps()}>
+                    <input {...getInputProps()} />
+                    <Button variant="outline">
+                      Add More Files
+                    </Button>
+                  </div>
+                  <Button
+                    disabled={uploads.some(u => u.status === 'uploading')}
+                    onClick={handleClose}
+                    variant="default"
+                  >
+                    {uploads.some(u => u.status === 'uploading') ? 'Uploading...' : 'Done'}
+                  </Button>
+                </div>
               </div>
             </div>
           )}
