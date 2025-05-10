@@ -1,5 +1,5 @@
 
-import { MediaFile, MediaLibraryFilters } from "./types";
+import { MediaFile, MediaLibraryFiltersType } from "./types";
 import { useBuckets } from "./use-buckets";
 import { useFileSelection } from "./use-file-selection";
 import { useFileOperations } from "./use-file-operations";
@@ -13,7 +13,7 @@ import { useMediaQuery } from "./use-media-query";
  * @returns Media library state and functions
  */
 export function useMediaLibrary(
-  filters: MediaLibraryFilters = { 
+  filters: MediaLibraryFiltersType = { 
     user: null, 
     category: null, 
     startDate: null, 

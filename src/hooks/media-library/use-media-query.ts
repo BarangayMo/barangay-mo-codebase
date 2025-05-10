@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { MediaFile, MediaLibraryFilters } from "./types";
+import { MediaFile, MediaLibraryFiltersType } from "./types";
 import { useFileProcessing } from "./use-file-processing";
 
 /**
@@ -13,7 +13,7 @@ import { useFileProcessing } from "./use-file-processing";
  * @returns Query state and data for media files
  */
 export function useMediaQuery(
-  filters: MediaLibraryFilters,
+  filters: MediaLibraryFiltersType,
   searchQuery: string,
   isAdmin: boolean,
   buckets: string[]

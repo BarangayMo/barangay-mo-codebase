@@ -222,9 +222,11 @@ export function useFileProcessing() {
               // Generate a unique ID for the file
               const fileId = file.id || `${bucketName}-${fullPath.replace(/[\/\.]/g, '-')}`;
               
-              // Construct file object
-              return {
+              // Fix: Cast to unknown first, then to MediaFile to satisfy TypeScript
+              const fileObject = {
                 id: fileId,
+                name: filename, // Required by MediaFile interface
+                size: file.metadata?.size || 0, // Required by MediaFile interface
                 filename: filename,
                 file_url: fullPath,
                 bucket_name: bucketName,
@@ -232,7 +234,9 @@ export function useFileProcessing() {
                 file_size: file.metadata?.size || 0,
                 uploaded_at: file.created_at || new Date().toISOString(),
                 signedUrl: signedUrlData?.signedUrl || null
-              } as MediaFile;
+              } as unknown as MediaFile;
+              
+              return fileObject;
             } catch (err) {
               console.error(`Error processing file ${file.name}:`, err);
               return null;
