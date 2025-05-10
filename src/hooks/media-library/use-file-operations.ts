@@ -1,4 +1,3 @@
-
 import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MediaFile, FileOperation } from "./types";
@@ -11,25 +10,30 @@ export function useFileOperations(refetch: () => void) {
 
   // Extract bucket name and path from file_url
   const getBucketAndPath = useCallback((fileUrl: string) => {
+    console.log(`Getting bucket and path for: ${fileUrl}`);
+    
     // Check if the URL is already absolute (starts with http)
     if (fileUrl.startsWith('http')) {
       const urlParts = fileUrl.split('/');
       // Try to extract bucket name from URL path
-      // This is a heuristic and may need to be adjusted based on your actual URL structure
       for (const bucketName of bucketNames) {
         const bucketIndex = urlParts.findIndex(part => part === bucketName);
         if (bucketIndex >= 0 && bucketIndex + 1 < urlParts.length) {
+          const path = urlParts.slice(bucketIndex + 1).join('/');
+          console.log(`Found bucket in URL: ${bucketName}, path: ${path}`);
           return {
             bucketName,
-            filePath: urlParts.slice(bucketIndex + 1).join('/')
+            filePath: path
           };
         }
       }
       
       // Default to user_uploads if we can't determine the bucket
+      const defaultPath = fileUrl.split('/').pop() || fileUrl;
+      console.log(`Using default bucket for URL: user_uploads, path: ${defaultPath}`);
       return { 
         bucketName: "user_uploads",
-        filePath: fileUrl.split('/').pop() || fileUrl // Just use the filename
+        filePath: defaultPath // Just use the filename
       };
     }
     
@@ -38,7 +42,7 @@ export function useFileOperations(refetch: () => void) {
     
     // If the path starts with a UUID, it's likely the format "userId/filename.ext"
     if (uuidRegex.test(fileUrl)) {
-      console.log(`UUID detected in path, using default bucket for: ${fileUrl}`);
+      console.log(`UUID detected in path: ${fileUrl}, using default bucket`);
       return { 
         bucketName: "user_uploads", // Default bucket
         filePath: fileUrl // Use full path
@@ -52,10 +56,11 @@ export function useFileOperations(refetch: () => void) {
       
       // Check if this matches a known bucket
       if (bucketNames.length > 0 && bucketNames.includes(possibleBucket)) {
-        console.log(`Found matching bucket "${possibleBucket}" for: ${fileUrl}`);
+        const path = fileUrl.substring(fileUrl.indexOf("/") + 1);
+        console.log(`Found matching bucket "${possibleBucket}" for: ${fileUrl}, path: ${path}`);
         return {
           bucketName: possibleBucket,
-          filePath: fileUrl.substring(fileUrl.indexOf("/") + 1)
+          filePath: path
         };
       }
     }
@@ -73,6 +78,7 @@ export function useFileOperations(refetch: () => void) {
     try {
       // If we have a signed URL, use that directly
       if (signedUrl) {
+        console.log(`Downloading file using signed URL: ${fileName}`);
         // Create an anchor element and trigger download
         const link = document.createElement('a');
         link.href = signedUrl;
@@ -86,6 +92,7 @@ export function useFileOperations(refetch: () => void) {
       
       // Otherwise, extract the file path and do a direct download
       const { filePath } = getBucketAndPath(fileUrl);
+      console.log(`Downloading file from: bucket=${bucketName}, path=${filePath}`);
 
       const { data, error } = await supabase.storage
         .from(bucketName)
@@ -116,6 +123,7 @@ export function useFileOperations(refetch: () => void) {
     try {
       // Extract the file path
       const { filePath } = getBucketAndPath(fileUrl);
+      console.log(`Deleting file: id=${fileId}, bucket=${bucketName}, path=${filePath}`);
 
       // Delete from storage
       const { error: storageError } = await supabase.storage
@@ -163,6 +171,7 @@ export function useFileOperations(refetch: () => void) {
       
       // Extract the file path
       const { filePath } = getBucketAndPath(fileUrl);
+      console.log(`Generating signed URL for: bucket=${bucketName}, path=${filePath}`);
 
       // Generate a signed URL with 7-day expiration for sharing
       const { data, error } = await supabase.storage

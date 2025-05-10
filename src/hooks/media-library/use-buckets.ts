@@ -28,8 +28,29 @@ export function useBuckets() {
         return buckets;
       } else {
         console.warn("No storage buckets found!");
+        // Create a default bucket if none exist
+        try {
+          console.log("Attempting to create default user_uploads bucket...");
+          const { error: createError } = await supabase.storage.createBucket('user_uploads', { public: true });
+          
+          if (createError) {
+            console.error("Error creating default bucket:", createError);
+          } else {
+            console.log("Created default user_uploads bucket");
+            // Retry fetching buckets
+            const { data: refreshedBuckets } = await supabase.storage.listBuckets();
+            if (refreshedBuckets && refreshedBuckets.length > 0) {
+              console.log("Successfully created and retrieved buckets");
+              setBuckets(refreshedBuckets);
+              return refreshedBuckets;
+            }
+          }
+        } catch (createErr) {
+          console.error("Exception creating bucket:", createErr);
+        }
+        
         // Only show warning toast if we're confident there are no buckets
-        toast.warning("No storage buckets found. Please create at least one bucket.");
+        toast.warning("No storage buckets found. Please create at least one bucket in the Supabase dashboard.");
         return [];
       }
     } catch (error) {
