@@ -1,39 +1,23 @@
-import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Download, Trash2, Copy, X } from "lucide-react";
-import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatDistanceToNow } from "date-fns";
 import { bytesToSize } from "@/lib/utils";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useMediaLibrary, MediaFile } from "@/hooks/use-media-library";
 
-// Define types for our media files and profiles
+// Define types for our profiles
 interface Profile {
   id: string;
   first_name: string | null;
   last_name: string | null;
 }
 
-interface MediaFile {
-  id: string;
-  user_id: string;
-  file_url: string;
-  filename: string;
-  category: string;
-  uploaded_at: string;
-  file_size: number;
-  content_type: string;
-  bucket_name?: string;
-  signedUrl?: string;
-}
-
 interface MediaFileWithProfile extends MediaFile {
-  profile: Profile | null;
-  signedUrl?: string;
+  profile?: Profile | null;
 }
 
 interface MediaLibraryFilters {
@@ -48,270 +32,18 @@ interface MediaLibraryGridProps {
   searchQuery?: string;
 }
 
-interface StorageBucket {
-  id: string;
-  name: string;
-  owner: string;
-  created_at: string;
-  updated_at: string;
-  public: boolean;
-}
-
 export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGridProps) {
   const [selectedMedia, setSelectedMedia] = useState<MediaFileWithProfile | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [availableBuckets, setAvailableBuckets] = useState<StorageBucket[]>([]);
-
-  // Fetch all available storage buckets
-  useEffect(() => {
-    const fetchBuckets = async () => {
-      try {
-        const { data: buckets, error } = await supabase.storage.listBuckets();
-        if (error) {
-          console.error("Error fetching buckets:", error);
-          toast.error("Failed to fetch storage buckets");
-          return;
-        }
-        
-        if (buckets && buckets.length > 0) {
-          console.log("Available buckets:", buckets);
-          setAvailableBuckets(buckets);
-        }
-      } catch (error) {
-        console.error("Exception fetching buckets:", error);
-        toast.error("Failed to fetch storage buckets");
-      }
-    };
-    
-    fetchBuckets();
-  }, []);
-
-  // Helper function to determine bucket name and file path from file_url
-  const getBucketAndPath = (fileUrl: string) => {
-    // Check if fileUrl contains user ID format (which indicates full path with bucket)
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\//i;
-    
-    // If the path starts with a UUID, it's likely the format "userId/filename.ext"
-    if (uuidRegex.test(fileUrl)) {
-      // In this case, there's no explicit bucket in the path
-      return { 
-        bucketName: "user_uploads", // Default bucket
-        filePath: fileUrl // Use full path
-      };
-    }
-    
-    // Check if path contains a slash indicating "bucketName/filePath" format
-    if (fileUrl.includes("/")) {
-      const parts = fileUrl.split("/");
-      const possibleBucket = parts[0];
-      
-      // Check if this matches a known bucket
-      if (availableBuckets.some(b => b.name === possibleBucket)) {
-        return {
-          bucketName: possibleBucket,
-          filePath: fileUrl.substring(fileUrl.indexOf("/") + 1)
-        };
-      }
-    }
-    
-    // Default fallback
-    return { 
-      bucketName: "user_uploads",
-      filePath: fileUrl
-    };
-  };
-
-  const { data: mediaFiles, isLoading, refetch } = useQuery({
-    queryKey: ['admin-media-files', filters, searchQuery, availableBuckets],
-    queryFn: async () => {
-      let query = supabase.from('media_files').select(`
-        id, 
-        user_id, 
-        file_url, 
-        filename, 
-        category, 
-        uploaded_at, 
-        file_size, 
-        content_type
-      `);
-
-      if (filters.user) query = query.eq('user_id', filters.user);
-      if (filters.category) query = query.eq('category', filters.category);
-      if (filters.startDate) query = query.gte('uploaded_at', filters.startDate);
-      if (filters.endDate) query = query.lte('uploaded_at', filters.endDate);
-      
-      if (searchQuery) {
-        query = query.ilike('filename', `%${searchQuery}%`);
-      }
-
-      const { data: mediaData, error } = await query.order('uploaded_at', { ascending: false });
-      
-      if (error) throw error;
-      
-      // Fetch user profile information separately
-      if (mediaData && mediaData.length > 0) {
-        const userIds = [...new Set(mediaData.map(file => file.user_id))];
-        
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, first_name, last_name')
-          .in('id', userIds);
-          
-        if (profilesError) {
-          console.error("Error fetching profiles:", profilesError);
-          return mediaData as MediaFile[]; // Return media data even if profiles fetch fails
-        }
-        
-        // Create a lookup map for profiles
-        const profileMap: Record<string, Profile> = {};
-        profilesData?.forEach(profile => {
-          profileMap[profile.id] = profile;
-        });
-        
-        // Process files from database records and attach profile data
-        const filesWithProfiles: MediaFileWithProfile[] = [];
-
-        for (const file of mediaData) {
-          try {
-            // Determine bucket name and file path
-            const { bucketName, filePath } = getBucketAndPath(file.file_url);
-            
-            // Try to get a signed URL with 7-day expiration for the file
-            const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-              .from(bucketName)
-              .createSignedUrl(filePath, 604800); // 604800 seconds = 7 days
-
-            if (signedUrlError) {
-              console.warn(`Could not create signed URL for ${bucketName}/${filePath}:`, signedUrlError);
-            }
-
-            filesWithProfiles.push({
-              ...file,
-              profile: profileMap[file.user_id] || null,
-              signedUrl: signedUrlData?.signedUrl || null,
-              bucket_name: bucketName
-            });
-          } catch (error) {
-            console.error(`Error processing file ${file.filename}:`, error);
-            // Still add the file even if we couldn't get a signed URL
-            filesWithProfiles.push({
-              ...file,
-              profile: profileMap[file.user_id] || null,
-              bucket_name: "user_uploads" // Default fallback
-            });
-          }
-        }
-        
-        return filesWithProfiles;
-      }
-      
-      return (mediaData || []) as MediaFile[];
-    },
-    enabled: availableBuckets.length > 0 // Only run query when buckets are available
-  });
-
-  const handleDownload = async (bucketName: string, fileUrl: string, fileName: string, signedUrl?: string) => {
-    try {
-      // If we have a signed URL, use that directly
-      if (signedUrl) {
-        // Create an anchor element and trigger download
-        const link = document.createElement('a');
-        link.href = signedUrl;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        toast.success('File downloaded successfully');
-        return;
-      }
-      
-      // Otherwise, extract the file path and do a direct download
-      const { filePath } = getBucketAndPath(fileUrl);
-
-      const { data, error } = await supabase.storage
-        .from(bucketName)
-        .download(filePath);
-
-      if (error) throw error;
-
-      // Create a temporary URL from the blob and trigger download
-      const url = URL.createObjectURL(data);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url); // Clean up
-      toast.success('File downloaded successfully');
-    } catch (error) {
-      toast.error('Failed to download file');
-      console.error('Download error:', error);
-    }
-  };
-
-  const handleDelete = async (fileId: string, bucketName: string, fileUrl: string) => {
-    try {
-      // Extract the file path
-      const { filePath } = getBucketAndPath(fileUrl);
-
-      // Delete from storage
-      const { error: storageError } = await supabase.storage
-        .from(bucketName)
-        .remove([filePath]);
-
-      if (storageError) throw storageError;
-
-      // Delete from metadata table
-      const { error: databaseError } = await supabase
-        .from('media_files')
-        .delete()
-        .eq('id', fileId);
-
-      if (databaseError) throw databaseError;
-
-      toast.success('File deleted successfully');
-      setSelectedMedia(null);
-      setDeleteConfirmOpen(false);
-      refetch(); // Refresh the media list
-    } catch (error) {
-      toast.error('Failed to delete file');
-      console.error('Delete error:', error);
-    }
-  };
-
-  const handleCopyUrl = async (signedUrl?: string, bucketName?: string, fileUrl?: string) => {
-    try {
-      // If we already have a signed URL, use that
-      if (signedUrl) {
-        await navigator.clipboard.writeText(signedUrl);
-        toast.success('URL copied to clipboard (expires in 7 days)');
-        return;
-      }
-      
-      // Otherwise generate one
-      if (!bucketName || !fileUrl) {
-        toast.error('Missing file information');
-        return;
-      }
-      
-      // Extract the file path
-      const { filePath } = getBucketAndPath(fileUrl);
-
-      // Generate a signed URL with 7-day expiration for sharing
-      const { data, error } = await supabase.storage
-        .from(bucketName)
-        .createSignedUrl(filePath, 604800); // 604800 seconds = 7 days
-      
-      if (error) throw error;
-      
-      await navigator.clipboard.writeText(data.signedUrl);
-      toast.success('URL copied to clipboard (expires in 7 days)');
-    } catch (error) {
-      toast.error('Failed to generate URL');
-      console.error('URL generation error:', error);
-    }
-  };
+  
+  const {
+    mediaFiles,
+    loadingFiles: isLoading,
+    isError,
+    handleDownload,
+    handleDelete,
+    handleCopyUrl
+  } = useMediaLibrary(filters, searchQuery);
 
   const getFileIcon = (contentType: string) => {
     if (contentType.startsWith('image/')) {
@@ -330,6 +62,16 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
       </div>;
     }
   };
+
+  if (isError) return <div className="text-center py-16 border rounded-lg bg-red-50">
+    <div className="mx-auto w-16 h-16 flex items-center justify-center rounded-full bg-red-100">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="h-8 w-8 text-red-600">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+      </svg>
+    </div>
+    <h3 className="mt-4 text-lg font-medium text-red-800">Error loading media</h3>
+    <p className="mt-1 text-sm text-red-600">Please check the console for details.</p>
+  </div>;
 
   if (isLoading) return <div className="flex items-center justify-center h-64">
     <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -571,6 +313,7 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
                     selectedMedia.bucket_name || 'user_uploads',
                     selectedMedia.file_url
                   );
+                  setSelectedMedia(null);
                 }
               }}
             >
