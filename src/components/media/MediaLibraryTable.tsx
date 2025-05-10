@@ -11,21 +11,44 @@ interface MediaFile {
   id: string;
   filename: string;
   alt_text?: string;
-  uploaded_at: string; // Changed from created_at to uploaded_at
+  uploaded_at: string;
   file_size: number;
   references?: number;
 }
 
-export function MediaLibraryTable() {
+interface MediaLibraryFilters {
+  user: string | null;
+  category: string | null;
+  startDate: Date | null;
+  endDate: Date | null;
+}
+
+interface MediaLibraryTableProps {
+  filters?: MediaLibraryFilters;
+  searchQuery?: string;
+}
+
+export function MediaLibraryTable({ filters = {}, searchQuery = "" }: MediaLibraryTableProps) {
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
 
   const { data: files, isLoading } = useQuery({
-    queryKey: ['media-files'],
+    queryKey: ['media-files', filters, searchQuery],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('media_files')
         .select('*')
-        .order('uploaded_at', { ascending: false }); // Changed from created_at to uploaded_at
+        .order('uploaded_at', { ascending: false });
+
+      if (filters.user) query = query.eq('user_id', filters.user);
+      if (filters.category) query = query.eq('category', filters.category);
+      if (filters.startDate) query = query.gte('uploaded_at', filters.startDate);
+      if (filters.endDate) query = query.lte('uploaded_at', filters.endDate);
+      
+      if (searchQuery) {
+        query = query.ilike('filename', `%${searchQuery}%`);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return data as MediaFile[];

@@ -38,11 +38,16 @@ interface MediaLibraryFilters {
   endDate: Date | null;
 }
 
-export function MediaLibraryGrid({ filters }: { filters: MediaLibraryFilters }) {
+interface MediaLibraryGridProps {
+  filters: MediaLibraryFilters;
+  searchQuery?: string;
+}
+
+export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGridProps) {
   const [selectedMedia, setSelectedMedia] = useState<MediaFileWithProfile | null>(null);
 
   const { data: mediaFiles, isLoading, refetch } = useQuery({
-    queryKey: ['admin-media-files', filters],
+    queryKey: ['admin-media-files', filters, searchQuery],
     queryFn: async () => {
       let query = supabase.from('media_files').select(`
         id, 
@@ -59,6 +64,10 @@ export function MediaLibraryGrid({ filters }: { filters: MediaLibraryFilters }) 
       if (filters.category) query = query.eq('category', filters.category);
       if (filters.startDate) query = query.gte('uploaded_at', filters.startDate);
       if (filters.endDate) query = query.lte('uploaded_at', filters.endDate);
+      
+      if (searchQuery) {
+        query = query.ilike('filename', `%${searchQuery}%`);
+      }
 
       const { data: mediaData, error } = await query.order('uploaded_at', { ascending: false });
       

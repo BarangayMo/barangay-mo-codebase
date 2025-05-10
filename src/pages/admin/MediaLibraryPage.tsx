@@ -8,6 +8,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { MediaLibraryFilters } from "@/components/media/MediaLibraryFilters";
+import { MediaUploadDialog } from "@/components/media/MediaUploadDialog";
 
 export default function MediaLibraryPage() {
   const [viewType, setViewType] = useState<'grid' | 'table'>('grid');
@@ -18,6 +19,7 @@ export default function MediaLibraryPage() {
     endDate: null
   });
   const [searchQuery, setSearchQuery] = useState("");
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 
   return (
     <AdminLayout title="Media Library">
@@ -72,7 +74,10 @@ export default function MediaLibraryPage() {
                 <List className="h-4 w-4" />
               </Button>
               
-              <Button variant="default">
+              <Button 
+                variant="default"
+                onClick={() => setUploadDialogOpen(true)}
+              >
                 Upload files
                 <Upload className="ml-2 h-4 w-4" />
               </Button>
@@ -81,10 +86,25 @@ export default function MediaLibraryPage() {
         </div>
         
         {viewType === 'table' ? (
-          <MediaLibraryTable />
+          <MediaLibraryTable 
+            filters={filters}
+            searchQuery={searchQuery} 
+          />
         ) : (
-          <MediaLibraryGrid filters={filters} />
+          <MediaLibraryGrid 
+            filters={filters}
+            searchQuery={searchQuery} 
+          />
         )}
+
+        <MediaUploadDialog 
+          open={uploadDialogOpen}
+          onClose={() => setUploadDialogOpen(false)}
+          onUploadComplete={() => {
+            // Refresh the media list after upload completes
+            // Both components handle this internally with react-query
+          }}
+        />
       </div>
     </AdminLayout>
   );
