@@ -27,13 +27,13 @@ interface MediaFile {
   uploaded_at: string;
   file_size: number;
   content_type: string;
-  bucket_name?: string; // Added bucket name field
-  signedUrl?: string;   // Added signedUrl field to fix type error
+  bucket_name?: string;
+  signedUrl?: string;
 }
 
 interface MediaFileWithProfile extends MediaFile {
   profile: Profile | null;
-  signedUrl?: string;   // Added signedUrl field to fix type error
+  signedUrl?: string;
 }
 
 interface MediaLibraryFilters {
@@ -86,6 +86,41 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
     fetchBuckets();
   }, []);
 
+  // Helper function to determine bucket name and file path from file_url
+  const getBucketAndPath = (fileUrl: string) => {
+    // Check if fileUrl contains user ID format (which indicates full path with bucket)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\//i;
+    
+    // If the path starts with a UUID, it's likely the format "userId/filename.ext"
+    if (uuidRegex.test(fileUrl)) {
+      // In this case, there's no explicit bucket in the path
+      return { 
+        bucketName: "user_uploads", // Default bucket
+        filePath: fileUrl // Use full path
+      };
+    }
+    
+    // Check if path contains a slash indicating "bucketName/filePath" format
+    if (fileUrl.includes("/")) {
+      const parts = fileUrl.split("/");
+      const possibleBucket = parts[0];
+      
+      // Check if this matches a known bucket
+      if (availableBuckets.some(b => b.name === possibleBucket)) {
+        return {
+          bucketName: possibleBucket,
+          filePath: fileUrl.substring(fileUrl.indexOf("/") + 1)
+        };
+      }
+    }
+    
+    // Default fallback
+    return { 
+      bucketName: "user_uploads",
+      filePath: fileUrl
+    };
+  };
+
   const { data: mediaFiles, isLoading, refetch } = useQuery({
     queryKey: ['admin-media-files', filters, searchQuery, availableBuckets],
     queryFn: async () => {
@@ -137,25 +172,10 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
         const filesWithProfiles: MediaFileWithProfile[] = [];
 
         for (const file of mediaData) {
-          // Extract bucket name from file_url (assuming format: "bucket_name/path/to/file")
-          const fileParts = file.file_url.split('/');
-          // Try to determine bucket name from path or use default
-          let bucketName = 'user_uploads'; // Default bucket
-          let filePath = file.file_url;
-
-          // If file_url contains a bucket reference (from database record)
-          if (file.file_url.includes('/')) {
-            // First part before slash might be bucket name
-            const possibleBucket = fileParts[0];
-            
-            // Check if this bucket exists in our list of available buckets
-            if (availableBuckets.some(b => b.name === possibleBucket)) {
-              bucketName = possibleBucket;
-              filePath = file.file_url.substring(file.file_url.indexOf('/') + 1);
-            }
-          }
-          
           try {
+            // Determine bucket name and file path
+            const { bucketName, filePath } = getBucketAndPath(file.file_url);
+            
             // Try to get a signed URL with 7-day expiration for the file
             const { data: signedUrlData, error: signedUrlError } = await supabase.storage
               .from(bucketName)
@@ -177,7 +197,7 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
             filesWithProfiles.push({
               ...file,
               profile: profileMap[file.user_id] || null,
-              bucket_name: bucketName
+              bucket_name: "user_uploads" // Default fallback
             });
           }
         }
@@ -206,9 +226,7 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
       }
       
       // Otherwise, extract the file path and do a direct download
-      const filePath = fileUrl.includes('/') 
-        ? fileUrl.substring(fileUrl.indexOf('/') + 1) 
-        : fileUrl;
+      const { filePath } = getBucketAndPath(fileUrl);
 
       const { data, error } = await supabase.storage
         .from(bucketName)
@@ -234,10 +252,8 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
 
   const handleDelete = async (fileId: string, bucketName: string, fileUrl: string) => {
     try {
-      // Extract the file path without bucket prefix
-      const filePath = fileUrl.includes('/') 
-        ? fileUrl.substring(fileUrl.indexOf('/') + 1) 
-        : fileUrl;
+      // Extract the file path
+      const { filePath } = getBucketAndPath(fileUrl);
 
       // Delete from storage
       const { error: storageError } = await supabase.storage
@@ -279,10 +295,8 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
         return;
       }
       
-      // Extract the file path without bucket prefix
-      const filePath = fileUrl.includes('/') 
-        ? fileUrl.substring(fileUrl.indexOf('/') + 1) 
-        : fileUrl;
+      // Extract the file path
+      const { filePath } = getBucketAndPath(fileUrl);
 
       // Generate a signed URL with 7-day expiration for sharing
       const { data, error } = await supabase.storage
@@ -336,9 +350,8 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
     <>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
         {mediaFiles.map((file) => {
-          // Use signed URL if available, otherwise fall back to regular public URL
-          const fileUrl = file.signedUrl || 
-            supabase.storage.from(file.bucket_name || 'user_uploads').getPublicUrl(file.file_url).data.publicUrl;
+          // Use signed URL if available
+          const fileUrl = file.signedUrl || null;
           const fileIcon = getFileIcon(file.content_type);
           
           return (
@@ -350,7 +363,7 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
               <div className="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
                 {file.content_type.startsWith('image/') ? (
                   <img 
-                    src={fileUrl} // Use the signed URL
+                    src={fileUrl} 
                     alt={file.filename} 
                     className="w-full h-full object-cover"
                     loading="lazy"
@@ -391,7 +404,7 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
                 <Button 
                   variant="secondary" 
                   size="sm" 
-                  className="shadow-lg"
+                  className="shadow-lg rounded-lg"
                   onClick={(e) => {
                     e.stopPropagation();
                     setSelectedMedia(file as MediaFileWithProfile);
@@ -417,10 +430,7 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
               <div className="bg-gray-50 rounded-xl flex items-center justify-center p-4 overflow-hidden">
                 {selectedMedia.content_type.startsWith('image/') ? (
                   <img 
-                    src={selectedMedia.signedUrl || 
-                      supabase.storage
-                        .from(selectedMedia.bucket_name || 'user_uploads')
-                        .getPublicUrl(selectedMedia.file_url).data.publicUrl} 
+                    src={selectedMedia.signedUrl} 
                     alt={selectedMedia.filename}
                     className="max-w-full max-h-[350px] object-contain rounded-lg shadow-sm"
                     onError={(e) => {
@@ -433,10 +443,7 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
                   />
                 ) : selectedMedia.content_type.startsWith('video/') ? (
                   <video 
-                    src={selectedMedia.signedUrl || 
-                      supabase.storage
-                        .from(selectedMedia.bucket_name || 'user_uploads')
-                        .getPublicUrl(selectedMedia.file_url).data.publicUrl}
+                    src={selectedMedia.signedUrl}
                     className="max-w-full max-h-[350px] rounded-lg shadow-sm"
                     controls
                     onError={(e) => {

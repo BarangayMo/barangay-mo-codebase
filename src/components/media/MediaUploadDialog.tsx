@@ -37,7 +37,7 @@ interface FileUpload {
   status: 'uploading' | 'success' | 'error';
   message?: string;
   url?: string;
-  xhr?: XMLHttpRequest; // Add reference to XHR for cancellation
+  xhr?: XMLHttpRequest;
 }
 
 interface StorageBucket {
@@ -120,9 +120,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
       return;
     }
 
-    // Fix: Use the actual UUID of the user from the session
     const userId = session.user.id;
-
     const { file } = upload;
     const fileExt = file.name.split('.').pop();
     const filePath = `${userId}/${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
@@ -156,12 +154,14 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
 
       if (error) throw error;
 
-      // Get the public URL for the file
-      const { data: urlData } = await supabase.storage
+      // Get the signed URL for the file (valid for 7 days)
+      const { data: urlData, error: urlError } = await supabase.storage
         .from(bucketToUse)
         .createSignedUrl(filePath, 604800); // 7 days
 
-      // Save media file metadata to database, use the user.id (UUID) instead of email
+      if (urlError) throw urlError;
+
+      // Save media file metadata to database
       const { error: dbError } = await supabase
         .from('media_files')
         .insert({
@@ -305,7 +305,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
               <Button 
                 size="lg" 
                 variant="default"
-                className="shadow-[0_6px_16px_rgba(59,130,246,0.3),0_2px_8px_rgba(59,130,246,0.15)] hover:shadow-[0_8px_20px_rgba(59,130,246,0.4),0_4px_10px_rgba(59,130,246,0.2)] transition-all duration-200"
+                className="shadow-[0_6px_16px_rgba(59,130,246,0.3),0_2px_8px_rgba(59,130,246,0.15)] hover:shadow-[0_8px_20px_rgba(59,130,246,0.4),0_4px_10px_rgba(59,130,246,0.2)] transition-all duration-200 rounded-lg"
               >
                 Browse Files
               </Button>
@@ -399,7 +399,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
                     }
                     setUploads([]);
                   }}
-                  className="mr-2"
+                  className="mr-2 rounded-lg"
                   disabled={uploads.some(u => u.status === 'uploading')}
                 >
                   Clear All
@@ -416,7 +416,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
                     <input {...getInputProps()} />
                     <Button 
                       variant="outline"
-                      className="shadow-sm hover:shadow-md"
+                      className="shadow-sm hover:shadow-md rounded-lg"
                     >
                       Add More Files
                     </Button>
@@ -425,7 +425,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
                     disabled={uploads.some(u => u.status === 'uploading')}
                     onClick={handleClose}
                     variant="default"
-                    className="shadow-[0_4px_12px_rgba(59,130,246,0.2),0_2px_6px_rgba(59,130,246,0.15)] hover:shadow-[0_6px_16px_rgba(59,130,246,0.3),0_3px_8px_rgba(59,130,246,0.2)] transition-all duration-200"
+                    className="shadow-[0_4px_12px_rgba(59,130,246,0.2),0_2px_6px_rgba(59,130,246,0.15)] hover:shadow-[0_6px_16px_rgba(59,130,246,0.3),0_3px_8px_rgba(59,130,246,0.2)] transition-all duration-200 rounded-lg"
                   >
                     {uploads.some(u => u.status === 'uploading') ? 'Uploading...' : 'Done'}
                   </Button>
