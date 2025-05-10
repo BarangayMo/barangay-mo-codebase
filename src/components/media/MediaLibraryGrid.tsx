@@ -153,6 +153,7 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
   };
 
   const handleCopyUrl = (fileUrl: string) => {
+    // Get the fully qualified public URL
     const url = supabase.storage.from('user_uploads').getPublicUrl(fileUrl).data.publicUrl;
     navigator.clipboard.writeText(url);
     toast.success('URL copied to clipboard');
@@ -195,6 +196,7 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
     <>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
         {mediaFiles.map((file) => {
+          // Explicitly get the full public URL for each file
           const fileUrl = supabase.storage.from('user_uploads').getPublicUrl(file.file_url).data.publicUrl;
           const fileIcon = getFileIcon(file.content_type);
           
@@ -207,10 +209,19 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
               <div className="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
                 {file.content_type.startsWith('image/') ? (
                   <img 
-                    src={fileUrl}
+                    src={fileUrl} // Use the full public URL
                     alt={file.filename} 
                     className="w-full h-full object-cover"
                     loading="lazy"
+                    onError={(e) => {
+                      console.error('Image load error:', fileUrl);
+                      // Fallback to file icon if image fails to load
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.parentElement?.classList.add('flex', 'items-center', 'justify-center');
+                      const icon = document.createElement('div');
+                      icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="w-12 h-12 text-gray-400"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>';
+                      e.currentTarget.parentElement?.appendChild(icon);
+                    }}
                   />
                 ) : fileIcon}
               </div>
@@ -240,21 +251,28 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
         })}
       </div>
 
-      {/* Media details dialog */}
+      {/* Redesigned Media details dialog */}
       {selectedMedia && (
         <Dialog open={!!selectedMedia} onOpenChange={(open) => !open && setSelectedMedia(null)}>
-          <DialogContent className="sm:max-w-3xl">
-            <DialogHeader>
+          <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-auto p-0">
+            <DialogHeader className="px-6 pt-6 pb-2">
               <DialogTitle className="text-xl font-semibold truncate">{selectedMedia.filename}</DialogTitle>
             </DialogHeader>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-              <div className="bg-gray-50 rounded-md flex items-center justify-center p-2 overflow-hidden">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+              <div className="bg-gray-50 rounded-xl flex items-center justify-center p-4 overflow-hidden">
                 {selectedMedia.content_type.startsWith('image/') ? (
                   <img 
                     src={supabase.storage.from('user_uploads').getPublicUrl(selectedMedia.file_url).data.publicUrl} 
                     alt={selectedMedia.filename}
-                    className="max-w-full max-h-[300px] object-contain rounded"
+                    className="max-w-full max-h-[350px] object-contain rounded-lg shadow-sm"
+                    onError={(e) => {
+                      console.error('Detail view image load error:', selectedMedia.file_url);
+                      e.currentTarget.style.display = 'none';
+                      const icon = document.createElement('div');
+                      icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="w-16 h-16 text-gray-400"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>';
+                      e.currentTarget.parentElement?.appendChild(icon);
+                    }}
                   />
                 ) : (
                   <div className="h-40 w-40 flex items-center justify-center">
@@ -263,10 +281,10 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
                 )}
               </div>
               
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">File details</h3>
-                  <div className="mt-2 space-y-2">
+              <div className="space-y-6">
+                <div className="bg-white rounded-lg p-4 border shadow-sm">
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">File details</h3>
+                  <div className="space-y-3">
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-500">Uploaded</span>
                       <span className="text-sm font-medium">
@@ -302,29 +320,29 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
                   </div>
                 </div>
                 
-                <div className="pt-4 border-t space-y-3">
+                <div className="space-y-3">
                   <Button 
                     variant="outline" 
-                    className="w-full justify-start"
+                    className="w-full justify-start hover:bg-gray-50 transition-colors rounded-lg h-12"
                     onClick={() => handleCopyUrl(selectedMedia.file_url)}
                   >
-                    <Copy className="mr-2 h-4 w-4" /> Copy URL
+                    <Copy className="mr-3 h-4 w-4" /> Copy URL
                   </Button>
                   
                   <Button 
                     variant="outline" 
-                    className="w-full justify-start"
+                    className="w-full justify-start hover:bg-blue-50 text-blue-600 hover:text-blue-700 transition-colors rounded-lg h-12"
                     onClick={() => handleDownload(selectedMedia.file_url, selectedMedia.filename)}
                   >
-                    <Download className="mr-2 h-4 w-4" /> Download
+                    <Download className="mr-3 h-4 w-4" /> Download
                   </Button>
                   
                   <Button 
                     variant="outline" 
-                    className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                    className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors rounded-lg h-12"
                     onClick={() => handleDelete(selectedMedia.id, selectedMedia.file_url)}
                   >
-                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                    <Trash2 className="mr-3 h-4 w-4" /> Delete
                   </Button>
                 </div>
               </div>

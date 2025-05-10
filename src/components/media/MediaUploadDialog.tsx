@@ -1,5 +1,4 @@
-
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { UploadCloud, X, CheckCircle, AlertOctagon, Info, Image, FileText, File } from "lucide-react";
@@ -37,6 +36,7 @@ interface FileUpload {
   status: 'uploading' | 'success' | 'error';
   message?: string;
   url?: string;
+  xhr?: XMLHttpRequest; // Add reference to XHR for cancellation
 }
 
 export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUploadDialogProps) {
@@ -86,6 +86,9 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
       const xhr = new XMLHttpRequest();
       const formData = new FormData();
       formData.append('file', file);
+      
+      // Store XHR reference for potential cancellation
+      updateUpload(upload.id, { xhr });
       
       // Set up progress tracking
       xhr.upload.addEventListener('progress', (event) => {
@@ -197,8 +200,18 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
     }
   };
 
+  // New function to cancel an ongoing upload
   const cancelUpload = (id: string) => {
-    setUploads(current => current.filter(upload => upload.id !== id));
+    const upload = uploads.find(u => u.id === id);
+    
+    // If upload is in progress and has an XHR reference, abort it
+    if (upload?.xhr && upload.status === 'uploading') {
+      upload.xhr.abort();
+    }
+    
+    // Remove from uploads list
+    setUploads(current => current.filter(u => u.id !== id));
+    toast.info('Upload canceled');
   };
 
   const getFileIcon = (mimeType: string) => {
@@ -212,7 +225,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">Upload Media</DialogTitle>
         </DialogHeader>
@@ -262,6 +275,19 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
                       ${upload.status === 'success' ? 'border-green-300 bg-green-50' : ''}
                     `}
                   >
+                    {/* Cancel button for uploads in progress */}
+                    {upload.status === 'uploading' && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="absolute top-1 right-1 h-6 w-6 p-0 rounded-full hover:bg-gray-200" 
+                        onClick={() => cancelUpload(upload.id)}
+                      >
+                        <X className="h-4 w-4" />
+                        <span className="sr-only">Cancel</span>
+                      </Button>
+                    )}
+                    
                     <div className="flex items-center gap-3 mb-3">
                       {getFileIcon(upload.file.type)}
                       <div className="flex-1 min-w-0">
