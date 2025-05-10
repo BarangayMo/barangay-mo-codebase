@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,9 @@ import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatDistanceToNow } from "date-fns";
 import { bytesToSize } from "@/lib/utils";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 // Define types for our media files and profiles
 interface Profile {
@@ -46,11 +48,46 @@ interface MediaLibraryGridProps {
   searchQuery?: string;
 }
 
+interface StorageBucket {
+  id: string;
+  name: string;
+  owner: string;
+  created_at: string;
+  updated_at: string;
+  public: boolean;
+}
+
 export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGridProps) {
   const [selectedMedia, setSelectedMedia] = useState<MediaFileWithProfile | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [availableBuckets, setAvailableBuckets] = useState<StorageBucket[]>([]);
+
+  // Fetch all available storage buckets
+  useEffect(() => {
+    const fetchBuckets = async () => {
+      try {
+        const { data: buckets, error } = await supabase.storage.listBuckets();
+        if (error) {
+          console.error("Error fetching buckets:", error);
+          toast.error("Failed to fetch storage buckets");
+          return;
+        }
+        
+        if (buckets && buckets.length > 0) {
+          console.log("Available buckets:", buckets);
+          setAvailableBuckets(buckets);
+        }
+      } catch (error) {
+        console.error("Exception fetching buckets:", error);
+        toast.error("Failed to fetch storage buckets");
+      }
+    };
+    
+    fetchBuckets();
+  }, []);
 
   const { data: mediaFiles, isLoading, refetch } = useQuery({
-    queryKey: ['admin-media-files', filters, searchQuery],
+    queryKey: ['admin-media-files', filters, searchQuery, availableBuckets],
     queryFn: async () => {
       let query = supabase.from('media_files').select(`
         id, 
@@ -96,37 +133,79 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
           profileMap[profile.id] = profile;
         });
         
-        // Attach profile data to media files and generate signed URLs
-        const filesWithProfiles = await Promise.all(mediaData.map(async file => {
+        // Process files from database records and attach profile data
+        const filesWithProfiles: MediaFileWithProfile[] = [];
+
+        for (const file of mediaData) {
           // Extract bucket name from file_url (assuming format: "bucket_name/path/to/file")
-          const bucketName = file.file_url.split('/')[0] || 'user_uploads';
-          const filePath = file.file_url.includes('/') 
-            ? file.file_url.substring(file.file_url.indexOf('/') + 1) 
-            : file.file_url;
+          const fileParts = file.file_url.split('/');
+          // Try to determine bucket name from path or use default
+          let bucketName = 'user_uploads'; // Default bucket
+          let filePath = file.file_url;
+
+          // If file_url contains a bucket reference (from database record)
+          if (file.file_url.includes('/')) {
+            // First part before slash might be bucket name
+            const possibleBucket = fileParts[0];
+            
+            // Check if this bucket exists in our list of available buckets
+            if (availableBuckets.some(b => b.name === possibleBucket)) {
+              bucketName = possibleBucket;
+              filePath = file.file_url.substring(file.file_url.indexOf('/') + 1);
+            }
+          }
           
-          // Get signed URL with 7 day expiration for each file
-          const { data: signedUrlData } = await supabase.storage
-            .from(bucketName)
-            .createSignedUrl(filePath, 604800); // 604800 seconds = 7 days
-          
-          return {
-            ...file,
-            profile: profileMap[file.user_id] || null,
-            signedUrl: signedUrlData?.signedUrl,
-            bucket_name: bucketName
-          };
-        }));
+          try {
+            // Try to get a signed URL with 7-day expiration for the file
+            const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+              .from(bucketName)
+              .createSignedUrl(filePath, 604800); // 604800 seconds = 7 days
+
+            if (signedUrlError) {
+              console.warn(`Could not create signed URL for ${bucketName}/${filePath}:`, signedUrlError);
+            }
+
+            filesWithProfiles.push({
+              ...file,
+              profile: profileMap[file.user_id] || null,
+              signedUrl: signedUrlData?.signedUrl || null,
+              bucket_name: bucketName
+            });
+          } catch (error) {
+            console.error(`Error processing file ${file.filename}:`, error);
+            // Still add the file even if we couldn't get a signed URL
+            filesWithProfiles.push({
+              ...file,
+              profile: profileMap[file.user_id] || null,
+              bucket_name: bucketName
+            });
+          }
+        }
         
-        return filesWithProfiles as MediaFileWithProfile[];
+        return filesWithProfiles;
       }
       
       return (mediaData || []) as MediaFile[];
-    }
+    },
+    enabled: availableBuckets.length > 0 // Only run query when buckets are available
   });
 
-  const handleDownload = async (bucketName: string, fileUrl: string, fileName: string) => {
+  const handleDownload = async (bucketName: string, fileUrl: string, fileName: string, signedUrl?: string) => {
     try {
-      // Extract the file path without bucket prefix
+      // If we have a signed URL, use that directly
+      if (signedUrl) {
+        // Create an anchor element and trigger download
+        const link = document.createElement('a');
+        link.href = signedUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success('File downloaded successfully');
+        return;
+      }
+      
+      // Otherwise, extract the file path and do a direct download
       const filePath = fileUrl.includes('/') 
         ? fileUrl.substring(fileUrl.indexOf('/') + 1) 
         : fileUrl;
@@ -137,6 +216,7 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
 
       if (error) throw error;
 
+      // Create a temporary URL from the blob and trigger download
       const url = URL.createObjectURL(data);
       const link = document.createElement('a');
       link.href = url;
@@ -144,6 +224,7 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      URL.revokeObjectURL(url); // Clean up
       toast.success('File downloaded successfully');
     } catch (error) {
       toast.error('Failed to download file');
@@ -175,6 +256,7 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
 
       toast.success('File deleted successfully');
       setSelectedMedia(null);
+      setDeleteConfirmOpen(false);
       refetch(); // Refresh the media list
     } catch (error) {
       toast.error('Failed to delete file');
@@ -182,8 +264,21 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
     }
   };
 
-  const handleCopyUrl = async (bucketName: string, fileUrl: string) => {
+  const handleCopyUrl = async (signedUrl?: string, bucketName?: string, fileUrl?: string) => {
     try {
+      // If we already have a signed URL, use that
+      if (signedUrl) {
+        await navigator.clipboard.writeText(signedUrl);
+        toast.success('URL copied to clipboard (expires in 7 days)');
+        return;
+      }
+      
+      // Otherwise generate one
+      if (!bucketName || !fileUrl) {
+        toast.error('Missing file information');
+        return;
+      }
+      
       // Extract the file path without bucket prefix
       const filePath = fileUrl.includes('/') 
         ? fileUrl.substring(fileUrl.indexOf('/') + 1) 
@@ -196,7 +291,7 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
       
       if (error) throw error;
       
-      navigator.clipboard.writeText(data.signedUrl);
+      await navigator.clipboard.writeText(data.signedUrl);
       toast.success('URL copied to clipboard (expires in 7 days)');
     } catch (error) {
       toast.error('Failed to generate URL');
@@ -269,6 +364,19 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
                       e.currentTarget.parentElement?.appendChild(icon);
                     }}
                   />
+                ) : file.content_type.startsWith('video/') ? (
+                  <video 
+                    src={fileUrl}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error('Video load error:', fileUrl);
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.parentElement?.classList.add('flex', 'items-center', 'justify-center');
+                      const icon = document.createElement('div');
+                      icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="w-12 h-12 text-blue-500"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
+                      e.currentTarget.parentElement?.appendChild(icon);
+                    }}
+                  />
                 ) : fileIcon}
               </div>
               
@@ -300,7 +408,7 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
       {/* Media details dialog */}
       {selectedMedia && (
         <Dialog open={!!selectedMedia} onOpenChange={(open) => !open && setSelectedMedia(null)}>
-          <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-auto p-0">
+          <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-auto p-0 rounded-xl border-none shadow-2xl">
             <DialogHeader className="px-6 pt-6 pb-2">
               <DialogTitle className="text-xl font-semibold truncate">{selectedMedia.filename}</DialogTitle>
             </DialogHeader>
@@ -320,6 +428,22 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
                       e.currentTarget.style.display = 'none';
                       const icon = document.createElement('div');
                       icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="w-16 h-16 text-gray-400"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>';
+                      e.currentTarget.parentElement?.appendChild(icon);
+                    }}
+                  />
+                ) : selectedMedia.content_type.startsWith('video/') ? (
+                  <video 
+                    src={selectedMedia.signedUrl || 
+                      supabase.storage
+                        .from(selectedMedia.bucket_name || 'user_uploads')
+                        .getPublicUrl(selectedMedia.file_url).data.publicUrl}
+                    className="max-w-full max-h-[350px] rounded-lg shadow-sm"
+                    controls
+                    onError={(e) => {
+                      console.error('Detail view video load error:', selectedMedia.file_url);
+                      e.currentTarget.style.display = 'none';
+                      const icon = document.createElement('div');
+                      icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="w-16 h-16 text-blue-500"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
                       e.currentTarget.parentElement?.appendChild(icon);
                     }}
                   />
@@ -376,21 +500,31 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
                 </div>
                 
                 <div className="space-y-3">
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start hover:bg-gray-50 transition-colors rounded-lg h-12 shadow-sm hover:shadow"
-                    onClick={() => handleCopyUrl(selectedMedia.bucket_name || 'user_uploads', selectedMedia.file_url)}
-                  >
-                    <Copy className="mr-3 h-4 w-4" /> Copy URL (7 days)
-                  </Button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-start bg-white hover:bg-gray-50 transition-all rounded-lg h-12 shadow-sm hover:shadow-md"
+                          onClick={() => handleCopyUrl(selectedMedia.signedUrl, selectedMedia.bucket_name, selectedMedia.file_url)}
+                        >
+                          <Copy className="mr-3 h-4 w-4" /> Copy URL (7 days)
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs">Copy a shareable URL that works for 7 days</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   
                   <Button 
                     variant="outline" 
-                    className="w-full justify-start hover:bg-blue-50 text-blue-600 hover:text-blue-700 transition-colors rounded-lg h-12 shadow-sm hover:shadow"
+                    className="w-full justify-start bg-white hover:bg-blue-50 text-blue-600 hover:text-blue-700 transition-all rounded-lg h-12 shadow-sm hover:shadow-md"
                     onClick={() => handleDownload(
                       selectedMedia.bucket_name || 'user_uploads', 
                       selectedMedia.file_url, 
-                      selectedMedia.filename
+                      selectedMedia.filename,
+                      selectedMedia.signedUrl
                     )}
                   >
                     <Download className="mr-3 h-4 w-4" /> Download
@@ -398,12 +532,8 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
                   
                   <Button 
                     variant="outline" 
-                    className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors rounded-lg h-12 shadow-sm hover:shadow"
-                    onClick={() => handleDelete(
-                      selectedMedia.id, 
-                      selectedMedia.bucket_name || 'user_uploads', 
-                      selectedMedia.file_url
-                    )}
+                    className="w-full justify-start bg-white text-red-600 hover:text-red-700 hover:bg-red-50 transition-all rounded-lg h-12 shadow-sm hover:shadow-md"
+                    onClick={() => setDeleteConfirmOpen(true)}
                   >
                     <Trash2 className="mr-3 h-4 w-4" /> Delete
                   </Button>
@@ -413,6 +543,35 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent className="rounded-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to delete this file?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. The file will be permanently removed from storage.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-md">Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              className="bg-red-600 hover:bg-red-700 rounded-md"
+              onClick={() => {
+                if (selectedMedia) {
+                  handleDelete(
+                    selectedMedia.id,
+                    selectedMedia.bucket_name || 'user_uploads',
+                    selectedMedia.file_url
+                  );
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

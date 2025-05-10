@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { UploadCloud, X, CheckCircle, AlertOctagon, Image, FileText, File } from "lucide-react";
@@ -40,10 +40,55 @@ interface FileUpload {
   xhr?: XMLHttpRequest; // Add reference to XHR for cancellation
 }
 
+interface StorageBucket {
+  id: string;
+  name: string;
+  owner: string;
+  created_at: string;
+  updated_at: string;
+  public: boolean;
+}
+
 export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUploadDialogProps) {
   const { user, session } = useAuth();
   const [uploads, setUploads] = useState<FileUpload[]>([]);
   const [quote, setQuote] = useState(() => UPLOAD_QUOTES[Math.floor(Math.random() * UPLOAD_QUOTES.length)]);
+  const [availableBuckets, setAvailableBuckets] = useState<StorageBucket[]>([]);
+  const [defaultBucket, setDefaultBucket] = useState('user_uploads');
+  
+  // Fetch all available storage buckets
+  useEffect(() => {
+    if (!open) return;
+    
+    const fetchBuckets = async () => {
+      try {
+        const { data: buckets, error } = await supabase.storage.listBuckets();
+        if (error) {
+          console.error("Error fetching buckets:", error);
+          toast.error("Failed to fetch storage buckets");
+          return;
+        }
+        
+        if (buckets && buckets.length > 0) {
+          console.log("Available buckets for upload:", buckets);
+          setAvailableBuckets(buckets);
+          
+          // Set the default bucket to user_uploads if it exists, otherwise use the first bucket
+          const userUploadsBucket = buckets.find(b => b.name === 'user_uploads');
+          if (userUploadsBucket) {
+            setDefaultBucket('user_uploads');
+          } else if (buckets.length > 0) {
+            setDefaultBucket(buckets[0].name);
+          }
+        }
+      } catch (error) {
+        console.error("Exception fetching buckets:", error);
+        toast.error("Failed to fetch storage buckets");
+      }
+    };
+    
+    fetchBuckets();
+  }, [open]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: acceptedFiles => {
@@ -98,10 +143,13 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
           updateUpload(upload.id, { progress: calculatedProgress });
         }
       });
+
+      // Make sure we have a valid bucket to upload to
+      const bucketToUse = defaultBucket || 'user_uploads';
       
       // Upload the file using Supabase Storage
       const { data, error } = await supabase.storage
-        .from('user_uploads')
+        .from(bucketToUse)
         .upload(filePath, file, {
           cacheControl: '3600'
         });
@@ -109,9 +157,9 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
       if (error) throw error;
 
       // Get the public URL for the file
-      const { data: { publicUrl } } = supabase.storage
-        .from('user_uploads')
-        .getPublicUrl(filePath);
+      const { data: urlData } = await supabase.storage
+        .from(bucketToUse)
+        .createSignedUrl(filePath, 604800); // 7 days
 
       // Save media file metadata to database, use the user.id (UUID) instead of email
       const { error: dbError } = await supabase
@@ -121,7 +169,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
           category: determineCategory(file.type),
           content_type: file.type,
           filename: file.name,
-          file_url: filePath,
+          file_url: filePath, // Store the path, including the bucket
           file_size: file.size
         });
 
@@ -131,7 +179,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
       updateUpload(upload.id, { 
         status: 'success', 
         progress: 100, 
-        url: publicUrl,
+        url: urlData?.signedUrl,
         message: 'Upload completed successfully' 
       });
       
@@ -226,7 +274,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-[0_10px_40px_-15px_rgba(0,0,0,0.3)] rounded-xl">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-[0_10px_50px_-15px_rgba(0,0,0,0.3)] rounded-xl">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">Upload Media</DialogTitle>
         </DialogHeader>
@@ -257,7 +305,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
               <Button 
                 size="lg" 
                 variant="default"
-                className="shadow-[0_4px_12px_rgba(59,130,246,0.3),0_2px_6px_rgba(59,130,246,0.1)] hover:shadow-[0_6px_16px_rgba(59,130,246,0.4),0_3px_8px_rgba(59,130,246,0.2)] transition-all duration-200"
+                className="shadow-[0_6px_16px_rgba(59,130,246,0.3),0_2px_8px_rgba(59,130,246,0.15)] hover:shadow-[0_8px_20px_rgba(59,130,246,0.4),0_4px_10px_rgba(59,130,246,0.2)] transition-all duration-200"
               >
                 Browse Files
               </Button>
@@ -368,7 +416,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
                     <input {...getInputProps()} />
                     <Button 
                       variant="outline"
-                      className="shadow-sm hover:shadow"
+                      className="shadow-sm hover:shadow-md"
                     >
                       Add More Files
                     </Button>
@@ -377,7 +425,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
                     disabled={uploads.some(u => u.status === 'uploading')}
                     onClick={handleClose}
                     variant="default"
-                    className="shadow-[0_4px_12px_rgba(59,130,246,0.2),0_2px_6px_rgba(59,130,246,0.1)] hover:shadow-[0_6px_16px_rgba(59,130,246,0.3),0_3px_8px_rgba(59,130,246,0.2)] transition-all duration-200"
+                    className="shadow-[0_4px_12px_rgba(59,130,246,0.2),0_2px_6px_rgba(59,130,246,0.15)] hover:shadow-[0_6px_16px_rgba(59,130,246,0.3),0_3px_8px_rgba(59,130,246,0.2)] transition-all duration-200"
                   >
                     {uploads.some(u => u.status === 'uploading') ? 'Uploading...' : 'Done'}
                   </Button>
