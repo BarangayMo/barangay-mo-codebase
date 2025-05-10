@@ -45,8 +45,7 @@ export function useMediaQuery(
           .select('*')
           .order('uploaded_at', { ascending: false });
 
-        // Only apply filters if they are set
-        if (filters.user) query = query.eq('user_id', filters.user);
+        // Only apply category and date filters - skip user filter to show all files
         if (filters.category) query = query.eq('category', filters.category);
         if (filters.startDate) query = query.gte('uploaded_at', filters.startDate);
         if (filters.endDate) query = query.lte('uploaded_at', filters.endDate);
@@ -70,40 +69,47 @@ export function useMediaQuery(
           allMediaFiles = [...allMediaFiles, ...processedDbFiles];
         }
         
-        // 2. For admins or when no specific filters are applied, also load files directly from storage 
-        // This ensures we show ALL files regardless of DB records
-        if (isAdmin && (!filters.user && !filters.category && !filters.startDate && !filters.endDate)) {
-          console.log("Admin user detected or no filters - loading all files from storage buckets");
+        // 2. Always load files directly from storage - remove the admin/filter check
+        console.log("Loading all files from storage buckets");
+        
+        if (buckets.length === 0) {
+          console.error("No buckets available");
+        } else {
+          console.log(`Loading files from buckets: ${buckets.join(', ')}`);
+        }
+        
+        const storageFiles = await loadFilesFromStorage(buckets);
+        
+        if (storageFiles.length > 0) {
+          console.log(`Found ${storageFiles.length} files directly from storage buckets`);
           
-          if (buckets.length === 0) {
-            console.error("No buckets available");
-          } else {
-            console.log(`Loading files from buckets: ${buckets.join(', ')}`);
+          // Filter by search query and category if needed
+          let filteredStorageFiles = storageFiles;
+          
+          if (searchQuery) {
+            filteredStorageFiles = filteredStorageFiles.filter(f => 
+              f.filename.toLowerCase().includes(searchQuery.toLowerCase())
+            );
           }
           
-          const storageFiles = await loadFilesFromStorage(buckets);
-          
-          if (storageFiles.length > 0) {
-            console.log(`Found ${storageFiles.length} files directly from storage buckets`);
-            
-            // Filter by search query if needed
-            const filteredStorageFiles = searchQuery 
-              ? storageFiles.filter(f => f.filename.toLowerCase().includes(searchQuery.toLowerCase()))
-              : storageFiles;
-            
-            if (filteredStorageFiles.length !== storageFiles.length) {
-              console.log(`Filtered storage files to ${filteredStorageFiles.length} based on search "${searchQuery}"`);
-            }
-            
-            // Remove duplicates by file_url (prefer DB records when there's overlap)
-            const dbFileUrls = new Set(allMediaFiles.map(f => f.file_url));
-            const uniqueStorageFiles = filteredStorageFiles.filter(f => !dbFileUrls.has(f.file_url));
-            
-            console.log(`Adding ${uniqueStorageFiles.length} unique storage files to results`);
-            allMediaFiles = [...allMediaFiles, ...uniqueStorageFiles];
-          } else {
-            console.log("No files found in storage buckets");
+          if (filters.category) {
+            filteredStorageFiles = filteredStorageFiles.filter(f => 
+              f.category === filters.category
+            );
           }
+          
+          if (filteredStorageFiles.length !== storageFiles.length) {
+            console.log(`Filtered storage files to ${filteredStorageFiles.length} based on filters`);
+          }
+          
+          // Remove duplicates by file_url (prefer DB records when there's overlap)
+          const dbFileUrls = new Set(allMediaFiles.map(f => f.file_url));
+          const uniqueStorageFiles = filteredStorageFiles.filter(f => !dbFileUrls.has(f.file_url));
+          
+          console.log(`Adding ${uniqueStorageFiles.length} unique storage files to results`);
+          allMediaFiles = [...allMediaFiles, ...uniqueStorageFiles];
+        } else {
+          console.log("No files found in storage buckets");
         }
         
         console.log(`Total media files to display: ${allMediaFiles.length}`);
