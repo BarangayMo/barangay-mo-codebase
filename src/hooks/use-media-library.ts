@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,7 +25,7 @@ export interface MediaFile {
   file_url: string;
   references?: number;
   signedUrl?: string;
-  category?: string; // Make category optional since it might not be present in all media files
+  category?: string; // Made optional since it might not be present in all files
 }
 
 interface MediaLibraryFilters {
@@ -56,43 +56,50 @@ export function useMediaLibrary(
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const isAdmin = userRole === 'superadmin';
 
-  // 1. Fetch all available storage buckets
-  useEffect(() => {
-    const fetchBuckets = async () => {
-      try {
-        console.log("Fetching storage buckets...");
-        setLoadingBuckets(true);
-        
-        const { data: buckets, error } = await supabase.storage.listBuckets();
-        
-        if (error) {
-          console.error("Error fetching storage buckets:", error);
-          toast.error("Failed to fetch storage buckets");
-          return;
-        }
-        
-        if (buckets && buckets.length > 0) {
-          console.log(`Found ${buckets.length} storage buckets:`, buckets.map(b => b.name).join(', '));
-          setBuckets(buckets);
-        } else {
-          console.warn("No storage buckets found!");
+  // 1. Fetch all available storage buckets - now using useCallback to prevent recreation on each render
+  const fetchBuckets = useCallback(async () => {
+    try {
+      console.log("Fetching storage buckets...");
+      setLoadingBuckets(true);
+      
+      const { data: buckets, error } = await supabase.storage.listBuckets();
+      
+      if (error) {
+        console.error("Error fetching storage buckets:", error);
+        toast.error("Failed to fetch storage buckets");
+        return [];
+      }
+      
+      if (buckets && buckets.length > 0) {
+        console.log(`Found ${buckets.length} storage buckets:`, buckets.map(b => b.name).join(', '));
+        setBuckets(buckets);
+        return buckets;
+      } else {
+        console.warn("No storage buckets found!");
+        // Only show warning toast if we're confident there are no buckets
+        if (!loadingBuckets) {
           toast.warning("No storage buckets found. Please create at least one bucket.");
         }
-      } catch (error) {
-        console.error("Exception fetching buckets:", error);
-        toast.error("Failed to fetch storage buckets");
-      } finally {
-        setLoadingBuckets(false);
+        return [];
       }
-    };
-    
+    } catch (error) {
+      console.error("Exception fetching buckets:", error);
+      toast.error("Failed to fetch storage buckets");
+      return [];
+    } finally {
+      setLoadingBuckets(false);
+    }
+  }, [loadingBuckets]);
+  
+  // Fetch buckets on initial load to make them available sooner
+  useEffect(() => {
     if (isAdmin) {
       fetchBuckets();
     }
-  }, [isAdmin]);
+  }, [isAdmin, fetchBuckets]);
 
   // 2. Helper function to determine bucket name and file path from file_url
-  const getBucketAndPath = (fileUrl: string) => {
+  const getBucketAndPath = useCallback((fileUrl: string) => {
     // Check if fileUrl contains user ID format (which indicates full path with bucket)
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\//i;
     
@@ -126,9 +133,120 @@ export function useMediaLibrary(
       bucketName: "user_uploads",
       filePath: fileUrl
     };
-  };
+  }, [buckets]);
 
-  // 3. Query to fetch media files from database and storage
+  // 3. Preload and process media files with better error handling
+  const processMedia = useCallback(async (dbFiles) => {
+    if (!dbFiles || dbFiles.length === 0) return [];
+    
+    console.log(`Processing ${dbFiles.length} media files from database`);
+    const processedFiles: MediaFile[] = [];
+    
+    for (const file of dbFiles) {
+      try {
+        // Determine bucket name and file path
+        const { bucketName, filePath } = getBucketAndPath(file.file_url);
+        
+        // Try to get a signed URL with 7-day expiration for the file
+        const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+          .from(bucketName)
+          .createSignedUrl(filePath, 604800); // 604800 seconds = 7 days
+
+        if (signedUrlError) {
+          console.error(`Error creating signed URL for ${file.filename}:`, signedUrlError);
+          
+          // Still add the file even if we couldn't get a signed URL
+          processedFiles.push({
+            ...file,
+            signedUrl: null,
+            bucket_name: bucketName
+          } as MediaFile);
+          continue;
+        }
+
+        // Add the file with signed URL
+        processedFiles.push({
+          ...file,
+          signedUrl: signedUrlData?.signedUrl || null,
+          bucket_name: bucketName
+        } as MediaFile);
+      } catch (error) {
+        console.error(`Error processing file ${file.filename}:`, error);
+        // Still add the file even if there was an error
+        processedFiles.push({
+          ...file,
+          bucket_name: "user_uploads" // Default fallback
+        } as MediaFile);
+      }
+    }
+    
+    return processedFiles;
+  }, [getBucketAndPath]);
+
+  // 4. Function to load files directly from storage buckets
+  const loadFilesFromStorage = useCallback(async () => {
+    if (!isAdmin) return [];
+    
+    // Make sure we have buckets
+    const availableBuckets = buckets.length > 0 ? buckets : await fetchBuckets();
+    if (!availableBuckets.length) return [];
+    
+    console.log(`Loading files directly from ${availableBuckets.length} storage buckets`);
+    const allFiles: MediaFile[] = [];
+    
+    // Process each bucket
+    for (const bucket of availableBuckets) {
+      try {
+        // List all files in the bucket (root level)
+        const { data: files, error } = await supabase.storage
+          .from(bucket.name)
+          .list();
+          
+        if (error) {
+          console.error(`Error listing files in bucket ${bucket.name}:`, error);
+          continue;
+        }
+        
+        if (!files || files.length === 0) continue;
+        
+        console.log(`Found ${files.length} files in bucket ${bucket.name}`);
+        
+        // Process each file
+        for (const file of files) {
+          if (file.id) { // Skip folders, only process files
+            try {
+              // Get signed URL
+              const { data: signedUrlData } = await supabase.storage
+                .from(bucket.name)
+                .createSignedUrl(file.name, 604800);
+              
+              // Construct file object
+              const fileObject: MediaFile = {
+                id: file.id, // Use storage object ID
+                filename: file.name,
+                file_url: file.name, // Just using the filename as the URL path
+                bucket_name: bucket.name,
+                content_type: file.metadata?.mimetype || 'application/octet-stream',
+                file_size: file.metadata?.size || 0,
+                uploaded_at: file.created_at || new Date().toISOString(),
+                signedUrl: signedUrlData?.signedUrl || null
+              };
+              
+              allFiles.push(fileObject);
+            } catch (err) {
+              console.error(`Error processing file ${file.name}:`, err);
+            }
+          }
+        }
+      } catch (err) {
+        console.error(`Error processing bucket ${bucket.name}:`, err);
+      }
+    }
+    
+    return allFiles;
+  }, [buckets, fetchBuckets, isAdmin]);
+
+  // 5. Query to fetch media files from database and enhance with storage data
   const { 
     data: mediaFiles, 
     isLoading: loadingFiles, 
@@ -167,84 +285,32 @@ export function useMediaLibrary(
 
         console.log(`Found ${dbFiles?.length || 0} media files in database`);
         
-        // Then process the files to get signed URLs from storage
+        // Process the database files to get signed URLs
         if (dbFiles && dbFiles.length > 0) {
-          const processedFiles: MediaFile[] = [];
-
-          for (const file of dbFiles) {
-            try {
-              // Determine bucket name and file path
-              const { bucketName, filePath } = getBucketAndPath(file.file_url);
-              console.log(`Processing file ${file.filename} with bucket: ${bucketName}, path: ${filePath}`);
-              
-              // Try to get a signed URL with 7-day expiration for the file
-              const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-                .from(bucketName)
-                .createSignedUrl(filePath, 604800); // 604800 seconds = 7 days
-
-              if (signedUrlError) {
-                console.error(`Error creating signed URL for ${file.filename}:`, signedUrlError);
-                
-                // Check if file exists in the bucket
-                const { data: fileExists, error: fileCheckError } = await supabase.storage
-                  .from(bucketName)
-                  .list(filePath.split('/').slice(0, -1).join('/'), {
-                    limit: 100,
-                  });
-
-                if (fileCheckError) {
-                  console.error(`Error checking if file exists: ${file.filename}`, fileCheckError);
-                } else {
-                  const fileName = filePath.split('/').pop() || '';
-                  const fileInStorage = fileExists?.find(f => f.name === fileName);
-                  console.log(`File ${fileName} exists in storage: ${!!fileInStorage}`);
-                }
-                
-                // Add the file anyway with a null signed URL
-                processedFiles.push({
-                  ...file,
-                  signedUrl: null,
-                  bucket_name: bucketName
-                } as MediaFile); // Cast to MediaFile to ensure type compliance
-                continue;
-              }
-
-              console.log(`Got signed URL for ${file.filename}: ${signedUrlData?.signedUrl ? 'success' : 'failed'}`);
-              
-              // Make sure all required properties exist
-              processedFiles.push({
-                ...file,
-                signedUrl: signedUrlData?.signedUrl || null,
-                bucket_name: bucketName
-              } as MediaFile); // Cast to MediaFile to ensure type compliance
-            } catch (error) {
-              console.error(`Error processing file ${file.filename}:`, error);
-              // Still add the file even if we couldn't get a signed URL
-              processedFiles.push({
-                ...file,
-                bucket_name: "user_uploads" // Default fallback
-              } as MediaFile); // Cast to MediaFile to ensure type compliance
-            }
-          }
-          
-          return processedFiles;
+          return await processMedia(dbFiles);
         }
         
-        // Fix for the TypeScript error - ensure each file has a bucket_name property
-        return (dbFiles || []).map(file => ({
-          ...file,
-          bucket_name: "user_uploads" // Default bucket name for all files
-        })) as MediaFile[];
+        // If no files in database, try to load directly from storage
+        const storageFiles = await loadFilesFromStorage();
+        if (storageFiles.length > 0) {
+          console.log(`Found ${storageFiles.length} files directly from storage buckets`);
+          return storageFiles;
+        }
+        
+        // Return empty array if no files found
+        return [];
       } catch (error) {
         console.error("Error in queryFn:", error);
         throw error;
       }
     },
-    // Run query regardless of buckets available to show data even if bucket detection fails
-    enabled: isAdmin
+    // Always enabled - this will preload the media files
+    enabled: true,
+    // Use staleTime to prevent frequent refetches
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  // 4. Handle file selection
+  // 6. Handle file selection
   const toggleFileSelection = (fileId: string) => {
     setSelectedFiles(prev => 
       prev.includes(fileId) 
@@ -263,7 +329,7 @@ export function useMediaLibrary(
     }
   };
 
-  // 5. File operations: download, delete, get URL
+  // 7. File operations: download, delete, get URL
   const handleDownload = async (bucketName: string, fileUrl: string, fileName: string, signedUrl?: string) => {
     try {
       // If we have a signed URL, use that directly

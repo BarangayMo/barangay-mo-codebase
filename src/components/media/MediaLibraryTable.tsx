@@ -36,7 +36,9 @@ export function MediaLibraryTable({
   useEffect(() => {
     if (files) {
       console.log("MediaLibraryTable received files:", files.length);
-      console.log("Sample file:", files[0]);
+      if (files.length > 0) {
+        console.log("Sample file:", files[0]);
+      }
     }
   }, [files]);
 
