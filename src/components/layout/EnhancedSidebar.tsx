@@ -15,10 +15,15 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 
 interface EnhancedSidebarProps {
   isCollapsed?: boolean;
+  isOpen?: boolean;
 }
 
-export const EnhancedSidebar = ({ isCollapsed = false }: EnhancedSidebarProps) => {
+export const EnhancedSidebar = ({ isCollapsed = false, isOpen = true }: EnhancedSidebarProps) => {
   const { openSections, toggleSection, activeSection, setActiveSection } = useSidebarState();
+
+  if (!isOpen) {
+    return null;
+  }
 
   return (
     <div className="h-full overflow-hidden">

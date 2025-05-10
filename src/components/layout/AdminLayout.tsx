@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import { EnhancedSidebar } from "./EnhancedSidebar";
 import { Button } from "../ui/button";
-import { MessageSquare, Bell, Sun, Moon } from "lucide-react";
+import { MessageSquare, Bell } from "lucide-react";
 import { ThemeToggle } from "../ui/theme-toggle";
 import { useSidebarState } from "@/hooks/use-sidebar-state";
 import { ProfileMenu } from "./ProfileMenu";

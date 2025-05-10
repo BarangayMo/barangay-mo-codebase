@@ -11,6 +11,10 @@ export const useSidebarState = () => {
   });
   
   const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    const savedState = localStorage.getItem("sidebar-open");
+    return savedState ? JSON.parse(savedState) === true : true;
+  });
 
   useEffect(() => {
     const pathSegments = pathname.split('/').filter(Boolean);
@@ -81,6 +85,10 @@ export const useSidebarState = () => {
   useEffect(() => {
     localStorage.setItem("sidebar-state", JSON.stringify(openSections));
   }, [openSections]);
+
+  useEffect(() => {
+    localStorage.setItem("sidebar-open", JSON.stringify(isSidebarOpen));
+  }, [isSidebarOpen]);
 
   const toggleSection = (sectionId: string, event: React.MouseEvent) => {
     event.preventDefault();
@@ -153,10 +161,16 @@ export const useSidebarState = () => {
     setOpenSections(newOpenSections);
   };
 
+  const toggleSidebar = () => {
+    setIsSidebarOpen(prev => !prev);
+  };
+
   return {
     openSections,
     toggleSection,
     activeSection,
-    setActiveSection
+    setActiveSection,
+    isSidebarOpen,
+    toggleSidebar
   };
 };

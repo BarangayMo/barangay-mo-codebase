@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { MediaLibraryFilters } from "@/hooks/media-library/types";
+import { MediaLibraryFiltersType } from "@/hooks/media-library/types";
 import { Badge } from "@/components/ui/badge";
 
 interface FilterProps {
-  filters: MediaLibraryFilters;
-  onFilterChange: (filters: MediaLibraryFilters) => void;
+  filters: MediaLibraryFiltersType;
+  onFilterChange: (filters: MediaLibraryFiltersType) => void;
 }
 
 interface User {
