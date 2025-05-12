@@ -6,7 +6,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, ArrowRight, ArrowLeftRight, Building, MapPin, Banknote, Clock,
-  GraduationCap, Briefcase, Bookmark, Share2, Users, Star
+  GraduationCap, Briefcase, Bookmark, Share2, Users, Star, MessageCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -113,13 +113,13 @@ export default function JobDetail() {
         </div>
 
         {loading ? <Skeleton className="h-96 w-full" /> : job && (
-          <div className="bg-white p-8 rounded-2xl shadow-md border border-gray-100 space-y-8">
-            <div className="flex justify-between items-start">
+          <div className="bg-white p-4 sm:p-6 md:p-8 rounded-2xl shadow-md border border-gray-100 space-y-6 sm:space-y-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">{job.title} <Badge className="bg-indigo-100 text-indigo-600">Open</Badge></h1>
                 <p className="text-gray-500 flex items-center mt-1"><MapPin size={14} className="mr-1" /> {job.location || '—'}</p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center flex-wrap gap-2">
                 <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">Apply Now</Button>
                 <Button size="sm" variant="outline" onClick={handleSaveJob} disabled={savingStatus}>
                   <Bookmark size={14} className="mr-2" /> {isSaved ? 'Saved' : 'Save Job'}
@@ -144,74 +144,44 @@ export default function JobDetail() {
               <div className="flex items-center gap-1"><ArrowLeftRight size={16} /> <span>{job.matched || '40'} Matched</span></div>
             </div>
 
-            <div className="border-b text-sm font-medium text-gray-500 flex gap-6 mt-4">
+            <div className="border-b text-sm font-medium text-gray-500 flex gap-6 mt-4 overflow-x-auto">
               {['description', 'review', 'other'].map((tab) => (
                 <div
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`cursor-pointer pb-2 transition-all ${activeTab === tab ? 'text-indigo-600 border-b-2 border-indigo-600' : ''}`}
+                  className={`cursor-pointer pb-2 transition-all whitespace-nowrap ${activeTab === tab ? 'text-indigo-600 border-b-2 border-indigo-600' : ''}`}
                 >
-                  {tab === 'description' ? 'Job Description' : tab === 'review' ? 'Review' : 'Other Jobs'}
+                  {tab === 'description' ? 'Job Description' : tab === 'review' ? 'Reviews' : 'Other Jobs'}
                 </div>
               ))}
             </div>
 
-            {activeTab === 'description' && (
-              <div className="space-y-6 pt-4">
-                <div>
-                  <h2 className="font-semibold text-gray-800 mb-2">About</h2>
-                  <p className="text-gray-600 text-sm whitespace-pre-line">{job.description}</p>
-                </div>
-                <div>
-                  <h2 className="font-semibold text-gray-800 mb-2">Key Responsibilities</h2>
-                  <ul className="list-disc pl-6 text-sm text-gray-700 space-y-1">
-                    {job.responsibilities?.map((item, idx) => (<li key={idx}>{item}</li>))}
-                  </ul>
-                </div>
-                <div>
-                  <h2 className="font-semibold text-gray-800 mb-2">Education</h2>
-                  <p className="text-gray-600 text-sm">{job.education}</p>
-                </div>
-                <div>
-                  <h2 className="font-semibold text-gray-800 mb-2">Skills</h2>
-                  <div className="flex flex-wrap gap-2">
-                    {job.skills?.map((skill, idx) => (
-                      <Badge key={idx} className="bg-gray-100 text-gray-800 border-none">{skill}</Badge>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <h2 className="font-semibold text-gray-800 mb-2">Preferred Qualifications</h2>
-                  <ul className="list-disc pl-6 text-sm text-gray-700 space-y-1">
-                    {job.qualifications?.map((item, idx) => (<li key={idx}>{item}</li>))}
-                  </ul>
-                </div>
-              </div>
-            )}
-
             {activeTab === 'review' && (
-              <div className="pt-4 space-y-4 max-w-md">
-                <form onSubmit={handleReviewSubmit} className="space-y-4">
-                  <Input
-                    placeholder="Your Name"
-                    value={reviewForm.name}
-                    onChange={(e) => setReviewForm({ ...reviewForm, name: e.target.value })}
-                  />
-                  <Input
-                    placeholder="Rating (1–5)"
-                    type="number"
-                    max={5}
-                    min={1}
-                    value={reviewForm.rating}
-                    onChange={(e) => setReviewForm({ ...reviewForm, rating: e.target.value })}
-                  />
-                  <Textarea
-                    placeholder="Write your feedback..."
-                    value={reviewForm.comment}
-                    onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
-                  />
-                  <Button type="submit" className="w-full bg-indigo-600 text-white">Submit Review</Button>
-                </form>
+              <div className="pt-4 space-y-6">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-800 mb-4">Leave a Review</h3>
+                  <form onSubmit={handleReviewSubmit} className="space-y-4">
+                    <Input
+                      placeholder="Your Name"
+                      value={reviewForm.name}
+                      onChange={(e) => setReviewForm({ ...reviewForm, name: e.target.value })}
+                    />
+                    <Input
+                      placeholder="Rating (1–5)"
+                      type="number"
+                      max={5}
+                      min={1}
+                      value={reviewForm.rating}
+                      onChange={(e) => setReviewForm({ ...reviewForm, rating: e.target.value })}
+                    />
+                    <Textarea
+                      placeholder="Write your feedback..."
+                      value={reviewForm.comment}
+                      onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
+                    />
+                    <Button type="submit" className="w-full bg-indigo-600 text-white">Submit Review</Button>
+                  </form>
+                </div>
               </div>
             )}
 
