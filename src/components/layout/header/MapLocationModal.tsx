@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from 'react';
 import { toast } from "sonner";
 import { 
@@ -9,9 +10,10 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, MapPin, Search, X } from "lucide-react";
+import { Loader2, MapPin, Search, X, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getGoogleMapsApiKey } from "@/services/apiKeys";
+import { RoleButton } from "@/components/ui/role-button";
 
 // Declare Google Maps types
 declare global {
@@ -279,7 +281,7 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
         {children}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[90vw] md:max-w-[500px] p-0 gap-0 max-h-[90vh] overflow-hidden rounded-xl shadow-lg border border-muted/30">
-        <div className="relative h-[75vh] md:h-[500px]">
+        <div className="relative h-[70vh] md:h-[450px]">
           {/* Map container */}
           {isLoading ? (
             <div className="h-full w-full flex items-center justify-center bg-muted/30">
@@ -357,36 +359,41 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
                     );
                   }
                 }}
-                className="absolute bottom-32 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white py-3 px-5 rounded-full shadow-lg border border-gray-100"
+                className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white py-2 px-4 rounded-full shadow-lg border border-gray-100"
               >
                 <MapPin className="h-5 w-5 text-red-500" />
-                <span className="font-medium text-red-500">Use my current location</span>
+                <span className="font-medium text-sm text-gray-700">Use my current location</span>
               </button>
             </>
           )}
         </div>
 
         {/* Location selection box */}
-        <div className="px-4 py-5 bg-white">
-          <h2 className="text-xl font-bold text-gray-800 mb-1">Choose delivery address</h2>
-          <p className="text-gray-500 mb-4">Move the map pin to your exact location.</p>
-
-          {selectedLocation && (
-            <div className="bg-gray-50 p-4 rounded-lg flex items-start gap-3 mb-4">
-              <MapPin className="h-6 w-6 text-gray-500 shrink-0 mt-1" />
-              <p className="text-gray-700 text-base font-medium break-words">
-                {selectedLocation.barangay}
-              </p>
+        <div className="px-4 py-4 bg-white border-t border-gray-100">
+          <div className="flex flex-col gap-3">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-800">Choose delivery address</h2>
+              <p className="text-sm text-gray-500">Move the map pin to your exact location.</p>
             </div>
-          )}
 
-          <Button 
-            onClick={handleConfirm} 
-            disabled={!selectedLocation}
-            className="w-full h-14 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold text-lg shadow-sm"
-          >
-            Confirm
-          </Button>
+            {selectedLocation && (
+              <div className="bg-gray-50 p-3 rounded-lg flex items-start gap-3">
+                <MapPin className="h-5 w-5 text-gray-500 shrink-0 mt-1" />
+                <p className="text-gray-700 text-sm break-words">
+                  {selectedLocation.barangay}
+                </p>
+              </div>
+            )}
+
+            <RoleButton 
+              onClick={handleConfirm} 
+              disabled={!selectedLocation}
+              className="w-full flex items-center justify-center gap-2 h-12 rounded-lg text-white font-medium"
+            >
+              Confirm
+              <ChevronRight className="h-5 w-5" />
+            </RoleButton>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
