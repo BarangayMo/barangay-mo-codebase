@@ -7,15 +7,21 @@ import { SelectItem } from "@/components/ui/select";
 const EducationDetailsForm = () => {
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
         <School className="text-blue-600 w-6 h-6" />
-        <h2 className="text-xl font-semibold">Education & Skills</h2>
+        <div>
+          <h2 className="text-xl font-semibold text-gray-800">Education & Skills</h2>
+          <p className="text-sm text-gray-500 mt-1">
+            Your educational background and professional capabilities
+          </p>
+        </div>
       </div>
       
-      <div className="space-y-4">
+      <div className="space-y-6">
         <FloatingSelect 
           id="education" 
           label="Educational Attainment"
+          className="focus-visible:ring-blue-500"
         >
           <SelectItem value="elementary">Elementary</SelectItem>
           <SelectItem value="highSchool">High School</SelectItem>
@@ -29,17 +35,20 @@ const EducationDetailsForm = () => {
           id="profession" 
           label="Profession" 
           placeholder=" " 
+          className="focus-visible:ring-blue-500"
         />
         
         <FloatingInput 
           id="skills" 
           label="Skills" 
           placeholder="Enter your skills (separated by commas)" 
+          className="focus-visible:ring-blue-500"
         />
         
         <FloatingSelect 
           id="jobStatus" 
           label="Job Status"
+          className="focus-visible:ring-blue-500"
         >
           <SelectItem value="employed">Employed</SelectItem>
           <SelectItem value="unemployed">Unemployed</SelectItem>

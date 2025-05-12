@@ -301,15 +301,15 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[90vw] md:max-w-[500px] p-0 gap-0 max-h-[90vh] overflow-hidden rounded-xl shadow-lg border border-muted/30">
+      <DialogContent className="sm:max-w-[90vw] md:max-w-[500px] p-0 gap-0 max-h-[90vh] overflow-hidden rounded-xl shadow-lg border border-gray-200">
         <DialogHeader className="sr-only">
-          <DialogTitle>Select Location</DialogTitle>
+          <DialogTitle>Select Barangay</DialogTitle>
         </DialogHeader>
         <div className="relative h-[70vh] md:h-[450px]">
           {/* Map container */}
           {isLoading ? (
-            <div className="h-full w-full flex items-center justify-center bg-muted/30">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <div className="h-full w-full flex items-center justify-center bg-blue-50">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
             </div>
           ) : (
             <>
@@ -324,23 +324,23 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
                       <X className="h-4 w-4 text-gray-500" />
                     </button>
                     <Input
-                      placeholder="Search address"
+                      placeholder="Search location"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                      className="pl-12 pr-10 h-12 py-3 rounded-full border-transparent focus-visible:ring-primary/30"
+                      className="pl-12 pr-10 h-12 py-3 rounded-full border-transparent focus-visible:ring-blue-500"
                     />
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full text-blue-700 hover:bg-blue-50"
                       onClick={handleSearch}
                       disabled={isSearching}
                     >
                       {isSearching ? (
-                        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                        <Loader2 className="h-5 w-5 animate-spin text-blue-700" />
                       ) : (
-                        <Search className="h-5 w-5 text-muted-foreground" />
+                        <Search className="h-5 w-5" />
                       )}
                     </Button>
                   </div>
@@ -353,9 +353,9 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
               {/* Current location button */}
               <button 
                 onClick={handleCurrentLocation}
-                className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white py-2 px-4 rounded-full shadow-lg border border-gray-100"
+                className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white py-2 px-4 rounded-full shadow-lg border border-gray-100 hover:bg-blue-50 transition-colors"
               >
-                <MapPin className="h-5 w-5 text-red-500" />
+                <MapPin className="h-5 w-5 text-blue-600" />
                 <span className="font-medium text-sm text-gray-700">Use my current location</span>
               </button>
             </>
@@ -363,28 +363,34 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
         </div>
 
         {/* Location selection box */}
-        <div className="px-4 py-4 bg-white border-t border-gray-100">
-          <div className="flex flex-col gap-3">
+        <div className="px-5 py-4 bg-white border-t border-gray-100">
+          <div className="flex flex-col gap-4">
             <div>
-              <h2 className="text-lg font-semibold text-gray-800">Choose delivery address</h2>
-              <p className="text-sm text-gray-500">Move the map pin to your exact location.</p>
+              <h2 className="text-lg font-semibold text-gray-800">Select Your Barangay</h2>
+              <p className="text-sm text-gray-500">Move the map pin to your exact barangay location</p>
             </div>
 
             {selectedLocation && (
-              <div className="bg-gray-50 p-3 rounded-lg flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-gray-500 shrink-0 mt-1" />
-                <p className="text-gray-700 text-sm break-words">
-                  {selectedLocation.barangay}
-                </p>
+              <div className="bg-blue-50 p-3 rounded-lg flex items-start gap-3">
+                <MapPin className="h-5 w-5 text-blue-600 shrink-0 mt-1" />
+                <div>
+                  <p className="text-gray-700 text-sm font-medium">
+                    {selectedLocation.barangay}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Lat: {selectedLocation.coordinates.lat.toFixed(4)}, 
+                    Long: {selectedLocation.coordinates.lng.toFixed(4)}
+                  </p>
+                </div>
               </div>
             )}
 
             <RoleButton 
               onClick={handleConfirm} 
               disabled={!selectedLocation}
-              className="w-full flex items-center justify-center gap-2 h-12 rounded-lg text-white font-medium"
+              className="w-full flex items-center justify-center gap-2 h-12 rounded-lg text-white font-medium bg-blue-600 hover:bg-blue-700"
             >
-              Confirm
+              Confirm Location
               <ChevronRight className="h-5 w-5" />
             </RoleButton>
           </div>

@@ -8,18 +8,24 @@ import { Label } from "@/components/ui/label";
 const HealthDetailsForm = () => {
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
         <Heart className="text-blue-600 w-6 h-6" />
-        <h2 className="text-xl font-semibold">Health Details</h2>
+        <div>
+          <h2 className="text-xl font-semibold text-gray-800">Health Details</h2>
+          <p className="text-sm text-gray-500 mt-1">
+            Information about your health status and medical conditions
+          </p>
+        </div>
       </div>
       
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <FloatingInput 
             id="height" 
             label="Height (in cm)" 
             type="number" 
             placeholder=" " 
+            className="focus-visible:ring-blue-500"
           />
           
           <FloatingInput 
@@ -27,19 +33,20 @@ const HealthDetailsForm = () => {
             label="Weight (in kg)" 
             type="number" 
             placeholder=" " 
+            className="focus-visible:ring-blue-500"
           />
         </div>
         
-        <div className="space-y-2">
-          <Label className="text-base">Do you have health conditions? (Ikaw ba ay may karamdaman?)</Label>
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <Label className="text-gray-700 font-medium">Do you have health conditions? (Ikaw ba ay may karamdaman?)</Label>
           <RadioGroup defaultValue="no" className="flex gap-4 pt-2">
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="yes" id="healthConditionYes" />
-              <Label htmlFor="healthConditionYes">Yes</Label>
+              <RadioGroupItem value="yes" id="healthConditionYes" className="text-blue-600" />
+              <Label htmlFor="healthConditionYes" className="text-gray-700">Yes</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="no" id="healthConditionNo" />
-              <Label htmlFor="healthConditionNo">No</Label>
+              <RadioGroupItem value="no" id="healthConditionNo" className="text-blue-600" />
+              <Label htmlFor="healthConditionNo" className="text-gray-700">No</Label>
             </div>
           </RadioGroup>
         </div>
@@ -48,18 +55,19 @@ const HealthDetailsForm = () => {
           id="healthCondition" 
           label="What is your health condition? (Ano ang iyong karamdaman?)" 
           placeholder=" " 
+          className="focus-visible:ring-blue-500"
         />
         
-        <div className="space-y-2">
-          <Label className="text-base">Do you receive barangay assistance for your condition? (May barangay assistance ba sa iyong karamdaman?)</Label>
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <Label className="text-gray-700 font-medium">Do you receive barangay assistance for your condition? (May barangay assistance ba sa iyong karamdaman?)</Label>
           <RadioGroup defaultValue="no" className="flex gap-4 pt-2">
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="yes" id="assistanceYes" />
-              <Label htmlFor="assistanceYes">Yes</Label>
+              <RadioGroupItem value="yes" id="assistanceYes" className="text-blue-600" />
+              <Label htmlFor="assistanceYes" className="text-gray-700">Yes</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="no" id="assistanceNo" />
-              <Label htmlFor="assistanceNo">No</Label>
+              <RadioGroupItem value="no" id="assistanceNo" className="text-blue-600" />
+              <Label htmlFor="assistanceNo" className="text-gray-700">No</Label>
             </div>
           </RadioGroup>
         </div>
