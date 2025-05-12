@@ -15,6 +15,24 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function JobDetail() {
   const { id } = useParams();
@@ -28,6 +46,9 @@ export default function JobDetail() {
   const [reviewForm, setReviewForm] = useState({ name: "", rating: "", comment: "" });
   const { toast } = useToast();
   const { isAuthenticated, user } = useAuth();
+  const [applicationDialogOpen, setApplicationDialogOpen] = useState(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [applying, setApplying] = useState(false);
 
   useEffect(() => {
     const fetchJobDetails = async () => {
@@ -90,8 +111,59 @@ export default function JobDetail() {
   };
 
   const handleShareJob = () => {
-    navigator.clipboard.writeText(window.location.href);
-    toast({ title: "Link copied", description: "Job link copied to clipboard" });
+    if (navigator.share) {
+      navigator.share({
+        title: job?.title,
+        text: `Check out this job: ${job?.title} at ${job?.company}`,
+        url: window.location.href,
+      }).then(() => {
+        toast({ title: "Shared", description: "Job shared successfully" });
+      }).catch((error) => {
+        console.error('Error sharing job:', error);
+        // Fallback if sharing fails
+        navigator.clipboard.writeText(window.location.href);
+        toast({ title: "Link copied", description: "Job link copied to clipboard" });
+      });
+    } else {
+      // Fallback for browsers that don't support the Web Share API
+      navigator.clipboard.writeText(window.location.href);
+      toast({ title: "Link copied", description: "Job link copied to clipboard" });
+    }
+  };
+
+  const handleApplyJob = () => {
+    if (!isAuthenticated) {
+      toast({ title: "Authentication required", description: "Please login to apply for this job", variant: "destructive" });
+      return;
+    }
+    
+    setApplicationDialogOpen(true);
+  };
+
+  const handleConfirmApplication = async () => {
+    setApplying(true);
+    
+    // Here you would typically handle the actual job application and payment process
+    try {
+      // For demonstration purposes, we're just simulating a successful application
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      
+      setApplicationDialogOpen(false);
+      setConfirmDialogOpen(false);
+      toast({ 
+        title: "Application submitted", 
+        description: "Your job application has been received successfully" 
+      });
+    } catch (error) {
+      console.error('Error applying for job:', error);
+      toast({ 
+        title: "Application failed", 
+        description: "There was an issue submitting your application", 
+        variant: "destructive" 
+      });
+    } finally {
+      setApplying(false);
+    }
   };
 
   const handleReviewSubmit = (e) => {
@@ -114,13 +186,13 @@ export default function JobDetail() {
 
         {loading ? <Skeleton className="h-96 w-full" /> : job && (
           <div className="bg-white p-8 rounded-2xl shadow-md border border-gray-100 space-y-8">
-            <div className="flex justify-between items-start">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">{job.title} <Badge className="bg-indigo-100 text-indigo-600">Open</Badge></h1>
                 <p className="text-gray-500 flex items-center mt-1"><MapPin size={14} className="mr-1" /> {job.location || '—'}</p>
               </div>
-              <div className="flex items-center gap-2">
-                <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">Apply Now</Button>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button className="bg-indigo-600 hover:bg-indigo-700 text-white" onClick={handleApplyJob}>Apply Now</Button>
                 <Button size="sm" variant="outline" onClick={handleSaveJob} disabled={savingStatus}>
                   <Bookmark size={14} className="mr-2" /> {isSaved ? 'Saved' : 'Save Job'}
                 </Button>
@@ -228,6 +300,67 @@ export default function JobDetail() {
           </div>
         )}
       </div>
+
+      {/* Job Application Dialog */}
+      <Dialog open={applicationDialogOpen} onOpenChange={setApplicationDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Apply for Job</DialogTitle>
+            <DialogDescription>
+              You are about to apply for the position of {job?.title} at {job?.company}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="space-y-1">
+              <p className="font-medium text-sm">Name</p>
+              <p className="text-gray-500">{user?.firstName} {user?.lastName}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="font-medium text-sm">Email</p>
+              <p className="text-gray-500">{user?.email}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-md">
+              <p className="text-sm font-medium">Application Fee</p>
+              <p className="text-2xl font-bold">₱50.00</p>
+              <p className="text-xs text-gray-500 mt-1">This fee is used to process your application</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setApplicationDialogOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={() => {
+                setApplicationDialogOpen(false);
+                setConfirmDialogOpen(true);
+              }}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white"
+            >
+              Continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Application</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to apply for this job? Your account will be charged ₱50.00.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmApplication} 
+              disabled={applying}
+              className="bg-indigo-600 hover:bg-indigo-700"
+            >
+              {applying ? "Processing..." : "Confirm & Pay"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Layout>
   );
 }
