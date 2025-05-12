@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, MapPin, Search, X, ChevronRight } from "lucide-react";
 import { RoleButton } from "@/components/ui/role-button";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { Map, Marker } from 'leaflet';
 // We'll dynamically import Leaflet to avoid SSR issues
 
@@ -31,6 +33,8 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
   const [selectedLocation, setSelectedLocation] = useState<{ barangay: string; coordinates: { lat: number; lng: number } } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const isMobile = useIsMobile();
+  const isSmallScreen = useMediaQuery("(max-width: 640px)");
   const mapRef = useRef<HTMLDivElement>(null);
 
   // Load the map when the modal is opened
@@ -303,102 +307,99 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[95vw] max-h-[90vh] overflow-hidden">
-        <DialogHeader>
-          <DialogTitle>Select Your Barangay</DialogTitle>
-          <DialogDescription>
-            Please select your barangay from the map or search for it by name.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="relative h-[70vh] md:h-[450px]">
-          {/* Map container */}
-          {isLoading ? (
-            <div className="h-full w-full flex items-center justify-center bg-blue-50">
-              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-            </div>
-          ) : (
-            <>
-              {/* Search bar overlay */}
-              <div className="absolute top-4 left-0 right-0 z-10 px-4">
-                <div className="relative w-full">
-                  <div className="relative bg-white rounded-full shadow-lg">
-                    <button 
-                      onClick={() => setIsOpen(false)} 
-                      className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded-full bg-white border border-gray-100 shadow-sm"
-                    >
-                      <X className="h-4 w-4 text-gray-500" />
-                    </button>
-                    <Input
-                      placeholder="Search location"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                      className="pl-12 pr-10 h-12 py-3 rounded-full border-transparent focus-visible:ring-blue-500"
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full text-blue-700 hover:bg-blue-50"
-                      onClick={handleSearch}
-                      disabled={isSearching}
-                    >
-                      {isSearching ? (
-                        <Loader2 className="h-5 w-5 animate-spin text-blue-700" />
-                      ) : (
-                        <Search className="h-5 w-5" />
-                      )}
-                    </Button>
+      <DialogContent className={`sm:max-w-[95vw] max-h-[95vh] overflow-hidden p-0 ${isSmallScreen ? 'w-[95vw]' : ''}`}>
+        <div className="flex flex-col h-full">
+          <DialogHeader className="p-4 sm:p-6 border-b">
+            <DialogTitle className="text-lg md:text-xl font-semibold">Select Your Barangay</DialogTitle>
+            <DialogDescription className="text-sm mt-1">
+              Please select your barangay from the map or search for it.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="relative flex-grow" style={{ minHeight: isSmallScreen ? '55vh' : '65vh' }}>
+            {/* Map container */}
+            {isLoading ? (
+              <div className="h-full w-full flex items-center justify-center bg-blue-50">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              </div>
+            ) : (
+              <>
+                {/* Search bar overlay */}
+                <div className="absolute top-4 left-0 right-0 z-10 px-3 sm:px-4">
+                  <div className="relative w-full">
+                    <div className="relative bg-white rounded-full shadow-lg">
+                      <button 
+                        onClick={() => setIsOpen(false)} 
+                        className="absolute left-2 top-1/2 -translate-y-1/2 h-7 w-7 sm:h-8 sm:w-8 flex items-center justify-center rounded-full bg-white border border-gray-100 shadow-sm"
+                      >
+                        <X className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
+                      </button>
+                      <Input
+                        placeholder="Search location"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                        className="pl-10 sm:pl-12 pr-10 h-10 sm:h-12 py-2 sm:py-3 rounded-full border-transparent focus-visible:ring-blue-500 text-sm sm:text-base"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 sm:h-10 sm:w-10 rounded-full text-blue-700 hover:bg-blue-50"
+                        onClick={handleSearch}
+                        disabled={isSearching}
+                      >
+                        {isSearching ? (
+                          <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin text-blue-700" />
+                        ) : (
+                          <Search className="h-4 w-4 sm:h-5 sm:w-5" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Map */}
-              <div ref={mapRef} className="h-full w-full" />
-              
-              {/* Current location button */}
-              <button 
-                onClick={handleCurrentLocation}
-                className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white py-2 px-4 rounded-full shadow-lg border border-gray-100 hover:bg-blue-50 transition-colors"
-              >
-                <MapPin className="h-5 w-5 text-blue-600" />
-                <span className="font-medium text-sm text-gray-700">Use my current location</span>
-              </button>
-            </>
-          )}
-        </div>
-
-        {/* Location selection box */}
-        <div className="px-5 py-4 bg-white border-t border-gray-100">
-          <div className="flex flex-col gap-4">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-800">Select Your Barangay</h2>
-              <p className="text-sm text-gray-500">Move the map pin to your exact barangay location</p>
-            </div>
-
-            {selectedLocation && (
-              <div className="bg-blue-50 p-3 rounded-lg flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-blue-600 shrink-0 mt-1" />
-                <div>
-                  <p className="text-gray-700 text-sm font-medium">
-                    {selectedLocation.barangay}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Lat: {selectedLocation.coordinates.lat.toFixed(4)}, 
-                    Long: {selectedLocation.coordinates.lng.toFixed(4)}
-                  </p>
-                </div>
-              </div>
+                {/* Map */}
+                <div ref={mapRef} className="h-full w-full" />
+                
+                {/* Current location button */}
+                <button 
+                  onClick={handleCurrentLocation}
+                  className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1 sm:gap-2 bg-white py-1.5 sm:py-2 px-3 sm:px-4 rounded-full shadow-lg border border-gray-100 hover:bg-blue-50 transition-colors"
+                >
+                  <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                  <span className="font-medium text-xs sm:text-sm text-gray-700">{isSmallScreen ? 'My Location' : 'Use my current location'}</span>
+                </button>
+              </>
             )}
+          </div>
 
-            <RoleButton 
-              onClick={handleConfirm} 
-              disabled={!selectedLocation}
-              className="w-full flex items-center justify-center gap-2 h-12 rounded-lg text-white font-medium bg-blue-600 hover:bg-blue-700"
-            >
-              Confirm Location
-              <ChevronRight className="h-5 w-5" />
-            </RoleButton>
+          {/* Location selection box */}
+          <div className="px-4 sm:px-5 py-3 sm:py-4 bg-white border-t border-gray-100">
+            <div className="flex flex-col gap-3 sm:gap-4">
+              {selectedLocation && (
+                <div className="bg-blue-50 p-3 rounded-lg flex items-start gap-3">
+                  <MapPin className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-gray-700 text-sm font-medium truncate">
+                      {selectedLocation.barangay}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Lat: {selectedLocation.coordinates.lat.toFixed(4)}, 
+                      Long: {selectedLocation.coordinates.lng.toFixed(4)}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <RoleButton 
+                onClick={handleConfirm} 
+                disabled={!selectedLocation}
+                className="w-full flex items-center justify-center gap-2 h-10 sm:h-12 rounded-lg text-white font-medium bg-blue-600 hover:bg-blue-700"
+              >
+                Confirm Location
+                <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
+              </RoleButton>
+            </div>
           </div>
         </div>
       </DialogContent>
