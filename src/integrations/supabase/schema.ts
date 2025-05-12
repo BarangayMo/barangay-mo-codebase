@@ -2,10 +2,12 @@
 // This file contains manually added type definitions for tables that are
 // not yet included in the auto-generated types.ts file from Supabase
 
+import { Json } from "./types";
+
 export interface RbiDraftForm {
   id: string;
   user_id: string;
-  form_data: Record<string, any>;
+  form_data: Json;
   last_completed_step: number;
   created_at: string;
   updated_at: string;

@@ -19,6 +19,7 @@ import { LoadingScreen } from "@/components/ui/loading";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { RbiFormData } from "@/types/rbi";
+import { Json } from "@/integrations/supabase/types";
 
 // Define step types
 type Step = {
@@ -62,7 +63,8 @@ export default function RbiRegistration() {
             .single();
             
           if (data && !error) {
-            setFormData(data.form_data as RbiFormData);
+            // Cast the JSON data to RbiFormData type
+            setFormData(data.form_data as unknown as RbiFormData);
             setCurrentStep(data.last_completed_step || 1);
             toast({
               title: "Form Data Loaded",
@@ -220,7 +222,7 @@ export default function RbiRegistration() {
         .from('rbi_draft_forms')
         .upsert({
           user_id: user.id,
-          form_data: formData,
+          form_data: formData as unknown as Json,
           last_completed_step: currentStep
         });
         

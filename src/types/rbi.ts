@@ -1,4 +1,6 @@
 
+import { Json } from "@/integrations/supabase/types";
+
 export interface RbiFormData {
   personalDetails: {
     firstName?: string;
