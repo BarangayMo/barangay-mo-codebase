@@ -1,18 +1,15 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { toast } from "sonner";
 import { 
   Dialog, 
   DialogContent, 
-  DialogFooter, 
   DialogHeader, 
   DialogTitle, 
   DialogTrigger 
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Loader2, MapPin, Search, ZoomIn, ZoomOut } from "lucide-react";
+import { Loader2, MapPin, Search, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getGoogleMapsApiKey } from "@/services/apiKeys";
 
@@ -281,62 +278,15 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[90vw] md:max-w-[700px] max-h-[90vh] overflow-hidden rounded-xl shadow-lg border-2 border-muted/30">
-        <DialogHeader className="pb-2">
-          <DialogTitle className="text-xl font-semibold">Select Your Barangay</DialogTitle>
-        </DialogHeader>
-
-        <div className="py-4 space-y-4 px-1">
-          <div className="flex items-center gap-3">
-            <div className="relative flex-1">
-              <Input
-                placeholder="Search location..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="pr-10 h-11 rounded-lg border-input/60 focus-visible:ring-primary/30"
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute right-0 top-0 h-full"
-                onClick={handleSearch}
-                disabled={isSearching}
-              >
-                {isSearching ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Search className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={() => handleZoom('in')}
-                className="rounded-lg h-11 w-11 border-input/60 hover:bg-accent/80"
-              >
-                <ZoomIn className="h-5 w-5" />
-              </Button>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={() => handleZoom('out')}
-                className="rounded-lg h-11 w-11 border-input/60 hover:bg-accent/80"
-              >
-                <ZoomOut className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-
+      <DialogContent className="sm:max-w-[90vw] md:max-w-[500px] p-0 gap-0 max-h-[90vh] overflow-hidden rounded-xl shadow-lg border border-muted/30">
+        <div className="relative h-[75vh] md:h-[500px]">
+          {/* Map container */}
           {isLoading ? (
-            <div className="h-[400px] w-full flex items-center justify-center bg-muted/30 rounded-xl">
+            <div className="h-full w-full flex items-center justify-center bg-muted/30">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           ) : !apiKey ? (
-            <div className="h-[400px] w-full flex items-center justify-center bg-muted/30 rounded-xl">
+            <div className="h-full w-full flex items-center justify-center bg-muted/30">
               <div className="text-center p-6">
                 <MapPin className="h-12 w-12 mx-auto mb-4 text-gray-400" />
                 <h3 className="text-lg font-medium mb-2">API Key Not Configured</h3>
@@ -346,38 +296,98 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
               </div>
             </div>
           ) : (
-            <div className="h-[400px] w-full relative">
-              <div ref={mapRef} className="h-full w-full rounded-xl overflow-hidden border border-input/30 shadow-sm" />
+            <>
+              {/* Search bar overlay */}
+              <div className="absolute top-4 left-0 right-0 z-10 px-4">
+                <div className="relative w-full">
+                  <div className="relative bg-white rounded-full shadow-lg">
+                    <button 
+                      onClick={() => setIsOpen(false)} 
+                      className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded-full bg-white border border-gray-100 shadow-sm"
+                    >
+                      <X className="h-4 w-4 text-gray-500" />
+                    </button>
+                    <Input
+                      placeholder="Search address"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                      className="pl-12 pr-10 h-12 py-3 rounded-full border-transparent focus-visible:ring-primary/30"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full"
+                      onClick={handleSearch}
+                      disabled={isSearching}
+                    >
+                      {isSearching ? (
+                        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                      ) : (
+                        <Search className="h-5 w-5 text-muted-foreground" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Map */}
+              <div ref={mapRef} className="h-full w-full" />
+              
+              {/* Current location button */}
+              <button 
+                onClick={() => {
+                  if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                      (position) => {
+                        const pos = {
+                          lat: position.coords.latitude,
+                          lng: position.coords.longitude
+                        };
+                        if (map) {
+                          map.setCenter(pos);
+                          map.setZoom(15);
+                          placeMarker(pos, map);
+                          reverseGeocode(pos);
+                        }
+                      },
+                      () => {
+                        toast.error("Error getting your location");
+                      }
+                    );
+                  }
+                }}
+                className="absolute bottom-32 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white py-3 px-5 rounded-full shadow-lg border border-gray-100"
+              >
+                <MapPin className="h-5 w-5 text-red-500" />
+                <span className="font-medium text-red-500">Use my current location</span>
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Location selection box */}
+        <div className="px-4 py-5 bg-white">
+          <h2 className="text-xl font-bold text-gray-800 mb-1">Choose delivery address</h2>
+          <p className="text-gray-500 mb-4">Move the map pin to your exact location.</p>
+
+          {selectedLocation && (
+            <div className="bg-gray-50 p-4 rounded-lg flex items-start gap-3 mb-4">
+              <MapPin className="h-6 w-6 text-gray-500 shrink-0 mt-1" />
+              <p className="text-gray-700 text-base font-medium break-words">
+                {selectedLocation.barangay}
+              </p>
             </div>
           )}
 
-          <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-lg border border-input/20">
-            <MapPin className="h-5 w-5 text-primary shrink-0" />
-            <div className="space-y-1 flex-1">
-              <Label className="text-sm font-medium">Selected Location</Label>
-              <p className="text-sm text-muted-foreground font-medium">
-                {selectedLocation?.barangay || 'No location selected'}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <DialogFooter className="sm:justify-between gap-3 pt-2">
-          <Button 
-            variant="outline" 
-            onClick={() => setIsOpen(false)}
-            className="w-full sm:w-auto rounded-lg border-input/60"
-          >
-            Cancel
-          </Button>
           <Button 
             onClick={handleConfirm} 
             disabled={!selectedLocation}
-            className="w-full sm:w-auto rounded-lg shadow-[0_4px_10px_rgba(0,0,0,0.1)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] transition-all duration-200 font-medium"
+            className="w-full h-14 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold text-lg shadow-sm"
           >
-            Confirm Location
+            Confirm
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

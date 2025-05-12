@@ -6,18 +6,20 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 
 export const DesktopSidebar = () => {
   return (
-    <div className="hidden md:block w-64 fixed top-0 left-0 h-full bg-white border-r shadow-sm z-20">
-      <div className="flex flex-col h-full">
-        <div className="flex items-center justify-center h-16 px-4 border-b">
-          <Logo />
+    <SidebarProvider>
+      <div className="hidden md:block w-64 fixed top-0 left-0 h-full bg-white border-r shadow-sm z-20">
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-center h-16 px-4 border-b">
+            <Logo />
+          </div>
+        
+          <div className="flex-1 overflow-hidden">
+            <EnhancedSidebar />
+          </div>
+        
+          <HelpSection />
         </div>
-      
-        <div className="flex-1 overflow-hidden">
-          <EnhancedSidebar />
-        </div>
-      
-        <HelpSection />
       </div>
-    </div>
+    </SidebarProvider>
   );
 };

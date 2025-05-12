@@ -11,7 +11,6 @@ import {
 import { sidebarMenuItems } from "@/config/sidebar-menu";
 import { useSidebarState } from "@/hooks/use-sidebar-state";
 import { SidebarMenuItem } from "./sidebar/SidebarMenuItem";
-import { SidebarProvider } from "@/components/ui/sidebar";
 
 interface EnhancedSidebarProps {
   isCollapsed?: boolean;

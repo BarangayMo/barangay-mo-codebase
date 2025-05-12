@@ -12,10 +12,12 @@ export interface MediaBucket {
 export interface MediaFile {
   id: string;
   user_id?: string;
+  name?: string;
   filename: string;
   alt_text?: string;
   uploaded_at: string;
   file_size: number;
+  size?: number;
   content_type: string;
   bucket_name: string;
   file_url: string;
@@ -35,4 +37,16 @@ export interface FileOperation {
   success: boolean;
   message?: string;
   file?: MediaFile;
+}
+
+// Alias for backward compatibility
+export type MediaLibraryFiltersType = MediaLibraryFilters;
+
+// Type definition for MediaFile with Profile data
+export interface MediaFileWithProfile extends MediaFile {
+  profile?: {
+    first_name?: string;
+    last_name?: string;
+    avatar_url?: string;
+  };
 }
