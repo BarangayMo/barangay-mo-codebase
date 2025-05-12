@@ -13,8 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Loader2, MapPin, Search, X, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { RoleButton } from "@/components/ui/role-button";
-import L from 'leaflet';
+// Import Leaflet only in client component context
 import 'leaflet/dist/leaflet.css';
+// We will dynamically import Leaflet below
 
 // Define types for our location data
 interface MapLocationModalProps {
@@ -25,8 +26,8 @@ interface MapLocationModalProps {
 export function MapLocationModal({ children, onLocationSelected }: MapLocationModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [map, setMap] = useState<L.Map | null>(null);
-  const [marker, setMarker] = useState<L.Marker | null>(null);
+  const [map, setMap] = useState<any | null>(null);
+  const [marker, setMarker] = useState<any | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{ barangay: string; coordinates: { lat: number; lng: number } } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -36,20 +37,34 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
   useEffect(() => {
     if (!isOpen || !mapRef.current) return;
     
-    // Fix for Leaflet icon issue in webpack/vite
-    const fixLeafletIcon = () => {
-      // @ts-ignore - Leaflet typings issue
-      delete L.Icon.Default.prototype._getIconUrl;
-      
-      L.Icon.Default.mergeOptions({
-        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-      });
-    };
+    // Dynamically import Leaflet to avoid SSR issues
+    const initLeaflet = async () => {
+      try {
+        // Dynamic import of Leaflet
+        const L = await import('leaflet');
+        
+        // Fix for Leaflet icon issue in webpack/vite
+        const fixLeafletIcon = () => {
+          // @ts-ignore - Leaflet typings issue
+          delete L.Icon.Default.prototype._getIconUrl;
+          
+          L.Icon.Default.mergeOptions({
+            iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+          });
+        };
 
-    fixLeafletIcon();
-    initializeMap();
+        fixLeafletIcon();
+        initializeMap(L);
+      } catch (error) {
+        console.error('Failed to load Leaflet:', error);
+        toast.error('Failed to load map. Please try again later.');
+        setIsLoading(false);
+      }
+    };
+    
+    initLeaflet();
     
     return () => {
       // Cleanup function
@@ -60,7 +75,7 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
     };
   }, [isOpen]);
 
-  const initializeMap = () => {
+  const initializeMap = async (L: any) => {
     if (!mapRef.current) return;
     
     setIsLoading(true);
@@ -91,35 +106,35 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
           };
           
           mapInstance.setView([userPosition.lat, userPosition.lng], 15);
-          placeMarker(userPosition, mapInstance);
+          placeMarker(userPosition, mapInstance, L);
           reverseGeocode(userPosition);
         },
         () => {
           // Fallback if user denies location permission
-          placeMarker(defaultPosition, mapInstance);
+          placeMarker(defaultPosition, mapInstance, L);
           reverseGeocode(defaultPosition);
         }
       );
     } else {
       // Fallback for browsers that don't support geolocation
-      placeMarker(defaultPosition, mapInstance);
+      placeMarker(defaultPosition, mapInstance, L);
       reverseGeocode(defaultPosition);
     }
 
     // Add click event listener to the map
-    mapInstance.on('click', (event: L.LeafletMouseEvent) => {
+    mapInstance.on('click', (event: any) => {
       const position = {
         lat: event.latlng.lat,
         lng: event.latlng.lng
       };
-      placeMarker(position, mapInstance);
+      placeMarker(position, mapInstance, L);
       reverseGeocode(position);
     });
 
     setIsLoading(false);
   };
 
-  const placeMarker = (position: { lat: number; lng: number }, mapInstance: L.Map) => {
+  const placeMarker = (position: { lat: number; lng: number }, mapInstance: any, L: any) => {
     if (marker) {
       mapInstance.removeLayer(marker);
     }
@@ -214,7 +229,10 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
         };
         
         map.setView([position.lat, position.lng], 15);
-        placeMarker(position, map);
+        
+        // Dynamically import Leaflet for marker placement
+        const L = await import('leaflet');
+        placeMarker(position, map, L);
         reverseGeocode(position);
       } else {
         toast.error("Couldn't find that location. Please try a different search.");
@@ -246,6 +264,30 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
     
     onLocationSelected(selectedLocation);
     setIsOpen(false);
+  };
+
+  const handleCurrentLocation = async () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const pos = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+          
+          if (map) {
+            map.setView([pos.lat, pos.lng], 15);
+            // Dynamically import Leaflet for marker placement
+            const L = await import('leaflet');
+            placeMarker(pos, map, L);
+            reverseGeocode(pos);
+          }
+        },
+        () => {
+          toast.error("Error getting your location");
+        }
+      );
+    }
   };
 
   return (
@@ -301,26 +343,7 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
               
               {/* Current location button */}
               <button 
-                onClick={() => {
-                  if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                      (position) => {
-                        const pos = {
-                          lat: position.coords.latitude,
-                          lng: position.coords.longitude
-                        };
-                        if (map) {
-                          map.setView([pos.lat, pos.lng], 15);
-                          placeMarker(pos, map);
-                          reverseGeocode(pos);
-                        }
-                      },
-                      () => {
-                        toast.error("Error getting your location");
-                      }
-                    );
-                  }
-                }}
+                onClick={handleCurrentLocation}
                 className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white py-2 px-4 rounded-full shadow-lg border border-gray-100"
               >
                 <MapPin className="h-5 w-5 text-red-500" />
