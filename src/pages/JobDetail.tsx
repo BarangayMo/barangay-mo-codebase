@@ -1,16 +1,20 @@
+// JobDetail.tsx
+
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, ArrowRight, ArrowLeftRight, Building, MapPin, Banknote, Clock,
-  GraduationCap, Briefcase, Bookmark, Share2, Users
+  GraduationCap, Briefcase, Bookmark, Share2, Users, Star
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function JobDetail() {
   const { id } = useParams();
@@ -20,18 +24,15 @@ export default function JobDetail() {
   const [isSaved, setIsSaved] = useState(false);
   const [savingStatus, setSavingStatus] = useState(false);
   const [activeTab, setActiveTab] = useState("description");
+  const [otherJobs, setOtherJobs] = useState([]);
+  const [reviewForm, setReviewForm] = useState({ name: "", rating: "", comment: "" });
   const { toast } = useToast();
   const { isAuthenticated, user } = useAuth();
 
   useEffect(() => {
     const fetchJobDetails = async () => {
       try {
-        const { data, error } = await supabase
-          .from('jobs')
-          .select('*')
-          .eq('id', id)
-          .single();
-
+        const { data, error } = await supabase.from('jobs').select('*').eq('id', id).single();
         if (error) throw error;
         setJob(data);
 
@@ -45,6 +46,13 @@ export default function JobDetail() {
 
           if (!savedJobError) setIsSaved(!!savedJob);
         }
+
+        const { data: others } = await supabase
+          .from('jobs')
+          .select('id, title, company, location')
+          .neq('id', id)
+          .limit(3);
+        setOtherJobs(others || []);
       } catch (error) {
         console.error('Error fetching job details:', error);
         toast({ title: "Error", description: "Failed to fetch job details", variant: "destructive" });
@@ -52,6 +60,7 @@ export default function JobDetail() {
         setLoading(false);
       }
     };
+
     if (id) fetchJobDetails();
   }, [id, isAuthenticated, user, toast]);
 
@@ -85,6 +94,12 @@ export default function JobDetail() {
     toast({ title: "Link copied", description: "Job link copied to clipboard" });
   };
 
+  const handleReviewSubmit = (e) => {
+    e.preventDefault();
+    toast({ title: "Review submitted", description: "Thanks for your feedback!" });
+    setReviewForm({ name: "", rating: "", comment: "" });
+  };
+
   return (
     <Layout>
       <div className="max-w-4xl mx-auto px-4 py-8">
@@ -105,6 +120,7 @@ export default function JobDetail() {
                 <p className="text-gray-500 flex items-center mt-1"><MapPin size={14} className="mr-1" /> {job.location || '—'}</p>
               </div>
               <div className="flex items-center gap-2">
+                <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">Apply Now</Button>
                 <Button size="sm" variant="outline" onClick={handleSaveJob} disabled={savingStatus}>
                   <Bookmark size={14} className="mr-2" /> {isSaved ? 'Saved' : 'Save Job'}
                 </Button>
@@ -114,7 +130,7 @@ export default function JobDetail() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm text-gray-700">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm text-gray-700 p-4 bg-white rounded-lg border">
               <div><p className="text-gray-500">Category</p><p className="font-medium">{job.category || 'Product'}</p></div>
               <div><p className="text-gray-500">Availability</p><p className="font-medium">{job.availability || '—'}</p></div>
               <div><p className="text-gray-500">Work Approach</p><p className="font-medium">{job.approach || 'Onsite'}</p></div>
@@ -174,16 +190,41 @@ export default function JobDetail() {
             )}
 
             {activeTab === 'review' && (
-              <div className="pt-4 text-sm text-gray-600">No reviews yet. Check back later.</div>
+              <div className="pt-4 space-y-4 max-w-md">
+                <form onSubmit={handleReviewSubmit} className="space-y-4">
+                  <Input
+                    placeholder="Your Name"
+                    value={reviewForm.name}
+                    onChange={(e) => setReviewForm({ ...reviewForm, name: e.target.value })}
+                  />
+                  <Input
+                    placeholder="Rating (1–5)"
+                    type="number"
+                    max={5}
+                    min={1}
+                    value={reviewForm.rating}
+                    onChange={(e) => setReviewForm({ ...reviewForm, rating: e.target.value })}
+                  />
+                  <Textarea
+                    placeholder="Write your feedback..."
+                    value={reviewForm.comment}
+                    onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
+                  />
+                  <Button type="submit" className="w-full bg-indigo-600 text-white">Submit Review</Button>
+                </form>
+              </div>
             )}
 
             {activeTab === 'other' && (
-              <div className="pt-4 text-sm text-gray-600">Other job listings will be displayed here soon.</div>
+              <div className="pt-4 space-y-3 text-sm text-gray-700">
+                {otherJobs.length > 0 ? otherJobs.map((ojob) => (
+                  <div key={ojob.id} className="p-4 rounded-lg border hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/jobs/${ojob.id}`)}>
+                    <h4 className="font-medium text-gray-800">{ojob.title}</h4>
+                    <p className="text-gray-500 text-sm">{ojob.company} — {ojob.location}</p>
+                  </div>
+                )) : <p>No other jobs available.</p>}
+              </div>
             )}
-
-            <div className="pt-6">
-              <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 text-sm rounded-lg">Apply Now</Button>
-            </div>
           </div>
         )}
       </div>
