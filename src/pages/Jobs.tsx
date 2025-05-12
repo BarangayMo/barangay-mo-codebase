@@ -1,347 +1,273 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
-import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { Briefcase, Search, Filter, MapPin, Building, Clock, Banknote, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Building2, MapPin, Clock, ChevronDown, Plus, Filter, X } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-import { 
-  Drawer, 
-  DrawerContent, 
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-  DrawerFooter,
-  DrawerClose
-} from "@/components/ui/drawer";
-
-const sortOptions = [
-  { label: "Most Recent", value: "recent" },
-  { label: "Highest Paid", value: "salary-high" },
-  { label: "Lowest Paid", value: "salary-low" },
-];
-
-const jobs = [
-  {
-    id: 1,
-    title: "Administrative Assistant",
-    company: "XYZ Corporation",
-    location: "Barangay 2, Makati City",
-    salary: "₱18,000 - ₱22,000 per month",
-    type: "Full-time",
-    posted: "Posted 2 days ago",
-    description: "We are looking for an Administrative Assistant to join our team. The ideal candidate will be responsible for handling office tasks, filing documents, answering phones, and providing support to the management team.",
-    requirements: [
-      "At least high school graduate, college degree preferred",
-      "Proficient in MS Office applications",
-      "Excellent organizational skills"
-    ],
-    image: "/lovable-uploads/3dcb24b2-de0f-453d-b088-ff9643f1ebbc.png"
-  },
-  {
-    id: 2,
-    title: "Customer Service Representative",
-    company: "ABC Company",
-    location: "Barangay 5, Quezon City",
-    salary: "₱15,000 - ₱20,000 per month",
-    type: "Full-time",
-    posted: "Posted 5 days ago",
-    description: "We are hiring a Customer Service Representative to provide excellent customer service and support. Responsibilities include answering inquiries, resolving complaints, and processing orders.",
-    requirements: [
-      "High school diploma or equivalent",
-      "Excellent communication skills",
-      "Ability to multitask and prioritize"
-    ],
-    image: "/lovable-uploads/7a5fdb55-e1bf-49fb-956a-2ac513bdbcd5.png"
-  },
-  {
-    id: 3,
-    title: "Data Entry Clerk",
-    company: "123 Data Solutions",
-    location: "Barangay 10, Pasig City",
-    salary: "₱16,000 - ₱19,000 per month",
-    type: "Part-time",
-    posted: "Posted 1 week ago",
-    description: "We need a Data Entry Clerk to accurately input and maintain data in our systems. The ideal candidate will have strong attention to detail and proficiency in data entry software.",
-    requirements: [
-      "High school diploma or equivalent",
-      "Proficient in data entry",
-      "Strong attention to detail"
-    ],
-    image: "/lovable-uploads/bf986c64-ee34-427c-90ad-0512f2e7f353.png"
-  },
-  {
-    id: 4,
-    title: "Delivery Driver",
-    company: "Fast Delivery Services",
-    location: "Barangay 15, Mandaluyong City",
-    salary: "₱17,000 - ₱21,000 per month",
-    type: "Full-time",
-    posted: "Posted 2 weeks ago",
-    description: "We are seeking a Delivery Driver to safely and efficiently deliver packages to our customers. The ideal candidate will have a valid driver's license and a clean driving record.",
-    requirements: [
-      "Valid driver's license",
-      "Clean driving record",
-      "Ability to lift heavy packages"
-    ],
-    image: "/lovable-uploads/3dcb24b2-de0f-453d-b088-ff9643f1ebbc.png"
-  },
-  {
-    id: 5,
-    title: "Sales Associate",
-    company: "Retail Emporium",
-    location: "Barangay 3, Taguig City",
-    salary: "₱15,000 - ₱18,000 per month",
-    type: "Part-time",
-    posted: "Posted 3 weeks ago",
-    description: "We are looking for a Sales Associate to assist customers and promote our products. The ideal candidate will have excellent customer service skills and a passion for sales.",
-    requirements: [
-      "High school diploma or equivalent",
-      "Excellent customer service skills",
-      "Ability to work in a fast-paced environment"
-    ],
-    image: "/lovable-uploads/7a5fdb55-e1bf-49fb-956a-2ac513bdbcd5.png"
-  },
-];
-
-// Filter component for mobile drawer
-const JobFilters = ({ onApplyFilters }) => {
-  const [search, setSearch] = useState("");
-  const [jobType, setJobType] = useState("");
-  const [location, setLocation] = useState("");
-  const [salaryMin, setSalaryMin] = useState("");
-  const [salaryMax, setSalaryMax] = useState("");
-  
-  const handleApply = () => {
-    onApplyFilters({
-      search,
-      jobType,
-      location,
-      salaryMin,
-      salaryMax
-    });
-  };
-  
-  return (
-    <div className="space-y-4">
-      <div>
-        <label className="text-sm font-medium mb-2 block">Search</label>
-        <Input
-          placeholder="Search jobs..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full"
-        />
-      </div>
-
-      <div>
-        <label className="text-sm font-medium mb-2 block">Job Type</label>
-        <Select value={jobType} onValueChange={setJobType}>
-          <SelectTrigger>
-            <SelectValue placeholder="All Types" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="full-time">Full-time</SelectItem>
-            <SelectItem value="part-time">Part-time</SelectItem>
-            <SelectItem value="contract">Contract</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <label className="text-sm font-medium mb-2 block">Location</label>
-        <Select value={location} onValueChange={setLocation}>
-          <SelectTrigger>
-            <SelectValue placeholder="All Locations" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Locations</SelectItem>
-            <SelectItem value="makati">Makati</SelectItem>
-            <SelectItem value="quezon">Quezon City</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <label className="text-sm font-medium mb-2 block">Salary Range</label>
-        <div className="grid grid-cols-2 gap-2">
-          <Input placeholder="Min" type="number" value={salaryMin} onChange={(e) => setSalaryMin(e.target.value)} />
-          <Input placeholder="Max" type="number" value={salaryMax} onChange={(e) => setSalaryMax(e.target.value)} />
-        </div>
-      </div>
-
-      <Button onClick={handleApply} className="w-full">
-        Apply Filters
-      </Button>
-    </div>
-  );
-};
+import { Input } from "@/components/ui/input";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useNavigate } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
 
 export default function Jobs() {
-  const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState("recent");
-  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [savedJobs, setSavedJobs] = useState({});
+  const { isAuthenticated, user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
-  const handleApplyFilters = (filters) => {
-    setSearch(filters.search);
-    // Apply other filters here
-    setIsFiltersOpen(false);
+  // Fetch jobs
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('jobs')
+          .select('*')
+          .order('created_at', { ascending: false });
+          
+        if (error) throw error;
+        
+        setJobs(data || []);
+        
+        // If authenticated, fetch saved jobs
+        if (isAuthenticated && user) {
+          const { data: savedJobsData, error: savedJobsError } = await supabase
+            .from('saved_jobs')
+            .select('job_id')
+            .eq('user_id', user.id);
+            
+          if (!savedJobsError && savedJobsData) {
+            const savedJobsMap = {};
+            savedJobsData.forEach(item => {
+              savedJobsMap[item.job_id] = true;
+            });
+            setSavedJobs(savedJobsMap);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching jobs:', error);
+        toast({
+          title: "Failed to fetch jobs",
+          description: "Please try refreshing the page",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchJobs();
+  }, [isAuthenticated, user, toast]);
+
+  // Filter jobs by search query
+  const filteredJobs = jobs.filter(job => {
+    const query = searchQuery.toLowerCase();
+    return (
+      job.title.toLowerCase().includes(query) ||
+      job.company.toLowerCase().includes(query) ||
+      job.location.toLowerCase().includes(query) ||
+      job.category.toLowerCase().includes(query)
+    );
+  });
+
+  // Save/unsave job
+  const handleSaveJob = async (jobId) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication required",
+        description: "Please login to save jobs",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      if (savedJobs[jobId]) {
+        // Unsave job
+        await supabase
+          .from('saved_jobs')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('job_id', jobId);
+          
+        setSavedJobs(prev => {
+          const newState = { ...prev };
+          delete newState[jobId];
+          return newState;
+        });
+        
+        toast({
+          title: "Job removed from saved",
+          description: "Job has been removed from your saved list"
+        });
+      } else {
+        // Save job
+        await supabase
+          .from('saved_jobs')
+          .insert({
+            user_id: user.id,
+            job_id: jobId
+          });
+          
+        setSavedJobs(prev => ({
+          ...prev,
+          [jobId]: true
+        }));
+        
+        toast({
+          title: "Job saved",
+          description: "Job has been added to your saved list"
+        });
+      }
+    } catch (error) {
+      console.error('Error saving job:', error);
+      toast({
+        title: "Action failed",
+        description: "Please try again",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const viewJobDetails = (jobId) => {
+    navigate(`/jobs/${jobId}`);
   };
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto px-4 py-6 md:py-8">
-        <div className="flex justify-between items-center mb-6">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold mb-2">Job Board</h1>
-            <p className="text-muted-foreground">
-              Find employment opportunities in your community
-            </p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Find Your Next Job</h1>
+            <p className="text-gray-600">Browse job opportunities in your barangay and beyond</p>
           </div>
-          <Button className="bg-official hover:bg-official-dark hidden sm:flex">
-            <Plus className="w-4 h-4 mr-2" />
-            Post a Job
-          </Button>
-        </div>
-
-        {/* Mobile post job button */}
-        <div className="flex sm:hidden mb-4">
-          <Button className="bg-official hover:bg-official-dark w-full">
-            <Plus className="w-4 h-4 mr-2" />
-            Post a Job
-          </Button>
-        </div>
-
-        <div className="grid md:grid-cols-[300px,1fr] gap-6">
-          {/* Filters Section - Desktop */}
-          <div className="hidden md:block space-y-6">
-            <div className="bg-white p-6 rounded-lg border shadow-sm">
-              <h2 className="text-lg font-semibold mb-4">Filters</h2>
-              <JobFilters onApplyFilters={handleApplyFilters} />
+          
+          <div className="w-full md:w-auto flex items-center gap-2 mt-4 md:mt-0">
+            <div className="relative w-full md:w-80">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <Input 
+                type="search"
+                placeholder="Search jobs..."
+                className="pl-10 border-blue-200 focus:border-blue-500"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
+            <Button variant="outline" className="border-blue-200">
+              <Filter size={18} className="mr-2" /> Filter
+            </Button>
           </div>
-
-          {/* Filters Drawer - Mobile */}
-          <div className="md:hidden mb-4">
-            <Drawer open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
-              <DrawerTrigger asChild>
-                <Button variant="outline" className="w-full">
-                  <Filter className="w-4 h-4 mr-2" />
-                  Filters
-                </Button>
-              </DrawerTrigger>
-              <DrawerContent>
-                <DrawerHeader>
-                  <DrawerTitle>Job Filters</DrawerTitle>
-                </DrawerHeader>
-                <div className="p-4">
-                  <JobFilters onApplyFilters={handleApplyFilters} />
-                </div>
-                <DrawerFooter>
-                  <DrawerClose asChild>
-                    <Button variant="outline">Cancel</Button>
-                  </DrawerClose>
-                </DrawerFooter>
-              </DrawerContent>
-            </Drawer>
-          </div>
-
-          {/* Jobs List Section */}
-          <div className="space-y-4 md:space-y-6">
-            <div className="flex justify-between items-center">
-              <p className="text-muted-foreground text-sm">
-                Showing {jobs.length} jobs
-              </p>
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sortOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-4">
-              {jobs.map((job) => (
-                <div
-                  key={job.id}
-                  className="bg-white rounded-lg border p-4 md:p-6 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex flex-col md:flex-row md:gap-4">
-                    <img
-                      src={job.image}
-                      alt={job.company}
-                      className="w-16 h-16 md:w-20 md:h-20 rounded-lg object-cover mb-4 md:mb-0"
-                    />
-                    <div className="flex-1">
-                      <div className="flex flex-col md:flex-row md:justify-between md:items-start">
-                        <div>
-                          <h3 className="text-xl font-semibold mb-1">{job.title}</h3>
-                          <div className="flex flex-wrap items-center gap-2 md:gap-4 text-sm text-muted-foreground mb-2">
-                            <span className="flex items-center gap-1">
-                              <Building2 className="w-4 h-4" />
-                              {job.company}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <MapPin className="w-4 h-4" />
-                              {job.location}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Clock className="w-4 h-4" />
-                              {job.posted}
-                            </span>
-                          </div>
-                        </div>
-                        <span className="inline-flex px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 mt-2 md:mt-0 w-fit">
-                          {job.type}
-                        </span>
-                      </div>
-
-                      <p className="mt-4 text-muted-foreground line-clamp-2 md:line-clamp-none">{job.description}</p>
-                      
-                      <div className="mt-4">
-                        <h4 className="font-medium mb-2">Requirements:</h4>
-                        <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                          {job.requirements.slice(0, 2).map((req, index) => (
-                            <li key={index}>{req}</li>
-                          ))}
-                          {job.requirements.length > 2 && (
-                            <li className="md:hidden">+ {job.requirements.length - 2} more</li>
-                          )}
-                          {job.requirements.slice(2).map((req, index) => (
-                            <li key={index} className="hidden md:list-item">{req}</li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      <div className="mt-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                        <span className="font-semibold text-lg">{job.salary}</span>
-                        <div className="flex flex-wrap gap-3 w-full md:w-auto">
-                          <Button variant="outline" className="flex-1 md:flex-none">Save Job</Button>
-                          <Button className="flex-1 md:flex-none bg-resident hover:bg-resident-dark text-white">
-                            Apply Now
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {loading ? (
+            // Loading skeletons
+            Array(6).fill(0).map((_, index) => (
+              <div key={index} className="border rounded-xl overflow-hidden shadow-sm p-6 bg-white">
+                <Skeleton className="h-6 w-3/4 mb-2" />
+                <Skeleton className="h-5 w-1/2 mb-4" />
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-3/4" />
+                <div className="mt-4 pt-4 border-t">
+                  <div className="flex flex-wrap gap-2">
+                    <Skeleton className="h-8 w-20" />
+                    <Skeleton className="h-8 w-24" />
                   </div>
                 </div>
-              ))}
+                <div className="mt-4 flex justify-between">
+                  <Skeleton className="h-10 w-28" />
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                </div>
+              </div>
+            ))
+          ) : filteredJobs.length === 0 ? (
+            <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center py-12">
+              <Briefcase className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-4 text-lg font-medium text-gray-900">No jobs found</h3>
+              <p className="mt-2 text-gray-500">Try adjusting your search criteria</p>
             </div>
-          </div>
+          ) : (
+            filteredJobs.map((job) => (
+              <div key={job.id} className="border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-white">
+                <div className="p-6">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 mb-1">{job.title}</h3>
+                      <p className="text-gray-600 font-medium">{job.company}</p>
+                    </div>
+                    {job.logo_url ? (
+                      <img 
+                        src={job.logo_url} 
+                        alt={`${job.company} logo`} 
+                        className="w-12 h-12 object-contain rounded-md"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 bg-blue-100 rounded-md flex items-center justify-center">
+                        <Building className="h-6 w-6 text-blue-600" />
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="mt-4 space-y-2">
+                    <div className="flex items-center text-gray-600">
+                      <MapPin size={16} className="mr-2 text-gray-400" />
+                      <span>{job.location}</span>
+                    </div>
+                    
+                    {job.salary && (
+                      <div className="flex items-center text-gray-600">
+                        <Banknote size={16} className="mr-2 text-gray-400" />
+                        <span>{job.salary}</span>
+                      </div>
+                    )}
+                    
+                    {job.availability && (
+                      <div className="flex items-center text-gray-600">
+                        <Clock size={16} className="mr-2 text-gray-400" />
+                        <span>{job.availability}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="mt-4 pt-4 border-t">
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                        {job.category}
+                      </Badge>
+                      {job.work_approach && (
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                          {job.work_approach}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 flex justify-between">
+                    <Button 
+                      onClick={() => viewJobDetails(job.id)} 
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      View Details
+                    </Button>
+                    
+                    <Button
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => handleSaveJob(job.id)}
+                      className={`rounded-full ${savedJobs[job.id] ? 'text-blue-600' : 'text-gray-400'}`}
+                    >
+                      <Bookmark className={`h-5 w-5 ${savedJobs[job.id] ? 'fill-blue-600' : ''}`} />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </Layout>

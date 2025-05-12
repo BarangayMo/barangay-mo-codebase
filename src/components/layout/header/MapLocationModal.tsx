@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { toast } from "sonner";
 import { 
@@ -6,7 +5,8 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogTrigger 
+  DialogTrigger, 
+  DialogFooter 
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -301,10 +301,14 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[90vw] md:max-w-[500px] p-0 gap-0 max-h-[90vh] overflow-hidden rounded-xl shadow-lg border border-gray-200">
-        <DialogHeader className="sr-only">
-          <DialogTitle>Select Barangay</DialogTitle>
+      <DialogContent className="sm:max-w-[95vw] max-h-[90vh] overflow-hidden">
+        <DialogHeader>
+          <DialogTitle>Select Your Barangay</DialogTitle>
+          <DialogDescription>
+            Please select your barangay from the map or search for it by name.
+          </DialogDescription>
         </DialogHeader>
+        
         <div className="relative h-[70vh] md:h-[450px]">
           {/* Map container */}
           {isLoading ? (

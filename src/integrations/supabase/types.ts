@@ -150,6 +150,72 @@ export type Database = {
         }
         Relationships: []
       }
+      jobs: {
+        Row: {
+          availability: string | null
+          category: string
+          company: string
+          created_at: string | null
+          description: string
+          education: string | null
+          experience: string
+          id: string
+          is_open: boolean | null
+          license: string | null
+          location: string
+          logo_url: string | null
+          qualifications: string[] | null
+          responsibilities: string[]
+          salary: string | null
+          skills: string[] | null
+          title: string
+          updated_at: string | null
+          work_approach: string | null
+        }
+        Insert: {
+          availability?: string | null
+          category: string
+          company: string
+          created_at?: string | null
+          description: string
+          education?: string | null
+          experience: string
+          id?: string
+          is_open?: boolean | null
+          license?: string | null
+          location: string
+          logo_url?: string | null
+          qualifications?: string[] | null
+          responsibilities: string[]
+          salary?: string | null
+          skills?: string[] | null
+          title: string
+          updated_at?: string | null
+          work_approach?: string | null
+        }
+        Update: {
+          availability?: string | null
+          category?: string
+          company?: string
+          created_at?: string | null
+          description?: string
+          education?: string | null
+          experience?: string
+          id?: string
+          is_open?: boolean | null
+          license?: string | null
+          location?: string
+          logo_url?: string | null
+          qualifications?: string[] | null
+          responsibilities?: string[]
+          salary?: string | null
+          skills?: string[] | null
+          title?: string
+          updated_at?: string | null
+          work_approach?: string | null
+        }
+        Relationships: []
+      }
       media_files: {
         Row: {
           category: string
@@ -218,6 +284,35 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      saved_jobs: {
+        Row: {
+          created_at: string | null
+          id: string
+          job_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          job_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          job_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_jobs_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       system_api_keys: {
         Row: {

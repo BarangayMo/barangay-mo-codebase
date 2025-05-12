@@ -1,10 +1,10 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Loader2, Save } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import PersonalDetailsForm from "@/components/rbi/PersonalDetailsForm";
 import AddressDetailsForm from "@/components/rbi/AddressDetailsForm";
@@ -16,6 +16,8 @@ import HousingDetailsForm from "@/components/rbi/HousingDetailsForm";
 import BeneficiaryDetailsForm from "@/components/rbi/BeneficiaryDetailsForm";
 import RbiReview from "@/components/rbi/RbiReview";
 import { LoadingScreen } from "@/components/ui/loading";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 // Define step types
 type Step = {
@@ -23,78 +25,164 @@ type Step = {
   name: string;
   description: string;
   component: React.ReactNode;
+  requiredFields: { section: string; fields: string[] }[];
 };
 
 export default function RbiRegistration() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    personalDetails: {},
+    address: {},
+    otherDetails: {},
+    parentDetails: {},
+    education: {},
+    health: {},
+    housing: {},
+    beneficiary: {}
+  });
+  const [errors, setErrors] = useState({});
   
-  // Define steps with descriptions
+  // Load saved form data if available
+  useEffect(() => {
+    const loadSavedData = async () => {
+      if (user?.id) {
+        setIsLoading(true);
+        try {
+          const { data, error } = await supabase
+            .from('rbi_draft_forms')
+            .select('form_data, last_completed_step')
+            .eq('user_id', user.id)
+            .single();
+            
+          if (data && !error) {
+            setFormData(data.form_data);
+            setCurrentStep(data.last_completed_step || 1);
+            toast({
+              title: "Form Data Loaded",
+              description: "Your previously saved information has been loaded.",
+            });
+          }
+        } catch (error) {
+          console.error("Error loading saved data:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    loadSavedData();
+  }, [user, toast]);
+  
+  // Define steps with descriptions and required fields
   const steps: Step[] = [
     { 
       id: 1, 
       name: "Personal Details", 
       description: "Basic information about yourself",
-      component: <PersonalDetailsForm /> 
+      component: <PersonalDetailsForm formData={formData} setFormData={setFormData} errors={errors} setErrors={setErrors} />,
+      requiredFields: [{ section: "personalDetails", fields: ["firstName", "lastName"] }]
     },
     { 
       id: 2, 
       name: "Address", 
       description: "Where you currently reside", 
-      component: <AddressDetailsForm /> 
+      component: <AddressDetailsForm formData={formData} setFormData={setFormData} errors={errors} setErrors={setErrors} />,
+      requiredFields: [{ section: "address", fields: ["street", "barangay"] }]
     },
     { 
       id: 3, 
       name: "Other Details", 
       description: "Additional personal information", 
-      component: <OtherDetailsForm /> 
+      component: <OtherDetailsForm formData={formData} setFormData={setFormData} errors={errors} setErrors={setErrors} />,
+      requiredFields: [{ section: "otherDetails", fields: ["dateOfBirth", "sex"] }]
     },
     { 
       id: 4, 
       name: "Parent Details", 
       description: "Information about your parents", 
-      component: <ParentDetailsForm /> 
+      component: <ParentDetailsForm formData={formData} setFormData={setFormData} errors={errors} setErrors={setErrors} />,
+      requiredFields: []  // Not requiring parent details
     },
     { 
       id: 5, 
       name: "Education", 
       description: "Educational attainment and skills", 
-      component: <EducationDetailsForm /> 
+      component: <EducationDetailsForm formData={formData} setFormData={setFormData} errors={errors} setErrors={setErrors} />,
+      requiredFields: [{ section: "education", fields: ["attainment"] }]
     },
     { 
       id: 6, 
       name: "Health Details", 
       description: "Health conditions and information", 
-      component: <HealthDetailsForm /> 
+      component: <HealthDetailsForm formData={formData} setFormData={setFormData} errors={errors} setErrors={setErrors} />,
+      requiredFields: [{ section: "health", fields: ["hasCondition"] }]
     },
     { 
       id: 7, 
       name: "Housing", 
       description: "Property and residence information", 
-      component: <HousingDetailsForm /> 
+      component: <HousingDetailsForm formData={formData} setFormData={setFormData} errors={errors} setErrors={setErrors} />,
+      requiredFields: []  // Not requiring housing details
     },
     { 
       id: 8, 
       name: "Beneficiary Programs", 
       description: "Government assistance programs", 
-      component: <BeneficiaryDetailsForm /> 
+      component: <BeneficiaryDetailsForm formData={formData} setFormData={setFormData} errors={errors} setErrors={setErrors} />,
+      requiredFields: []  // Not requiring beneficiary details
     },
     { 
       id: 9, 
       name: "Review", 
       description: "Verify your information before submission", 
-      component: <RbiReview /> 
+      component: <RbiReview formData={formData} />,
+      requiredFields: []  // No validation on review page
     },
   ];
   
   // Calculate progress
   const progress = (currentStep / steps.length) * 100;
   
+  // Validate the current step
+  const validateStep = () => {
+    const currentStepData = steps.find(step => step.id === currentStep);
+    if (!currentStepData || !currentStepData.requiredFields.length) return true;
+    
+    let isValid = true;
+    const newErrors = { ...errors };
+    
+    currentStepData.requiredFields.forEach(({ section, fields }) => {
+      fields.forEach(field => {
+        if (!formData[section] || !formData[section][field]) {
+          isValid = false;
+          if (!newErrors[section]) newErrors[section] = {};
+          newErrors[section][field] = "This field is required";
+        }
+      });
+    });
+    
+    setErrors(newErrors);
+    return isValid;
+  };
+  
   const handleNext = () => {
     if (currentStep < steps.length) {
+      // Validate before proceeding
+      if (!validateStep()) {
+        toast({
+          title: "Validation Error",
+          description: "Please fill in all required fields before proceeding.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
       setIsLoading(true);
       setTimeout(() => {
         setCurrentStep(currentStep + 1);
@@ -112,6 +200,47 @@ export default function RbiRegistration() {
         window.scrollTo(0, 0);
         setIsLoading(false);
       }, 500);
+    }
+  };
+  
+  const handleSaveForLater = async () => {
+    if (!user?.id) {
+      toast({
+        title: "Authentication Required",
+        description: "Please login to save your progress.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('rbi_draft_forms')
+        .upsert({
+          user_id: user.id,
+          form_data: formData,
+          last_completed_step: currentStep,
+          updated_at: new Date()
+        });
+        
+      if (error) throw error;
+      
+      toast({
+        title: "Progress Saved",
+        description: "You can continue filling the form later.",
+      });
+      
+      navigate("/resident-home");
+    } catch (error) {
+      console.error("Error saving form:", error);
+      toast({
+        title: "Save Failed",
+        description: "There was an error saving your progress. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
   
@@ -161,24 +290,44 @@ export default function RbiRegistration() {
         </div>
         
         <div className="flex justify-between mt-8">
-          {currentStep > 1 ? (
-            <Button 
-              variant="outline" 
-              onClick={handlePrevious}
-              className="flex items-center gap-2 border-blue-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300"
-            >
-              <ArrowLeft className="w-4 h-4" /> Previous
-            </Button>
-          ) : (
-            <Link to="/resident-home">
+          <div className="flex gap-2">
+            {currentStep > 1 ? (
               <Button 
-                variant="outline"
+                variant="outline" 
+                onClick={handlePrevious}
                 className="flex items-center gap-2 border-blue-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300"
               >
-                <ArrowLeft className="w-4 h-4" /> Back to Home
+                <ArrowLeft className="w-4 h-4" /> Previous
               </Button>
-            </Link>
-          )}
+            ) : (
+              <Link to="/resident-home">
+                <Button 
+                  variant="outline"
+                  className="flex items-center gap-2 border-blue-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300"
+                >
+                  <ArrowLeft className="w-4 h-4" /> Back to Home
+                </Button>
+              </Link>
+            )}
+            
+            <Button 
+              variant="outline" 
+              onClick={handleSaveForLater}
+              disabled={isSaving}
+              className="flex items-center gap-2 border-blue-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" /> Save for Later
+                </>
+              )}
+            </Button>
+          </div>
           
           {currentStep < steps.length ? (
             <Button 

@@ -1,12 +1,26 @@
 
 import { User } from "lucide-react";
 import { FloatingInput } from "@/components/ui/floating-input";
+import { useState } from "react";
 
-const PersonalDetailsForm = () => {
+const PersonalDetailsForm = ({ formData, setFormData, errors, setErrors }) => {
+  const handleChange = (field, value) => {
+    setFormData(prev => ({ ...prev, personalDetails: { ...prev.personalDetails, [field]: value } }));
+    // Clear error when user types
+    if (errors?.personalDetails?.[field]) {
+      setErrors(prev => ({
+        ...prev,
+        personalDetails: { ...prev.personalDetails, [field]: null }
+      }));
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
-        <User className="text-blue-600 w-6 h-6" />
+        <div className="bg-blue-100 p-2 rounded-lg">
+          <User className="text-blue-600 w-6 h-6" />
+        </div>
         <div>
           <h2 className="text-xl font-semibold text-gray-800">Personal Details</h2>
           <p className="text-sm text-gray-500 mt-1">
@@ -22,6 +36,9 @@ const PersonalDetailsForm = () => {
             label="Last Name" 
             placeholder=" " 
             className="focus-visible:ring-blue-500"
+            value={formData?.personalDetails?.lastName || ""}
+            onChange={(e) => handleChange("lastName", e.target.value)}
+            error={errors?.personalDetails?.lastName}
           />
           
           <FloatingInput 
@@ -29,6 +46,9 @@ const PersonalDetailsForm = () => {
             label="First Name" 
             placeholder=" " 
             className="focus-visible:ring-blue-500"
+            value={formData?.personalDetails?.firstName || ""}
+            onChange={(e) => handleChange("firstName", e.target.value)}
+            error={errors?.personalDetails?.firstName}
           />
         </div>
         
@@ -38,6 +58,8 @@ const PersonalDetailsForm = () => {
             label="Middle Name" 
             placeholder=" " 
             className="focus-visible:ring-blue-500"
+            value={formData?.personalDetails?.middleName || ""}
+            onChange={(e) => handleChange("middleName", e.target.value)}
           />
           
           <FloatingInput 
@@ -45,6 +67,8 @@ const PersonalDetailsForm = () => {
             label="Suffix (Jr., Sr., III, etc.)" 
             placeholder=" " 
             className="focus-visible:ring-blue-500"
+            value={formData?.personalDetails?.suffix || ""}
+            onChange={(e) => handleChange("suffix", e.target.value)}
           />
         </div>
       </div>

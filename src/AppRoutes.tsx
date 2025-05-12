@@ -1,3 +1,4 @@
+
 import { Route, Routes } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import Index from "@/pages/Index";
@@ -20,6 +21,7 @@ import NotFound from "@/pages/NotFound";
 import Services from "@/pages/Services";
 import Marketplace from "@/pages/Marketplace";
 import Jobs from "@/pages/Jobs";
+import JobDetail from "@/pages/JobDetail";
 import Contact from "@/pages/Contact";
 import About from "@/pages/About";
 import Features from "@/pages/Features";
@@ -115,6 +117,7 @@ export function AppRoutes() {
       <Route path="/messages" element={<Messages />} />
       <Route path="/services" element={<Services />} />
       <Route path="/jobs" element={<Jobs />} />
+      <Route path="/jobs/:id" element={<JobDetail />} />
       
       <Route path="/marketplace" element={<Marketplace />} />
       <Route path="/marketplace/product/:id" element={<ProductDetail />} />
