@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, MapPin, Search, X, ChevronRight } from "lucide-react";
 import { RoleButton } from "@/components/ui/role-button";
-import type { Map as LeafletMap, Marker } from 'leaflet';
+import type { Map, Marker } from 'leaflet';
 // We'll dynamically import Leaflet to avoid SSR issues
 
 // Define types for our location data
@@ -24,7 +24,7 @@ interface MapLocationModalProps {
 export function MapLocationModal({ children, onLocationSelected }: MapLocationModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [map, setMap] = useState<LeafletMap | null>(null);
+  const [map, setMap] = useState<Map | null>(null);
   const [marker, setMarker] = useState<Marker | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{ barangay: string; coordinates: { lat: number; lng: number } } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -52,9 +52,9 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
         // Fix for Leaflet icon issue in webpack/vite
         const fixLeafletIcon = () => {
           // @ts-ignore - Leaflet typings issue
-          delete L.default.Icon.Default.prototype._getIconUrl;
+          delete L.Icon.Default.prototype._getIconUrl;
           
-          L.default.Icon.Default.mergeOptions({
+          L.Icon.Default.mergeOptions({
             iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
             iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
             shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
@@ -62,7 +62,7 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
         };
 
         fixLeafletIcon();
-        initializeMap(L.default);
+        initializeMap(L);
       } catch (error) {
         console.error('Failed to load Leaflet:', error);
         toast.error('Failed to load map. Please try again later.');
@@ -81,7 +81,7 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
     };
   }, [isOpen]);
 
-  const initializeMap = async (L: typeof import('leaflet').default) => {
+  const initializeMap = async (L: typeof import('leaflet')) => {
     if (!mapRef.current) return;
     
     setIsLoading(true);
@@ -140,7 +140,7 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
     setIsLoading(false);
   };
 
-  const placeMarker = (position: { lat: number; lng: number }, mapInstance: LeafletMap, L: typeof import('leaflet').default) => {
+  const placeMarker = (position: { lat: number; lng: number }, mapInstance: Map, L: typeof import('leaflet')) => {
     if (marker) {
       mapInstance.removeLayer(marker);
     }
@@ -238,7 +238,7 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
         
         // Dynamically import Leaflet for marker placement
         const L = await import('leaflet');
-        placeMarker(position, map, L.default);
+        placeMarker(position, map, L);
         reverseGeocode(position);
       } else {
         toast.error("Couldn't find that location. Please try a different search.");
@@ -285,7 +285,7 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
             map.setView([pos.lat, pos.lng], 15);
             // Dynamically import Leaflet for marker placement
             const L = await import('leaflet');
-            placeMarker(pos, map, L.default);
+            placeMarker(pos, map, L);
             reverseGeocode(pos);
           }
         },
