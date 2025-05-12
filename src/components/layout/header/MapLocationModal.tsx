@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from 'react';
 import { toast } from "sonner";
 import { 
@@ -6,7 +7,8 @@ import {
   DialogHeader, 
   DialogTitle, 
   DialogTrigger, 
-  DialogFooter 
+  DialogFooter,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

@@ -7,6 +7,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 export type UserRole = "resident" | "official" | "superadmin" | null;
 
 interface UserData {
+  id?: string;
   name: string;
   email?: string;
   avatar?: string;
@@ -56,6 +57,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         
         if (session?.user) {
           const userData = {
+            id: session.user.id, // Added id field
             name: session.user.email || '',
             email: session.user.email,
             firstName: session.user.user_metadata?.first_name,
@@ -106,6 +108,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       if (session?.user) {
         const userData = {
+          id: session.user.id, // Added id field
           name: session.user.email || '',
           email: session.user.email,
           firstName: session.user.user_metadata?.first_name,
