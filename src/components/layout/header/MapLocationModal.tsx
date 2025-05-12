@@ -13,9 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Loader2, MapPin, Search, X, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { RoleButton } from "@/components/ui/role-button";
-// Import Leaflet only in client component context
-import 'leaflet/dist/leaflet.css';
-// We will dynamically import Leaflet below
+// We will dynamically import Leaflet and its CSS below
 
 // Define types for our location data
 interface MapLocationModalProps {
@@ -40,6 +38,14 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
     // Dynamically import Leaflet to avoid SSR issues
     const initLeaflet = async () => {
       try {
+        // Add Leaflet CSS
+        const linkEl = document.createElement('link');
+        linkEl.rel = 'stylesheet';
+        linkEl.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        linkEl.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+        linkEl.crossOrigin = '';
+        document.head.appendChild(linkEl);
+        
         // Dynamic import of Leaflet
         const L = await import('leaflet');
         
