@@ -238,7 +238,7 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
         
         // Dynamically import Leaflet for marker placement
         const L = await import('leaflet');
-        placeMarker(position, map, L);
+        placeMarker(position, map, L.default);
         reverseGeocode(position);
       } else {
         toast.error("Couldn't find that location. Please try a different search.");
@@ -285,7 +285,7 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
             map.setView([pos.lat, pos.lng], 15);
             // Dynamically import Leaflet for marker placement
             const L = await import('leaflet');
-            placeMarker(pos, map, L);
+            placeMarker(pos, map, L.default);
             reverseGeocode(pos);
           }
         },
