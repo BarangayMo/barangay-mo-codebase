@@ -18,6 +18,7 @@ import RbiReview from "@/components/rbi/RbiReview";
 import { LoadingScreen } from "@/components/ui/loading";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { RbiFormData } from "@/types/rbi";
 
 // Define step types
 type Step = {
@@ -36,7 +37,7 @@ export default function RbiRegistration() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<RbiFormData>({
     personalDetails: {},
     address: {},
     otherDetails: {},
@@ -46,7 +47,7 @@ export default function RbiRegistration() {
     housing: {},
     beneficiary: {}
   });
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<Record<string, any>>({});
   
   // Load saved form data if available
   useEffect(() => {
@@ -61,7 +62,7 @@ export default function RbiRegistration() {
             .single();
             
           if (data && !error) {
-            setFormData(data.form_data);
+            setFormData(data.form_data as RbiFormData);
             setCurrentStep(data.last_completed_step || 1);
             toast({
               title: "Form Data Loaded",
@@ -220,8 +221,7 @@ export default function RbiRegistration() {
         .upsert({
           user_id: user.id,
           form_data: formData,
-          last_completed_step: currentStep,
-          updated_at: new Date()
+          last_completed_step: currentStep
         });
         
       if (error) throw error;

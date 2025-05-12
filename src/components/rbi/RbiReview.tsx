@@ -1,8 +1,14 @@
+
 import { ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { RbiFormData } from "@/types/rbi";
 
-const RbiReview = ({ formData }) => {
+interface RbiReviewProps {
+  formData: RbiFormData;
+}
+
+const RbiReview = ({ formData }: RbiReviewProps) => {
   const [showAllDetails, setShowAllDetails] = useState(false);
 
   return (

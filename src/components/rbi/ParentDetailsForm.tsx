@@ -3,8 +3,20 @@ import { User } from "lucide-react";
 import { FloatingInput } from "@/components/ui/floating-input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { RbiFormComponentProps } from "@/types/rbi";
 
-const ParentDetailsForm = () => {
+const ParentDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiFormComponentProps) => {
+  const handleChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, parentDetails: { ...prev.parentDetails, [field]: value } }));
+    // Clear error when user types or selects
+    if (errors?.parentDetails?.[field]) {
+      setErrors(prev => ({
+        ...prev,
+        parentDetails: { ...prev.parentDetails, [field]: null }
+      }));
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
@@ -28,6 +40,8 @@ const ParentDetailsForm = () => {
                 label="Last Name" 
                 placeholder=" " 
                 className="focus-visible:ring-blue-500"
+                value={formData?.parentDetails?.fatherLastName || ""}
+                onChange={(e) => handleChange("fatherLastName", e.target.value)}
               />
               
               <FloatingInput 
@@ -35,6 +49,8 @@ const ParentDetailsForm = () => {
                 label="First Name" 
                 placeholder=" " 
                 className="focus-visible:ring-blue-500"
+                value={formData?.parentDetails?.fatherFirstName || ""}
+                onChange={(e) => handleChange("fatherFirstName", e.target.value)}
               />
             </div>
             
@@ -44,6 +60,8 @@ const ParentDetailsForm = () => {
                 label="Middle Name" 
                 placeholder=" " 
                 className="focus-visible:ring-blue-500"
+                value={formData?.parentDetails?.fatherMiddleName || ""}
+                onChange={(e) => handleChange("fatherMiddleName", e.target.value)}
               />
               
               <FloatingInput 
@@ -51,6 +69,8 @@ const ParentDetailsForm = () => {
                 label="Suffix (Jr., Sr., III, etc.)" 
                 placeholder=" " 
                 className="focus-visible:ring-blue-500"
+                value={formData?.parentDetails?.fatherSuffix || ""}
+                onChange={(e) => handleChange("fatherSuffix", e.target.value)}
               />
             </div>
           </div>
@@ -65,6 +85,8 @@ const ParentDetailsForm = () => {
                 label="Last Name" 
                 placeholder=" " 
                 className="focus-visible:ring-blue-500"
+                value={formData?.parentDetails?.motherLastName || ""}
+                onChange={(e) => handleChange("motherLastName", e.target.value)}
               />
               
               <FloatingInput 
@@ -72,6 +94,8 @@ const ParentDetailsForm = () => {
                 label="First Name" 
                 placeholder=" " 
                 className="focus-visible:ring-blue-500"
+                value={formData?.parentDetails?.motherFirstName || ""}
+                onChange={(e) => handleChange("motherFirstName", e.target.value)}
               />
             </div>
             
@@ -81,6 +105,8 @@ const ParentDetailsForm = () => {
                 label="Middle Name" 
                 placeholder=" " 
                 className="focus-visible:ring-blue-500"
+                value={formData?.parentDetails?.motherMiddleName || ""}
+                onChange={(e) => handleChange("motherMiddleName", e.target.value)}
               />
               
               <FloatingInput 
@@ -88,6 +114,8 @@ const ParentDetailsForm = () => {
                 label="Parent Status" 
                 placeholder="Married, Separated, etc." 
                 className="focus-visible:ring-blue-500"
+                value={formData?.parentDetails?.parentStatus || ""}
+                onChange={(e) => handleChange("parentStatus", e.target.value)}
               />
             </div>
           </div>
@@ -97,7 +125,11 @@ const ParentDetailsForm = () => {
           <div className="space-y-5">
             <div className="bg-blue-50 p-4 rounded-lg">
               <Label className="text-gray-700 font-medium">Is your father still alive? (Nabubuhay pa ba ang iyong tatay?)</Label>
-              <RadioGroup defaultValue="yes" className="flex gap-4 pt-2">
+              <RadioGroup 
+                value={formData?.parentDetails?.fatherAlive || "yes"} 
+                onValueChange={(value) => handleChange("fatherAlive", value)}
+                className="flex gap-4 pt-2"
+              >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="yes" id="fatherAliveYes" className="text-blue-600" />
                   <Label htmlFor="fatherAliveYes" className="text-gray-700">Yes</Label>
@@ -111,7 +143,11 @@ const ParentDetailsForm = () => {
             
             <div className="bg-blue-50 p-4 rounded-lg">
               <Label className="text-gray-700 font-medium">Is your mother still alive? (Nabubuhay pa ba ang iyong nanay?)</Label>
-              <RadioGroup defaultValue="yes" className="flex gap-4 pt-2">
+              <RadioGroup 
+                value={formData?.parentDetails?.motherAlive || "yes"} 
+                onValueChange={(value) => handleChange("motherAlive", value)}
+                className="flex gap-4 pt-2"
+              >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="yes" id="motherAliveYes" className="text-blue-600" />
                   <Label htmlFor="motherAliveYes" className="text-gray-700">Yes</Label>
@@ -125,7 +161,11 @@ const ParentDetailsForm = () => {
             
             <div className="bg-blue-50 p-4 rounded-lg">
               <Label className="text-gray-700 font-medium">Do you own a vehicle? (Ikaw ba ay may sasakyan?)</Label>
-              <RadioGroup defaultValue="no" className="flex gap-4 pt-2">
+              <RadioGroup 
+                value={formData?.parentDetails?.hasVehicle || "no"} 
+                onValueChange={(value) => handleChange("hasVehicle", value)}
+                className="flex gap-4 pt-2"
+              >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="yes" id="vehicleYes" className="text-blue-600" />
                   <Label htmlFor="vehicleYes" className="text-gray-700">Yes</Label>
@@ -139,7 +179,11 @@ const ParentDetailsForm = () => {
             
             <div className="bg-blue-50 p-4 rounded-lg">
               <Label className="text-gray-700 font-medium">Do you have a garage? (Ikaw ba ay may Garahe?)</Label>
-              <RadioGroup defaultValue="no" className="flex gap-4 pt-2">
+              <RadioGroup 
+                value={formData?.parentDetails?.hasGarage || "no"} 
+                onValueChange={(value) => handleChange("hasGarage", value)}
+                className="flex gap-4 pt-2"
+              >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="yes" id="garageYes" className="text-blue-600" />
                   <Label htmlFor="garageYes" className="text-gray-700">Yes</Label>

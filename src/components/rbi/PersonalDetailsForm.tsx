@@ -1,10 +1,10 @@
 
 import { User } from "lucide-react";
 import { FloatingInput } from "@/components/ui/floating-input";
-import { useState } from "react";
+import { RbiFormComponentProps } from "@/types/rbi";
 
-const PersonalDetailsForm = ({ formData, setFormData, errors, setErrors }) => {
-  const handleChange = (field, value) => {
+const PersonalDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiFormComponentProps) => {
+  const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, personalDetails: { ...prev.personalDetails, [field]: value } }));
     // Clear error when user types
     if (errors?.personalDetails?.[field]) {

@@ -3,9 +3,10 @@ import { School } from "lucide-react";
 import { FloatingInput } from "@/components/ui/floating-input";
 import { FloatingSelect } from "@/components/ui/floating-select";
 import { SelectItem } from "@/components/ui/select";
+import { RbiFormComponentProps } from "@/types/rbi";
 
-const EducationDetailsForm = ({ formData, setFormData, errors, setErrors }) => {
-  const handleChange = (field, value) => {
+const EducationDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiFormComponentProps) => {
+  const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, education: { ...prev.education, [field]: value } }));
     // Clear error when user selects or types
     if (errors?.education?.[field]) {

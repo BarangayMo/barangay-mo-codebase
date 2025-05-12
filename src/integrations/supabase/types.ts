@@ -285,6 +285,33 @@ export type Database = {
         }
         Relationships: []
       }
+      rbi_draft_forms: {
+        Row: {
+          created_at: string | null
+          form_data: Json
+          id: string
+          last_completed_step: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          form_data: Json
+          id?: string
+          last_completed_step?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          form_data?: Json
+          id?: string
+          last_completed_step?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       saved_jobs: {
         Row: {
           created_at: string | null

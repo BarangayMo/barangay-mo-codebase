@@ -4,9 +4,10 @@ import { FloatingInput } from "@/components/ui/floating-input";
 import { FloatingTextarea } from "@/components/ui/floating-textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { RbiFormComponentProps } from "@/types/rbi";
 
-const HealthDetailsForm = ({ formData, setFormData, errors, setErrors }) => {
-  const handleChange = (field, value) => {
+const HealthDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiFormComponentProps) => {
+  const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, health: { ...prev.health, [field]: value } }));
     // Clear error when user types or selects
     if (errors?.health?.[field]) {
