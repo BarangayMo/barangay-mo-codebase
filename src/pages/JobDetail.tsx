@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 export default function JobDetail() {
   const { id } = useParams();
@@ -24,6 +26,7 @@ export default function JobDetail() {
   const [activeTab, setActiveTab] = useState("description");
   const [otherJobs, setOtherJobs] = useState([]);
   const [reviewForm, setReviewForm] = useState({ name: "", rating: "", comment: "" });
+  const [applyDialogOpen, setApplyDialogOpen] = useState(false);
   const { toast } = useToast();
   const { isAuthenticated, user } = useAuth();
 
@@ -108,6 +111,27 @@ export default function JobDetail() {
     setReviewForm({ name: "", rating: "", comment: "" });
   };
 
+  const handleApplyClick = () => {
+    if (!isAuthenticated) {
+      toast({ 
+        title: "Authentication required", 
+        description: "Please login to apply for this job", 
+        variant: "destructive" 
+      });
+      return;
+    }
+    
+    setApplyDialogOpen(true);
+  };
+  
+  const handleApplyConfirm = () => {
+    toast({ 
+      title: "Application submitted", 
+      description: "Your application has been submitted successfully!" 
+    });
+    setApplyDialogOpen(false);
+  };
+
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -120,9 +144,14 @@ export default function JobDetail() {
                   <p className="text-gray-500 flex items-center mt-1"><MapPin size={14} className="mr-1" /> {job.location || '—'}</p>
                 </div>
                 <div className="flex items-center flex-wrap gap-2">
-                  <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">Apply Now</Button>
+                  <Button 
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                    onClick={handleApplyClick}
+                  >
+                    Apply Now
+                  </Button>
                   <Button size="sm" variant="outline" onClick={handleSaveJob} disabled={savingStatus}>
-                    <Bookmark size={14} className="mr-2" /> {isSaved ? 'Saved' : 'Save Job'}
+                    <Bookmark size={14} className="mr-2" fill={isSaved ? "currentColor" : "none"} /> {isSaved ? 'Saved' : 'Save Job'}
                   </Button>
                   <Button size="sm" variant="outline" onClick={handleShareJob}>
                     <Share2 size={14} className="mr-2" /> Share
@@ -194,9 +223,24 @@ export default function JobDetail() {
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h3 className="font-semibold text-gray-800 mb-4">Leave a Review</h3>
                     <form onSubmit={handleReviewSubmit} className="space-y-4">
-                      <Input placeholder="Your Name" value={reviewForm.name} onChange={(e) => setReviewForm({ ...reviewForm, name: e.target.value })} />
-                      <Input placeholder="Rating (1–5)" type="number" max={5} min={1} value={reviewForm.rating} onChange={(e) => setReviewForm({ ...reviewForm, rating: e.target.value })} />
-                      <Textarea placeholder="Write your feedback..." value={reviewForm.comment} onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })} />
+                      <Input
+                        placeholder="Your Name"
+                        value={reviewForm.name}
+                        onChange={(e) => setReviewForm({ ...reviewForm, name: e.target.value })}
+                      />
+                      <Input
+                        placeholder="Rating (1–5)"
+                        type="number"
+                        max={5}
+                        min={1}
+                        value={reviewForm.rating}
+                        onChange={(e) => setReviewForm({ ...reviewForm, rating: e.target.value })}
+                      />
+                      <Textarea
+                        placeholder="Write your feedback..."
+                        value={reviewForm.comment}
+                        onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
+                      />
                       <Button type="submit" className="w-full bg-indigo-600 text-white">Submit Review</Button>
                     </form>
                   </div>
@@ -216,7 +260,103 @@ export default function JobDetail() {
             </div>
           )}
         </div>
+
+        <aside className="space-y-6 sticky top-24 self-start">
+          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="h-12 w-12 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-semibold text-sm">
+                {job?.poster_name?.[0]?.toUpperCase() || 'U'}
+              </div>
+              <div>
+                <p className="font-semibold text-gray-900">{job?.poster_name || 'Job Poster'}</p>
+                <p className="text-sm text-gray-500">Joined Jan 2023</p>
+              </div>
+            </div>
+            <div className="text-sm text-gray-700 space-y-2">
+              <div className="flex items-center gap-2">
+                <Star size={14} className="text-yellow-400" />
+                <span>4.8 rating</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Briefcase size={14} />
+                <span>18 Jobs Posted</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Users size={14} />
+                <span>32 Reviews</span>
+              </div>
+            </div>
+            <Button variant="outline" size="sm" className="mt-4 w-full flex items-center justify-center gap-2" onClick={() => navigate(`/messages/new?recipient=${job?.poster_id || ''}`)}>
+              <MessageCircle size={14} /> Message
+            </Button>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+            <h3 className="text-sm font-medium text-gray-900 mb-4">More from other employers</h3>
+            <div className="space-y-3 text-sm text-gray-700">
+              {otherJobs.length > 0 ? otherJobs.map((ojob) => (
+                <div key={ojob.id} className="p-4 rounded-lg border hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/jobs/${ojob.id}`)}>
+                  <h4 className="font-medium text-gray-800">{ojob.title}</h4>
+                  <p className="text-gray-500 text-sm">{ojob.company} — {ojob.location}</p>
+                </div>
+              )) : <p>No other jobs found.</p>}
+            </div>
+          </div>
+        </aside>
       </div>
+      
+      {/* Apply Dialog */}
+      <Dialog open={applyDialogOpen} onOpenChange={setApplyDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Apply for this Job</DialogTitle>
+            <DialogDescription>
+              Confirm your application for {job?.title} at {job?.company}.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 my-6">
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-medium">Application Fee</h4>
+                <span className="font-semibold text-indigo-600">₱50.00</span>
+              </div>
+              <p className="text-sm text-gray-500">
+                This fee helps ensure serious applications and supports our platform operations.
+              </p>
+            </div>
+            
+            {user && (
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-gray-500">Name</p>
+                  <p className="font-medium">{user.firstName} {user.lastName || ''}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500">Email</p>
+                  <p className="font-medium">{user.email}</p>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setApplyDialogOpen(false)}
+              className="sm:flex-1"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleApplyConfirm} 
+              className="bg-indigo-600 hover:bg-indigo-700 sm:flex-1"
+            >
+              Confirm & Pay ₱50
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }
