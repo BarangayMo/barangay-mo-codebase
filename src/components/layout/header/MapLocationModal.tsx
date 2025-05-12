@@ -12,16 +12,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, MapPin, Search, X, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getGoogleMapsApiKey } from "@/services/apiKeys";
 import { RoleButton } from "@/components/ui/role-button";
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
-// Declare Google Maps types
-declare global {
-  interface Window {
-    initGoogleMapsModal: () => void;
-  }
-}
-
+// Define types for our location data
 interface MapLocationModalProps {
   children: React.ReactNode;
   onLocationSelected: (location: { barangay: string; coordinates: { lat: number; lng: number } }) => void;
@@ -30,93 +25,62 @@ interface MapLocationModalProps {
 export function MapLocationModal({ children, onLocationSelected }: MapLocationModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [map, setMap] = useState<google.maps.Map | null>(null);
-  const [marker, setMarker] = useState<google.maps.Marker | null>(null);
+  const [map, setMap] = useState<L.Map | null>(null);
+  const [marker, setMarker] = useState<L.Marker | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{ barangay: string; coordinates: { lat: number; lng: number } } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
-  const [apiKey, setApiKey] = useState<string | null>(null);
   const mapRef = useRef<HTMLDivElement>(null);
 
-  // Load Google Maps API script
+  // Load the map when the modal is opened
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !mapRef.current) return;
     
-    const fetchApiKeyAndLoadMap = async () => {
-      try {
-        // Get API key using the service
-        const key = await getGoogleMapsApiKey();
-        
-        if (!key) {
-          console.error("Error fetching Google Maps API key");
-          toast.error("Failed to load map. API key not configured.");
-          setIsLoading(false);
-          return;
-        }
-        
-        // Save API key to state
-        setApiKey(key);
-        loadGoogleMaps(key);
-      } catch (error) {
-        console.error("Error fetching API key:", error);
-        toast.error("Failed to load map configuration");
-        setIsLoading(false);
-      }
-    };
-    
-    const loadGoogleMaps = (key: string) => {
-      if (window.google?.maps) {
-        initializeMap();
-        return;
-      }
+    // Fix for Leaflet icon issue in webpack/vite
+    const fixLeafletIcon = () => {
+      // @ts-ignore - Leaflet typings issue
+      delete L.Icon.Default.prototype._getIconUrl;
       
-      // Define callback for when Maps API loads
-      window.initGoogleMapsModal = () => {
-        initializeMap();
-      };
-      
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places&callback=initGoogleMapsModal`;
-      script.async = true;
-      script.defer = true;
-      document.head.appendChild(script);
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      });
     };
+
+    fixLeafletIcon();
+    initializeMap();
     
-    fetchApiKeyAndLoadMap();
-    
-    // Cleanup function
     return () => {
-      if (window.initGoogleMapsModal) {
-        // @ts-ignore - we're intentionally removing the function
-        window.initGoogleMapsModal = undefined;
+      // Cleanup function
+      if (map) {
+        map.remove();
+        setMap(null);
       }
     };
   }, [isOpen]);
 
   const initializeMap = () => {
-    if (!mapRef.current || !window.google?.maps) return;
-
+    if (!mapRef.current) return;
+    
+    setIsLoading(true);
+    
     // Default to Metro Manila, Philippines
     const defaultPosition = { lat: 14.5995, lng: 120.9842 };
     
-    const mapOptions: google.maps.MapOptions = {
-      center: defaultPosition,
-      zoom: 12,
-      mapTypeControl: false,
-      fullscreenControl: false,
-      streetViewControl: false,
-      styles: [
-        {
-          featureType: 'administrative.locality',
-          elementType: 'labels',
-          stylers: [{ visibility: 'on' }]
-        }
+    // Create map instance
+    const mapInstance = L.map(mapRef.current, {
+      center: [defaultPosition.lat, defaultPosition.lng],
+      zoom: 13,
+      layers: [
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        })
       ]
-    };
+    });
 
-    const newMap = new google.maps.Map(mapRef.current, mapOptions);
-    setMap(newMap);
-
+    setMap(mapInstance);
+    
     // Try to get user location
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -126,53 +90,49 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
             lng: position.coords.longitude
           };
           
-          newMap.setCenter(userPosition);
-          placeMarker(userPosition, newMap);
+          mapInstance.setView([userPosition.lat, userPosition.lng], 15);
+          placeMarker(userPosition, mapInstance);
           reverseGeocode(userPosition);
         },
         () => {
           // Fallback if user denies location permission
-          placeMarker(defaultPosition, newMap);
+          placeMarker(defaultPosition, mapInstance);
           reverseGeocode(defaultPosition);
         }
       );
     } else {
       // Fallback for browsers that don't support geolocation
-      placeMarker(defaultPosition, newMap);
+      placeMarker(defaultPosition, mapInstance);
       reverseGeocode(defaultPosition);
     }
 
     // Add click event listener to the map
-    newMap.addListener('click', (event: google.maps.MapMouseEvent) => {
-      if (event.latLng) {
-        const position = {
-          lat: event.latLng.lat(),
-          lng: event.latLng.lng()
-        };
-        placeMarker(position, newMap);
-        reverseGeocode(position);
-      }
+    mapInstance.on('click', (event: L.LeafletMouseEvent) => {
+      const position = {
+        lat: event.latlng.lat,
+        lng: event.latlng.lng
+      };
+      placeMarker(position, mapInstance);
+      reverseGeocode(position);
     });
 
     setIsLoading(false);
   };
 
-  const placeMarker = (position: { lat: number; lng: number }, mapInstance: google.maps.Map) => {
+  const placeMarker = (position: { lat: number; lng: number }, mapInstance: L.Map) => {
     if (marker) {
-      marker.setMap(null);
+      mapInstance.removeLayer(marker);
     }
 
-    const newMarker = new google.maps.Marker({
-      position,
-      map: mapInstance,
-      animation: google.maps.Animation.DROP,
+    const newMarker = L.marker([position.lat, position.lng], {
       draggable: true
-    });
+    }).addTo(mapInstance);
 
-    newMarker.addListener('dragend', () => {
+    newMarker.on('dragend', () => {
+      const newPosition = newMarker.getLatLng();
       const position = {
-        lat: newMarker.getPosition()?.lat() || 0,
-        lng: newMarker.getPosition()?.lng() || 0
+        lat: newPosition.lat,
+        lng: newPosition.lng
       };
       reverseGeocode(position);
     });
@@ -181,83 +141,96 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
   };
 
   const reverseGeocode = async (position: { lat: number; lng: number }) => {
-    if (!window.google?.maps) {
-      toast.error("Google Maps API not loaded properly");
-      return;
-    }
-
     try {
-      const geocoder = new google.maps.Geocoder();
-      geocoder.geocode({ location: position }, (results, status) => {
-        if (status === google.maps.GeocoderStatus.OK && results && results[0]) {
-          // Extract the barangay name
-          let barangay = '';
-          
-          for (const component of results[0].address_components) {
-            if (component.types.includes('sublocality_level_1') || 
-                component.types.includes('sublocality') || 
-                component.types.includes('neighborhood')) {
-              barangay = component.long_name;
-              break;
-            }
-          }
-
-          // If we couldn't find a barangay, use a more general location
-          if (!barangay) {
-            for (const component of results[0].address_components) {
-              if (component.types.includes('locality') || 
-                  component.types.includes('administrative_area_level_3')) {
-                barangay = component.long_name;
-                break;
-              }
-            }
-          }
-          
-          setSelectedLocation({
-            barangay,
-            coordinates: position
-          });
-        } else {
-          toast.error("Couldn't determine location. Please try again.");
-        }
+      // Use Nominatim API for reverse geocoding (OpenStreetMap's geocoding service)
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.lat}&lon=${position.lng}&addressdetails=1`
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch location data');
+      }
+      
+      const data = await response.json();
+      
+      // Extract location details
+      let barangay = '';
+      
+      // Try to find the most specific location name
+      if (data.address) {
+        // First try to find the suburb/district/neighborhood (which is often the barangay in Philippines)
+        barangay = data.address.suburb || 
+                   data.address.neighbourhood || 
+                   data.address.district ||
+                   data.address.village ||
+                   data.address.town ||
+                   data.address.city ||
+                   data.display_name.split(',')[0];
+      }
+      
+      // If we couldn't find any location data, use a generic placeholder
+      if (!barangay) {
+        barangay = 'Selected Location';
+      }
+      
+      setSelectedLocation({
+        barangay,
+        coordinates: position
       });
     } catch (error) {
       console.error('Error during reverse geocoding:', error);
       toast.error("Error fetching location data");
+      
+      // Set a fallback location name
+      setSelectedLocation({
+        barangay: 'Selected Location',
+        coordinates: position
+      });
     }
   };
 
-  const handleSearch = () => {
-    if (!map || !searchQuery.trim() || !window.google?.maps) return;
+  const handleSearch = async () => {
+    if (!map || !searchQuery.trim()) return;
 
     setIsSearching(true);
     
-    const geocoder = new google.maps.Geocoder();
-    // Focus on Philippines
-    const searchWithCountry = `${searchQuery}, Philippines`;
-    
-    geocoder.geocode({ address: searchWithCountry }, (results, status) => {
-      if (status === google.maps.GeocoderStatus.OK && results && results[0] && results[0].geometry) {
+    try {
+      // Use Nominatim API for forward geocoding (search)
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&countrycodes=ph&limit=1`
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch search results');
+      }
+      
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        const result = data[0];
         const position = {
-          lat: results[0].geometry.location.lat(),
-          lng: results[0].geometry.location.lng()
+          lat: parseFloat(result.lat),
+          lng: parseFloat(result.lon)
         };
         
-        map.setCenter(position);
-        map.setZoom(15);
+        map.setView([position.lat, position.lng], 15);
         placeMarker(position, map);
         reverseGeocode(position);
       } else {
         toast.error("Couldn't find that location. Please try a different search.");
       }
+    } catch (error) {
+      console.error('Error during search:', error);
+      toast.error("Search failed. Please try again.");
+    } finally {
       setIsSearching(false);
-    });
+    }
   };
 
   const handleZoom = (direction: 'in' | 'out') => {
     if (!map) return;
     
-    const currentZoom = map.getZoom() || 12;
+    const currentZoom = map.getZoom();
     if (direction === 'in') {
       map.setZoom(currentZoom + 1);
     } else {
@@ -286,16 +259,6 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
           {isLoading ? (
             <div className="h-full w-full flex items-center justify-center bg-muted/30">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : !apiKey ? (
-            <div className="h-full w-full flex items-center justify-center bg-muted/30">
-              <div className="text-center p-6">
-                <MapPin className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <h3 className="text-lg font-medium mb-2">API Key Not Configured</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Please ask an administrator to configure the Google Maps API key.
-                </p>
-              </div>
             </div>
           ) : (
             <>
@@ -347,8 +310,7 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
                           lng: position.coords.longitude
                         };
                         if (map) {
-                          map.setCenter(pos);
-                          map.setZoom(15);
+                          map.setView([pos.lat, pos.lng], 15);
                           placeMarker(pos, map);
                           reverseGeocode(pos);
                         }
