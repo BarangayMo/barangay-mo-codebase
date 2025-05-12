@@ -11,9 +11,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, MapPin, Search, X, ChevronRight } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { RoleButton } from "@/components/ui/role-button";
-// We will dynamically import Leaflet and its CSS below
+import type { Map as LeafletMap, Marker } from 'leaflet';
+// We'll dynamically import Leaflet to avoid SSR issues
 
 // Define types for our location data
 interface MapLocationModalProps {
@@ -24,8 +24,8 @@ interface MapLocationModalProps {
 export function MapLocationModal({ children, onLocationSelected }: MapLocationModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [map, setMap] = useState<any | null>(null);
-  const [marker, setMarker] = useState<any | null>(null);
+  const [map, setMap] = useState<LeafletMap | null>(null);
+  const [marker, setMarker] = useState<Marker | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{ barangay: string; coordinates: { lat: number; lng: number } } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -52,9 +52,9 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
         // Fix for Leaflet icon issue in webpack/vite
         const fixLeafletIcon = () => {
           // @ts-ignore - Leaflet typings issue
-          delete L.Icon.Default.prototype._getIconUrl;
+          delete L.default.Icon.Default.prototype._getIconUrl;
           
-          L.Icon.Default.mergeOptions({
+          L.default.Icon.Default.mergeOptions({
             iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
             iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
             shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
@@ -62,7 +62,7 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
         };
 
         fixLeafletIcon();
-        initializeMap(L);
+        initializeMap(L.default);
       } catch (error) {
         console.error('Failed to load Leaflet:', error);
         toast.error('Failed to load map. Please try again later.');
@@ -81,7 +81,7 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
     };
   }, [isOpen]);
 
-  const initializeMap = async (L: any) => {
+  const initializeMap = async (L: typeof import('leaflet').default) => {
     if (!mapRef.current) return;
     
     setIsLoading(true);
@@ -140,7 +140,7 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
     setIsLoading(false);
   };
 
-  const placeMarker = (position: { lat: number; lng: number }, mapInstance: any, L: any) => {
+  const placeMarker = (position: { lat: number; lng: number }, mapInstance: LeafletMap, L: typeof import('leaflet').default) => {
     if (marker) {
       mapInstance.removeLayer(marker);
     }
@@ -302,6 +302,9 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
         {children}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[90vw] md:max-w-[500px] p-0 gap-0 max-h-[90vh] overflow-hidden rounded-xl shadow-lg border border-muted/30">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Select Location</DialogTitle>
+        </DialogHeader>
         <div className="relative h-[70vh] md:h-[450px]">
           {/* Map container */}
           {isLoading ? (
