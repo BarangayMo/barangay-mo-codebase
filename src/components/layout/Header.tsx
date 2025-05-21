@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, User, ShoppingCart } from "lucide-react";
+import { Bell, User, ShoppingCart, X } from "lucide-react"; // Added X for SheetClose
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { HeaderLogo } from "./header/HeaderLogo";
@@ -9,6 +9,8 @@ import { DesktopNavItems } from "./header/DesktopNavItems";
 import { ProfileMenu } from "./ProfileMenu";
 import { LanguageSelector } from "./LanguageSelector";
 import { useCartSummary } from "@/hooks/useCartSummary";
+import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from "@/components/ui/sheet"; // Added Sheet components
+import { CartDrawerContent } from "@/components/cart/CartDrawerContent"; // Import the new drawer content
 
 export const Header = () => {
   const { isAuthenticated, userRole } = useAuth();
@@ -62,16 +64,34 @@ export const Header = () => {
               )}
               <div className="flex items-center gap-0.5 md:gap-2">
                 {showCartIcon && (
-                  <Button asChild variant="ghost" size="icon" className="relative">
-                    <Link to="/marketplace/cart">
-                      <ShoppingCart className="h-5 w-5" />
-                      {cartItemCount > 0 && (
-                        <span className="absolute -top-1 -right-1 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center bg-red-500">
-                          {cartItemCount}
-                        </span>
-                      )}
-                    </Link>
-                  </Button>
+                  isMobile ? (
+                    <Button asChild variant="ghost" size="icon" className="relative">
+                      <Link to="/marketplace/cart">
+                        <ShoppingCart className="h-5 w-5" />
+                        {cartItemCount > 0 && (
+                          <span className="absolute -top-1 -right-1 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center bg-red-500">
+                            {cartItemCount}
+                          </span>
+                        )}
+                      </Link>
+                    </Button>
+                  ) : (
+                    <Sheet>
+                      <SheetTrigger asChild>
+                        <Button variant="ghost" size="icon" className="relative">
+                          <ShoppingCart className="h-5 w-5" />
+                          {cartItemCount > 0 && (
+                            <span className="absolute -top-1 -right-1 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center bg-red-500">
+                              {cartItemCount}
+                            </span>
+                          )}
+                        </Button>
+                      </SheetTrigger>
+                      <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col">
+                        <CartDrawerContent />
+                      </SheetContent>
+                    </Sheet>
+                  )
                 )}
                 <Button
                   variant="ghost"
@@ -109,15 +129,11 @@ export const Header = () => {
                   </Button>
                 </>
               )}
-              {showCartIcon && (
+              {showCartIcon && ( // For non-authenticated users, cart icon always links to cart page
                 <Button asChild variant="ghost" size="icon" className="relative">
                   <Link to="/marketplace/cart">
                     <ShoppingCart className="h-5 w-5" />
-                    {isAuthenticated && cartItemCount > 0 && (
-                       <span className="absolute -top-1 -right-1 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center bg-red-500">
-                          {cartItemCount}
-                        </span>
-                    )}
+                    {/* Badge for non-auth users is typically not shown or shows 0 */}
                   </Link>
                 </Button>
               )}
