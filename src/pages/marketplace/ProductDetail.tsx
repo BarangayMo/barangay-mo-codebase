@@ -103,24 +103,23 @@ const fetchProductById = async (productId: string): Promise<ProductDetailType | 
   if (data) {
     let processedSpecifications: ProductSpecification[] | undefined = undefined;
     
-    if (data.specifications) { // data.specifications is Json | null from Supabase
+    if (data.specifications) { 
       try {
         const specsInput = data.specifications; // specsInput is Json | null
 
-        if (Array.isArray(specsInput)) { // specsInput is Json[]
+        if (Array.isArray(specsInput)) { // specsInput is Json[] which means (unknown[] | primitives)
           processedSpecifications = specsInput
-            .filter(isProductSpecification) // Use the type guard
-            .map(spec => ({ key: spec.key, value: spec.value })); // spec is now ProductSpecification
+            .filter((item): item is ProductSpecification => isProductSpecification(item)) // Guard ensures item is ProductSpecification
+            .map((spec: ProductSpecification) => ({ key: spec.key, value: spec.value })); // spec is now correctly typed
         } else if (typeof specsInput === 'object' && specsInput !== null) { 
           // specsInput is { [key: string]: Json } (but not an array)
-          // Case 1: specsInput is already like { key: "Brand", value: "Acme" }
-          if (isProductSpecification(specsInput)) {
+          if (isProductSpecification(specsInput)) { // Check if the object itself is a ProductSpecification
             processedSpecifications = [{ key: specsInput.key, value: specsInput.value }];
           } else {
-            // Case 2: specsInput is like { "Brand": "Acme", "Material": "Steel" }
-            // Convert object properties to {key, value} pairs
+            // Convert object properties like { "Brand": "Acme", "Material": "Steel" }
+            // to {key, value} pairs
             processedSpecifications = Object.entries(specsInput)
-              .map(([key, value]) => ({ // value here is Json
+              .map(([key, value]) => ({
                 key,
                 value: String(value) // Safely convert Json value to string
               }));
@@ -129,10 +128,11 @@ const fetchProductById = async (productId: string): Promise<ProductDetailType | 
           // Try to parse JSON string for specifications
           const parsedSpecs = JSON.parse(specsInput); // parsedSpecs is 'any'
           if (Array.isArray(parsedSpecs)) {
-            processedSpecifications = parsedSpecs
-              .filter(isProductSpecification)
-              .map(spec => ({ key: spec.key, value: spec.value }));
-          } else if (isProductSpecification(parsedSpecs)) {
+            const unknownArray = parsedSpecs as unknown[]; // Treat as array of unknowns
+            processedSpecifications = unknownArray
+              .filter((item): item is ProductSpecification => isProductSpecification(item))
+              .map((spec: ProductSpecification) => ({ key: spec.key, value: spec.value }));
+          } else if (isProductSpecification(parsedSpecs)) { // parsedSpecs is 'any', guard narrows to ProductSpecification
              processedSpecifications = [{ key: parsedSpecs.key, value: parsedSpecs.value }];
           }
         }
