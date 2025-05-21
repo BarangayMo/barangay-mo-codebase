@@ -3,27 +3,30 @@ import { BrowserRouter as Router } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { ThemeProvider } from "./components/theme-provider";
-import AppRoutes from "./AppRoutes";
-import { ScrollToTop } from "./components/ScrollToTop";
-import { FaviconManager } from "./components/FaviconManager";
+import { AppRoutes } from "./AppRoutes"; // Changed to named import
+import FaviconManager from "./components/FaviconManager"; // Changed to default import
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster as ShadcnToaster } from "@/components/ui/toaster"; // shadcn/ui toaster
-import { Toaster as SonnerToaster } from "@/components/ui/sonner"; // sonner toaster
+import { Toaster as ShadcnToaster } from "@/components/ui/toaster";
+import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { SupabaseWarning } from "./components/ui/supabase-warning";
-import { useSupabaseStatus } from "./hooks/use-supabase-status";
+// Removed useSupabaseStatus import here as SupabaseWarning handles it internally
+// import { useSupabaseStatus } from "./hooks/use-supabase-status";
+import { ScrollToTop } from "./components/ScrollToTop";
+
 
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: false, // Disable refetch on window focus globally
+      refetchOnWindowFocus: false,
       staleTime: 1000 * 60 * 5, // 5 minutes
     },
   },
 });
 
 function App() {
-  const { warning } = useSupabaseStatus();
+  // Removed: const { warning } = useSupabaseStatus(); 
+  // SupabaseWarning component now fetches its own status.
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -34,9 +37,10 @@ function App() {
               <FaviconManager />
               <ScrollToTop />
               <AppRoutes />
-              <ShadcnToaster /> {/* For shadcn/ui toasts */}
-              <SonnerToaster /> {/* For Sonner toasts, if used */}
-              {warning && <SupabaseWarning message={warning} />}
+              <ShadcnToaster />
+              <SonnerToaster />
+              {/* Changed: SupabaseWarning now renders conditionally based on its internal state */}
+              <SupabaseWarning /> 
             </Router>
           </AuthProvider>
         </LanguageProvider>
@@ -46,4 +50,3 @@ function App() {
 }
 
 export default App;
-
