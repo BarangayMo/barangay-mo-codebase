@@ -52,6 +52,16 @@ interface ProductDetailType {
   created_at: string;
 }
 
+// Type guard to check for ProductSpecification
+const isProductSpecification = (item: unknown): item is ProductSpecification => {
+  if (typeof item !== 'object' || item === null) {
+    return false;
+  }
+  // Check for key and value properties of type string
+  const obj = item as Record<string, unknown>;
+  return typeof obj.key === 'string' && typeof obj.value === 'string';
+};
+
 // Function to fetch product by ID
 const fetchProductById = async (productId: string): Promise<ProductDetailType | null> => {
   if (!productId) return null;
@@ -91,57 +101,40 @@ const fetchProductById = async (productId: string): Promise<ProductDetailType | 
   console.log("Product data fetched (raw):", data);
 
   if (data) {
-    // Handle specifications safely
     let processedSpecifications: ProductSpecification[] | undefined = undefined;
     
     if (data.specifications) { // data.specifications is Json | null from Supabase
       try {
-        // Handle specifications based on their actual type
-        if (Array.isArray(data.specifications)) { // data.specifications is Json[]
-          processedSpecifications = data.specifications
-            .filter((specItem): specItem is ProductSpecification => { // specItem is Json
-              // Check if specItem is an object and has string properties 'key' and 'value'
-              if (typeof specItem !== 'object' || specItem === null) return false;
-              const s = specItem as { key?: unknown, value?: unknown }; // Cast to check properties
-              return typeof s.key === 'string' && typeof s.value === 'string';
-            })
-            .map(validSpec => ({ key: validSpec.key, value: validSpec.value })); // Ensure only key/value are passed
+        const specsInput = data.specifications; // specsInput is Json | null
 
-        } else if (typeof data.specifications === 'object' && data.specifications !== null) { 
-          // data.specifications is { [key: string]: Json }
-          const specsObject = data.specifications as { key?: unknown, value?: unknown, [key: string]: any };
-          
-          // Case 1: specsObject is like { key: "Brand", value: "Acme" }
-          if (typeof specsObject.key === 'string' && typeof specsObject.value === 'string') {
-            processedSpecifications = [{ key: specsObject.key, value: specsObject.value }];
+        if (Array.isArray(specsInput)) { // specsInput is Json[]
+          processedSpecifications = specsInput
+            .filter(isProductSpecification) // Use the type guard
+            .map(spec => ({ key: spec.key, value: spec.value })); // spec is now ProductSpecification
+        } else if (typeof specsInput === 'object' && specsInput !== null) { 
+          // specsInput is { [key: string]: Json } (but not an array)
+          // Case 1: specsInput is already like { key: "Brand", value: "Acme" }
+          if (isProductSpecification(specsInput)) {
+            processedSpecifications = [{ key: specsInput.key, value: specsInput.value }];
           } else {
-            // Case 2: specsObject is like { "Brand": "Acme", "Material": "Steel" }
+            // Case 2: specsInput is like { "Brand": "Acme", "Material": "Steel" }
             // Convert object properties to {key, value} pairs
-            processedSpecifications = Object.entries(specsObject)
-              .map(([key, value]) => ({
+            processedSpecifications = Object.entries(specsInput)
+              .map(([key, value]) => ({ // value here is Json
                 key,
-                value: String(value) // value is Json, String(value) is safe
+                value: String(value) // Safely convert Json value to string
               }));
           }
-        } else if (typeof data.specifications === 'string') {
+        } else if (typeof specsInput === 'string') {
           // Try to parse JSON string for specifications
-          const parsedSpecs = JSON.parse(data.specifications); // parsedSpecs is 'any'
+          const parsedSpecs = JSON.parse(specsInput); // parsedSpecs is 'any'
           if (Array.isArray(parsedSpecs)) {
             processedSpecifications = parsedSpecs
-              .filter((specItem): specItem is ProductSpecification => {
-                if (typeof specItem !== 'object' || specItem === null) return false;
-                const s = specItem as { key?: unknown, value?: unknown };
-                return typeof s.key === 'string' && typeof s.value === 'string';
-              })
-              .map(validSpec => ({ key: validSpec.key, value: validSpec.value }));
+              .filter(isProductSpecification)
+              .map(spec => ({ key: spec.key, value: spec.value }));
+          } else if (isProductSpecification(parsedSpecs)) {
+             processedSpecifications = [{ key: parsedSpecs.key, value: parsedSpecs.value }];
           }
-          // Optionally, handle if parsedSpecs is a single object representing one spec
-          // else if (typeof parsedSpecs === 'object' && parsedSpecs !== null) {
-          //   const s = parsedSpecs as { key?: unknown, value?: unknown };
-          //   if (typeof s.key === 'string' && typeof s.value === 'string') {
-          //     processedSpecifications = [{ key: s.key, value: s.value }];
-          //   }
-          // }
         }
       } catch (e) {
         console.warn("Failed to process specifications:", e);
@@ -163,11 +156,11 @@ const fetchProductById = async (productId: string): Promise<ProductDetailType | 
       sold_count: data.sold_count,
       is_active: data.is_active,
       tags: Array.isArray(data.tags) ? data.tags.filter((tag: any): tag is string => typeof tag === 'string') : undefined,
-      specifications: processedSpecifications,
+      specifications: processedSpecifications, // Use the processed specifications
       shipping_info: data.shipping_info,
       return_policy: data.return_policy,
-      vendors: data.vendors as Vendor | undefined, // Assuming vendors is correctly structured or null
-      product_categories: data.product_categories as ProductCategory | undefined, // Same for product_categories
+      vendors: data.vendors as Vendor | undefined, 
+      product_categories: data.product_categories as ProductCategory | undefined,
       created_at: data.created_at,
     };
     console.log("Processed product data:", productDetailData);
@@ -469,16 +462,16 @@ export default function ProductDetail() {
         {/* Breadcrumbs */}
         <div className="text-sm text-muted-foreground mb-4">
           <Link to="/marketplace" className="hover:underline">Marketplace</Link>
-          {product.product_categories && (
+          {product!.product_categories && ( // product is checked for nullity before this render path
             <>
               <ChevronRight className="inline h-4 w-4 mx-1" />
-              <Link to={`/marketplace?category=${product.product_categories.name.toLowerCase().replace(/\s+/g, '-')}`} className="hover:underline">
-                {product.product_categories.name}
+              <Link to={`/marketplace?category=${product!.product_categories.name.toLowerCase().replace(/\s+/g, '-')}`} className="hover:underline">
+                {product!.product_categories.name}
               </Link>
             </>
           )}
           <ChevronRight className="inline h-4 w-4 mx-1" />
-          <span className="truncate max-w-[200px] sm:max-w-xs md:max-w-sm inline-block align-bottom">{product.name}</span>
+          <span className="truncate max-w-[200px] sm:max-w-xs md:max-w-sm inline-block align-bottom">{product!.name}</span>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
@@ -487,7 +480,7 @@ export default function ProductDetail() {
             <div className="border rounded-lg p-2 bg-white mb-2 aspect-square flex items-center justify-center">
               <img 
                 src={selectedImage || DEFAULT_PRODUCT_IMAGE} 
-                alt={product.name} 
+                alt={product!.name} 
                 className="w-full h-auto object-contain rounded-lg max-h-[350px] md:max-h-[400px]"
                 onError={(e) => (e.currentTarget.src = DEFAULT_PRODUCT_IMAGE)}
               />
@@ -504,7 +497,7 @@ export default function ProductDetail() {
                 >
                   <img 
                     src={imageSrc || DEFAULT_PRODUCT_IMAGE} 
-                    alt={`${product.name} thumbnail ${index + 1}`} 
+                    alt={`${product!.name} thumbnail ${index + 1}`} 
                     className="w-full h-full object-contain"
                     onError={(e) => (e.currentTarget.src = DEFAULT_PRODUCT_IMAGE)}
                   />
@@ -523,27 +516,27 @@ export default function ProductDetail() {
 
           {/* Product Info */}
           <div className="space-y-4">
-            <h1 className="text-2xl md:text-3xl font-bold">{product.name}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold">{product!.name}</h1>
             
             <div className="flex items-center gap-4 flex-wrap">
-              {product.average_rating && product.average_rating > 0 ? (
+              {product!.average_rating && product!.average_rating > 0 ? (
                 <div className="flex items-center">
-                  <span className="text-yellow-500 font-bold mr-1">{product.average_rating.toFixed(1)}</span>
+                  <span className="text-yellow-500 font-bold mr-1">{product!.average_rating.toFixed(1)}</span>
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className={cn("h-5 w-5", i < Math.round(product.average_rating!) ? "fill-yellow-400 text-yellow-400" : "text-gray-300")} />
+                    <Star key={i} className={cn("h-5 w-5", i < Math.round(product!.average_rating!) ? "fill-yellow-400 text-yellow-400" : "text-gray-300")} />
                   ))}
-                  {product.rating_count !== undefined && <span className="text-sm text-muted-foreground ml-2">({product.rating_count} ratings)</span>}
+                  {product!.rating_count !== undefined && <span className="text-sm text-muted-foreground ml-2">({product!.rating_count} ratings)</span>}
                 </div>
               ) : (
                 <span className="text-sm text-muted-foreground">No ratings yet</span>
               )}
-              {product.sold_count !== undefined && product.sold_count > 0 && <span className="text-sm text-muted-foreground">| {product.sold_count} sold</span>}
+              {product!.sold_count !== undefined && product!.sold_count > 0 && <span className="text-sm text-muted-foreground">| {product!.sold_count} sold</span>}
             </div>
 
             <div>
-              <span className="text-3xl font-bold text-primary">₱{product.price.toFixed(2)}</span>
-              {product.original_price && discountPercentage > 0 && (
-                <span className="text-xl text-gray-400 line-through ml-2">₱{product.original_price.toFixed(2)}</span>
+              <span className="text-3xl font-bold text-primary">₱{product!.price.toFixed(2)}</span>
+              {product!.original_price && discountPercentage > 0 && (
+                <span className="text-xl text-gray-400 line-through ml-2">₱{product!.original_price.toFixed(2)}</span>
               )}
               {discountPercentage > 0 && (
                 <Badge variant="destructive" className="ml-2">-{discountPercentage}%</Badge>
@@ -552,9 +545,9 @@ export default function ProductDetail() {
             
             <div className="flex items-center gap-2 text-sm">
               <span className="text-muted-foreground">Availability:</span>
-              {product.stock_quantity > 0 ? (
+              {product!.stock_quantity > 0 ? (
                 <span className="text-green-600 font-medium">
-                  In Stock ({product.stock_quantity} available)
+                  In Stock ({product!.stock_quantity} available)
                 </span>
               ) : (
                 <span className="text-red-600 font-medium">Out of Stock</span>
@@ -568,7 +561,7 @@ export default function ProductDetail() {
                   <Minus className="h-4 w-4" />
                 </Button>
                 <span className="px-3 text-sm w-8 text-center">{quantity}</span>
-                <Button variant="ghost" size="icon" onClick={incrementQuantity} disabled={quantity >= product.stock_quantity} className="h-8 w-8">
+                <Button variant="ghost" size="icon" onClick={incrementQuantity} disabled={quantity >= product!.stock_quantity} className="h-8 w-8">
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
@@ -578,7 +571,7 @@ export default function ProductDetail() {
               <Button 
                 size="lg" 
                 onClick={handleAddToCart} 
-                disabled={product.stock_quantity === 0 || !user || quantity > product.stock_quantity}
+                disabled={product!.stock_quantity === 0 || !user || quantity > product!.stock_quantity}
                 className="bg-blue-500 hover:bg-blue-600 text-white flex-1"
               >
                 <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
@@ -586,7 +579,7 @@ export default function ProductDetail() {
               <Button 
                 size="lg" 
                 onClick={handleBuyNow} 
-                disabled={product.stock_quantity === 0 || !user || quantity > product.stock_quantity}
+                disabled={product!.stock_quantity === 0 || !user || quantity > product!.stock_quantity}
                 className="bg-primary hover:bg-primary/90 text-white flex-1"
               >
                 Buy Now
@@ -602,13 +595,13 @@ export default function ProductDetail() {
               </Button>
             </div>
             
-            {product.vendors && (
+            {product!.vendors && (
               <div className="mt-6 border-t pt-4">
                 <p className="text-sm text-muted-foreground mb-1">Sold by:</p>
                 <div className="flex items-center gap-2">
                   <Store className="h-5 w-5 text-primary" />
-                  <Link to={`/marketplace/vendor/${product.vendors.id}`} className="font-medium hover:underline text-primary">
-                    {product.vendors.shop_name}
+                  <Link to={`/marketplace/vendor/${product!.vendors.id}`} className="font-medium hover:underline text-primary">
+                    {product!.vendors.shop_name}
                   </Link>
                 </div>
               </div>
@@ -619,14 +612,14 @@ export default function ProductDetail() {
         <div className="mt-8 md:mt-12">
           <h2 className="text-xl font-semibold mb-3">Product Description</h2>
           <div className="text-muted-foreground whitespace-pre-wrap prose prose-sm max-w-none">
-            {product.description || "No description available."}
+            {product!.description || "No description available."}
           </div>
           
-          {product.specifications && product.specifications.length > 0 && (
+          {product!.specifications && product!.specifications.length > 0 && (
             <>
               <h2 className="text-xl font-semibold mt-6 mb-3">Specifications</h2>
               <ul className="list-disc list-inside text-muted-foreground space-y-1">
-                {product.specifications.map((spec, index) => (
+                {product!.specifications.map((spec, index) => (
                   <li key={index}><strong>{spec.key}:</strong> {spec.value}</li>
                 ))}
               </ul>
@@ -634,18 +627,18 @@ export default function ProductDetail() {
           )}
         </div>
         
-        {(product.shipping_info || product.return_policy) && (
+        {(product!.shipping_info || product!.return_policy) && (
             <div className="mt-8 md:mt-12 grid md:grid-cols-2 gap-6 border-t pt-6">
-                {product.shipping_info && (
+                {product!.shipping_info && (
                     <div>
                         <h3 className="text-lg font-medium mb-2 flex items-center"><Truck className="mr-2 h-5 w-5 text-primary" /> Shipping Information</h3>
-                        <p className="text-sm text-muted-foreground">{product.shipping_info}</p>
+                        <p className="text-sm text-muted-foreground">{product!.shipping_info}</p>
                     </div>
                 )}
-                {product.return_policy && (
+                {product!.return_policy && (
                     <div>
                         <h3 className="text-lg font-medium mb-2 flex items-center"><RotateCcw className="mr-2 h-5 w-5 text-primary" /> Return Policy</h3>
-                        <p className="text-sm text-muted-foreground">{product.return_policy}</p>
+                        <p className="text-sm text-muted-foreground">{product!.return_policy}</p>
                     </div>
                 )}
             </div>
