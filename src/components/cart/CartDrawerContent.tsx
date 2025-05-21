@@ -282,6 +282,7 @@ export const CartDrawerContent = ({ onClose }: CartDrawerContentProps) => {
       )}
 
       {cartItems && cartItems.length > 0 && (
+  {cartItems && cartItems.length > 0 && (
   <SheetFooter className="p-4 border-t bg-background flex flex-col gap-4">
     
     {/* Order special instructions */}
@@ -323,6 +324,7 @@ export const CartDrawerContent = ({ onClose }: CartDrawerContentProps) => {
     
   </SheetFooter>
 )}
+
 
     </div>
   );
