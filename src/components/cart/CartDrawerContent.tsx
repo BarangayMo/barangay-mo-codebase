@@ -5,13 +5,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { RoleButton } from '@/components/ui/role-button';
-import { Button } from '@/components/ui/button'; // Added Button import
+import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Textarea } from "@/components/ui/textarea";
-import { X, Minus, Plus, Trash2, Loader2, ShoppingBag } from 'lucide-react';
+import { Minus, Plus, Trash2, Loader2, ShoppingBag } from 'lucide-react'; // Removed X
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatCurrency } from '@/lib/utils'; // Import formatCurrency
 
 const DEFAULT_PRODUCT_IMAGE = "/lovable-uploads/fde1e978-0d35-49ec-9f4b-1f03b096b981.png";
 
@@ -78,7 +79,11 @@ const fetchCartItemsForDrawer = async (userId: string): Promise<CartItemDisplay[
     });
 };
 
-export const CartDrawerContent = () => {
+interface CartDrawerContentProps {
+  onClose?: () => void; // Add onClose prop
+}
+
+export const CartDrawerContent = ({ onClose }: CartDrawerContentProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -133,6 +138,7 @@ export const CartDrawerContent = () => {
     }
   });
 
+
   const handleUpdateQuantity = (id: string, newQuantity: number) => {
     if (newQuantity < 1) return;
     updateQuantityMutation.mutate({ cartItemId: id, newQuantity });
@@ -143,7 +149,6 @@ export const CartDrawerContent = () => {
   };
 
   const subtotal = cartItems?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0;
-  // Shipping and discount logic can be simplified or omitted for drawer, full calculation at checkout.
   const total = subtotal; 
 
   const handleCheckout = () => {
@@ -151,27 +156,23 @@ export const CartDrawerContent = () => {
       toast({ title: "Cart is empty", description: "Please add items to your cart before checkout.", variant: "default" });
       return;
     }
-    // Close the sheet before navigating
-    const closeButton = document.getElementById('cart-drawer-close-button');
-    if (closeButton) closeButton.click();
-    
+    if (onClose) { // Use onClose prop to close the drawer
+      onClose();
+    }
     navigate("/marketplace/checkout", { state: { cartItems, total, specialInstructions } });
   };
 
   if (!user) {
-    // This case should ideally not be reached if drawer is only shown for authenticated users
     return <div className="p-6 text-center">Please log in to view your cart.</div>;
   }
 
   return (
     <div className="flex flex-col h-full">
       <SheetHeader className="p-4 border-b">
-        <SheetTitle className="text-xl font-semibold">Your cart</SheetTitle>
-        <SheetClose asChild id="cart-drawer-close-button">
-          <Button variant="ghost" size="icon" className="absolute top-3 right-3 text-muted-foreground hover:text-foreground">
-            <X className="h-5 w-5" />
-          </Button>
-        </SheetClose>
+        <SheetTitle className="text-xl font-semibold">
+          Your cart ({cartItems?.length || 0})
+        </SheetTitle>
+        {/* Removed the explicit SheetClose X button here */}
       </SheetHeader>
 
       {isLoading && (
@@ -202,7 +203,7 @@ export const CartDrawerContent = () => {
           <h3 className="text-lg font-medium">Your cart is empty</h3>
           <p className="text-sm text-muted-foreground mb-4">Add some products to get started.</p>
           <SheetClose asChild>
-             <Button asChild variant="outline">
+             <Button asChild variant="outline" onClick={onClose}> {/* Also call onClose here if sheet should close */}
                 <Link to="/marketplace">Continue Shopping</Link>
             </Button>
           </SheetClose>
@@ -220,7 +221,7 @@ export const CartDrawerContent = () => {
             <div className="space-y-4">
             {cartItems.map(item => (
               <div key={item.cart_item_id} className="flex gap-3 items-start p-1 border-b pb-3 last:border-b-0">
-                <SheetClose asChild>
+                <SheetClose asChild onClick={onClose}>
                   <Link to={`/marketplace/product/${item.product_id}`} className="flex-shrink-0">
                     <img
                       src={item.image || DEFAULT_PRODUCT_IMAGE}
@@ -231,12 +232,12 @@ export const CartDrawerContent = () => {
                   </Link>
                 </SheetClose>
                 <div className="flex-1 min-w-0">
-                  <SheetClose asChild>
+                  <SheetClose asChild onClick={onClose}>
                     <Link to={`/marketplace/product/${item.product_id}`} className="hover:underline">
                       <h4 className="text-sm font-medium truncate">{item.name}</h4>
                     </Link>
                   </SheetClose>
-                  <p className="text-xs text-muted-foreground">₱{item.price.toFixed(2)}</p>
+                  <p className="text-xs text-muted-foreground">{formatCurrency(item.price)}</p>
                   {/* Quantity Controls */}
                   <div className="flex items-center mt-1.5">
                     <Button
@@ -271,7 +272,7 @@ export const CartDrawerContent = () => {
                   {item.quantity > item.max_quantity && <p className="text-xs text-red-500 mt-1">Max {item.max_quantity} in stock</p>}
                 </div>
                 <div className="text-sm font-medium text-right">
-                  ₱{(item.price * item.quantity).toFixed(2)}
+                  {formatCurrency(item.price * item.quantity)}
                 </div>
               </div>
             ))}
@@ -282,6 +283,13 @@ export const CartDrawerContent = () => {
 
       {cartItems && cartItems.length > 0 && (
         <SheetFooter className="p-4 border-t bg-background flex-col gap-4">
+          <div className="w-full space-y-1">
+            <div className="flex justify-between text-lg font-semibold">
+              <span>Estimated total</span>
+              <span>{formatCurrency(total)}</span>
+            </div>
+            <p className="text-xs text-muted-foreground">Taxes, discounts and shipping calculated at checkout.</p>
+          </div>
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="instructions">
               <AccordionTrigger className="text-sm">Order special instructions</AccordionTrigger>
@@ -296,13 +304,6 @@ export const CartDrawerContent = () => {
             </AccordionItem>
           </Accordion>
           
-          <div className="w-full space-y-1">
-            <div className="flex justify-between text-lg font-semibold">
-              <span>Estimated total</span>
-              <span>₱{total.toFixed(2)}</span>
-            </div>
-            <p className="text-xs text-muted-foreground">Taxes, discounts and shipping calculated at checkout.</p>
-          </div>
           <RoleButton
             size="lg"
             className="w-full"

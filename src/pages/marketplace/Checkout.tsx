@@ -5,17 +5,18 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, CreditCard, Wallet, CheckCircle } from "lucide-react";
+import { ChevronLeft, CreditCard, Wallet } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { formatCurrency } from '@/lib/utils';
 
 const paymentMethods = [
   { id: "cod", name: "Cash on Delivery", icon: Wallet },
   { id: "card", name: "Credit/Debit Card", icon: CreditCard },
 ];
 
-// Mock order summary
+// Mock order summary - this should ideally come from props/state in a real app
 const orderSummary = {
   subtotal: 680.00,
   shipping: 50.00,
@@ -29,7 +30,7 @@ export default function Checkout() {
   const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { userRole } = useAuth();
+  // const { userRole } = useAuth(); // userRole not directly used here, RoleButton handles it
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -160,21 +161,21 @@ export default function Checkout() {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Subtotal ({orderSummary.items} items)</span>
-                  <span>₱{orderSummary.subtotal.toFixed(2)}</span>
+                  <span>{formatCurrency(orderSummary.subtotal)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping</span>
-                  <span>₱{orderSummary.shipping.toFixed(2)}</span>
+                  <span>{formatCurrency(orderSummary.shipping)}</span>
                 </div>
                 {orderSummary.discount > 0 && (
                   <div className="flex justify-between text-green-600">
                     <span>Discount</span>
-                    <span>- ₱{orderSummary.discount.toFixed(2)}</span>
+                    <span>- {formatCurrency(orderSummary.discount)}</span>
                   </div>
                 )}
                 <div className="border-t pt-2 mt-2 font-bold flex justify-between">
                   <span>Total</span>
-                  <span>₱{orderSummary.total.toFixed(2)}</span>
+                  <span>{formatCurrency(orderSummary.total)}</span>
                 </div>
               </div>
               
@@ -182,7 +183,6 @@ export default function Checkout() {
                 type="submit" 
                 className="w-full mt-4" 
                 disabled={isProcessing}
-                // variant="default" // RoleButton uses "default" by default for role colors
               >
                 {isProcessing ? "Processing..." : "Place Order"}
               </RoleButton>

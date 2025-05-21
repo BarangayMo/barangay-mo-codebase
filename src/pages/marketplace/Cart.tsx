@@ -3,12 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { ChevronLeft, Trash2, ShoppingBag, Minus, Plus, Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatCurrency } from '@/lib/utils';
 
 const DEFAULT_PRODUCT_IMAGE = "/lovable-uploads/fde1e978-0d35-49ec-9f4b-1f03b096b981.png";
 
@@ -300,7 +301,7 @@ export default function Cart() {
                     </div>
                     
                     <div className="font-semibold text-right">
-                      ₱{(item.price * item.quantity).toFixed(2)}
+                      {formatCurrency(item.price * item.quantity)}
                     </div>
                   </div>
                 ))}
@@ -329,21 +330,21 @@ export default function Cart() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span>Subtotal ({cartItems.length} items)</span>
-                    <span>₱{subtotal.toFixed(2)}</span>
+                    <span>{formatCurrency(subtotal)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Shipping</span>
-                    <span>₱{shipping.toFixed(2)}</span>
+                    <span>{formatCurrency(shipping)}</span>
                   </div>
                   {isPromoApplied && (
                     <div className="flex justify-between text-green-600">
                       <span>Discount (5%)</span>
-                      <span>- ₱{discount.toFixed(2)}</span>
+                      <span>- {formatCurrency(discount)}</span>
                     </div>
                   )}
                   <div className="border-t pt-2 mt-2 font-bold flex justify-between text-lg">
                     <span>Total</span>
-                    <span>₱{total.toFixed(2)}</span>
+                    <span>{formatCurrency(total)}</span>
                   </div>
                 </div>
                 

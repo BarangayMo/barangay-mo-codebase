@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, User, ShoppingCart, X } from "lucide-react"; // Added X for SheetClose
+import { Bell, User, ShoppingCart } from "lucide-react"; // Removed X as it's not used here directly now
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { HeaderLogo } from "./header/HeaderLogo";
@@ -9,14 +9,16 @@ import { DesktopNavItems } from "./header/DesktopNavItems";
 import { ProfileMenu } from "./ProfileMenu";
 import { LanguageSelector } from "./LanguageSelector";
 import { useCartSummary } from "@/hooks/useCartSummary";
-import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from "@/components/ui/sheet"; // Added Sheet components
-import { CartDrawerContent } from "@/components/cart/CartDrawerContent"; // Import the new drawer content
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"; // Removed SheetClose, SheetHeader, SheetTitle as they are used in CartDrawerContent
+import { CartDrawerContent } from "@/components/cart/CartDrawerContent";
+import { useState } from "react"; // Added useState
 
 export const Header = () => {
   const { isAuthenticated, userRole } = useAuth();
   const isMobile = useIsMobile();
   const location = useLocation();
   const { cartItemCount } = useCartSummary();
+  const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false); // State for drawer
 
   const getDashboardRoute = () => {
     switch (userRole) {
@@ -76,7 +78,7 @@ export const Header = () => {
                       </Link>
                     </Button>
                   ) : (
-                    <Sheet>
+                    <Sheet open={isCartDrawerOpen} onOpenChange={setIsCartDrawerOpen}>
                       <SheetTrigger asChild>
                         <Button variant="ghost" size="icon" className="relative">
                           <ShoppingCart className="h-5 w-5" />
@@ -88,7 +90,7 @@ export const Header = () => {
                         </Button>
                       </SheetTrigger>
                       <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col">
-                        <CartDrawerContent />
+                        <CartDrawerContent onClose={() => setIsCartDrawerOpen(false)} />
                       </SheetContent>
                     </Sheet>
                   )
