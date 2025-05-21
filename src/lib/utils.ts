@@ -5,10 +5,12 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('en-PH', {
+// Updated formatCurrency to accept a currency code
+export const formatCurrency = (amount: number, currency: string): string => {
+  return new Intl.NumberFormat('en-US', { // Using 'en-US' for broad locale compatibility
     style: 'currency',
-    currency: 'PHP'
+    currency: currency,
+    currencyDisplay: 'code' // Ensures the currency code (e.g., NGN, USD) is displayed
   }).format(amount);
 };
 
