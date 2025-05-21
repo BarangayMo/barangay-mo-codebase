@@ -71,7 +71,7 @@ export const Header = () => {
                       <Link to="/marketplace/cart">
                         <ShoppingCart className="h-4 w-4 md:h-5 md:w-5" />
                         {cartItemCount > 0 && (
-                          <span className="absolute -top-0.5 -right-0.5 text-white text-[10px] md:text-xs rounded-full w-3.5 h-3.5 md:w-4 md:h-4 flex items-center justify-center bg-red-500">
+                          <span className="absolute -top-0.5 -right-0.5 text-white text-[10px] md:text-xs rounded-full w-3.5 h-3.5 md:w-4 md:h-4 flex items-center justify-center bg-official">
                             {cartItemCount}
                           </span>
                         )}
@@ -83,7 +83,7 @@ export const Header = () => {
                         <Button variant="ghost" size="icon" className="relative">
                           <ShoppingCart className="h-5 w-5" />
                           {cartItemCount > 0 && (
-                            <span className="absolute -top-1 -right-1 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center bg-red-500">
+                            <span className="absolute -top-0.5 -right-0.5 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center bg-official">
                               {cartItemCount}
                             </span>
                           )}
@@ -98,13 +98,13 @@ export const Header = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="relative w-8 h-8"
+                  className="relative w-8 h-8 md:w-9 md:h-9"
                   asChild
                 >
                   <Link to="/notifications">
                     <Bell className="h-4 w-4 md:h-5 md:w-5" />
-                    <span className="absolute -top-0.5 -right-0.5 text-white text-[10px] md:text-xs rounded-full w-3.5 h-3.5 md:w-4 md:h-4 flex items-center justify-center bg-[#ea384c]">
-                      3
+                    <span className="absolute -top-0.5 -right-0.5 text-white text-[10px] md:text-xs rounded-full w-3.5 h-3.5 md:w-4 md:h-4 flex items-center justify-center bg-official">
+                      3 {/* This is a placeholder count */}
                     </span>
                   </Link>
                 </Button>
@@ -132,11 +132,20 @@ export const Header = () => {
                 </>
               )}
               {showCartIcon && (
-                <Button asChild variant="ghost" size="icon" className="relative w-8 h-8">
-                  <Link to="/marketplace/cart">
-                    <ShoppingCart className="h-4 w-4 md:h-5 md:w-5" />
-                  </Link>
-                </Button>
+                isMobile ? ( // Also update mobile cart icon badge for consistency when not authenticated
+                  <Button asChild variant="ghost" size="icon" className="relative w-8 h-8">
+                    <Link to="/marketplace/cart">
+                      <ShoppingCart className="h-4 w-4 md:h-5 md:w-5" />
+                      {/* Assuming no badge if not logged in and cart is empty, or a generic style if cart can be used anonymously */}
+                    </Link>
+                  </Button>
+                ) : ( // Desktop cart icon for unauthenticated user
+                  <Button asChild variant="ghost" size="icon" className="relative">
+                     <Link to="/marketplace/cart">
+                       <ShoppingCart className="h-5 w-5" />
+                     </Link>
+                  </Button>
+                )
               )}
               {isMobile && (
                 <Button asChild variant="ghost" size="icon" className="rounded-full w-8 h-8">
