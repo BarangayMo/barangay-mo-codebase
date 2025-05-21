@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
-import { Button } from "@/components/ui/button";
+import { RoleButton } from "@/components/ui/role-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -9,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { ChevronLeft, CreditCard, Wallet, CheckCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const paymentMethods = [
   { id: "cod", name: "Cash on Delivery", icon: Wallet },
@@ -29,6 +29,7 @@ export default function Checkout() {
   const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { userRole } = useAuth();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -177,13 +178,14 @@ export default function Checkout() {
                 </div>
               </div>
               
-              <Button 
+              <RoleButton 
                 type="submit" 
                 className="w-full mt-4" 
                 disabled={isProcessing}
+                // variant="default" // RoleButton uses "default" by default for role colors
               >
                 {isProcessing ? "Processing..." : "Place Order"}
-              </Button>
+              </RoleButton>
             </div>
           </div>
         </form>
