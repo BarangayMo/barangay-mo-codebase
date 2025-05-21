@@ -1,4 +1,3 @@
-
 import { FC } from "react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +25,8 @@ interface ProductCardProps {
   product: ProductCardType;
 }
 
+const DEFAULT_PRODUCT_IMAGE = "/lovable-uploads/fde1e978-0d35-49ec-9f4b-1f03b096b981.png";
+
 export const ProductCard: FC<ProductCardProps> = ({ product }) => {
   const {
     id,
@@ -44,23 +45,18 @@ export const ProductCard: FC<ProductCardProps> = ({ product }) => {
     ? Math.round(((original_price - price) / original_price) * 100)
     : 0;
     
-  console.log("Product card rendering with ID:", id);
+  console.log("Product card rendering with ID:", id, "Image URL:", main_image_url);
 
   return (
     <Link to={`/marketplace/product/${id}`} className="group">
       <div className="border rounded-lg overflow-hidden bg-white hover:shadow-md transition-shadow">
         <div className="relative aspect-square bg-gray-100">
-          {main_image_url ? (
-            <img
-              src={main_image_url}
-              alt={name}
-              className="object-contain w-full h-full p-2"
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full w-full">
-              <div className="text-3xl text-gray-300">📷</div>
-            </div>
-          )}
+          <img
+            src={main_image_url || DEFAULT_PRODUCT_IMAGE}
+            alt={name}
+            className="object-contain w-full h-full p-2"
+            onError={(e) => (e.currentTarget.src = DEFAULT_PRODUCT_IMAGE)}
+          />
           {discountPercentage > 0 && (
             <Badge variant="destructive" className="absolute top-2 left-2">
               -{discountPercentage}%

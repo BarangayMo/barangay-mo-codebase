@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +5,8 @@ import { useToast } from "@/hooks/use-toast";
 import { ChevronLeft, Trash2, ShoppingBag, Package } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+
+const DEFAULT_PRODUCT_IMAGE = "/lovable-uploads/fde1e978-0d35-49ec-9f4b-1f03b096b981.png";
 
 // Mock cart data
 const initialCartItems = [
@@ -24,6 +25,14 @@ const initialCartItems = [
     quantity: 1,
     image: "/lovable-uploads/3ee20358-a5dd-4933-a21d-71d3f13d0047.png",
     seller: "Hotel Supplies PH"
+  },
+  {
+    id: 3, // Example of item that might miss an image in real data
+    name: "Stainless Steel Vegetable Grater",
+    price: 288.53,
+    quantity: 1,
+    image: "", // Empty image string to test default
+    seller: "Metro Cookwares"
   }
 ];
 
@@ -77,7 +86,7 @@ export default function Cart() {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto pb-20">
+      <div className="max-w-4xl mx-auto px-4 py-6 pb-20">
         <div className="flex items-center mb-4">
           <Link to="/marketplace" className="flex items-center text-sm text-muted-foreground hover:text-primary">
             <ChevronLeft className="h-4 w-4 mr-1" />
@@ -93,28 +102,24 @@ export default function Cart() {
               <div className="space-y-4">
                 {cartItems.map(item => (
                   <div key={item.id} className="flex gap-4 p-4 border rounded-lg bg-white">
-                    <div className="w-20 h-20">
-                      {item.image ? (
-                        <img 
-                          src={item.image} 
-                          alt={item.name}
-                          className="w-20 h-20 object-contain"
-                        />
-                      ) : (
-                        <div className="w-20 h-20 bg-gray-100 flex items-center justify-center">
-                          <Package className="text-gray-400" />
-                        </div>
-                      )}
+                    <div className="w-20 h-20 flex-shrink-0 bg-gray-100 flex items-center justify-center rounded">
+                      <img 
+                        src={item.image || DEFAULT_PRODUCT_IMAGE} 
+                        alt={item.name}
+                        className="w-full h-full object-contain p-1"
+                        onError={(e) => (e.currentTarget.src = DEFAULT_PRODUCT_IMAGE)}
+                      />
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium">{item.name}</h3>
-                      <p className="text-sm text-muted-foreground">{item.seller}</p>
+                      <h3 className="font-medium truncate">{item.name}</h3>
+                      <p className="text-sm text-muted-foreground truncate">{item.seller}</p>
                       <div className="flex items-center justify-between mt-2">
                         <div className="flex items-center">
                           <button 
-                            className="w-8 h-8 flex items-center justify-center border rounded-l-md"
+                            className="w-8 h-8 flex items-center justify-center border rounded-l-md hover:bg-gray-50"
                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            disabled={item.quantity <= 1}
                           >
                             -
                           </button>
@@ -122,7 +127,7 @@ export default function Cart() {
                             {item.quantity}
                           </div>
                           <button
-                            className="w-8 h-8 flex items-center justify-center border rounded-r-md"
+                            className="w-8 h-8 flex items-center justify-center border rounded-r-md hover:bg-gray-50"
                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
                           >
                             +
@@ -139,8 +144,8 @@ export default function Cart() {
                       </div>
                     </div>
                     
-                    <div className="font-bold">
-                      ₱{item.price.toFixed(2)}
+                    <div className="font-semibold text-right">
+                      ₱{(item.price * item.quantity).toFixed(2)}
                     </div>
                   </div>
                 ))}
@@ -182,7 +187,7 @@ export default function Cart() {
                       <span>- ₱{discount.toFixed(2)}</span>
                     </div>
                   )}
-                  <div className="border-t pt-2 mt-2 font-bold flex justify-between">
+                  <div className="border-t pt-2 mt-2 font-bold flex justify-between text-lg">
                     <span>Total</span>
                     <span>₱{total.toFixed(2)}</span>
                   </div>
@@ -191,6 +196,7 @@ export default function Cart() {
                 <Button 
                   className="w-full mt-4" 
                   onClick={handleCheckout}
+                  size="lg"
                 >
                   Proceed to Checkout
                 </Button>

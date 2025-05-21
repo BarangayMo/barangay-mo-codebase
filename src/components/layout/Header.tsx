@@ -1,7 +1,6 @@
-
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, User } from "lucide-react";
+import { Bell, User, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { HeaderLogo } from "./header/HeaderLogo";
@@ -13,6 +12,7 @@ import { LanguageSelector } from "./LanguageSelector";
 export const Header = () => {
   const { isAuthenticated, userRole } = useAuth();
   const isMobile = useIsMobile();
+  const location = useLocation();
 
   const getDashboardRoute = () => {
     switch (userRole) {
@@ -27,6 +27,9 @@ export const Header = () => {
     }
   };
 
+  const showCartIcon = location.pathname.startsWith('/marketplace');
+  const cartItemCount = 2; 
+
   return (
     <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md shadow-sm">
       <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
@@ -37,7 +40,7 @@ export const Header = () => {
 
         <DesktopNavItems />
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1 md:gap-3">
           {isAuthenticated ? (
             <>
               {!isMobile && (
@@ -56,7 +59,19 @@ export const Header = () => {
                   <LanguageSelector />
                 </>
               )}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-0.5 md:gap-2">
+                {showCartIcon && (
+                  <Button asChild variant="ghost" size="icon" className="relative">
+                    <Link to="/marketplace/cart">
+                      <ShoppingCart className="h-5 w-5" />
+                      {cartItemCount > 0 && (
+                        <span className="absolute -top-1 -right-1 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center bg-red-500">
+                          {cartItemCount}
+                        </span>
+                      )}
+                    </Link>
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -81,7 +96,7 @@ export const Header = () => {
               )}
             </>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-0.5 md:gap-2">
               {!isMobile && (
                 <>
                   <LanguageSelector />
@@ -92,6 +107,18 @@ export const Header = () => {
                     <Link to="/register">Register</Link>
                   </Button>
                 </>
+              )}
+              {showCartIcon && (
+                <Button asChild variant="ghost" size="icon" className="relative">
+                  <Link to="/marketplace/cart">
+                    <ShoppingCart className="h-5 w-5" />
+                    {cartItemCount > 0 && (
+                      <span className="absolute -top-1 -right-1 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center bg-red-500">
+                        {cartItemCount}
+                      </span>
+                    )}
+                  </Link>
+                </Button>
               )}
               {isMobile && (
                 <Button asChild variant="ghost" size="icon" className="rounded-full">
