@@ -282,38 +282,48 @@ export const CartDrawerContent = ({ onClose }: CartDrawerContentProps) => {
       )}
 
       {cartItems && cartItems.length > 0 && (
-        <SheetFooter className="p-4 border-t bg-background flex-col gap-4">
-          <div className="w-full space-y-1">
-            <div className="flex justify-between text-lg font-semibold">
-              <span>Estimated total</span>
-              <span>{formatCurrency(total)}</span>
-            </div>
-            <p className="text-xs text-muted-foreground">Taxes, discounts and shipping calculated at checkout.</p>
-          </div>
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="instructions">
-              <AccordionTrigger className="text-sm">Order special instructions</AccordionTrigger>
-              <AccordionContent>
-                <Textarea
-                  placeholder="Add a note for the seller..."
-                  value={specialInstructions}
-                  onChange={(e) => setSpecialInstructions(e.target.value)}
-                  className="min-h-[80px]"
-                />
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-          
-          <RoleButton
-            size="lg"
-            className="w-full"
-            onClick={handleCheckout}
-            disabled={isLoading || !cartItems || cartItems.length === 0 || updateQuantityMutation.isPending || removeItemMutation.isPending}
-          >
-            Check out
-          </RoleButton>
-        </SheetFooter>
-      )}
+  <SheetFooter className="p-4 border-t bg-background flex-col gap-4">
+    
+    {/* Order special instructions */}
+    <Accordion type="single" collapsible className="w-full">
+      <AccordionItem value="instructions">
+        <AccordionTrigger className="text-sm">Order special instructions</AccordionTrigger>
+        <AccordionContent>
+          <Textarea
+            placeholder="Add a note for the seller..."
+            value={specialInstructions}
+            onChange={(e) => setSpecialInstructions(e.target.value)}
+            className="min-h-[80px]"
+          />
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+
+    {/* Estimated total */}
+    <div className="w-full space-y-1">
+      <div className="flex justify-between text-lg font-semibold">
+        <span>Estimated total</span>
+        <span>{formatCurrency(total)}</span>
+      </div>
+      <p className="text-xs text-muted-foreground">Taxes, discounts and shipping calculated at checkout.</p>
+    </div>
+
+    {/* Checkout button */}
+    <RoleButton
+      size="lg"
+      className="w-full"
+      onClick={handleCheckout}
+      disabled={
+        isLoading || !cartItems || cartItems.length === 0 ||
+        updateQuantityMutation.isPending || removeItemMutation.isPending
+      }
+    >
+      Check out
+    </RoleButton>
+    
+  </SheetFooter>
+)}
+
     </div>
   );
 };
