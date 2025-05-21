@@ -237,7 +237,7 @@ export const CartDrawerContent = ({ onClose }: CartDrawerContentProps) => {
                       <h4 className="text-sm font-medium truncate">{item.name}</h4>
                     </Link>
                   </SheetClose>
-                  <p className="text-xs text-muted-foreground">{formatCurrency(item.price)}</p>
+                  <p className="text-xs text-muted-foreground">{formatCurrency(item.price, 'NGN')}</p>
                   {/* Quantity Controls */}
                   <div className="flex items-center mt-1.5">
                     <Button
@@ -272,7 +272,7 @@ export const CartDrawerContent = ({ onClose }: CartDrawerContentProps) => {
                   {item.quantity > item.max_quantity && <p className="text-xs text-red-500 mt-1">Max {item.max_quantity} in stock</p>}
                 </div>
                 <div className="text-sm font-medium text-right">
-                  {formatCurrency(item.price * item.quantity)}
+                  {formatCurrency(item.price * item.quantity, 'NGN')}
                 </div>
               </div>
             ))}
@@ -305,7 +305,7 @@ export const CartDrawerContent = ({ onClose }: CartDrawerContentProps) => {
     <div className="w-full space-y-1">
       <div className="flex justify-between text-lg font-semibold">
         <span>Estimated total</span>
-        <span>{formatCurrency(total)}</span>
+        <span>{formatCurrency(total, 'NGN')}</span>
       </div>
       <p className="text-xs text-muted-foreground">
         Taxes, discounts and shipping calculated at checkout.

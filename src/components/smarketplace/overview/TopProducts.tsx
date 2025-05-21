@@ -1,4 +1,5 @@
 
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
 import { formatCurrency } from "@/lib/utils";
@@ -8,7 +9,7 @@ interface TopProductsProps {
     id: number;
     name: string;
     sales: number;
-    price: string;
+    price: string; // Keep as string, parsing will be handled
     stock: number;
   }>;
 }
@@ -41,7 +42,8 @@ export const TopProducts = ({ products }: TopProductsProps) => {
     {
       id: 'price',
       header: 'Price',
-      cell: (product) => formatCurrency(parseFloat(product.price.replace(/[^\d.-]/g, ''))),
+      // Ensure parseFloat is used correctly and provide a currency
+      cell: (product) => formatCurrency(parseFloat(product.price.replace(/[^\d.-]/g, '')), 'NGN'),
       align: 'right' as const,
     },
   ];
@@ -62,3 +64,4 @@ export const TopProducts = ({ products }: TopProductsProps) => {
     </Card>
   );
 };
+

@@ -301,7 +301,7 @@ export default function Cart() {
                     </div>
                     
                     <div className="font-semibold text-right">
-                      {formatCurrency(item.price * item.quantity)}
+                      {formatCurrency(item.price * item.quantity, 'NGN')}
                     </div>
                   </div>
                 ))}
@@ -330,21 +330,21 @@ export default function Cart() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span>Subtotal ({cartItems.length} items)</span>
-                    <span>{formatCurrency(subtotal)}</span>
+                    <span>{formatCurrency(subtotal, 'NGN')}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Shipping</span>
-                    <span>{formatCurrency(shipping)}</span>
+                    <span>{formatCurrency(shipping, 'NGN')}</span>
                   </div>
                   {isPromoApplied && (
                     <div className="flex justify-between text-green-600">
                       <span>Discount (5%)</span>
-                      <span>- {formatCurrency(discount)}</span>
+                      <span>- {formatCurrency(discount, 'NGN')}</span>
                     </div>
                   )}
                   <div className="border-t pt-2 mt-2 font-bold flex justify-between text-lg">
                     <span>Total</span>
-                    <span>{formatCurrency(total)}</span>
+                    <span>{formatCurrency(total, 'NGN')}</span>
                   </div>
                 </div>
                 
