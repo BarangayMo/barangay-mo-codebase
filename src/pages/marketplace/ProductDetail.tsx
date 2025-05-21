@@ -58,6 +58,7 @@ export interface ProductDetailType {
 const fetchProductById = async (productId: string): Promise<ProductDetailType | null> => {
   if (!productId) return null;
   console.log("Fetching product with ID:", productId);
+  
   const { data, error } = await supabase
     .from("products")
     .select(`
@@ -104,17 +105,23 @@ const fetchSimilarProducts = async (categoryId?: string | null, currentProductId
 
 
 export default function ProductDetail() {
-  const { id } = useParams<{ id: string }>(); // This parameter name must match the route parameter in AppRoutes.tsx
+  // Correctly extract the id parameter from the URL
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [quantity, setQuantity] = useState(1);
   
+  // Log to debug route parameter
+  useEffect(() => {
+    console.log("ProductDetail mounted with ID from useParams:", id);
+  }, [id]);
+  
   const { data: product, isLoading, error } = useQuery<ProductDetailType | null>({
     queryKey: ['product', id], 
     queryFn: () => fetchProductById(id!),
-    enabled: !!id,
+    enabled: !!id, // Only run the query if we have an ID
   });
 
   const { data: similarProducts, isLoading: isLoadingSimilar } = useQuery<ProductCardType[]>({
@@ -215,12 +222,13 @@ export default function ProductDetail() {
   }
 
   if (error || !product) {
+    console.error("Error or no product found:", error, "Product ID:", id);
     return (
       <Layout>
         <div className="max-w-5xl mx-auto p-6 text-center">
           <h2 className="text-2xl font-semibold mb-4">Product Not Found</h2>
           <p className="text-muted-foreground mb-6">
-            {error ? error.message : "The product you are looking for does not exist or is no longer available."}
+            {error ? `Error: ${error.message}` : `The product with ID: ${id} does not exist or is no longer available.`}
           </p>
           <Button asChild>
             <Link to="/marketplace">

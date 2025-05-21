@@ -43,6 +43,8 @@ export const ProductCard: FC<ProductCardProps> = ({ product }) => {
   const discountPercentage = original_price && price < original_price
     ? Math.round(((original_price - price) / original_price) * 100)
     : 0;
+    
+  console.log("Product card rendering with ID:", id);
 
   return (
     <Link to={`/marketplace/product/${id}`} className="group">

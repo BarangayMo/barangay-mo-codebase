@@ -2,18 +2,21 @@
 import { useState, useEffect } from "react";
 import DetailPage from "../DetailPage";
 import { Helmet } from "react-helmet";
+import { useParams } from "react-router-dom";
 
-const ProductDetail = () => {
+const ProductDetailAdmin = () => {
+  const { id } = useParams<{ id: string }>();
   // This helps simulate loading state briefly when navigating to the page
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
+    console.log("Admin Product Detail mounted with ID:", id);
     const timer = setTimeout(() => {
       setLoading(false);
     }, 500);
     
     return () => clearTimeout(timer);
-  }, []);
+  }, [id]);
   
   return (
     <>
@@ -31,4 +34,4 @@ const ProductDetail = () => {
   );
 };
 
-export default ProductDetail;
+export default ProductDetailAdmin;
