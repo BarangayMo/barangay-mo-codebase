@@ -102,7 +102,7 @@ const fetchSimilarProducts = async (categoryId?: string | null, currentProductId
 
 
 export default function ProductDetail() {
-  const { productId } = useParams<{ productId: string }>();
+  const { id: productId } = useParams<{ id: string }>(); // Changed 'productId' to 'id' and aliased to productId
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -110,19 +110,19 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   
   const { data: product, isLoading, error } = useQuery<ProductDetailType | null>({
-    queryKey: ['product', productId],
+    queryKey: ['product', productId], // productId here is the 'id' from params
     queryFn: () => fetchProductById(productId!),
     enabled: !!productId,
   });
 
   const { data: similarProducts, isLoading: isLoadingSimilar } = useQuery<ProductCardType[]>({
-    queryKey: ['similarProducts', product?.product_categories?.id, productId],
+    queryKey: ['similarProducts', product?.product_categories?.id, productId], // productId here is the 'id' from params
     queryFn: () => fetchSimilarProducts(product?.product_categories?.id, productId),
     enabled: !!product, // Fetch only when main product data is available
   });
 
   const addToCartMutation = useMutation({
-    mutationFn: async ({ productId, qty }: { productId: string; qty: number }) => {
+    mutationFn: async ({ prodId, qty }: { prodId: string; qty: number }) => { // Renamed productId to prodId to avoid conflict
       if (!user) {
         toast({ title: "Login Required", description: "Please login to add items to your cart.", variant: "destructive" });
         throw new Error("User not authenticated");
@@ -131,7 +131,7 @@ export default function ProductDetail() {
         .from('cart_items')
         .select('id, quantity')
         .eq('user_id', user.id)
-        .eq('product_id', productId)
+        .eq('product_id', prodId)
         .single();
 
       if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
@@ -145,7 +145,7 @@ export default function ProductDetail() {
       } else {
         const { error: insertError } = await supabase
           .from('cart_items')
-          .insert({ product_id: productId, user_id: user.id, quantity: qty });
+          .insert({ product_id: prodId, user_id: user.id, quantity: qty });
         if (insertError) throw insertError;
       }
     },
@@ -167,7 +167,7 @@ export default function ProductDetail() {
   
   const handleAddToCart = () => {
     if (!product) return;
-    addToCartMutation.mutate({ productId: product.id, qty: quantity });
+    addToCartMutation.mutate({ prodId: product.id, qty: quantity });
   };
   
   const handleBuyNow = () => {
@@ -176,13 +176,13 @@ export default function ProductDetail() {
     // This check is to prevent re-triggering navigation if "Buy Now" is clicked while "Add to Cart" is processing.
     // However, the core logic of Buy Now might be different (e.g., direct to checkout with item details).
     // For now, it adds to cart then navigates.
-    if (addToCartMutation.isPending && addToCartMutation.variables?.productId === product.id && addToCartMutation.variables?.qty === quantity) {
+    if (addToCartMutation.isPending && addToCartMutation.variables?.prodId === product.id && addToCartMutation.variables?.qty === quantity) {
       // If "Add to Cart" is already processing this exact item and quantity,
       // we might want to wait for it to complete or handle differently.
       // For simplicity, we allow proceeding, but this could be refined.
     }
     
-    addToCartMutation.mutate({ productId: product.id, qty: quantity}, {
+    addToCartMutation.mutate({ prodId: product.id, qty: quantity}, {
       onSuccess: () => {
         // Original onSuccess still runs (toast, invalidateQueries)
         // Then navigate
@@ -373,17 +373,17 @@ export default function ProductDetail() {
                   variant="outline" 
                   className="flex-1 border-primary text-primary hover:bg-primary/5"
                   onClick={handleAddToCart}
-                  disabled={!isAvailable || (addToCartMutation.isPending && addToCartMutation.variables?.productId === product.id && addToCartMutation.variables?.qty === quantity)}
+                  disabled={!isAvailable || (addToCartMutation.isPending && addToCartMutation.variables?.prodId === product.id && addToCartMutation.variables?.qty === quantity)}
                 >
                   <ShoppingCart className="mr-2 h-5 w-5" />
-                  {addToCartMutation.isPending && addToCartMutation.variables?.productId === product.id && addToCartMutation.variables?.qty === quantity ? "Adding..." : "Add to Cart"}
+                  {addToCartMutation.isPending && addToCartMutation.variables?.prodId === product.id && addToCartMutation.variables?.qty === quantity ? "Adding..." : "Add to Cart"}
                 </Button>
                 <Button 
                   className="flex-1 bg-red-500 hover:bg-red-600"
                   onClick={handleBuyNow}
-                  disabled={!isAvailable || (addToCartMutation.isPending && addToCartMutation.variables?.productId === product.id && addToCartMutation.variables?.qty === quantity)}
+                  disabled={!isAvailable || (addToCartMutation.isPending && addToCartMutation.variables?.prodId === product.id && addToCartMutation.variables?.qty === quantity)}
                 >
-                  {addToCartMutation.isPending && addToCartMutation.variables?.productId === product.id && addToCartMutation.variables?.qty === quantity ? "Processing..." : "Buy Now"}
+                  {addToCartMutation.isPending && addToCartMutation.variables?.prodId === product.id && addToCartMutation.variables?.qty === quantity ? "Processing..." : "Buy Now"}
                 </Button>
               </div>
             </div>
