@@ -1,10 +1,11 @@
+
 import { useAuth } from "@/contexts/AuthContext";
 import { Header } from "./Header";
 import { MobileNavbar } from "./MobileNavbar";
 import { DesktopSidebar } from "./DesktopSidebar";
 import { Footer } from "./Footer";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ReactNode, Suspense, useState, useEffect } from "react";
+import { ReactNode, Suspense, useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useLocation } from "react-router-dom";
 import { LoadingScreen } from "../ui/loading";
@@ -16,7 +17,7 @@ interface LayoutProps {
   children: ReactNode;
   hideHeader?: boolean;
   hideFooter?: boolean;
-  hideMobileNavbar?: boolean; // New prop
+  hideMobileNavbar?: boolean;
 }
 
 // Animation variants
@@ -47,18 +48,42 @@ export const Layout = ({ children, hideHeader = false, hideFooter = false, hideM
   const isMobile = useIsMobile();
   const { pathname } = useLocation();
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Prevent loading screen on tab visibility change
+  const previousPathRef = useRef(pathname);
+  const isVisibilityChange = useRef(false);
 
   // Only show footer on mobile for homepage
   const shouldShowFooter = !hideFooter && (!isMobile || pathname === '/');
 
   useEffect(() => {
-    // Simulate loading for at least 1 second when route changes
-    setIsLoading(true);
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 800);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        isVisibilityChange.current = true;
+      }
+    };
 
-    return () => clearTimeout(timer);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
+  useEffect(() => {
+    // Only show loading state if this is a genuine navigation, not a visibility change
+    if (pathname !== previousPathRef.current && !isVisibilityChange.current) {
+      setIsLoading(true);
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 800);
+      return () => clearTimeout(timer);
+    } else {
+      // Reset visibility change flag
+      isVisibilityChange.current = false;
+      // Don't show loading state for visibility changes
+      setIsLoading(false);
+    }
+    
+    // Update previous path
+    previousPathRef.current = pathname;
   }, [pathname]);
 
   const showSidebar = isAuthenticated && 
@@ -88,7 +113,7 @@ export const Layout = ({ children, hideHeader = false, hideFooter = false, hideM
           {!hideHeader && <Header />}
           <main className={cn(
             "flex-grow",
-            isMobile && !hideMobileNavbar ? "pb-20" : "" // Adjusted paddingBottom based on hideMobileNavbar
+            isMobile && !hideMobileNavbar ? "pb-20" : ""
           )}>
             {isLoading ? (
               renderSkeleton()
@@ -109,7 +134,7 @@ export const Layout = ({ children, hideHeader = false, hideFooter = false, hideM
               </Suspense>
             )}
           </main>
-          {isMobile && !hideMobileNavbar && <MobileNavbar />} {/* Conditionally render MobileNavbar */}
+          {isMobile && !hideMobileNavbar && <MobileNavbar />}
           {shouldShowFooter && <Footer />}
         </div>
       </div>
