@@ -15,7 +15,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { MobileNavbar } from "@/components/layout/MobileNavbar";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useTheme } from "@/components/theme-provider"; // Changed import
 import { motion } from "framer-motion";
 
 // Translation dictionary for all text in the component
@@ -82,7 +82,7 @@ export const Menu = () => {
   const navigate = useNavigate();
   const { logout, isAuthenticated } = useAuth();
   const { language } = useLanguage();
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme } = useTheme(); // This will now use the theme from src/components/theme-provider.tsx
   
   // Select the appropriate translations based on language
   const t = translations[language];
@@ -110,7 +110,7 @@ export const Menu = () => {
 
   return (
     <motion.div 
-      className="bg-gray-50 min-h-screen pb-20"
+      className="bg-gray-50 min-h-screen pb-20 dark:bg-zinc-900" // Added dark mode class
       initial="hidden"
       animate="visible"
       exit="exit"
@@ -118,129 +118,130 @@ export const Menu = () => {
     >
       {/* Header */}
       <motion.div 
-        className="px-4 py-4 flex items-center border-b bg-white"
+        className="px-4 py-4 flex items-center border-b bg-white dark:bg-zinc-800 dark:border-zinc-700" // Added dark mode classes
         variants={itemVariants}
       >
-        <button onClick={handleBack} className="mr-4">
+        <button onClick={handleBack} className="mr-4 text-gray-700 dark:text-gray-300">
           <ChevronLeft className="w-6 h-6" />
         </button>
-        <h1 className="text-xl font-bold">{t.menu}</h1>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t.menu}</h1>
       </motion.div>
 
       <motion.div className="px-4 py-3" variants={itemVariants}>
-        <h2 className="text-sm text-gray-500 mb-2">{t.general}</h2>
+        <h2 className="text-sm text-gray-500 dark:text-gray-400 mb-2">{t.general}</h2>
         
         {/* General Settings Group */}
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
+        <div className="bg-white dark:bg-zinc-800 rounded-lg shadow-sm overflow-hidden mb-6">
           {/* Profile Item - New */}
           <motion.div 
-            className="p-4 flex items-center justify-between border-b"
+            className="p-4 flex items-center justify-between border-b dark:border-zinc-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-700/50"
             variants={itemVariants}
             whileTap={{ scale: 0.98 }}
             onClick={handleProfileClick}
           >
             <div className="flex items-center">
-              <User className="text-gray-600 w-5 h-5 mr-3" />
-              <p className="font-medium">{t.profile}</p>
+              <User className="text-gray-600 dark:text-gray-400 w-5 h-5 mr-3" />
+              <p className="font-medium text-gray-800 dark:text-gray-200">{t.profile}</p>
             </div>
-            <ChevronRight className="h-5 w-5 text-gray-400" />
+            <ChevronRight className="h-5 w-5 text-gray-400 dark:text-gray-500" />
           </motion.div>
 
           {/* Feedback Item */}
           <motion.div 
-            className="p-4 flex items-center border-b"
+            className="p-4 flex items-center border-b dark:border-zinc-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-700/50"
             variants={itemVariants}
             whileTap={{ scale: 0.98 }}
           >
-            <ThumbsUp className="text-gray-600 w-5 h-5 mr-3" />
+            <ThumbsUp className="text-gray-600 dark:text-gray-400 w-5 h-5 mr-3" />
             <div>
-              <p className="font-medium">{t.feedback}</p>
-              <p className="text-sm text-gray-500">{t.feedbackDesc}</p>
+              <p className="font-medium text-gray-800 dark:text-gray-200">{t.feedback}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t.feedbackDesc}</p>
             </div>
           </motion.div>
           
           {/* Switch Themes Item */}
           <motion.div 
-            className="p-4 flex items-center justify-between border-b"
+            className="p-4 flex items-center justify-between border-b dark:border-zinc-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-700/50"
             variants={itemVariants}
-            whileTap={{ scale: 0.98 }}
+            // Removed whileTap for Switch, as it interferes with the switch interaction
           >
             <div className="flex items-center">
-              <ToggleRight className="text-gray-600 w-5 h-5 mr-3" />
-              <p className="font-medium">{t.themes}</p>
+              <ToggleRight className="text-gray-600 dark:text-gray-400 w-5 h-5 mr-3" />
+              <p className="font-medium text-gray-800 dark:text-gray-200">{t.themes}</p>
             </div>
             <Switch
               checked={theme === "dark"}
               onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+              className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input"
             />
           </motion.div>
           
           {/* Clear Cache Item */}
           <motion.div 
-            className="p-4 flex items-center border-b"
+            className="p-4 flex items-center border-b dark:border-zinc-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-700/50"
             variants={itemVariants}
             whileTap={{ scale: 0.98 }}
           >
             <div className="flex items-center flex-1">
-              <FileText className="text-gray-600 w-5 h-5 mr-3" />
-              <p className="font-medium">{t.cache}</p>
+              <FileText className="text-gray-600 dark:text-gray-400 w-5 h-5 mr-3" />
+              <p className="font-medium text-gray-800 dark:text-gray-200">{t.cache}</p>
             </div>
           </motion.div>
           
           {/* FAQ Item */}
           <motion.div 
-            className="p-4 flex items-center justify-between"
+            className="p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-700/50"
             variants={itemVariants}
             whileTap={{ scale: 0.98 }}
           >
             <div className="flex items-center">
-              <CircleHelp className="text-gray-600 w-5 h-5 mr-3" />
-              <p className="font-medium">{t.faq}</p>
+              <CircleHelp className="text-gray-600 dark:text-gray-400 w-5 h-5 mr-3" />
+              <p className="font-medium text-gray-800 dark:text-gray-200">{t.faq}</p>
             </div>
-            <ChevronRight className="h-5 w-5 text-gray-400" />
+            <ChevronRight className="h-5 w-5 text-gray-400 dark:text-gray-500" />
           </motion.div>
         </div>
         
         {/* Legal Group */}
-        <h2 className="text-sm text-gray-500 mb-2">{t.legal}</h2>
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
+        <h2 className="text-sm text-gray-500 dark:text-gray-400 mb-2">{t.legal}</h2>
+        <div className="bg-white dark:bg-zinc-800 rounded-lg shadow-sm overflow-hidden mb-6">
           {/* Privacy Terms Item */}
           <motion.div 
-            className="p-4 flex items-center justify-between border-b"
+            className="p-4 flex items-center justify-between border-b dark:border-zinc-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-700/50"
             variants={itemVariants}
             whileTap={{ scale: 0.98 }}
           >
             <div className="flex items-center">
-              <FileText className="text-gray-600 w-5 h-5 mr-3" />
-              <p className="font-medium">{t.privacy}</p>
+              <FileText className="text-gray-600 dark:text-gray-400 w-5 h-5 mr-3" />
+              <p className="font-medium text-gray-800 dark:text-gray-200">{t.privacy}</p>
             </div>
-            <ChevronRight className="h-5 w-5 text-gray-400" />
+            <ChevronRight className="h-5 w-5 text-gray-400 dark:text-gray-500" />
           </motion.div>
           
           {/* Terms and Conditions Item */}
           <motion.div 
-            className="p-4 flex items-center justify-between"
+            className="p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-700/50"
             variants={itemVariants}
             whileTap={{ scale: 0.98 }}
           >
             <div className="flex items-center">
-              <FileText className="text-gray-600 w-5 h-5 mr-3" />
-              <p className="font-medium">{t.terms}</p>
+              <FileText className="text-gray-600 dark:text-gray-400 w-5 h-5 mr-3" />
+              <p className="font-medium text-gray-800 dark:text-gray-200">{t.terms}</p>
             </div>
-            <ChevronRight className="h-5 w-5 text-gray-400" />
+            <ChevronRight className="h-5 w-5 text-gray-400 dark:text-gray-500" />
           </motion.div>
         </div>
         
         {/* Sign Out/In Button */}
         <motion.div 
-          className="bg-white rounded-lg shadow-sm overflow-hidden"
+          className="bg-white dark:bg-zinc-800 rounded-lg shadow-sm overflow-hidden"
           variants={itemVariants}
-          whileTap={{ scale: 0.98 }}
+          // Removed whileTap, button has its own feedback
         >
           {isAuthenticated ? (
             <button 
               onClick={handleLogout}
-              className="p-4 flex items-center w-full text-left text-red-600"
+              className="p-4 flex items-center w-full text-left text-red-600 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
             >
               <LogOut className="w-5 h-5 mr-3" />
               <p className="font-medium">{t.logout}</p>
@@ -248,7 +249,7 @@ export const Menu = () => {
           ) : (
             <button 
               onClick={handleLogin}
-              className="p-4 flex items-center w-full text-left text-blue-600"
+              className="p-4 flex items-center w-full text-left text-primary hover:bg-primary/10 dark:text-blue-400 dark:hover:bg-blue-400/10"
             >
               <LogIn className="w-5 h-5 mr-3" />
               <p className="font-medium">{t.login}</p>
