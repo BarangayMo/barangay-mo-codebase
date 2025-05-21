@@ -107,33 +107,67 @@ const fetchProductById = async (productId: string): Promise<ProductDetailType | 
       try {
         const specsInput = data.specifications; // specsInput is Json | null
 
-        if (Array.isArray(specsInput)) { // specsInput is Json[] which means (unknown[] | primitives)
-          processedSpecifications = specsInput
-            .filter((item): item is ProductSpecification => isProductSpecification(item)) // Guard ensures item is ProductSpecification
-            .map((spec: ProductSpecification) => ({ key: spec.key, value: spec.value })); // spec is now correctly typed
+        if (Array.isArray(specsInput)) { // Handle when specsInput is an array of Json items
+          const collectedSpecs: ProductSpecification[] = [];
+          for (const item of specsInput) { // item is of type Json here
+            if (isProductSpecification(item)) { // Type guard narrows 'item' to ProductSpecification
+              collectedSpecs.push({ key: item.key, value: item.value });
+            }
+          }
+          if (collectedSpecs.length > 0) {
+            processedSpecifications = collectedSpecs;
+          }
         } else if (typeof specsInput === 'object' && specsInput !== null) { 
-          // specsInput is { [key: string]: Json } (but not an array)
-          if (isProductSpecification(specsInput)) { // Check if the object itself is a ProductSpecification
+          // Handle when specsInput is a single object (either a ProductSpecification or a map)
+          if (isProductSpecification(specsInput)) { // Check if the whole object IS a ProductSpecification
             processedSpecifications = [{ key: specsInput.key, value: specsInput.value }];
           } else {
-            // Convert object properties like { "Brand": "Acme", "Material": "Steel" }
-            // to {key, value} pairs
-            processedSpecifications = Object.entries(specsInput)
-              .map(([key, value]) => ({
-                key,
-                value: String(value) // Safely convert Json value to string
-              }));
+            // Convert object { "Brand": "Acme", "Material": "Steel" } to ProductSpecification[]
+            const objEntriesSpecs: ProductSpecification[] = [];
+            for (const [entryKey, entryValue] of Object.entries(specsInput)) { // entryValue is Json
+              // We only want simple stringifiable values for the specifications list
+              if (typeof entryValue === 'string' || typeof entryValue === 'number' || typeof entryValue === 'boolean') {
+                objEntriesSpecs.push({ key: entryKey, value: String(entryValue) });
+              } else if (entryValue === null) {
+                objEntriesSpecs.push({ key: entryKey, value: 'null' }); // Represent null as string "null" or handle as needed
+              }
+              // Note: Complex nested Json objects/arrays as values are ignored here for simplicity
+            }
+            if (objEntriesSpecs.length > 0) {
+              processedSpecifications = objEntriesSpecs;
+            }
           }
         } else if (typeof specsInput === 'string') {
-          // Try to parse JSON string for specifications
-          const parsedSpecs = JSON.parse(specsInput); // parsedSpecs is 'any'
-          if (Array.isArray(parsedSpecs)) {
-            const unknownArray = parsedSpecs as unknown[]; // Treat as array of unknowns
-            processedSpecifications = unknownArray
-              .filter((item): item is ProductSpecification => isProductSpecification(item))
-              .map((spec: ProductSpecification) => ({ key: spec.key, value: spec.value }));
-          } else if (isProductSpecification(parsedSpecs)) { // parsedSpecs is 'any', guard narrows to ProductSpecification
-             processedSpecifications = [{ key: parsedSpecs.key, value: parsedSpecs.value }];
+          // Handle when specsInput is a JSON string
+          const parsedSpecs = JSON.parse(specsInput); // parsedSpecs is 'any' / 'unknown'
+          
+          if (Array.isArray(parsedSpecs)) { // If parsed string results in an array
+            const collectedSpecs: ProductSpecification[] = [];
+            for (const item of parsedSpecs) { // item is 'unknown' here
+              if (isProductSpecification(item)) { // Type guard narrows 'item'
+                collectedSpecs.push({ key: item.key, value: item.value });
+              }
+            }
+            if (collectedSpecs.length > 0) {
+              processedSpecifications = collectedSpecs;
+            }
+          } else if (typeof parsedSpecs === 'object' && parsedSpecs !== null) { // If parsed string results in an object
+            if (isProductSpecification(parsedSpecs)) { // Check if the parsed object IS a ProductSpecification
+              processedSpecifications = [{ key: parsedSpecs.key, value: parsedSpecs.value }];
+            } else {
+              // Convert parsed object { "Brand": "Acme" } to ProductSpecification[]
+              const objEntriesSpecs: ProductSpecification[] = [];
+              for (const [entryKey, entryValue] of Object.entries(parsedSpecs)) {
+                 if (typeof entryValue === 'string' || typeof entryValue === 'number' || typeof entryValue === 'boolean') {
+                    objEntriesSpecs.push({ key: entryKey, value: String(entryValue) });
+                 } else if (entryValue === null) {
+                    objEntriesSpecs.push({ key: entryKey, value: 'null' });
+                 }
+              }
+              if (objEntriesSpecs.length > 0) {
+                processedSpecifications = objEntriesSpecs;
+              }
+            }
           }
         }
       } catch (e) {
