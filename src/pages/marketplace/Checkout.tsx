@@ -23,13 +23,11 @@ interface CartItem {
   quantity: number;
   image?: string | null;
 }
-
 interface CheckoutLocationState {
   cartItems: CartItem[];
   total: number;
   specialInstructions?: string;
 }
-
 interface SavedShippingDetails {
   firstName: string;
   lastName: string;
@@ -41,14 +39,21 @@ interface SavedShippingDetails {
   country: string;
   contactEmail: string;
 }
-
 export default function Checkout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
-  const { user, isAuthenticated } = useAuth();
-
-  const { cartItems = [], total: subtotalFromCart = 0, specialInstructions = "" } = (location.state as CheckoutLocationState) || {};
+  const {
+    toast
+  } = useToast();
+  const {
+    user,
+    isAuthenticated
+  } = useAuth();
+  const {
+    cartItems = [],
+    total: subtotalFromCart = 0,
+    specialInstructions = ""
+  } = location.state as CheckoutLocationState || {};
 
   // State for originally fetched user address details
   const [savedShippingDetails, setSavedShippingDetails] = useState<SavedShippingDetails | null>(null);
@@ -57,7 +62,6 @@ export default function Checkout() {
   // Form state
   const [contactEmail, setContactEmail] = useState(user?.email || "");
   const [saveInfo, setSaveInfo] = useState(false);
-
   const [shippingCountry, setShippingCountry] = useState("Philippines"); // Default and disabled
   const [shippingFirstName, setShippingFirstName] = useState(user?.firstName || "");
   const [shippingLastName, setShippingLastName] = useState(user?.lastName || "");
@@ -67,37 +71,32 @@ export default function Checkout() {
   const [shippingState, setShippingState] = useState("Metro Manila"); // Default state
   const [shippingPostalCode, setShippingPostalCode] = useState("");
   const [deliveryNotes, setDeliveryNotes] = useState(specialInstructions);
-  
   const [billingAddressOption, setBillingAddressOption] = useState("same");
   const [paymentMethod, setPaymentMethod] = useState("paystack");
   const [isProcessing, setIsProcessing] = useState(false);
-
   useEffect(() => {
     if (user?.id) {
       const fetchUserSettings = async () => {
-        const { data, error } = await supabase
-          .from('user_settings')
-          .select('address, phone_number')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
+        const {
+          data,
+          error
+        } = await supabase.from('user_settings').select('address, phone_number').eq('user_id', user.id).maybeSingle();
         if (error) {
           console.error("Error fetching user settings:", error);
-        } 
-        
+        }
         const initialDetails: SavedShippingDetails = {
-            firstName: user.firstName || "",
-            lastName: user.lastName || "",
-            address: "",
-            apartment: "",
-            city: "",
-            state: "Metro Manila", // Default, can be overridden by saved data
-            postalCode: "",
-            country: "Philippines",
-            contactEmail: user.email || "",
+          firstName: user.firstName || "",
+          lastName: user.lastName || "",
+          address: "",
+          apartment: "",
+          city: "",
+          state: "Metro Manila",
+          // Default, can be overridden by saved data
+          postalCode: "",
+          country: "Philippines",
+          contactEmail: user.email || ""
         };
         let foundSavedAddress = false;
-
         if (data?.address && typeof data.address === 'object') {
           const addr = data.address as any;
           initialDetails.address = addr.street || "";
@@ -108,28 +107,27 @@ export default function Checkout() {
           initialDetails.country = addr.country || "Philippines";
           foundSavedAddress = true;
         }
-        if (data?.phone_number && !initialDetails.contactEmail) { // Use phone if email not primary
-             initialDetails.contactEmail = data.phone_number;
+        if (data?.phone_number && !initialDetails.contactEmail) {
+          // Use phone if email not primary
+          initialDetails.contactEmail = data.phone_number;
         }
-        
         setSavedShippingDetails(initialDetails);
-
         if (foundSavedAddress) {
-            setShippingFirstName(initialDetails.firstName);
-            setShippingLastName(initialDetails.lastName);
-            setShippingAddress(initialDetails.address);
-            setShippingApartment(initialDetails.apartment);
-            setShippingCity(initialDetails.city);
-            setShippingState(initialDetails.state);
-            setShippingPostalCode(initialDetails.postalCode);
-            setContactEmail(initialDetails.contactEmail);
-            setUseSavedAddress(true);
+          setShippingFirstName(initialDetails.firstName);
+          setShippingLastName(initialDetails.lastName);
+          setShippingAddress(initialDetails.address);
+          setShippingApartment(initialDetails.apartment);
+          setShippingCity(initialDetails.city);
+          setShippingState(initialDetails.state);
+          setShippingPostalCode(initialDetails.postalCode);
+          setContactEmail(initialDetails.contactEmail);
+          setUseSavedAddress(true);
         } else {
-            // No saved address, but still prefill names and email from user object
-            setShippingFirstName(user.firstName || "");
-            setShippingLastName(user.lastName || "");
-            setContactEmail(user.email || "");
-            setUseSavedAddress(false);
+          // No saved address, but still prefill names and email from user object
+          setShippingFirstName(user.firstName || "");
+          setShippingLastName(user.lastName || "");
+          setContactEmail(user.email || "");
+          setUseSavedAddress(false);
         }
       };
       fetchUserSettings();
@@ -137,91 +135,105 @@ export default function Checkout() {
       setUseSavedAddress(false); // No user, not using saved address
     }
   }, [user]);
-
   const handleUseSavedAddressChange = (checked: boolean) => {
     setUseSavedAddress(checked);
     if (checked && savedShippingDetails) {
-        // User wants to use saved address, populate form from savedShippingDetails
-        setShippingFirstName(savedShippingDetails.firstName);
-        setShippingLastName(savedShippingDetails.lastName);
-        setShippingAddress(savedShippingDetails.address);
-        setShippingApartment(savedShippingDetails.apartment);
-        setShippingCity(savedShippingDetails.city);
-        setShippingState(savedShippingDetails.state);
-        setShippingPostalCode(savedShippingDetails.postalCode);
-        setContactEmail(savedShippingDetails.contactEmail);
+      // User wants to use saved address, populate form from savedShippingDetails
+      setShippingFirstName(savedShippingDetails.firstName);
+      setShippingLastName(savedShippingDetails.lastName);
+      setShippingAddress(savedShippingDetails.address);
+      setShippingApartment(savedShippingDetails.apartment);
+      setShippingCity(savedShippingDetails.city);
+      setShippingState(savedShippingDetails.state);
+      setShippingPostalCode(savedShippingDetails.postalCode);
+      setContactEmail(savedShippingDetails.contactEmail);
     } else {
-        // User wants to enter a new address. Fields are now enabled.
-        // Optionally clear them if you want a fresh start, e.g.:
-        // setShippingFirstName(user?.firstName || ""); setShippingLastName(user?.lastName || ""); 
-        // setShippingAddress(""); // etc.
-        // For now, current values (possibly from user object if no saved address) remain for editing.
+      // User wants to enter a new address. Fields are now enabled.
+      // Optionally clear them if you want a fresh start, e.g.:
+      // setShippingFirstName(user?.firstName || ""); setShippingLastName(user?.lastName || ""); 
+      // setShippingAddress(""); // etc.
+      // For now, current values (possibly from user object if no saved address) remain for editing.
     }
   };
-
   const handleSaveInformation = async () => {
     if (!user || !user.id) return;
-
     const addressPayload = {
       street: shippingAddress,
       apartment: shippingApartment,
       city: shippingCity,
       state: shippingState,
       postalCode: shippingPostalCode,
-      country: shippingCountry, // Will be "Philippines"
+      country: shippingCountry // Will be "Philippines"
     };
 
     // Update profiles table for names
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({ first_name: shippingFirstName, last_name: shippingLastName })
-      .eq('id', user.id);
-
+    const {
+      error: profileError
+    } = await supabase.from('profiles').update({
+      first_name: shippingFirstName,
+      last_name: shippingLastName
+    }).eq('id', user.id);
     if (profileError) {
-      toast({ title: "Error", description: "Could not update name information.", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Could not update name information.",
+        variant: "destructive"
+      });
     }
-    
     let phonePayload = {};
-    if (contactEmail && !contactEmail.includes('@')) { 
-        phonePayload = { phone_number: contactEmail };
+    if (contactEmail && !contactEmail.includes('@')) {
+      phonePayload = {
+        phone_number: contactEmail
+      };
     } else if (contactEmail && contactEmail.includes('@') && user.email !== contactEmail) {
-        // If user entered a new email in contact field, we are not updating auth.users.email here.
-        // This example focuses on shipping contact which might be phone or existing email.
-        // To update user.email, supabase.auth.updateUser({ email: contactEmail }) would be needed,
-        // typically with verification. For simplicity, we assume contactEmail is either phone or matches user.email.
+      // If user entered a new email in contact field, we are not updating auth.users.email here.
+      // This example focuses on shipping contact which might be phone or existing email.
+      // To update user.email, supabase.auth.updateUser({ email: contactEmail }) would be needed,
+      // typically with verification. For simplicity, we assume contactEmail is either phone or matches user.email.
     }
-
-
-    const { data: existingSettings, error: fetchError } = await supabase
-        .from('user_settings')
-        .select('user_id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
+    const {
+      data: existingSettings,
+      error: fetchError
+    } = await supabase.from('user_settings').select('user_id').eq('user_id', user.id).maybeSingle();
     if (fetchError) {
-        console.error("Error checking user_settings:", fetchError);
-        toast({ title: "Error", description: "Could not save information.", variant: "destructive" });
-        return;
+      console.error("Error checking user_settings:", fetchError);
+      toast({
+        title: "Error",
+        description: "Could not save information.",
+        variant: "destructive"
+      });
+      return;
     }
-
     let settingsError;
     if (existingSettings) {
-        const { error } = await supabase
-            .from('user_settings')
-            .update({ address: addressPayload, ...phonePayload })
-            .eq('user_id', user.id);
-        settingsError = error;
+      const {
+        error
+      } = await supabase.from('user_settings').update({
+        address: addressPayload,
+        ...phonePayload
+      }).eq('user_id', user.id);
+      settingsError = error;
     } else {
-        const { error } = await supabase
-            .from('user_settings')
-            .insert({ user_id: user.id, address: addressPayload, ...phonePayload });
-        settingsError = error;
+      const {
+        error
+      } = await supabase.from('user_settings').insert({
+        user_id: user.id,
+        address: addressPayload,
+        ...phonePayload
+      });
+      settingsError = error;
     }
-
     if (settingsError) {
-      toast({ title: "Error", description: "Could not save shipping information.", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Could not save shipping information.",
+        variant: "destructive"
+      });
     } else {
-      toast({ title: "Information Saved", description: "Your information has been saved for next time." });
+      toast({
+        title: "Information Saved",
+        description: "Your information has been saved for next time."
+      });
       // Re-fetch or update savedShippingDetails if information was successfully saved
       const newSavedDetails: SavedShippingDetails = {
         firstName: shippingFirstName,
@@ -232,70 +244,95 @@ export default function Checkout() {
         state: shippingState,
         postalCode: shippingPostalCode,
         country: shippingCountry,
-        contactEmail: contactEmail,
+        contactEmail: contactEmail
       };
       setSavedShippingDetails(newSavedDetails);
     }
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isAuthenticated || !user) {
-        toast({ title: "Authentication Error", description: "Please log in to proceed.", variant: "destructive" });
-        navigate("/login", { state: { from: location } });
-        return;
+      toast({
+        title: "Authentication Error",
+        description: "Please log in to proceed.",
+        variant: "destructive"
+      });
+      navigate("/login", {
+        state: {
+          from: location
+        }
+      });
+      return;
     }
     if (cartItems.length === 0) {
-        toast({ title: "Empty Cart", description: "Your cart is empty.", variant: "default" });
-        return;
+      toast({
+        title: "Empty Cart",
+        description: "Your cart is empty.",
+        variant: "default"
+      });
+      return;
     }
-    
+
     // Basic validation for required fields if not using saved address
     if (!useSavedAddress) {
-        if (!shippingLastName || !shippingAddress || !shippingCity || !shippingState) {
-            toast({ title: "Missing Information", description: "Please fill in all required delivery fields.", variant: "destructive"});
-            return;
-        }
+      if (!shippingLastName || !shippingAddress || !shippingCity || !shippingState) {
+        toast({
+          title: "Missing Information",
+          description: "Please fill in all required delivery fields.",
+          variant: "destructive"
+        });
+        return;
+      }
     }
-
-
     if (saveInfo) {
       await handleSaveInformation();
     }
     setIsProcessing(true);
-    
+
     // Simulate processing
     setTimeout(() => {
       setIsProcessing(false);
-      navigate("/marketplace/order-confirmation", { state: { orderDetails: { cartItems, total: finalTotal, deliveryNotes, shippingAddress: {
-        firstName: shippingFirstName, lastName: shippingLastName, address: shippingAddress, apartment: shippingApartment, city: shippingCity, state: shippingState, postalCode: shippingPostalCode, country: shippingCountry, contact: contactEmail
-      }} } });
+      navigate("/marketplace/order-confirmation", {
+        state: {
+          orderDetails: {
+            cartItems,
+            total: finalTotal,
+            deliveryNotes,
+            shippingAddress: {
+              firstName: shippingFirstName,
+              lastName: shippingLastName,
+              address: shippingAddress,
+              apartment: shippingApartment,
+              city: shippingCity,
+              state: shippingState,
+              postalCode: shippingPostalCode,
+              country: shippingCountry,
+              contact: contactEmail
+            }
+          }
+        }
+      });
       toast({
         title: "Order placed successfully",
-        description: "Thank you for your purchase!",
+        description: "Thank you for your purchase!"
       });
     }, 1500);
   };
-
-  const shippingCost = 0; 
-  const taxRate = 0.075; 
+  const shippingCost = 0;
+  const taxRate = 0.075;
   const estimatedTaxes = subtotalFromCart * taxRate;
   const finalTotal = subtotalFromCart + shippingCost + estimatedTaxes;
-
-  return (
-    <Layout>
+  return <Layout>
       <div className="min-h-screen bg-gray-50">
         {/* Custom Header */}
         <header className="py-4 px-6 md:px-12 lg:px-24 bg-white border-b">
           <div className="max-w-7xl mx-auto flex justify-between items-center">
-            <Link to="/marketplace" className="text-2xl font-bold tracking-tight text-gray-900">GYBLOOM</Link>
+            <Link to="/marketplace" className="text-2xl font-bold tracking-tight text-gray-900 mx-0 px-0">Checkout</Link>
             <Link to="/marketplace/cart" className="relative">
               <ShoppingBag className="h-6 w-6 text-gray-500 hover:text-gray-700" />
-              {cartItems.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs w-4 h-4 rounded-full flex items-center justify-center">
+              {cartItems.length > 0 && <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs w-4 h-4 rounded-full flex items-center justify-center">
                   {cartItems.length}
-                </span>
-              )}
+                </span>}
             </Link>
           </div>
         </header>
@@ -310,20 +347,10 @@ export default function Checkout() {
                   {!isAuthenticated && <Link to="/login" className="text-sm text-primary hover:underline">Log in</Link>}
                   {isAuthenticated && user?.email && <span className="text-sm text-gray-600">{user.email}</span>}
                 </div>
-                <Input 
-                  id="contactEmail" 
-                  placeholder="Email or mobile phone number" 
-                  value={contactEmail}
-                  onChange={(e) => setContactEmail(e.target.value)}
-                  required 
-                  disabled={useSavedAddress && !!savedShippingDetails?.contactEmail} // Disable if using saved address with contact info
-                />
+                <Input id="contactEmail" placeholder="Email or mobile phone number" value={contactEmail} onChange={e => setContactEmail(e.target.value)} required disabled={useSavedAddress && !!savedShippingDetails?.contactEmail} // Disable if using saved address with contact info
+              />
                  <div className="mt-3 flex items-center">
-                  <Checkbox 
-                    id="saveInfo" 
-                    checked={saveInfo}
-                    onCheckedChange={(checked) => setSaveInfo(checked as boolean)}
-                  />
+                  <Checkbox id="saveInfo" checked={saveInfo} onCheckedChange={checked => setSaveInfo(checked as boolean)} />
                   <Label htmlFor="saveInfo" className="ml-2 text-sm text-gray-600">Save this information for next time</Label>
                 </div>
               </div>
@@ -331,12 +358,8 @@ export default function Checkout() {
               <div>
                 <h2 className="text-xl font-semibold text-gray-800 mb-3">Delivery</h2>
                 <div className="mt-3 mb-4 flex items-center">
-                  <Checkbox
-                    id="useSavedAddress"
-                    checked={useSavedAddress}
-                    onCheckedChange={handleUseSavedAddressChange}
-                    disabled={!savedShippingDetails && !user?.id} // Disable if no saved details to use and not logged in
-                  />
+                  <Checkbox id="useSavedAddress" checked={useSavedAddress} onCheckedChange={handleUseSavedAddressChange} disabled={!savedShippingDetails && !user?.id} // Disable if no saved details to use and not logged in
+                />
                   <Label htmlFor="useSavedAddress" className="ml-2 text-sm text-gray-600">Use my saved address</Label>
                 </div>
                 <div className="space-y-4">
@@ -454,13 +477,7 @@ export default function Checkout() {
                     </Select>
                     <Input id="postalCode" placeholder="Postal code (optional)" className="sm:col-span-2 md:col-span-1" value={shippingPostalCode} onChange={e => setShippingPostalCode(e.target.value)} disabled={useSavedAddress} />
                   </div>
-                  <Textarea 
-                    id="deliveryNotes" 
-                    placeholder="Delivery Notes (Optional)" 
-                    value={deliveryNotes}
-                    onChange={(e) => setDeliveryNotes(e.target.value)}
-                    className="min-h-[80px]"
-                  />
+                  <Textarea id="deliveryNotes" placeholder="Delivery Notes (Optional)" value={deliveryNotes} onChange={e => setDeliveryNotes(e.target.value)} className="min-h-[80px]" />
                 </div>
               </div>
               
@@ -488,12 +505,12 @@ export default function Checkout() {
                     </div>
                     <div className="p-6 text-center bg-gray-50 rounded-b-md">
                         <svg className="mx-auto h-12 w-auto text-gray-400 mb-3" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                            <rect width="48" height="30" rx="3" fill="#E5E7EB"/>
-                            <path d="M0 8C0 5.23858 2.23858 3 5 3H43C45.7614 3 48 5.23858 48 8V12H0V8Z" fill="#D1D5DB"/>
-                            <circle cx="6" cy="7" r="1.5" fill="#fff"/>
-                            <circle cx="10" cy="7" r="1.5" fill="#fff"/>
-                            <circle cx="14" cy="7" r="1.5" fill="#fff"/>
-                            <path d="M30 20L38 20M34 16V24" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <rect width="48" height="30" rx="3" fill="#E5E7EB" />
+                            <path d="M0 8C0 5.23858 2.23858 3 5 3H43C45.7614 3 48 5.23858 48 8V12H0V8Z" fill="#D1D5DB" />
+                            <circle cx="6" cy="7" r="1.5" fill="#fff" />
+                            <circle cx="10" cy="7" r="1.5" fill="#fff" />
+                            <circle cx="14" cy="7" r="1.5" fill="#fff" />
+                            <path d="M30 20L38 20M34 16V24" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                         <p className="text-xs text-gray-500">After clicking "Pay now", you will be redirected to Paystack to complete your purchase securely.</p>
                     </div>
@@ -515,12 +532,7 @@ export default function Checkout() {
                  {/* TODO: Add form for different billing address if selected */}
               </div>
 
-              <RoleButton 
-                type="submit" 
-                size="lg"
-                className="w-full mt-6 text-lg py-3 h-auto" 
-                disabled={isProcessing || cartItems.length === 0}
-              >
+              <RoleButton type="submit" size="lg" className="w-full mt-6 text-lg py-3 h-auto" disabled={isProcessing || cartItems.length === 0}>
                 {isProcessing ? "Processing..." : "Pay now"}
               </RoleButton>
             </form>
@@ -529,30 +541,20 @@ export default function Checkout() {
             <div className="bg-white md:bg-gray-100 p-4 md:p-6 rounded-lg md:border h-fit md:sticky md:top-24">
               {/* ... keep existing code (Order Summary content: cart items, subtotal, shipping, taxes, total) */}
               <div className="space-y-3">
-                {cartItems.length === 0 && (
-                  <p className="text-gray-600 text-sm">Your cart is empty. Add items to proceed.</p>
-                )}
-                {cartItems.map(item => (
-                  <div key={item.product_id} className="flex items-center gap-4 pb-3 border-b last:border-b-0">
+                {cartItems.length === 0 && <p className="text-gray-600 text-sm">Your cart is empty. Add items to proceed.</p>}
+                {cartItems.map(item => <div key={item.product_id} className="flex items-center gap-4 pb-3 border-b last:border-b-0">
                     <div className="relative">
-                      <img 
-                        src={item.image || DEFAULT_PRODUCT_IMAGE} 
-                        alt={item.name} 
-                        className="w-16 h-16 object-cover rounded-md border"
-                        onError={(e) => (e.currentTarget.src = DEFAULT_PRODUCT_IMAGE)}
-                      />
+                      <img src={item.image || DEFAULT_PRODUCT_IMAGE} alt={item.name} className="w-16 h-16 object-cover rounded-md border" onError={e => e.currentTarget.src = DEFAULT_PRODUCT_IMAGE} />
                       <span className="absolute -top-2 -right-2 bg-gray-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">{item.quantity}</span>
                     </div>
                     <div className="flex-1 min-w-0"> {/* Added min-w-0 for better truncation if needed */}
                       <h3 className="text-sm font-medium text-gray-800 truncate">{item.name}</h3>
                     </div>
                     <span className="text-sm font-medium text-gray-800">{formatCurrency(item.price * item.quantity, 'NGN')}</span>
-                  </div>
-                ))}
+                  </div>)}
               </div>
 
-              {cartItems.length > 0 && (
-                <>
+              {cartItems.length > 0 && <>
                   <div className="space-y-2 pt-6 border-t mt-6">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Subtotal</span>
@@ -572,11 +574,10 @@ export default function Checkout() {
                     <span className="text-gray-800">Total</span>
                     <div className="flex items-baseline">
                       <span className="text-xs text-gray-500 mr-1">NGN</span>
-                      <span className="text-gray-900">{formatCurrency(finalTotal, 'NGN').replace('NGN','').trim()}</span>
+                      <span className="text-gray-900">{formatCurrency(finalTotal, 'NGN').replace('NGN', '').trim()}</span>
                     </div>
                   </div>
-                </>
-              )}
+                </>}
             </div>
           </div>
         </main>
@@ -591,6 +592,5 @@ export default function Checkout() {
           </div>
         </footer>
       </div>
-    </Layout>
-  );
+    </Layout>;
 }
