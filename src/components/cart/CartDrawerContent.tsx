@@ -284,8 +284,8 @@ export const CartDrawerContent = ({ onClose }: CartDrawerContentProps) => {
       {cartItems && cartItems.length > 0 && (
   
       
-  <SheetFooter className="p-4 border-t bg-background flex flex-col gap-4">
-    
+  <SheetFooter className="p-4 border-t bg-background">
+  <div className="flex flex-col gap-4 w-full">
     {/* Order special instructions */}
     <Accordion type="single" collapsible className="w-full">
       <AccordionItem value="instructions">
@@ -307,7 +307,9 @@ export const CartDrawerContent = ({ onClose }: CartDrawerContentProps) => {
         <span>Estimated total</span>
         <span>{formatCurrency(total)}</span>
       </div>
-      <p className="text-xs text-muted-foreground">Taxes, discounts and shipping calculated at checkout.</p>
+      <p className="text-xs text-muted-foreground">
+        Taxes, discounts and shipping calculated at checkout.
+      </p>
     </div>
 
     {/* Checkout button */}
@@ -316,14 +318,18 @@ export const CartDrawerContent = ({ onClose }: CartDrawerContentProps) => {
       className="w-full"
       onClick={handleCheckout}
       disabled={
-        isLoading || !cartItems || cartItems.length === 0 ||
-        updateQuantityMutation.isPending || removeItemMutation.isPending
+        isLoading ||
+        !cartItems ||
+        cartItems.length === 0 ||
+        updateQuantityMutation.isPending ||
+        removeItemMutation.isPending
       }
     >
       Check out
     </RoleButton>
-    
-  </SheetFooter>
+  </div>
+</SheetFooter>
+
 )}
 
 
