@@ -91,60 +91,58 @@ const fetchProductById = async (productId: string): Promise<ProductDetailType | 
   console.log("Product data fetched (raw):", data);
 
   if (data) {
+    // Handle specifications safely
     let processedSpecifications: ProductSpecification[] | undefined = undefined;
-    if (data.specifications && typeof data.specifications === 'object' && !Array.isArray(data.specifications)) {
-      // Attempt to parse if it's a single object or a JSON string representing an array
-      let specsArray: any[] = [];
-      if (typeof data.specifications === 'string') {
-        try {
-          specsArray = JSON.parse(data.specifications);
-        } catch (e) {
-          console.warn("Failed to parse specifications JSON string:", data.specifications, e);
-        }
-      } else if (typeof data.specifications === 'object' && data.specifications !== null) {
-        // If it's already an object but not an array, wrap it if it's a single spec
-        // This part might need refinement based on actual single object structure
-        // For now, assume it might be an array-like object or needs to be treated as an array of one
-         if (Array.isArray(data.specifications)) {
-           specsArray = data.specifications;
-         } else {
-            // If it's a single object like {key:"Color", value:"Red"}, this won't work directly
-            // The original code was expecting an array.
-            // The DB schema for `specifications` is jsonb. It could be `[{key:"k", value:"v"}]` or `{"key":"k", "value":"v"}`.
-            // The safest is to expect an array. If it's not, log a warning.
-            console.warn("Fetched specifications is an object but not an array as expected:", data.specifications);
-         }
-      }
-
-      if (Array.isArray(specsArray)) {
-        const validSpecifications: ProductSpecification[] = [];
-        let allItemsValid = true;
-        for (const item of specsArray) {
-          if (
-            typeof item === 'object' &&
-            item !== null &&
-            'key' in item &&
-            typeof item.key === 'string' &&
-            'value' in item &&
-            typeof item.value === 'string'
-          ) {
-            validSpecifications.push({ key: item.key, value: item.value });
+    
+    if (data.specifications) {
+      try {
+        // Handle specifications based on their actual type
+        if (Array.isArray(data.specifications)) {
+          // It's already an array
+          processedSpecifications = data.specifications
+            .filter(spec => 
+              typeof spec === 'object' && 
+              spec !== null && 
+              'key' in spec && 
+              'value' in spec &&
+              typeof spec.key === 'string' &&
+              typeof spec.value === 'string'
+            )
+            .map(spec => ({ 
+              key: spec.key as string, 
+              value: spec.value as string 
+            }));
+        } else if (typeof data.specifications === 'object') {
+          // Single object case
+          if ('key' in data.specifications && 'value' in data.specifications) {
+            processedSpecifications = [{
+              key: String(data.specifications.key),
+              value: String(data.specifications.value)
+            }];
           } else {
-            allItemsValid = false;
-            console.warn("Invalid specification item:", item);
-            break; 
+            // Handle object with key/value pairs
+            processedSpecifications = Object.entries(data.specifications)
+              .map(([key, value]) => ({
+                key,
+                value: String(value)
+              }));
+          }
+        } else if (typeof data.specifications === 'string') {
+          // Try to parse JSON string
+          const parsedSpecs = JSON.parse(data.specifications);
+          if (Array.isArray(parsedSpecs)) {
+            processedSpecifications = parsedSpecs
+              .filter(spec => 'key' in spec && 'value' in spec)
+              .map(spec => ({
+                key: String(spec.key),
+                value: String(spec.value)
+              }));
           }
         }
-        if (allItemsValid && validSpecifications.length > 0) {
-          processedSpecifications = validSpecifications;
-        } else if (!allItemsValid) {
-           console.warn("Fetched specifications array contains one or more invalid items:", specsArray);
-        }
+      } catch (e) {
+        console.warn("Failed to process specifications:", e);
       }
-    } else if (data.specifications === null) {
-      // Specifications are null, which is fine
     }
-
 
     const productDetailData: ProductDetailType = {
       id: data.id,
@@ -154,12 +152,12 @@ const fetchProductById = async (productId: string): Promise<ProductDetailType | 
       original_price: data.original_price,
       stock_quantity: data.stock_quantity,
       main_image_url: data.main_image_url,
-      gallery_image_urls: data.gallery_image_urls as string[] | null,
+      gallery_image_urls: Array.isArray(data.gallery_image_urls) ? data.gallery_image_urls : null,
       average_rating: data.average_rating,
       rating_count: data.rating_count,
       sold_count: data.sold_count,
       is_active: data.is_active,
-      tags: data.tags as string[] | undefined,
+      tags: Array.isArray(data.tags) ? data.tags : undefined,
       specifications: processedSpecifications,
       shipping_info: data.shipping_info,
       return_policy: data.return_policy,
@@ -238,13 +236,13 @@ export default function ProductDetail() {
     console.log("ProductDetail mounted with ID from useParams:", id);
   }, [id]);
   
-  const { data: product, isLoading, error } = useQuery<ProductDetailType | null>({
+  const { data: product, isLoading, error } = useQuery({
     queryKey: ['product', id], 
     queryFn: () => fetchProductById(id!),
     enabled: !!id,
   });
 
-  const { data: similarProducts, isLoading: isLoadingSimilar } = useQuery<ProductCardType[]>({
+  const { data: similarProducts, isLoading: isLoadingSimilar } = useQuery({
     queryKey: ['similarProducts', product?.product_categories?.id, id],
     queryFn: () => fetchSimilarProducts(product?.product_categories?.id, id),
     enabled: !!product?.product_categories?.id && !!id,
@@ -272,14 +270,14 @@ export default function ProductDetail() {
       return;
     }
     if (quantity <= 0) {
-      toast({ title: "Invalid Quantity", description: "Quantity must be at least 1.", variant: "default" });
+      toast({ title: "Invalid Quantity", description: "Quantity must be at least 1.", variant: "destructive" });
       return;
     }
     if (quantity > product.stock_quantity) {
        toast({ 
         title: "Stock Limit Exceeded", 
         description: `Only ${product.stock_quantity} of ${product.name} available.`,
-        variant: "default"
+        variant: "destructive"
       });
       return;
     }
@@ -287,7 +285,7 @@ export default function ProductDetail() {
        toast({ 
         title: "Stock Limit Reached", 
         description: `Cannot add ${quantity}. You have ${quantity} in cart, and only ${product.stock_quantity} total stock available.`,
-        variant: "default"
+        variant: "destructive"
       });
       return;
     }
@@ -310,7 +308,7 @@ export default function ProductDetail() {
         toast({ 
           title: "Stock Limit Reached", 
           description: `Cannot add ${quantity}. You have ${currentCartQuantity} in cart, and only ${product.stock_quantity} total stock available.`,
-          variant: "default"
+          variant: "destructive"
         });
         return;
       }
@@ -358,14 +356,14 @@ export default function ProductDetail() {
       return;
     }
     if (quantity <= 0) {
-      toast({ title: "Invalid Quantity", description: "Quantity must be at least 1.", variant: "default" });
+      toast({ title: "Invalid Quantity", description: "Quantity must be at least 1.", variant: "destructive" });
       return;
     }
     if (quantity > product.stock_quantity) {
        toast({ 
         title: "Stock Limit Exceeded", 
         description: `Only ${product.stock_quantity} of ${product.name} available for purchase.`,
-        variant: "default"
+        variant: "destructive"
       });
       return;
     }
@@ -620,8 +618,8 @@ export default function ProductDetail() {
             <>
               <h2 className="text-xl font-semibold mt-6 mb-3">Specifications</h2>
               <ul className="list-disc list-inside text-muted-foreground space-y-1">
-                {product.specifications.map(spec => (
-                  <li key={spec.key}><strong>{spec.key}:</strong> {spec.value}</li>
+                {product.specifications.map((spec, index) => (
+                  <li key={index}><strong>{spec.key}:</strong> {spec.value}</li>
                 ))}
               </ul>
             </>
