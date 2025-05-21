@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode, useEffect, useRef } from "react";
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,23 +43,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [session, setSession] = useState<Session | null>(null);
   const [rbiCompleted, setRbiCompleted] = useState(false);
   
-  // Track if this is the initial session check
   const isInitialMount = useRef(true);
-  // Track if a redirect is already in progress to prevent multiple redirects
   const redirectInProgress = useRef(false);
-  // Track the last auth event type to differentiate between real auth changes and refreshes
   const lastAuthEvent = useRef<string | null>(null);
-  // Track visibility change to handle tab focus events
   const wasTabHidden = useRef(false);
+  const isPerformingVisibilityRefresh = useRef(false);
 
-  // Handle visibility change to detect when tab is refocused
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && wasTabHidden.current) {
         console.log("Tab became visible - performing silent session refresh");
         wasTabHidden.current = false;
+        isPerformingVisibilityRefresh.current = true;
         
-        // Silently refresh the session without triggering redirects
         supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
           if (currentSession !== session) {
             console.log("Session changed during visibility change");
@@ -77,7 +72,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               };
               setUser(userData);
               
-              // Update role without redirecting
               if (currentSession.user.email) {
                 let role: UserRole = "resident";
                 if (currentSession.user.email.includes('official')) {
@@ -91,7 +85,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               setUser(null);
               setUserRole(null);
               
-              // Only redirect to login if we were authenticated before and now we're not
               if (isAuthenticated && !currentSession && 
                   !currentPath.includes('/login') && 
                   !currentPath.includes('/register') && 
@@ -103,6 +96,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               }
             }
           }
+          setTimeout(() => {
+            if(isPerformingVisibilityRefresh.current) {
+              isPerformingVisibilityRefresh.current = false;
+            }
+          }, 100);
         });
       } else if (document.visibilityState === 'hidden') {
         wasTabHidden.current = true;
@@ -116,25 +114,28 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   useEffect(() => {
     console.log("Setting up auth state change listener");
     
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log("Auth state changed:", event, session?.user?.email);
         lastAuthEvent.current = event;
+
+        let localIsVisibilityRefresh = false;
+        if (isPerformingVisibilityRefresh.current) {
+          localIsVisibilityRefresh = true;
+          isPerformingVisibilityRefresh.current = false;
+          console.log("Auth event (", event, ") occurred during/after visibility refresh. Redirects might be suppressed.");
+        }
         
-        // Don't respond to INITIAL_SESSION event unless it's the first mount
-        if (event === 'INITIAL_SESSION' && !isInitialMount.current) {
+        if (event === 'INITIAL_SESSION' && !isInitialMount.current && !localIsVisibilityRefresh) {
           console.log("Ignoring duplicate INITIAL_SESSION event");
           return;
         }
         
-        // For genuine sign-in/sign-out events, update state and redirect
         const isSignInEvent = event === 'SIGNED_IN';
         const isSignOutEvent = event === 'SIGNED_OUT';
         const isPasswordRecoveryEvent = event === 'PASSWORD_RECOVERY';
         const isUserUpdatedEvent = event === 'USER_UPDATED';
         
-        // Set current session state
         setSession(session);
         setIsAuthenticated(!!session);
         
@@ -150,7 +151,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           setUser(userData);
           
           if (session.user.email) {
-            // Determine role based on email pattern
             let role: UserRole = "resident";
             
             if (session.user.email.includes('official')) {
@@ -161,18 +161,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             
             setUserRole(role);
             
-            // Handle redirect after sign in - only on actual SIGNED_IN event
-            if (isSignInEvent && !redirectInProgress.current) {
+            if (isSignInEvent && !redirectInProgress.current && !localIsVisibilityRefresh) {
               const redirectPath = role === 'official' 
                 ? '/official-dashboard' 
                 : role === 'superadmin' 
                   ? '/admin' 
                   : '/resident-home';
                 
-              console.log("Redirecting to:", redirectPath);
-              redirectInProgress.current = true;
-              navigate(redirectPath);
-              setTimeout(() => { redirectInProgress.current = false; }, 500);
+              if (currentPath !== redirectPath && !['/login', '/register', '/verify'].includes(currentPath)) {
+                console.log("Redirecting to:", redirectPath, "after SIGNED_IN event.");
+                redirectInProgress.current = true;
+                navigate(redirectPath);
+                setTimeout(() => { redirectInProgress.current = false; }, 500);
+              } else {
+                console.log("Redirect skipped: already on target or public path, or visibility refresh.");
+              }
             }
           } else {
             setUserRole(null);
@@ -181,7 +184,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           setUser(null);
           setUserRole(null);
           
-          // Only redirect on actual sign out
           if (isSignOutEvent && !redirectInProgress.current) {
             console.log("Redirecting to login after sign out");
             redirectInProgress.current = true;
@@ -192,7 +194,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log("Initial session check:", session?.user?.email);
       
@@ -211,24 +212,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setUser(userData);
         
         if (session.user.email) {
-          // Determine role based on email pattern
+          let role: UserRole = "resident";
           if (session.user.email.includes('official')) {
-            setUserRole('official');
+            role = 'official';
           } else if (session.user.email.includes('admin')) {
-            setUserRole('superadmin');
-          } else {
-            setUserRole('resident');
+            role = 'superadmin';
           }
+          setUserRole(role);
           
-          // Handle redirect for existing session if on login/register page
           if ((currentPath === '/login' || currentPath === '/register') && !redirectInProgress.current) {
-            const redirectPath = session.user.email.includes('official') 
+            const redirectPath = role === 'official' 
               ? '/official-dashboard' 
-              : session.user.email.includes('admin') 
+              : role === 'superadmin' 
                 ? '/admin' 
                 : '/resident-home';
             
-            console.log("Redirecting existing session to:", redirectPath);
+            console.log("Redirecting existing session from login/register to:", redirectPath);
             redirectInProgress.current = true;
             navigate(redirectPath);
             setTimeout(() => { redirectInProgress.current = false; }, 500);
@@ -236,7 +235,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         }
       }
       
-      // Mark initial mount as complete after first session check
       isInitialMount.current = false;
     });
 
@@ -301,6 +299,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         navigate(navigateToPath || "/login");
         setTimeout(() => { redirectInProgress.current = false; }, 500);
       }
+    } else {
+      console.error("Logout error:", error.message);
     }
   };
 
