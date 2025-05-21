@@ -100,7 +100,7 @@ export default function Cart() {
     mutationFn: async ({ cartItemId, newQuantity }: { cartItemId: string, newQuantity: number }) => {
       const itemToUpdate = cartItems?.find(item => item.cart_item_id === cartItemId);
       if (itemToUpdate && newQuantity > itemToUpdate.max_quantity) {
-        toast({ title: "Stock limit", description: `Only ${itemToUpdate.max_quantity} available.`, variant: "default"}); // Changed "warning" to "default"
+        toast({ title: "Stock limit", description: `Only ${itemToUpdate.max_quantity} available.`, variant: "default"});
         return Promise.reject(new Error("Exceeds stock limit"));
       }
       const { error } = await supabase
@@ -114,7 +114,7 @@ export default function Cart() {
       queryClient.invalidateQueries({ queryKey: ['cartSummary', user?.id] });
     },
     onError: (error: any) => {
-      if (error.message !== "Exceeds stock limit") { // Avoid double toast for stock limit
+      if (error.message !== "Exceeds stock limit") { 
         toast({ title: "Error", description: `Failed to update quantity: ${error.message}`, variant: "destructive" });
       }
     }
@@ -148,8 +148,8 @@ export default function Cart() {
   };
   
   const subtotal = cartItems?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0;
-  const shipping = subtotal > 0 ? 50 : 0; // Example shipping cost
-  const discount = isPromoApplied ? subtotal * 0.05 : 0; // 5% discount
+  const shipping = subtotal > 0 ? 50 : 0; 
+  const discount = isPromoApplied ? subtotal * 0.05 : 0; 
   const total = subtotal + shipping - discount;
   
   const applyPromoCode = () => {
@@ -163,7 +163,7 @@ export default function Cart() {
   
   const handleCheckout = () => {
     if (!cartItems || cartItems.length === 0) {
-      toast({ title: "Cart is empty", description: "Please add items to your cart before checkout.", variant: "default" }); // Changed "warning" to "default"
+      toast({ title: "Cart is empty", description: "Please add items to your cart before checkout.", variant: "default" });
       return;
     }
     navigate("/marketplace/checkout", { state: { cartItems, total } });
@@ -231,7 +231,7 @@ export default function Cart() {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto px-4 py-6 pb-20">
+      <div className="max-w-4xl mx-auto px-4 py-6 pb-24 md:pb-20 overflow-x-hidden"> {/* Added pb-24 for more space above mobile nav, overflow-x-hidden */}
         <div className="flex items-center mb-4">
           <Link to="/marketplace" className="flex items-center text-sm text-muted-foreground hover:text-primary">
             <ChevronLeft className="h-4 w-4 mr-1" />
@@ -246,8 +246,8 @@ export default function Cart() {
             <div className="md:col-span-2">
               <div className="space-y-4">
                 {cartItems.map(item => (
-                  <div key={item.cart_item_id} className="flex gap-4 p-4 border rounded-lg bg-white">
-                    <div className="w-20 h-20 flex-shrink-0 bg-gray-100 flex items-center justify-center rounded">
+                  <div key={item.cart_item_id} className="flex flex-col sm:flex-row gap-4 p-4 border rounded-lg bg-white overflow-hidden"> {/* Added overflow-hidden, responsive flex direction */}
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 bg-gray-100 flex items-center justify-center rounded self-center sm:self-start"> {/* Centered image on mobile */}
                       <img 
                         src={item.image || DEFAULT_PRODUCT_IMAGE} 
                         alt={item.name}
@@ -259,7 +259,7 @@ export default function Cart() {
                     <div className="flex-1 min-w-0">
                       <h3 className="font-medium truncate">{item.name}</h3>
                       <p className="text-sm text-muted-foreground truncate">Sold by: {item.seller}</p>
-                      <div className="flex items-center justify-between mt-2">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-2 gap-2 sm:gap-0"> {/* Responsive flex, added gap */}
                         <div className="flex items-center">
                           <Button 
                             variant="outline" size="icon"
@@ -284,11 +284,11 @@ export default function Cart() {
                             <Plus className="h-4 w-4"/>
                           </Button>
                         </div>
-                        {item.quantity > item.max_quantity && <p className="text-xs text-red-500 ml-2">Max {item.max_quantity} in stock</p>}
+                        {item.quantity > item.max_quantity && <p className="text-xs text-red-500 ml-0 sm:ml-2">Max {item.max_quantity} in stock</p>} {/* Adjusted margin for mobile */}
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          className="text-muted-foreground hover:text-destructive"
+                          className="text-muted-foreground hover:text-destructive self-end sm:self-center" // Align trash icon on mobile
                           onClick={() => handleRemoveItem(item.cart_item_id)}
                           disabled={removeItemMutation.isPending && removeItemMutation.variables === item.cart_item_id}
                         >
@@ -300,7 +300,7 @@ export default function Cart() {
                       </div>
                     </div>
                     
-                    <div className="font-semibold text-right">
+                    <div className="font-semibold text-right self-end sm:self-start pt-2 sm:pt-0"> {/* Align price on mobile */}
                       {formatCurrency(item.price * item.quantity, 'NGN')}
                     </div>
                   </div>
@@ -308,13 +308,14 @@ export default function Cart() {
               </div>
               
               <div className="mt-6">
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2"> {/* Responsive flex for promo */}
                   <Input 
                     placeholder="Enter promo code"
                     value={promoCode}
                     onChange={e => setPromoCode(e.target.value)}
+                    className="flex-grow"
                   />
-                  <Button onClick={applyPromoCode} disabled={isPromoApplied}>
+                  <Button onClick={applyPromoCode} disabled={isPromoApplied} className="w-full sm:w-auto"> {/* Full width on mobile for apply */}
                     Apply
                   </Button>
                 </div>

@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, User, ShoppingCart } from "lucide-react";
+import { Bell, User, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { HeaderLogo } from "./header/HeaderLogo";
@@ -69,7 +69,7 @@ export const Header = () => {
                   isMobile ? (
                     <Button asChild variant="ghost" size="icon" className="relative w-8 h-8">
                       <Link to="/marketplace/cart">
-                        <ShoppingCart className="h-4 w-4 md:h-5 md:w-5" />
+                        <ShoppingBag className="h-4 w-4 md:h-5 md:w-5" />
                         {cartItemCount > 0 && (
                           <span className="absolute -top-0.5 -right-0.5 text-white text-[10px] md:text-xs rounded-full w-3.5 h-3.5 md:w-4 md:h-4 flex items-center justify-center bg-official">
                             {cartItemCount}
@@ -80,8 +80,8 @@ export const Header = () => {
                   ) : (
                     <Sheet open={isCartDrawerOpen} onOpenChange={setIsCartDrawerOpen}>
                       <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className="relative">
-                          <ShoppingCart className="h-5 w-5" />
+                        <Button variant="ghost" size="icon" className="relative w-9 h-9">
+                          <ShoppingBag className="h-5 w-5" />
                           {cartItemCount > 0 && (
                             <span className="absolute -top-0.5 -right-0.5 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center bg-official">
                               {cartItemCount}
@@ -132,17 +132,16 @@ export const Header = () => {
                 </>
               )}
               {showCartIcon && (
-                isMobile ? ( // Also update mobile cart icon badge for consistency when not authenticated
+                isMobile ? ( 
                   <Button asChild variant="ghost" size="icon" className="relative w-8 h-8">
                     <Link to="/marketplace/cart">
-                      <ShoppingCart className="h-4 w-4 md:h-5 md:w-5" />
-                      {/* Assuming no badge if not logged in and cart is empty, or a generic style if cart can be used anonymously */}
+                      <ShoppingBag className="h-4 w-4 md:h-5 md:w-5" />
                     </Link>
                   </Button>
-                ) : ( // Desktop cart icon for unauthenticated user
-                  <Button asChild variant="ghost" size="icon" className="relative">
+                ) : ( 
+                  <Button asChild variant="ghost" size="icon" className="relative w-9 h-9">
                      <Link to="/marketplace/cart">
-                       <ShoppingCart className="h-5 w-5" />
+                       <ShoppingBag className="h-5 w-5" />
                      </Link>
                   </Button>
                 )

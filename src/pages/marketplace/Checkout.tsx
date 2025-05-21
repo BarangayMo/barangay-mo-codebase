@@ -323,11 +323,11 @@ export default function Checkout() {
   const finalTotal = subtotalFromCart + shippingCost + estimatedTaxes;
   return (
     <Layout hideFooter={true}>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 overflow-x-hidden">
         {/* Custom Header */}
-        <header className="py-4 px-6 md:px-12 lg:px-24 bg-white border-b">
+        <header className="py-4 px-4 sm:px-6 md:px-12 lg:px-24 bg-white border-b">
           <div className="max-w-7xl mx-auto flex justify-between items-center">
-            <Link to="/marketplace" className="text-2xl font-bold tracking-tight text-gray-900 mx-0 px-0">Checkout</Link>
+            <Link to="/marketplace" className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 mx-0 px-0">Checkout</Link>
             <Link to="/marketplace/cart" className="relative">
               <ShoppingBag className="h-6 w-6 text-gray-500 hover:text-gray-700" />
               {cartItems.length > 0 && (
@@ -339,7 +339,7 @@ export default function Checkout() {
           </div>
         </header>
 
-        <main className="py-8 px-4 md:px-8 lg:px-12">
+        <main className="py-8 px-4 sm:px-6 md:px-8 lg:px-12 pb-24 md:pb-8">
           <div className="max-w-7xl mx-auto grid md:grid-cols-[2fr_1fr] gap-8 lg:gap-12">
             {/* Left Column: Form */}
             <form onSubmit={handleSubmit} className="space-y-8">
@@ -369,7 +369,7 @@ export default function Checkout() {
                 billingAddressOption={billingAddressOption}
                 setBillingAddressOption={setBillingAddressOption}
               />
-              <RoleButton type="submit" size="lg" className="w-full mt-6 text-lg py-3 h-auto" disabled={isProcessing || cartItems.length === 0}>
+              <RoleButton type="submit" size="lg" className="w-full mt-6" disabled={isProcessing || cartItems.length === 0}>
                 {isProcessing ? "Processing..." : "Pay now"}
               </RoleButton>
             </form>
@@ -386,8 +386,8 @@ export default function Checkout() {
         </main>
 
         {/* Custom Footer (original location, will be hidden by Layout prop) */}
-        <footer className="py-8 px-6 md:px-12 lg:px-24 mt-12 border-t bg-gray-50">
-          <div className="max-w-7xl mx-auto flex flex-wrap gap-x-6 gap-y-2 justify-center text-xs text-gray-500">
+        <footer className="py-8 px-4 sm:px-6 md:px-12 lg:px-24 mt-12 border-t bg-gray-50">
+          <div className="max-w-7xl mx-auto flex flex-wrap gap-x-4 sm:gap-x-6 gap-y-2 justify-center text-xs text-gray-500">
             <Link to="#" className="hover:text-primary">Refund policy</Link>
             <Link to="#" className="hover:text-primary">Privacy policy</Link>
             <Link to="#" className="hover:text-primary">Terms of service</Link>
