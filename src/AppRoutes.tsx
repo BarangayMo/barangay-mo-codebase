@@ -115,6 +115,7 @@ export function AppRoutes() {
       <Route path="/settings" element={<Settings />} />
       <Route path="/menu" element={<Menu />} />
       <Route path="/messages" element={<Messages />} />
+      <Route path="/messages/:id" element={<Messages />} /> {/* Added dynamic route for individual messages */}
       <Route path="/services" element={<Services />} />
       <Route path="/jobs" element={<Jobs />} />
       <Route path="/jobs/:id" element={<JobDetail />} />
@@ -135,3 +136,4 @@ export function AppRoutes() {
     </Routes>
   );
 }
+
