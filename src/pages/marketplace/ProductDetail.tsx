@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -13,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProductCard, ProductCardType } from "@/components/marketplace/ProductCard"; // For similar products
+import { cn } from "@/lib/utils";
 
 // More detailed Product type for this page
 export interface ProductDetailType {
@@ -137,16 +137,16 @@ export default function ProductDetail() {
       if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
 
       if (existingItem) {
-        const { error } = await supabase
+        const { error: updateError } = await supabase
           .from('cart_items')
           .update({ quantity: existingItem.quantity + qty })
           .eq('id', existingItem.id);
-        if (error) throw error;
+        if (updateError) throw updateError;
       } else {
-        const { error } = await supabase
+        const { error: insertError } = await supabase
           .from('cart_items')
           .insert({ product_id: productId, user_id: user.id, quantity: qty });
-        if (error) throw error;
+        if (insertError) throw insertError;
       }
     },
     onSuccess: () => {
@@ -172,10 +172,23 @@ export default function ProductDetail() {
   
   const handleBuyNow = () => {
     if (!product) return;
-    addToCartMutation.mutate({ productId: product.id, qty: quantity});
-    // Assuming mutation success will lead to toast, then navigate.
-    // For a real buy now, you might want to navigate after successful add or directly to a checkout with item info.
-    navigate("/marketplace/cart"); // Navigate to cart page (to be implemented fully later)
+    // Check if mutation is already pending for the "Add to Cart" action with the same quantity
+    // This check is to prevent re-triggering navigation if "Buy Now" is clicked while "Add to Cart" is processing.
+    // However, the core logic of Buy Now might be different (e.g., direct to checkout with item details).
+    // For now, it adds to cart then navigates.
+    if (addToCartMutation.isPending && addToCartMutation.variables?.productId === product.id && addToCartMutation.variables?.qty === quantity) {
+      // If "Add to Cart" is already processing this exact item and quantity,
+      // we might want to wait for it to complete or handle differently.
+      // For simplicity, we allow proceeding, but this could be refined.
+    }
+    
+    addToCartMutation.mutate({ productId: product.id, qty: quantity}, {
+      onSuccess: () => {
+        // Original onSuccess still runs (toast, invalidateQueries)
+        // Then navigate
+        navigate("/marketplace/cart");
+      }
+    });
   };
 
   if (isLoading) {
@@ -335,9 +348,9 @@ export default function ProductDetail() {
                   <div className="text-sm text-muted-foreground w-24 shrink-0">Quantity:</div>
                   <div className="flex items-center">
                     <button 
-                      className="w-8 h-8 flex items-center justify-center border rounded-l-md hover:bg-gray-100"
+                      className="w-8 h-8 flex items-center justify-center border rounded-l-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                       onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
-                      disabled={!isAvailable}
+                      disabled={!isAvailable || quantity <= 1}
                     >
                       -
                     </button>
@@ -345,7 +358,7 @@ export default function ProductDetail() {
                       {quantity}
                     </div>
                     <button
-                      className="w-8 h-8 flex items-center justify-center border rounded-r-md hover:bg-gray-100"
+                      className="w-8 h-8 flex items-center justify-center border rounded-r-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                       onClick={() => setQuantity(prev => Math.min(prev + 1, product.stock_quantity || 1))}
                       disabled={!isAvailable || quantity >= (product.stock_quantity || 0)}
                     >
@@ -360,17 +373,17 @@ export default function ProductDetail() {
                   variant="outline" 
                   className="flex-1 border-primary text-primary hover:bg-primary/5"
                   onClick={handleAddToCart}
-                  disabled={!isAvailable || addToCartMutation.isPending}
+                  disabled={!isAvailable || (addToCartMutation.isPending && addToCartMutation.variables?.productId === product.id && addToCartMutation.variables?.qty === quantity)}
                 >
                   <ShoppingCart className="mr-2 h-5 w-5" />
-                  {addToCartMutation.isPending && addToCartMutation.variables?.qty === quantity ? "Adding..." : "Add to Cart"}
+                  {addToCartMutation.isPending && addToCartMutation.variables?.productId === product.id && addToCartMutation.variables?.qty === quantity ? "Adding..." : "Add to Cart"}
                 </Button>
                 <Button 
                   className="flex-1 bg-red-500 hover:bg-red-600"
                   onClick={handleBuyNow}
-                  disabled={!isAvailable || addToCartMutation.isPending}
+                  disabled={!isAvailable || (addToCartMutation.isPending && addToCartMutation.variables?.productId === product.id && addToCartMutation.variables?.qty === quantity)}
                 >
-                  Buy Now
+                  {addToCartMutation.isPending && addToCartMutation.variables?.productId === product.id && addToCartMutation.variables?.qty === quantity ? "Processing..." : "Buy Now"}
                 </Button>
               </div>
             </div>
