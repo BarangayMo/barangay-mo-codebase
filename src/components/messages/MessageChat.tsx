@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { ArrowLeft, Send, Smile, Paperclip, Mic, MoreVertical } from "lucide-react"; // Added Paperclip, Mic, MoreVertical
+import { useState, useEffect } from "react"; // Added useEffect
+import { ArrowLeft, Send, Smile, Paperclip, Mic, MoreVertical } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ export function MessageChat({ selectedConversation, onBack }: MessageChatProps) 
   );
 
   // Update messages when selectedConversation changes
-  useState(() => {
+  useEffect(() => { // Changed from useState to useEffect
     setMessages(selectedConversation ? allChatHistory[selectedConversation.id] || [] : []);
   }, [selectedConversation]);
 
