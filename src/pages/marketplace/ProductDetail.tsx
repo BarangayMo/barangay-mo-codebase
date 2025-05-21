@@ -94,8 +94,55 @@ const fetchProductById = async (productId: string): Promise<ProductDetailType | 
     throw error;
   }
   
-  console.log("Product data fetched:", data);
-  return data as ProductDetailType | null;
+  console.log("Product data fetched (raw):", data);
+
+  if (data) {
+    let processedSpecifications: ProductSpecification[] | undefined = undefined;
+    // Supabase returns specifications as Json | null. We need ProductSpecification[] | undefined.
+    if (data.specifications && Array.isArray(data.specifications)) {
+      // Basic check to see if it's an array of objects with key/value
+      const isValidSpecArray = data.specifications.every(
+        (item: any) => typeof item === 'object' && item !== null && 'key' in item && 'value' in item
+      );
+      if (isValidSpecArray) {
+        processedSpecifications = data.specifications as ProductSpecification[];
+      } else {
+        console.warn("Fetched specifications are not in the expected format:", data.specifications);
+      }
+    } else if (data.specifications !== null) {
+      console.warn("Fetched specifications are not an array or null:", data.specifications);
+    }
+
+    // Construct the ProductDetailType object carefully
+    // The 'as any' for data is a temporary escape hatch if Supabase's inferred type for data (from types.ts)
+    // isn't perfectly aligning yet, especially for nested objects like vendors/product_categories.
+    // Ideally, Supabase's generated types should make this smooth.
+    const productDetailData: ProductDetailType = {
+      id: (data as any).id,
+      name: (data as any).name,
+      description: (data as any).description,
+      price: (data as any).price,
+      original_price: (data as any).original_price,
+      stock_quantity: (data as any).stock_quantity,
+      main_image_url: (data as any).main_image_url,
+      average_rating: (data as any).average_rating,
+      rating_count: (data as any).rating_count,
+      sold_count: (data as any).sold_count,
+      is_active: (data as any).is_active,
+      tags: (data as any).tags,
+      specifications: processedSpecifications, // Use the processed specifications
+      shipping_info: (data as any).shipping_info,
+      return_policy: (data as any).return_policy,
+      vendors: (data as any).vendors as Vendor | undefined, // Cast nested structures if necessary
+      product_categories: (data as any).product_categories as ProductCategory | undefined,
+      product_images: (data as any).product_images as ProductImage[] | undefined,
+      created_at: (data as any).created_at,
+    };
+    console.log("Processed product data:", productDetailData);
+    return productDetailData;
+  }
+  
+  return null;
 };
 
 const fetchSimilarProducts = async (categoryId?: string, currentProductId?: string): Promise<ProductCardType[]> => {

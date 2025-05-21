@@ -348,6 +348,7 @@ export type Database = {
           rating_count: number | null
           sku: string | null
           sold_count: number | null
+          specifications: Json | null
           stock_quantity: number
           tags: string[] | null
           updated_at: string
@@ -372,6 +373,7 @@ export type Database = {
           rating_count?: number | null
           sku?: string | null
           sold_count?: number | null
+          specifications?: Json | null
           stock_quantity?: number
           tags?: string[] | null
           updated_at?: string
@@ -396,6 +398,7 @@ export type Database = {
           rating_count?: number | null
           sku?: string | null
           sold_count?: number | null
+          specifications?: Json | null
           stock_quantity?: number
           tags?: string[] | null
           updated_at?: string
