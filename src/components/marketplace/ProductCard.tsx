@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Star } from "lucide-react";
+import { DEFAULT_PRODUCT_IMAGE } from "@/lib/constants";
 
 // Define the product data structure
 export interface ProductCardType {
@@ -24,8 +25,6 @@ export interface ProductCardType {
 interface ProductCardProps {
   product: ProductCardType;
 }
-
-const DEFAULT_PRODUCT_IMAGE = "/lovable-uploads/fde1e978-0d35-49ec-9f4b-1f03b096b981.png";
 
 export const ProductCard: FC<ProductCardProps> = ({ product }) => {
   const {

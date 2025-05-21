@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatCurrency } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
+import { DEFAULT_PRODUCT_IMAGE } from "@/lib/constants"; // Import the constant
 
 // Define interfaces for cart items and location state
 interface CartItem {
