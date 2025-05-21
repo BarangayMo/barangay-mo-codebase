@@ -186,7 +186,7 @@ export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth(); // Assuming useAuth provides user info
+  const { user } = useAuth(); // Assuming useAuth provides user info, including user.id
   const queryClient = useQueryClient();
   const [quantity, setQuantity] = useState(1);
   
@@ -216,21 +216,82 @@ export default function ProductDetail() {
     }
   }, [product]);
 
-  const handleAddToCart = () => {
-    if (!product) return;
-    // Basic add to cart logic (actual implementation would use context/store)
-    console.log(`Added ${quantity} of ${product.name} to cart.`);
-    toast({
-      title: "Added to Cart",
-      description: `${quantity} x ${product.name} has been added to your cart.`,
-      action: (
-        <Button variant="outline" size="sm" onClick={() => navigate('/marketplace/cart')}>
-          View Cart
-        </Button>
-      ),
-    });
-    // Example: Invalidate cart queries if using React Query for cart state
-    // queryClient.invalidateQueries(['cart']);
+  const handleAddToCart = async () => {
+    if (!product) {
+      toast({ title: "Error", description: "Product not available.", variant: "destructive" });
+      return;
+    }
+    if (!user) {
+      toast({ title: "Authentication Required", description: "Please log in to add items to your cart.", variant: "destructive", action: <Button onClick={() => navigate('/login')}>Login</Button> });
+      return;
+    }
+
+    try {
+      // Check if item already in cart
+      const { data: existingItem, error: fetchError } = await supabase
+        .from('cart_items')
+        .select('id, quantity')
+        .eq('user_id', user.id)
+        .eq('product_id', product.id)
+        .single();
+
+      // PGRST116 means no rows found, which is not an error in this context.
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        throw fetchError;
+      }
+
+      const requestedTotalQuantity = existingItem ? existingItem.quantity + quantity : quantity;
+
+      if (requestedTotalQuantity > product.stock_quantity) {
+        toast({ 
+          title: "Stock Limit Reached", 
+          description: `You can't have more than ${product.stock_quantity} of ${product.name} in your cart. You already have ${existingItem ? existingItem.quantity : 0}.`,
+          variant: "warning" 
+        });
+        return;
+      }
+      
+      if (quantity <= 0) {
+        toast({ title: "Invalid Quantity", description: "Quantity must be at least 1.", variant: "warning" });
+        return;
+      }
+
+
+      if (existingItem) {
+        // Item exists, update quantity
+        const newQuantity = existingItem.quantity + quantity;
+        const { error: updateError } = await supabase
+          .from('cart_items')
+          .update({ quantity: newQuantity, added_at: new Date().toISOString() })
+          .eq('id', existingItem.id);
+        if (updateError) throw updateError;
+        toast({ title: "Cart Updated", description: `${product.name} quantity updated in your cart.` });
+      } else {
+        // Item does not exist, insert new
+        const { error: insertError } = await supabase
+          .from('cart_items')
+          .insert({
+            user_id: user.id,
+            product_id: product.id,
+            quantity: quantity,
+          });
+        if (insertError) throw insertError;
+        toast({
+          title: "Added to Cart",
+          description: `${quantity} x ${product.name} has been added to your cart.`,
+          action: (
+            <Button variant="outline" size="sm" onClick={() => navigate('/marketplace/cart')}>
+              View Cart
+            </Button>
+          ),
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ['cartItems', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['cartSummary', user.id] }); // For header count
+    } catch (error: any) {
+      console.error("Error adding to cart:", error);
+      toast({ title: "Error Adding to Cart", description: `Failed to add item: ${error.message}`, variant: "destructive" });
+    }
   };
 
   const handleBuyNow = () => {
@@ -410,7 +471,7 @@ export default function ProductDetail() {
               <Button 
                 size="lg" 
                 onClick={handleAddToCart} 
-                disabled={product.stock_quantity === 0}
+                disabled={product.stock_quantity === 0 || !user}
                 className="bg-blue-500 hover:bg-blue-600 text-white flex-1"
               >
                 <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart

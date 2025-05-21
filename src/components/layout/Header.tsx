@@ -8,11 +8,13 @@ import { LocationDropdown } from "./header/LocationDropdown";
 import { DesktopNavItems } from "./header/DesktopNavItems";
 import { ProfileMenu } from "./ProfileMenu";
 import { LanguageSelector } from "./LanguageSelector";
+import { useCartSummary } from "@/hooks/useCartSummary";
 
 export const Header = () => {
   const { isAuthenticated, userRole } = useAuth();
   const isMobile = useIsMobile();
   const location = useLocation();
+  const { cartItemCount } = useCartSummary();
 
   const getDashboardRoute = () => {
     switch (userRole) {
@@ -27,8 +29,7 @@ export const Header = () => {
     }
   };
 
-  const showCartIcon = location.pathname.startsWith('/marketplace');
-  const cartItemCount = 2; 
+  const showCartIcon = location.pathname.startsWith('/marketplace') || location.pathname.startsWith('/resident-home');
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md shadow-sm">
@@ -112,10 +113,10 @@ export const Header = () => {
                 <Button asChild variant="ghost" size="icon" className="relative">
                   <Link to="/marketplace/cart">
                     <ShoppingCart className="h-5 w-5" />
-                    {cartItemCount > 0 && (
-                      <span className="absolute -top-1 -right-1 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center bg-red-500">
-                        {cartItemCount}
-                      </span>
+                    {isAuthenticated && cartItemCount > 0 && (
+                       <span className="absolute -top-1 -right-1 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center bg-red-500">
+                          {cartItemCount}
+                        </span>
                     )}
                   </Link>
                 </Button>

@@ -346,6 +346,8 @@ export type Database = {
           original_price: number | null
           price: number
           rating_count: number | null
+          return_policy: string | null
+          shipping_info: string | null
           sku: string | null
           sold_count: number | null
           specifications: Json | null
@@ -371,6 +373,8 @@ export type Database = {
           original_price?: number | null
           price: number
           rating_count?: number | null
+          return_policy?: string | null
+          shipping_info?: string | null
           sku?: string | null
           sold_count?: number | null
           specifications?: Json | null
@@ -396,6 +400,8 @@ export type Database = {
           original_price?: number | null
           price?: number
           rating_count?: number | null
+          return_policy?: string | null
+          shipping_info?: string | null
           sku?: string | null
           sold_count?: number | null
           specifications?: Json | null
