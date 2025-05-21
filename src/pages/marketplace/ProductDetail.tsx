@@ -52,16 +52,6 @@ interface ProductDetailType {
   created_at: string;
 }
 
-// Type guard to check for ProductSpecification
-const isProductSpecification = (item: unknown): item is ProductSpecification => {
-  if (typeof item !== 'object' || item === null) {
-    return false;
-  }
-  // Check for key and value properties of type string
-  const obj = item as Record<string, unknown>;
-  return typeof obj.key === 'string' && typeof obj.value === 'string';
-};
-
 // Function to fetch product by ID
 const fetchProductById = async (productId: string): Promise<ProductDetailType | null> => {
   if (!productId) return null;
@@ -100,82 +90,73 @@ const fetchProductById = async (productId: string): Promise<ProductDetailType | 
   
   console.log("Product data fetched (raw):", data);
 
-  if (data) {
-    let processedSpecifications: ProductSpecification[] | undefined = undefined;
-    
-    if (data.specifications) { 
-      try {
-        const specsInput = data.specifications; // specsInput is Json | null
-
-        if (Array.isArray(specsInput)) { // Handle when specsInput is an array of Json items
-          const collectedSpecs: ProductSpecification[] = [];
-          for (const item of specsInput) { // item is of type Json here
-            if (isProductSpecification(item)) { // Type guard narrows 'item' to ProductSpecification
-              collectedSpecs.push({ key: item.key, value: item.value });
-            }
+  // Process specifications based on data type
+  let processedSpecifications: ProductSpecification[] | undefined = undefined;
+  
+  if (data && data.specifications) {
+    try {
+      const specs = data.specifications;
+      
+      // Handle array format
+      if (Array.isArray(specs)) {
+        processedSpecifications = [];
+        for (let i = 0; i < specs.length; i++) {
+          const spec = specs[i];
+          if (typeof spec === 'object' && spec !== null && 'key' in spec && 'value' in spec) {
+            const key = String(spec.key);
+            const value = String(spec.value);
+            processedSpecifications.push({ key, value });
           }
-          if (collectedSpecs.length > 0) {
-            processedSpecifications = collectedSpecs;
-          }
-        } else if (typeof specsInput === 'object' && specsInput !== null) { 
-          // Handle when specsInput is a single object (either a ProductSpecification or a map)
-          if (isProductSpecification(specsInput)) { // Check if the whole object IS a ProductSpecification
-            processedSpecifications = [{ key: specsInput.key, value: specsInput.value }];
-          } else {
-            // Convert object { "Brand": "Acme", "Material": "Steel" } to ProductSpecification[]
-            const objEntriesSpecs: ProductSpecification[] = [];
-            for (const [entryKey, entryValue] of Object.entries(specsInput)) { // entryValue is Json
-              // We only want simple stringifiable values for the specifications list
-              if (typeof entryValue === 'string' || typeof entryValue === 'number' || typeof entryValue === 'boolean') {
-                objEntriesSpecs.push({ key: entryKey, value: String(entryValue) });
-              } else if (entryValue === null) {
-                objEntriesSpecs.push({ key: entryKey, value: 'null' }); // Represent null as string "null" or handle as needed
-              }
-              // Note: Complex nested Json objects/arrays as values are ignored here for simplicity
-            }
-            if (objEntriesSpecs.length > 0) {
-              processedSpecifications = objEntriesSpecs;
-            }
-          }
-        } else if (typeof specsInput === 'string') {
-          // Handle when specsInput is a JSON string
-          const parsedSpecs = JSON.parse(specsInput); // parsedSpecs is 'any' / 'unknown'
-          
-          if (Array.isArray(parsedSpecs)) { // If parsed string results in an array
-            const collectedSpecs: ProductSpecification[] = [];
-            for (const item of parsedSpecs) { // item is 'unknown' here
-              if (isProductSpecification(item)) { // Type guard narrows 'item'
-                collectedSpecs.push({ key: item.key, value: item.value });
-              }
-            }
-            if (collectedSpecs.length > 0) {
-              processedSpecifications = collectedSpecs;
-            }
-          } else if (typeof parsedSpecs === 'object' && parsedSpecs !== null) { // If parsed string results in an object
-            if (isProductSpecification(parsedSpecs)) { // Check if the parsed object IS a ProductSpecification
-              processedSpecifications = [{ key: parsedSpecs.key, value: parsedSpecs.value }];
-            } else {
-              // Convert parsed object { "Brand": "Acme" } to ProductSpecification[]
-              const objEntriesSpecs: ProductSpecification[] = [];
-              for (const [entryKey, entryValue] of Object.entries(parsedSpecs)) {
-                 if (typeof entryValue === 'string' || typeof entryValue === 'number' || typeof entryValue === 'boolean') {
-                    objEntriesSpecs.push({ key: entryKey, value: String(entryValue) });
-                 } else if (entryValue === null) {
-                    objEntriesSpecs.push({ key: entryKey, value: 'null' });
-                 }
-              }
-              if (objEntriesSpecs.length > 0) {
-                processedSpecifications = objEntriesSpecs;
-              }
+        }
+      } 
+      // Handle object format (key-value pairs)
+      else if (typeof specs === 'object' && specs !== null) {
+        processedSpecifications = [];
+        for (const key in specs) {
+          if (Object.prototype.hasOwnProperty.call(specs, key)) {
+            const value = specs[key];
+            if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+              processedSpecifications.push({ key, value: String(value) });
             }
           }
         }
-      } catch (e) {
-        console.warn("Failed to process specifications:", e);
-        processedSpecifications = undefined; // Ensure it's undefined on error
       }
+      // Handle string format (JSON string)
+      else if (typeof specs === 'string') {
+        try {
+          const parsedSpecs = JSON.parse(specs);
+          if (Array.isArray(parsedSpecs)) {
+            processedSpecifications = [];
+            for (let i = 0; i < parsedSpecs.length; i++) {
+              const spec = parsedSpecs[i];
+              if (typeof spec === 'object' && spec !== null && 'key' in spec && 'value' in spec) {
+                processedSpecifications.push({ 
+                  key: String(spec.key), 
+                  value: String(spec.value) 
+                });
+              }
+            }
+          } else if (typeof parsedSpecs === 'object' && parsedSpecs !== null) {
+            processedSpecifications = [];
+            for (const key in parsedSpecs) {
+              if (Object.prototype.hasOwnProperty.call(parsedSpecs, key)) {
+                const value = parsedSpecs[key];
+                if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+                  processedSpecifications.push({ key, value: String(value) });
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.warn("Failed to parse specifications JSON string:", e);
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to process specifications:", e);
     }
+  }
 
+  if (data) {
     const productDetailData: ProductDetailType = {
       id: data.id,
       name: data.name,
@@ -184,13 +165,13 @@ const fetchProductById = async (productId: string): Promise<ProductDetailType | 
       original_price: data.original_price,
       stock_quantity: data.stock_quantity,
       main_image_url: data.main_image_url,
-      gallery_image_urls: Array.isArray(data.gallery_image_urls) ? data.gallery_image_urls.filter((url: any): url is string => typeof url === 'string' && url.length > 0) : null,
+      gallery_image_urls: Array.isArray(data.gallery_image_urls) ? data.gallery_image_urls.filter(url => typeof url === 'string' && url.length > 0) : null,
       average_rating: data.average_rating,
       rating_count: data.rating_count,
       sold_count: data.sold_count,
       is_active: data.is_active,
-      tags: Array.isArray(data.tags) ? data.tags.filter((tag: any): tag is string => typeof tag === 'string') : undefined,
-      specifications: processedSpecifications, // Use the processed specifications
+      tags: Array.isArray(data.tags) ? data.tags.filter(tag => typeof tag === 'string') : undefined,
+      specifications: processedSpecifications,
       shipping_info: data.shipping_info,
       return_policy: data.return_policy,
       vendors: data.vendors as Vendor | undefined, 
@@ -313,18 +294,6 @@ export default function ProductDetail() {
       });
       return;
     }
-    // This duplicate check seems redundant. The check above is `quantity > product.stock_quantity`.
-    // The check inside try/catch `currentCartQuantity + quantity > product.stock_quantity` is more specific.
-    // Removing this one:
-    // if (quantity > product.stock_quantity) {
-    //    toast({ 
-    //     title: "Stock Limit Reached", 
-    //     description: `Cannot add ${quantity}. You have ${quantity} in cart, and only ${product.stock_quantity} total stock available.`,
-    //     variant: "destructive"
-    //   });
-    //   return;
-    // }
-
 
     try {
       const { data: existingItem, error: fetchError } = await supabase
