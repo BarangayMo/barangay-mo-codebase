@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatCurrency } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
-import { DEFAULT_PRODUCT_IMAGE } from "@/lib/constants"; // Import the constant
+import { DEFAULT_PRODUCT_IMAGE } from "@/lib/constants";
 
 // Define interfaces for cart items and location state
 interface CartItem {
@@ -322,7 +322,7 @@ export default function Checkout() {
   const taxRate = 0.075;
   const estimatedTaxes = subtotalFromCart * taxRate;
   const finalTotal = subtotalFromCart + shippingCost + estimatedTaxes;
-  return <Layout>
+  return <Layout hideFooter={true}>
       <div className="min-h-screen bg-gray-50">
         {/* Custom Header */}
         <header className="py-4 px-6 md:px-12 lg:px-24 bg-white border-b">
@@ -539,7 +539,6 @@ export default function Checkout() {
 
             {/* Right Column: Order Summary - md:sticky ensures it sticks on medium screens and up */}
             <div className="bg-white md:bg-gray-100 p-4 md:p-6 rounded-lg md:border h-fit md:sticky md:top-24">
-              {/* ... keep existing code (Order Summary content: cart items, subtotal, shipping, taxes, total) */}
               <div className="space-y-3">
                 {cartItems.length === 0 && <p className="text-gray-600 text-sm">Your cart is empty. Add items to proceed.</p>}
                 {cartItems.map(item => <div key={item.product_id} className="flex items-center gap-4 pb-3 border-b last:border-b-0">
@@ -582,7 +581,7 @@ export default function Checkout() {
           </div>
         </main>
 
-        {/* Custom Footer */}
+        {/* Custom Footer (original location, will be hidden by Layout prop) */}
         <footer className="py-8 px-6 md:px-12 lg:px-24 mt-12 border-t bg-gray-50">
           <div className="max-w-7xl mx-auto flex flex-wrap gap-x-6 gap-y-2 justify-center text-xs text-gray-500">
             <Link to="#" className="hover:text-primary">Refund policy</Link>
