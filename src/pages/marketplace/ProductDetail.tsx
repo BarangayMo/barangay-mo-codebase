@@ -7,11 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProductCard, ProductCardType } from '@/components/marketplace/ProductCard';
-import { Star, ChevronLeft, ChevronRight, ShoppingCart, Heart, MessageSquare, Minus, Plus, Share2, Store, ShieldCheck, MapPin, Truck, RotateCcw } from 'lucide-react';
+import { Star, ChevronLeft, ChevronRight, ShoppingCart, Heart, Minus, Plus, Share2, Store, Truck, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
-// import { Box } from 'lucide-react'; // Replaced Box with default image
 
 const DEFAULT_PRODUCT_IMAGE = "/lovable-uploads/fde1e978-0d35-49ec-9f4b-1f03b096b981.png";
 
@@ -98,45 +97,66 @@ const fetchProductById = async (productId: string): Promise<ProductDetailType | 
 
   if (data) {
     let processedSpecifications: ProductSpecification[] | undefined = undefined;
-    // Supabase returns specifications as Json | null. We need ProductSpecification[] | undefined.
     if (data.specifications && Array.isArray(data.specifications)) {
-      // Basic check to see if it's an array of objects with key/value
-      const isValidSpecArray = data.specifications.every(
-        (item: any) => typeof item === 'object' && item !== null && 'key' in item && 'value' in item
-      );
-      if (isValidSpecArray) {
-        processedSpecifications = data.specifications as ProductSpecification[];
-      } else {
-        console.warn("Fetched specifications are not in the expected format:", data.specifications);
+      const potentialSpecifications = data.specifications as any[]; // Cast to iterate
+      const validSpecifications: ProductSpecification[] = [];
+      let allItemsValid = true;
+      for (const item of potentialSpecifications) {
+        // Check if item is an object and has 'key' and 'value' properties of type string
+        if (
+          typeof item === 'object' &&
+          item !== null &&
+          'key' in item &&
+          typeof item.key === 'string' &&
+          'value' in item &&
+          typeof item.value === 'string'
+        ) {
+          validSpecifications.push({ key: item.key, value: item.value });
+        } else {
+          allItemsValid = false;
+          console.warn("Invalid specification item:", item);
+          break; 
+        }
       }
-    } else if (data.specifications !== null) {
-      console.warn("Fetched specifications are not an array or null:", data.specifications);
+      if (allItemsValid && validSpecifications.length > 0) {
+        processedSpecifications = validSpecifications;
+      } else if (!allItemsValid) {
+         console.warn("Fetched specifications array contains one or more invalid items:", data.specifications);
+      }
+    } else if (data.specifications !== null && !Array.isArray(data.specifications)) {
+      // This case handles if specifications is a single object not in an array, or other non-array JSON
+      console.warn("Fetched specifications are not an array as expected:", data.specifications);
+      // Optionally, try to process if it's a single spec object
+      if (typeof data.specifications === 'object' && data.specifications !== null && 'key' in data.specifications && 'value' in data.specifications) {
+        // This check is a basic example; you might need more robust parsing if specs can be a single object
+         // processedSpecifications = [{ key: (data.specifications as any).key, value: (data.specifications as any).value }];
+         // For now, sticking to array expectation based on ProductSpecification[]
+      }
+    } else if (data.specifications === null) {
+      // Specifications are null, which is fine, processedSpecifications remains undefined
     }
 
-    // Construct the ProductDetailType object carefully
-    // The 'as any' for data is a temporary escape hatch if Supabase's inferred type for data (from types.ts)
-    // isn't perfectly aligning yet, especially for nested objects like vendors/product_categories.
-    // Ideally, Supabase's generated types should make this smooth.
+
     const productDetailData: ProductDetailType = {
-      id: (data as any).id,
-      name: (data as any).name,
-      description: (data as any).description,
-      price: (data as any).price,
-      original_price: (data as any).original_price,
-      stock_quantity: (data as any).stock_quantity,
-      main_image_url: (data as any).main_image_url,
-      average_rating: (data as any).average_rating,
-      rating_count: (data as any).rating_count,
-      sold_count: (data as any).sold_count,
-      is_active: (data as any).is_active,
-      tags: (data as any).tags,
-      specifications: processedSpecifications, // Use the processed specifications
-      shipping_info: (data as any).shipping_info,
-      return_policy: (data as any).return_policy,
-      vendors: (data as any).vendors as Vendor | undefined, // Cast nested structures if necessary
-      product_categories: (data as any).product_categories as ProductCategory | undefined,
-      product_images: (data as any).product_images as ProductImage[] | undefined,
-      created_at: (data as any).created_at,
+      id: data.id,
+      name: data.name,
+      description: data.description,
+      price: data.price,
+      original_price: data.original_price,
+      stock_quantity: data.stock_quantity,
+      main_image_url: data.main_image_url,
+      average_rating: data.average_rating,
+      rating_count: data.rating_count,
+      sold_count: data.sold_count,
+      is_active: data.is_active,
+      tags: data.tags as string[] | undefined,
+      specifications: processedSpecifications,
+      shipping_info: data.shipping_info,
+      return_policy: data.return_policy,
+      vendors: data.vendors as Vendor | undefined,
+      product_categories: data.product_categories as ProductCategory | undefined,
+      product_images: data.product_images as ProductImage[] | undefined,
+      created_at: data.created_at,
     };
     console.log("Processed product data:", productDetailData);
     return productDetailData;
@@ -177,7 +197,22 @@ const fetchSimilarProducts = async (categoryId?: string, currentProductId?: stri
     console.error("Error fetching similar products:", error.message);
     throw error;
   }
-  return data as ProductCardType[];
+  // Ensure mapping to ProductCardType if structure differs slightly
+  return (data || []).map(p => ({
+    id: p.id,
+    name: p.name,
+    price: p.price,
+    original_price: p.original_price,
+    stock_quantity: p.stock_quantity,
+    main_image_url: p.main_image_url,
+    average_rating: p.average_rating,
+    rating_count: p.rating_count,
+    sold_count: p.sold_count,
+    is_active: p.is_active,
+    tags: p.tags,
+    vendors: p.vendors as { shop_name: string } | null | undefined,
+    product_categories: p.product_categories as { name: string } | null | undefined,
+  }));
 };
 
 
@@ -203,7 +238,7 @@ export default function ProductDetail() {
   const { data: similarProducts, isLoading: isLoadingSimilar } = useQuery<ProductCardType[]>({
     queryKey: ['similarProducts', product?.product_categories?.id, id],
     queryFn: () => fetchSimilarProducts(product?.product_categories?.id, id),
-    enabled: !!product && !!id,
+    enabled: !!product?.product_categories?.id && !!id,
   });
 
   const [selectedImage, setSelectedImage] = useState<string | undefined>(undefined);
@@ -211,8 +246,12 @@ export default function ProductDetail() {
   useEffect(() => {
     if (product?.main_image_url) {
       setSelectedImage(product.main_image_url);
-    } else if (product && !product.main_image_url) {
+    } else if (product && !product.main_image_url && (!product.product_images || product.product_images.length === 0)) {
       setSelectedImage(DEFAULT_PRODUCT_IMAGE);
+    } else if (product?.product_images && product.product_images.length > 0 && product.product_images[0]?.image_url) {
+      setSelectedImage(product.product_images[0].image_url);
+    } else {
+       setSelectedImage(DEFAULT_PRODUCT_IMAGE); // Fallback if no images at all
     }
   }, [product]);
 
@@ -225,9 +264,29 @@ export default function ProductDetail() {
       toast({ title: "Authentication Required", description: "Please log in to add items to your cart.", variant: "destructive", action: <Button onClick={() => navigate('/login')}>Login</Button> });
       return;
     }
+    if (quantity <= 0) {
+      toast({ title: "Invalid Quantity", description: "Quantity must be at least 1.", variant: "default" });
+      return;
+    }
+    if (quantity > product.stock_quantity) {
+       toast({ 
+        title: "Stock Limit Exceeded", 
+        description: `Only ${product.stock_quantity} of ${product.name} available.`,
+        variant: "default"
+      });
+      return;
+    }
+    if (quantity > product.stock_quantity) {
+       toast({ 
+        title: "Stock Limit Reached", 
+        description: `Cannot add ${quantity}. You have ${quantity} in cart, and only ${product.stock_quantity} total stock available.`,
+        variant: "default"
+      });
+      return;
+    }
+
 
     try {
-      // Check if item already in cart
       const { data: existingItem, error: fetchError } = await supabase
         .from('cart_items')
         .select('id, quantity')
@@ -235,30 +294,22 @@ export default function ProductDetail() {
         .eq('product_id', product.id)
         .single();
 
-      // PGRST116 means no rows found, which is not an error in this context.
-      if (fetchError && fetchError.code !== 'PGRST116') {
+      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116: No rows found, not an error here
         throw fetchError;
       }
 
-      const requestedTotalQuantity = existingItem ? existingItem.quantity + quantity : quantity;
-
-      if (requestedTotalQuantity > product.stock_quantity) {
+      const currentCartQuantity = existingItem ? existingItem.quantity : 0;
+      if (currentCartQuantity + quantity > product.stock_quantity) {
         toast({ 
           title: "Stock Limit Reached", 
-          description: `You can't have more than ${product.stock_quantity} of ${product.name} in your cart. You already have ${existingItem ? existingItem.quantity : 0}.`,
-          variant: "warning" 
+          description: `Cannot add ${quantity}. You have ${currentCartQuantity} in cart, and only ${product.stock_quantity} total stock available.`,
+          variant: "default"
         });
         return;
       }
       
-      if (quantity <= 0) {
-        toast({ title: "Invalid Quantity", description: "Quantity must be at least 1.", variant: "warning" });
-        return;
-      }
-
 
       if (existingItem) {
-        // Item exists, update quantity
         const newQuantity = existingItem.quantity + quantity;
         const { error: updateError } = await supabase
           .from('cart_items')
@@ -267,7 +318,6 @@ export default function ProductDetail() {
         if (updateError) throw updateError;
         toast({ title: "Cart Updated", description: `${product.name} quantity updated in your cart.` });
       } else {
-        // Item does not exist, insert new
         const { error: insertError } = await supabase
           .from('cart_items')
           .insert({
@@ -287,7 +337,7 @@ export default function ProductDetail() {
         });
       }
       queryClient.invalidateQueries({ queryKey: ['cartItems', user.id] });
-      queryClient.invalidateQueries({ queryKey: ['cartSummary', user.id] }); // For header count
+      queryClient.invalidateQueries({ queryKey: ['cartSummary', user.id] });
     } catch (error: any) {
       console.error("Error adding to cart:", error);
       toast({ title: "Error Adding to Cart", description: `Failed to add item: ${error.message}`, variant: "destructive" });
@@ -296,20 +346,61 @@ export default function ProductDetail() {
 
   const handleBuyNow = () => {
     if (!product) return;
-    // Navigate to checkout with product info
+    if (!user) {
+      toast({ title: "Authentication Required", description: "Please log in to buy items.", variant: "destructive", action: <Button onClick={() => navigate('/login')}>Login</Button> });
+      return;
+    }
+    if (quantity <= 0) {
+      toast({ title: "Invalid Quantity", description: "Quantity must be at least 1.", variant: "default" });
+      return;
+    }
+    if (quantity > product.stock_quantity) {
+       toast({ 
+        title: "Stock Limit Exceeded", 
+        description: `Only ${product.stock_quantity} of ${product.name} available for purchase.`,
+        variant: "default"
+      });
+      return;
+    }
+    // Navigate to checkout with product info (assuming checkout page handles single item purchase)
+    // This might need adjustment if checkout page expects an array of cartItems
+    const itemToCheckout = {
+      product_id: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: quantity,
+      image: product.main_image_url || DEFAULT_PRODUCT_IMAGE,
+      seller: product.vendors?.shop_name || "N/A",
+      stock_quantity: product.stock_quantity,
+      max_quantity: product.stock_quantity, // This might not be needed in this context
+    };
     console.log(`Buying ${quantity} of ${product.name} now.`);
-    navigate('/marketplace/checkout', { state: { product, quantity } });
+    navigate('/marketplace/checkout', { state: { cartItems: [itemToCheckout], total: product.price * quantity } });
   };
 
   const incrementQuantity = () => setQuantity(prev => Math.min(prev + 1, product?.stock_quantity || 1));
   const decrementQuantity = () => setQuantity(prev => Math.max(1, prev - 1));
 
-  const discountPercentage = product.original_price && product.price < product.original_price
+  const discountPercentage = product && product.original_price && product.price < product.original_price
     ? Math.round(((product.original_price - product.price) / product.original_price) * 100)
     : 0;
 
-  const galleryImages = product.product_images?.map(img => img.image_url).filter(Boolean) as string[] || [];
-  const displayGallery = [product.main_image_url, ...galleryImages].filter(Boolean) as string[];
+  const galleryImages = product?.product_images?.map(img => img.image_url).filter(Boolean) as string[] || [];
+  // Ensure main_image_url is first if it exists and is not already in galleryImages
+  const initialImage = product?.main_image_url;
+  let displayGallery: string[] = [];
+  if (initialImage) {
+    displayGallery.push(initialImage);
+  }
+  galleryImages.forEach(imgUrl => {
+    if (!initialImage || imgUrl !== initialImage) {
+      displayGallery.push(imgUrl);
+    }
+  });
+  // If displayGallery is empty after all, add default image
+  if (displayGallery.length === 0) {
+    displayGallery.push(DEFAULT_PRODUCT_IMAGE);
+  }
 
   if (isLoading) {
     return (
@@ -365,13 +456,13 @@ export default function ProductDetail() {
           {product.product_categories && (
             <>
               <ChevronRight className="inline h-4 w-4 mx-1" />
-              <Link to={`/marketplace?category=${product.product_categories.name}`} className="hover:underline">
+              <Link to={`/marketplace?category=${product.product_categories.name.toLowerCase().replace(/\s+/g, '-')}`} className="hover:underline">
                 {product.product_categories.name}
               </Link>
             </>
           )}
           <ChevronRight className="inline h-4 w-4 mx-1" />
-          <span className="truncate">{product.name}</span>
+          <span className="truncate max-w-[200px] sm:max-w-xs md:max-w-sm inline-block align-bottom">{product.name}</span>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
@@ -386,13 +477,13 @@ export default function ProductDetail() {
               />
             </div>
             <div className="flex gap-2 overflow-x-auto pb-1">
-              {displayGallery.length > 0 ? displayGallery.map((imageSrc, index) => (
+              {displayGallery.length > 1 || (displayGallery.length === 1 && displayGallery[0] !== DEFAULT_PRODUCT_IMAGE) ? displayGallery.map((imageSrc, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(imageSrc)}
                   className={cn(
-                    "w-16 h-16 md:w-20 md:h-20 border rounded-md p-1 flex-shrink-0 hover:border-blue-500",
-                    (selectedImage || product.main_image_url) === imageSrc ? "border-blue-500 ring-2 ring-blue-500" : "border-gray-200"
+                    "w-16 h-16 md:w-20 md:h-20 border rounded-md p-1 flex-shrink-0 hover:border-primary focus:outline-none focus:ring-2 focus:ring-primary",
+                    (selectedImage || product.main_image_url) === imageSrc ? "border-primary ring-2 ring-primary" : "border-gray-200"
                   )}
                 >
                   <img 
@@ -418,7 +509,7 @@ export default function ProductDetail() {
           <div className="space-y-4">
             <h1 className="text-2xl md:text-3xl font-bold">{product.name}</h1>
             
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-wrap">
               {product.average_rating && product.average_rating > 0 ? (
                 <div className="flex items-center">
                   <span className="text-yellow-500 font-bold mr-1">{product.average_rating.toFixed(1)}</span>
@@ -430,11 +521,11 @@ export default function ProductDetail() {
               ) : (
                 <span className="text-sm text-muted-foreground">No ratings yet</span>
               )}
-              {product.sold_count !== undefined && <span className="text-sm text-muted-foreground">| {product.sold_count} sold</span>}
+              {product.sold_count !== undefined && product.sold_count > 0 && <span className="text-sm text-muted-foreground">| {product.sold_count} sold</span>}
             </div>
 
             <div>
-              <span className="text-3xl font-bold text-red-600">₱{product.price.toFixed(2)}</span>
+              <span className="text-3xl font-bold text-primary">₱{product.price.toFixed(2)}</span>
               {product.original_price && discountPercentage > 0 && (
                 <span className="text-xl text-gray-400 line-through ml-2">₱{product.original_price.toFixed(2)}</span>
               )}
@@ -457,11 +548,11 @@ export default function ProductDetail() {
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground">Quantity:</span>
               <div className="flex items-center border rounded-md">
-                <Button variant="ghost" size="icon" onClick={decrementQuantity} className="h-8 w-8">
+                <Button variant="ghost" size="icon" onClick={decrementQuantity} disabled={quantity <= 1} className="h-8 w-8">
                   <Minus className="h-4 w-4" />
                 </Button>
-                <span className="px-3 text-sm">{quantity}</span>
-                <Button variant="ghost" size="icon" onClick={incrementQuantity} className="h-8 w-8">
+                <span className="px-3 text-sm w-8 text-center">{quantity}</span>
+                <Button variant="ghost" size="icon" onClick={incrementQuantity} disabled={quantity >= product.stock_quantity} className="h-8 w-8">
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
@@ -471,7 +562,7 @@ export default function ProductDetail() {
               <Button 
                 size="lg" 
                 onClick={handleAddToCart} 
-                disabled={product.stock_quantity === 0 || !user}
+                disabled={product.stock_quantity === 0 || !user || quantity > product.stock_quantity}
                 className="bg-blue-500 hover:bg-blue-600 text-white flex-1"
               >
                 <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
@@ -479,8 +570,8 @@ export default function ProductDetail() {
               <Button 
                 size="lg" 
                 onClick={handleBuyNow} 
-                disabled={product.stock_quantity === 0}
-                className="bg-red-500 hover:bg-red-600 text-white flex-1"
+                disabled={product.stock_quantity === 0 || !user || quantity > product.stock_quantity}
+                className="bg-primary hover:bg-primary/90 text-white flex-1"
               >
                 Buy Now
               </Button>
@@ -495,28 +586,25 @@ export default function ProductDetail() {
               </Button>
             </div>
             
-            {/* Vendor Info Teaser */}
             {product.vendors && (
               <div className="mt-6 border-t pt-4">
                 <p className="text-sm text-muted-foreground mb-1">Sold by:</p>
                 <div className="flex items-center gap-2">
                   <Store className="h-5 w-5 text-primary" />
-                  <Link to={`/marketplace/vendor/${product.vendors.id}`} className="font-medium hover:underline">
+                  <Link to={`/marketplace/vendor/${product.vendors.id}`} className="font-medium hover:underline text-primary">
                     {product.vendors.shop_name}
                   </Link>
                 </div>
-                 {/* Add more vendor details or link to vendor page here */}
               </div>
             )}
           </div>
         </div>
         
-        {/* Product Description & Specifications */}
         <div className="mt-8 md:mt-12">
           <h2 className="text-xl font-semibold mb-3">Product Description</h2>
-          <p className="text-muted-foreground whitespace-pre-wrap">
+          <div className="text-muted-foreground whitespace-pre-wrap prose prose-sm max-w-none">
             {product.description || "No description available."}
-          </p>
+          </div>
           
           {product.specifications && product.specifications.length > 0 && (
             <>
@@ -530,25 +618,23 @@ export default function ProductDetail() {
           )}
         </div>
         
-        {/* Shipping & Returns */}
         {(product.shipping_info || product.return_policy) && (
-            <div className="mt-8 md:mt-12 grid md:grid-cols-2 gap-6">
+            <div className="mt-8 md:mt-12 grid md:grid-cols-2 gap-6 border-t pt-6">
                 {product.shipping_info && (
                     <div>
-                        <h3 className="text-lg font-medium mb-2 flex items-center"><Truck className="mr-2 h-5 w-5" /> Shipping Information</h3>
+                        <h3 className="text-lg font-medium mb-2 flex items-center"><Truck className="mr-2 h-5 w-5 text-primary" /> Shipping Information</h3>
                         <p className="text-sm text-muted-foreground">{product.shipping_info}</p>
                     </div>
                 )}
                 {product.return_policy && (
                     <div>
-                        <h3 className="text-lg font-medium mb-2 flex items-center"><RotateCcw className="mr-2 h-5 w-5" /> Return Policy</h3>
+                        <h3 className="text-lg font-medium mb-2 flex items-center"><RotateCcw className="mr-2 h-5 w-5 text-primary" /> Return Policy</h3>
                         <p className="text-sm text-muted-foreground">{product.return_policy}</p>
                     </div>
                 )}
             </div>
         )}
 
-        {/* Similar Products */}
         {isLoadingSimilar && (
             <div className="mt-8 md:mt-12">
                 <h2 className="text-xl font-semibold mb-4">Similar Products</h2>
@@ -566,7 +652,7 @@ export default function ProductDetail() {
         {similarProducts && similarProducts.length > 0 && (
           <div className="mt-8 md:mt-12">
             <h2 className="text-xl font-semibold mb-4">You Might Also Like</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {similarProducts.map(p => <ProductCard key={p.id} product={p} />)}
             </div>
           </div>

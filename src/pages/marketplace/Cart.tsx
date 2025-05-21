@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -100,7 +99,7 @@ export default function Cart() {
     mutationFn: async ({ cartItemId, newQuantity }: { cartItemId: string, newQuantity: number }) => {
       const itemToUpdate = cartItems?.find(item => item.cart_item_id === cartItemId);
       if (itemToUpdate && newQuantity > itemToUpdate.max_quantity) {
-        toast({ title: "Stock limit", description: `Only ${itemToUpdate.max_quantity} available.`, variant: "warning"});
+        toast({ title: "Stock limit", description: `Only ${itemToUpdate.max_quantity} available.`, variant: "default"}); // Changed "warning" to "default"
         return Promise.reject(new Error("Exceeds stock limit"));
       }
       const { error } = await supabase
@@ -163,7 +162,7 @@ export default function Cart() {
   
   const handleCheckout = () => {
     if (!cartItems || cartItems.length === 0) {
-      toast({ title: "Cart is empty", description: "Please add items to your cart before checkout.", variant: "warning" });
+      toast({ title: "Cart is empty", description: "Please add items to your cart before checkout.", variant: "default" }); // Changed "warning" to "default"
       return;
     }
     navigate("/marketplace/checkout", { state: { cartItems, total } });
