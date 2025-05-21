@@ -206,7 +206,7 @@ const fetchSimilarProducts = async (categoryId?: string, currentProductId?: stri
       vendors (shop_name), 
       product_categories (name)
     `)
-    .eq('product_category_id', categoryId)
+    .eq('category_id', categoryId) // Corrected: Was 'product_category_id'
     .neq('id', currentProductId) // Exclude the current product
     .eq('is_active', true)
     .limit(5);
