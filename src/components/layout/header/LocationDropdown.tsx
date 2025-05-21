@@ -32,6 +32,8 @@ export function LocationDropdown() {
     setLocation(selectedLocation.barangay);
     setCoordinates(selectedLocation.coordinates);
     toast.success(`Location set to ${selectedLocation.barangay}`);
+    // Close the dropdown if it was open via the text search part
+    setDropdownOpen(false); 
   };
 
   // For showing the dropdown content on large screens
@@ -70,9 +72,10 @@ export function LocationDropdown() {
               <DropdownMenuItem
                 key={brgy}
                 onClick={() => {
-                  setLocation(brgy);
-                  setDropdownOpen(false);
-                  setSearch("");
+                  // Simulate handleLocationSelected for text selection for simplicity
+                  // In a real scenario, you might not have coordinates here or need a different flow
+                  handleLocationSelected({ barangay: brgy, coordinates: { lat: 0, lng: 0 } }); 
+                  setSearch(""); // Clear search after selection
                 }}
               >
                 {brgy}
@@ -106,7 +109,10 @@ export function LocationDropdown() {
       </div>
       
       <div className="border-t p-3 flex justify-center">
-        <MapLocationModal onLocationSelected={handleLocationSelected}>
+        <MapLocationModal onLocationSelected={(loc) => {
+          handleLocationSelected(loc);
+          setDropdownOpen(false); // Close dropdown after map selection
+        }}>
           <Button size="sm" className="w-full" variant="outline">
             <MapPin className="h-4 w-4 mr-2" />
             Select on Map
@@ -118,32 +124,40 @@ export function LocationDropdown() {
 
   return (
     <div className="flex items-center">
+      {/* This button now serves as the primary trigger for the map modal on all screen sizes */}
       <MapLocationModal onLocationSelected={handleLocationSelected}>
         <Button 
           variant="ghost" 
           size="sm" 
-          className="flex items-center gap-2 min-w-[150px]"
+          className="flex items-center gap-1 md:gap-2 w-full max-w-[120px] md:max-w-[150px] px-1 md:px-2" // Adjusted padding and max-width for mobile
           disabled={isLoading}
         >
           {isLoading ? (
             <>
-              <Loader className="h-4 w-4 shrink-0 animate-spin" />
-              <span className="truncate max-w-[100px]">Loading...</span>
+              <Loader className="h-3 w-3 md:h-4 md:w-4 shrink-0 animate-spin" />
+              <span className="truncate text-xs md:text-sm">Loading...</span>
             </>
           ) : (
             <>
-              <MapPin className="h-4 w-4 shrink-0" />
-              <span className="truncate max-w-[100px]">{location}</span>
+              <MapPin className="h-3 w-3 md:h-4 md:w-4 shrink-0" />
+              <span className="truncate text-xs md:text-sm max-w-[70px] md:max-w-[100px]">{location}</span>
             </>
           )}
-          <ChevronDown className="h-3 w-3 opacity-50 ml-auto" />
+          <ChevronDown className="h-3 w-3 opacity-50 ml-auto shrink-0" />
         </Button>
       </MapLocationModal>
       
-      {/* Legacy dropdown - only shown for text-based search */}
+      {/* Legacy dropdown for text-based search, triggered by a separate, hidden button if needed,
+          or integrate search within the modal. For now, let's keep it as is but ensure it can be opened.
+          The onOpenChange for DropdownMenu is now tied to `dropdownOpen` state which can be controlled.
+          To allow opening text search, we can add a small icon button next to or inside MapLocationModal trigger.
+          For simplicity, this example focuses on the map modal being the primary interaction.
+      */}
       <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-        <DropdownMenuTrigger className="hidden">
-          <span className="sr-only">Open barangay menu</span>
+        {/* This trigger is effectively hidden but programmatically controlled.
+            You might add a visible trigger if text search needs to be distinct. */}
+        <DropdownMenuTrigger asChild> 
+            <button className="hidden" aria-label="Open barangay search list"></button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-[280px]">
           {renderDropdownContent()}

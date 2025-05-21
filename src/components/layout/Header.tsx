@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, User, ShoppingCart } from "lucide-react"; // Removed X as it's not used here directly now
+import { Bell, User, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { HeaderLogo } from "./header/HeaderLogo";
@@ -9,16 +9,16 @@ import { DesktopNavItems } from "./header/DesktopNavItems";
 import { ProfileMenu } from "./ProfileMenu";
 import { LanguageSelector } from "./LanguageSelector";
 import { useCartSummary } from "@/hooks/useCartSummary";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"; // Removed SheetClose, SheetHeader, SheetTitle as they are used in CartDrawerContent
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { CartDrawerContent } from "@/components/cart/CartDrawerContent";
-import { useState } from "react"; // Added useState
+import { useState } from "react";
 
 export const Header = () => {
   const { isAuthenticated, userRole } = useAuth();
   const isMobile = useIsMobile();
   const location = useLocation();
   const { cartItemCount } = useCartSummary();
-  const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false); // State for drawer
+  const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
 
   const getDashboardRoute = () => {
     switch (userRole) {
@@ -37,15 +37,15 @@ export const Header = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md shadow-sm">
-      <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-6">
+      <div className="mx-auto max-w-7xl px-2 md:px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-1 md:gap-2">
           <HeaderLogo />
           <LocationDropdown />
         </div>
 
-        <DesktopNavItems />
+        {!isMobile && <DesktopNavItems />}
 
-        <div className="flex items-center gap-1 md:gap-3">
+        <div className="flex items-center gap-0 md:gap-2">
           {isAuthenticated ? (
             <>
               {!isMobile && (
@@ -64,14 +64,14 @@ export const Header = () => {
                   <LanguageSelector />
                 </>
               )}
-              <div className="flex items-center gap-0.5 md:gap-2">
+              <div className="flex items-center gap-0 md:gap-1">
                 {showCartIcon && (
                   isMobile ? (
-                    <Button asChild variant="ghost" size="icon" className="relative">
+                    <Button asChild variant="ghost" size="icon" className="relative w-8 h-8 md:w-auto md:h-auto">
                       <Link to="/marketplace/cart">
-                        <ShoppingCart className="h-5 w-5" />
+                        <ShoppingCart className="h-4 w-4 md:h-5 md:w-5" />
                         {cartItemCount > 0 && (
-                          <span className="absolute -top-1 -right-1 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center bg-red-500">
+                          <span className="absolute -top-0.5 -right-0.5 text-white text-[10px] md:text-xs rounded-full w-3.5 h-3.5 md:w-4 md:h-4 flex items-center justify-center bg-red-500">
                             {cartItemCount}
                           </span>
                         )}
@@ -98,12 +98,12 @@ export const Header = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="relative"
+                  className="relative w-8 h-8 md:w-auto md:h-auto"
                   asChild
                 >
                   <Link to="/notifications">
-                    <Bell className="h-5 w-5" />
-                    <span className="absolute -top-1 -right-1 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center bg-[#ea384c]">
+                    <Bell className="h-4 w-4 md:h-5 md:w-5" />
+                    <span className="absolute -top-0.5 -right-0.5 text-white text-[10px] md:text-xs rounded-full w-3.5 h-3.5 md:w-4 md:h-4 flex items-center justify-center bg-[#ea384c]">
                       3
                     </span>
                   </Link>
@@ -111,15 +111,15 @@ export const Header = () => {
                 {!isMobile && <ProfileMenu />}
               </div>
               {isMobile && (
-                <Button asChild variant="ghost" size="icon" className="rounded-full">
+                <Button asChild variant="ghost" size="icon" className="rounded-full w-8 h-8 md:w-auto md:h-auto">
                   <Link to="/resident-profile">
-                    <User className="h-5 w-5" />
+                    <User className="h-4 w-4 md:h-5 md:w-5" />
                   </Link>
                 </Button>
               )}
             </>
           ) : (
-            <div className="flex items-center gap-0.5 md:gap-2">
+            <div className="flex items-center gap-0 md:gap-2">
               {!isMobile && (
                 <>
                   <LanguageSelector />
@@ -131,18 +131,17 @@ export const Header = () => {
                   </Button>
                 </>
               )}
-              {showCartIcon && ( // For non-authenticated users, cart icon always links to cart page
-                <Button asChild variant="ghost" size="icon" className="relative">
+              {showCartIcon && (
+                <Button asChild variant="ghost" size="icon" className="relative w-8 h-8 md:w-auto md:h-auto">
                   <Link to="/marketplace/cart">
-                    <ShoppingCart className="h-5 w-5" />
-                    {/* Badge for non-auth users is typically not shown or shows 0 */}
+                    <ShoppingCart className="h-4 w-4 md:h-5 md:w-5" />
                   </Link>
                 </Button>
               )}
               {isMobile && (
-                <Button asChild variant="ghost" size="icon" className="rounded-full">
+                <Button asChild variant="ghost" size="icon" className="rounded-full w-8 h-8 md:w-auto md:h-auto">
                   <Link to="/login">
-                    <User className="h-5 w-5" />
+                    <User className="h-4 w-4 md:h-5 md:w-5" />
                   </Link>
                 </Button>
               )}
