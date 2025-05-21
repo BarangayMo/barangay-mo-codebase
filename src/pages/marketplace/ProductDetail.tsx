@@ -94,53 +94,58 @@ const fetchProductById = async (productId: string): Promise<ProductDetailType | 
     // Handle specifications safely
     let processedSpecifications: ProductSpecification[] | undefined = undefined;
     
-    if (data.specifications) {
+    if (data.specifications) { // data.specifications is Json | null from Supabase
       try {
         // Handle specifications based on their actual type
-        if (Array.isArray(data.specifications)) {
-          // It's already an array
+        if (Array.isArray(data.specifications)) { // data.specifications is Json[]
           processedSpecifications = data.specifications
-            .filter(spec => 
-              typeof spec === 'object' && 
-              spec !== null && 
-              'key' in spec && 
-              'value' in spec &&
-              typeof spec.key === 'string' &&
-              typeof spec.value === 'string'
-            )
-            .map(spec => ({ 
-              key: spec.key as string, 
-              value: spec.value as string 
-            }));
-        } else if (typeof data.specifications === 'object') {
-          // Single object case
-          if ('key' in data.specifications && 'value' in data.specifications) {
-            processedSpecifications = [{
-              key: String(data.specifications.key),
-              value: String(data.specifications.value)
-            }];
+            .filter((specItem): specItem is ProductSpecification => { // specItem is Json
+              // Check if specItem is an object and has string properties 'key' and 'value'
+              if (typeof specItem !== 'object' || specItem === null) return false;
+              const s = specItem as { key?: unknown, value?: unknown }; // Cast to check properties
+              return typeof s.key === 'string' && typeof s.value === 'string';
+            })
+            .map(validSpec => ({ key: validSpec.key, value: validSpec.value })); // Ensure only key/value are passed
+
+        } else if (typeof data.specifications === 'object' && data.specifications !== null) { 
+          // data.specifications is { [key: string]: Json }
+          const specsObject = data.specifications as { key?: unknown, value?: unknown, [key: string]: any };
+          
+          // Case 1: specsObject is like { key: "Brand", value: "Acme" }
+          if (typeof specsObject.key === 'string' && typeof specsObject.value === 'string') {
+            processedSpecifications = [{ key: specsObject.key, value: specsObject.value }];
           } else {
-            // Handle object with key/value pairs
-            processedSpecifications = Object.entries(data.specifications)
+            // Case 2: specsObject is like { "Brand": "Acme", "Material": "Steel" }
+            // Convert object properties to {key, value} pairs
+            processedSpecifications = Object.entries(specsObject)
               .map(([key, value]) => ({
                 key,
-                value: String(value)
+                value: String(value) // value is Json, String(value) is safe
               }));
           }
         } else if (typeof data.specifications === 'string') {
-          // Try to parse JSON string
-          const parsedSpecs = JSON.parse(data.specifications);
+          // Try to parse JSON string for specifications
+          const parsedSpecs = JSON.parse(data.specifications); // parsedSpecs is 'any'
           if (Array.isArray(parsedSpecs)) {
             processedSpecifications = parsedSpecs
-              .filter(spec => 'key' in spec && 'value' in spec)
-              .map(spec => ({
-                key: String(spec.key),
-                value: String(spec.value)
-              }));
+              .filter((specItem): specItem is ProductSpecification => {
+                if (typeof specItem !== 'object' || specItem === null) return false;
+                const s = specItem as { key?: unknown, value?: unknown };
+                return typeof s.key === 'string' && typeof s.value === 'string';
+              })
+              .map(validSpec => ({ key: validSpec.key, value: validSpec.value }));
           }
+          // Optionally, handle if parsedSpecs is a single object representing one spec
+          // else if (typeof parsedSpecs === 'object' && parsedSpecs !== null) {
+          //   const s = parsedSpecs as { key?: unknown, value?: unknown };
+          //   if (typeof s.key === 'string' && typeof s.value === 'string') {
+          //     processedSpecifications = [{ key: s.key, value: s.value }];
+          //   }
+          // }
         }
       } catch (e) {
         console.warn("Failed to process specifications:", e);
+        processedSpecifications = undefined; // Ensure it's undefined on error
       }
     }
 
@@ -152,17 +157,17 @@ const fetchProductById = async (productId: string): Promise<ProductDetailType | 
       original_price: data.original_price,
       stock_quantity: data.stock_quantity,
       main_image_url: data.main_image_url,
-      gallery_image_urls: Array.isArray(data.gallery_image_urls) ? data.gallery_image_urls : null,
+      gallery_image_urls: Array.isArray(data.gallery_image_urls) ? data.gallery_image_urls.filter((url: any): url is string => typeof url === 'string' && url.length > 0) : null,
       average_rating: data.average_rating,
       rating_count: data.rating_count,
       sold_count: data.sold_count,
       is_active: data.is_active,
-      tags: Array.isArray(data.tags) ? data.tags : undefined,
+      tags: Array.isArray(data.tags) ? data.tags.filter((tag: any): tag is string => typeof tag === 'string') : undefined,
       specifications: processedSpecifications,
       shipping_info: data.shipping_info,
       return_policy: data.return_policy,
-      vendors: data.vendors as Vendor | undefined,
-      product_categories: data.product_categories as ProductCategory | undefined,
+      vendors: data.vendors as Vendor | undefined, // Assuming vendors is correctly structured or null
+      product_categories: data.product_categories as ProductCategory | undefined, // Same for product_categories
       created_at: data.created_at,
     };
     console.log("Processed product data:", productDetailData);
@@ -236,7 +241,7 @@ export default function ProductDetail() {
     console.log("ProductDetail mounted with ID from useParams:", id);
   }, [id]);
   
-  const { data: product, isLoading, error } = useQuery({
+  const { data: product, isLoading, error } = useQuery<ProductDetailType | null, Error>({
     queryKey: ['product', id], 
     queryFn: () => fetchProductById(id!),
     enabled: !!id,
@@ -281,14 +286,17 @@ export default function ProductDetail() {
       });
       return;
     }
-    if (quantity > product.stock_quantity) {
-       toast({ 
-        title: "Stock Limit Reached", 
-        description: `Cannot add ${quantity}. You have ${quantity} in cart, and only ${product.stock_quantity} total stock available.`,
-        variant: "destructive"
-      });
-      return;
-    }
+    // This duplicate check seems redundant. The check above is `quantity > product.stock_quantity`.
+    // The check inside try/catch `currentCartQuantity + quantity > product.stock_quantity` is more specific.
+    // Removing this one:
+    // if (quantity > product.stock_quantity) {
+    //    toast({ 
+    //     title: "Stock Limit Reached", 
+    //     description: `Cannot add ${quantity}. You have ${quantity} in cart, and only ${product.stock_quantity} total stock available.`,
+    //     variant: "destructive"
+    //   });
+    //   return;
+    // }
 
 
     try {
