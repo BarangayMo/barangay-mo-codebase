@@ -67,7 +67,7 @@ export const Header = () => {
               <div className="flex items-center gap-0 md:gap-1">
                 {showCartIcon && (
                   isMobile ? (
-                    <Button asChild variant="ghost" size="icon" className="relative w-8 h-8 md:w-auto md:h-auto">
+                    <Button asChild variant="ghost" size="icon" className="relative w-8 h-8">
                       <Link to="/marketplace/cart">
                         <ShoppingCart className="h-4 w-4 md:h-5 md:w-5" />
                         {cartItemCount > 0 && (
@@ -98,7 +98,7 @@ export const Header = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="relative w-8 h-8 md:w-auto md:h-auto"
+                  className="relative w-8 h-8"
                   asChild
                 >
                   <Link to="/notifications">
@@ -111,7 +111,7 @@ export const Header = () => {
                 {!isMobile && <ProfileMenu />}
               </div>
               {isMobile && (
-                <Button asChild variant="ghost" size="icon" className="rounded-full w-8 h-8 md:w-auto md:h-auto">
+                <Button asChild variant="ghost" size="icon" className="rounded-full w-8 h-8">
                   <Link to="/resident-profile">
                     <User className="h-4 w-4 md:h-5 md:w-5" />
                   </Link>
@@ -132,14 +132,14 @@ export const Header = () => {
                 </>
               )}
               {showCartIcon && (
-                <Button asChild variant="ghost" size="icon" className="relative w-8 h-8 md:w-auto md:h-auto">
+                <Button asChild variant="ghost" size="icon" className="relative w-8 h-8">
                   <Link to="/marketplace/cart">
                     <ShoppingCart className="h-4 w-4 md:h-5 md:w-5" />
                   </Link>
                 </Button>
               )}
               {isMobile && (
-                <Button asChild variant="ghost" size="icon" className="rounded-full w-8 h-8 md:w-auto md:h-auto">
+                <Button asChild variant="ghost" size="icon" className="rounded-full w-8 h-8">
                   <Link to="/login">
                     <User className="h-4 w-4 md:h-5 md:w-5" />
                   </Link>
