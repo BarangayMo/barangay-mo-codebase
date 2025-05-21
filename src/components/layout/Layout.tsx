@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { Header } from "./Header";
 import { MobileNavbar } from "./MobileNavbar";
@@ -17,6 +16,7 @@ interface LayoutProps {
   children: ReactNode;
   hideHeader?: boolean;
   hideFooter?: boolean;
+  hideMobileNavbar?: boolean; // New prop
 }
 
 // Animation variants
@@ -42,7 +42,7 @@ const pageVariants = {
   }
 };
 
-export const Layout = ({ children, hideHeader = false, hideFooter = false }: LayoutProps) => {
+export const Layout = ({ children, hideHeader = false, hideFooter = false, hideMobileNavbar = false }: LayoutProps) => {
   const { isAuthenticated, userRole } = useAuth();
   const isMobile = useIsMobile();
   const { pathname } = useLocation();
@@ -88,7 +88,7 @@ export const Layout = ({ children, hideHeader = false, hideFooter = false }: Lay
           {!hideHeader && <Header />}
           <main className={cn(
             "flex-grow",
-            isMobile ? "pb-20" : ""
+            isMobile && !hideMobileNavbar ? "pb-20" : "" // Adjusted paddingBottom based on hideMobileNavbar
           )}>
             {isLoading ? (
               renderSkeleton()
@@ -109,7 +109,7 @@ export const Layout = ({ children, hideHeader = false, hideFooter = false }: Lay
               </Suspense>
             )}
           </main>
-          {isMobile && <MobileNavbar />}
+          {isMobile && !hideMobileNavbar && <MobileNavbar />} {/* Conditionally render MobileNavbar */}
           {shouldShowFooter && <Footer />}
         </div>
       </div>

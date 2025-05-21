@@ -1,12 +1,12 @@
-
-import { useState, useEffect } from "react"; // Added useEffect
-import { ArrowLeft, Send, Smile, Paperclip, Mic, MoreVertical } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Send, Smile, Paperclip, MoreVertical, Archive, Trash2, Ban } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { UserConversation, ChatMessage, chatHistory as allChatHistory } from "@/data/conversations";
 import { cn } from "@/lib/utils";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 
 interface MessageChatProps {
   selectedConversation: UserConversation | null;
@@ -22,7 +22,7 @@ export function MessageChat({ selectedConversation, onBack }: MessageChatProps) 
   );
 
   // Update messages when selectedConversation changes
-  useEffect(() => { // Changed from useState to useEffect
+  useEffect(() => {
     setMessages(selectedConversation ? allChatHistory[selectedConversation.id] || [] : []);
   }, [selectedConversation]);
 
@@ -68,9 +68,36 @@ export function MessageChat({ selectedConversation, onBack }: MessageChatProps) 
           <h2 className="font-semibold text-gray-800">{selectedConversation.name}</h2>
           {selectedConversation.online && <p className="text-xs text-green-500">Online</p>}
         </div>
-        <Button variant="ghost" size="icon" className="text-gray-500">
-          <MoreVertical className="w-5 h-5" />
-        </Button>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon" className="text-gray-500">
+              <MoreVertical className="w-5 h-5" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-56 p-2 mr-4">
+            <Button
+              variant="ghost"
+              className="w-full justify-start px-2 py-1.5 text-sm font-normal text-gray-700 hover:bg-gray-100"
+              onClick={() => console.log("Archive Chat:", selectedConversation.id)}
+            >
+              <Archive className="mr-2 h-4 w-4" /> Archive Chat
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full justify-start px-2 py-1.5 text-sm font-normal text-gray-700 hover:bg-gray-100"
+              onClick={() => console.log("Delete Chat:", selectedConversation.id)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" /> Delete Chat
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full justify-start px-2 py-1.5 text-sm font-normal text-red-600 hover:bg-red-50 hover:text-red-700"
+              onClick={() => console.log("Block Contact:", selectedConversation.id)}
+            >
+              <Ban className="mr-2 h-4 w-4" /> Block Contact
+            </Button>
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* Messages Area */}

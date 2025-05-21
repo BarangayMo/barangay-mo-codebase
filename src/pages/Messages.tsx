@@ -74,7 +74,11 @@ export default function Messages() {
   }
 
   return (
-    <Layout hideHeader={false} hideFooter={true}> {/* hideFooter for a cleaner full-screen messages feel */}
+    <Layout 
+      hideHeader={false} 
+      hideFooter={true} 
+      hideMobileNavbar={!!activeConversationIdFromParams} // Hide mobile navbar if a conversation is selected
+    >
       <Helmet>
         <title>Messages - Barangay Management System</title>
       </Helmet>
@@ -104,4 +108,3 @@ export default function Messages() {
     </Layout>
   );
 }
-
