@@ -1,7 +1,7 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { Briefcase } from "lucide-react";
 
 export function DesktopNavItems() {
   const { pathname } = useLocation();
@@ -28,8 +28,12 @@ export function DesktopNavItems() {
     return isAuthenticated ? "/messages" : "/login";
   };
 
+  const getJobsRoute = () => {
+    return "/jobs";
+  };
+
   return (
-    <div className="hidden md:flex items-center space-x-4">
+    <div className="hidden md:flex items-center space-x-1">
       <Button 
         variant="ghost" 
         size="sm" 
@@ -55,6 +59,15 @@ export function DesktopNavItems() {
         className={pathname === "/services" ? "text-[#1a237e]" : ""}
       >
         <Link to="/services">Services</Link>
+      </Button>
+      
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        asChild
+        className={pathname.startsWith("/jobs") ? "text-[#1a237e]" : ""}
+      >
+        <Link to={getJobsRoute()}>Jobs</Link>
       </Button>
       
       <Button 
