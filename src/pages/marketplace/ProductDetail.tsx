@@ -25,11 +25,6 @@ interface ProductCategory {
   name: string;
 }
 
-interface ProductImage {
-  id: string;
-  image_url: string;
-}
-
 interface ProductSpecification {
   key: string;
   value: string;
@@ -42,18 +37,18 @@ interface ProductDetailType {
   price: number;
   original_price?: number;
   stock_quantity: number;
-  main_image_url?: string;
+  main_image_url?: string | null;
+  gallery_image_urls?: string[] | null;
   average_rating?: number;
   rating_count?: number;
   sold_count?: number;
   is_active?: boolean;
   tags?: string[];
   specifications?: ProductSpecification[];
-  shipping_info?: string;
-  return_policy?: string;
+  shipping_info?: string | null;
+  return_policy?: string | null;
   vendors?: Vendor;
   product_categories?: ProductCategory;
-  product_images?: ProductImage[];
   created_at: string;
 }
 
@@ -72,6 +67,7 @@ const fetchProductById = async (productId: string): Promise<ProductDetailType | 
       original_price,
       stock_quantity,
       main_image_url,
+      gallery_image_urls,
       average_rating,
       rating_count,
       sold_count,
@@ -82,8 +78,7 @@ const fetchProductById = async (productId: string): Promise<ProductDetailType | 
       return_policy,
       created_at,
       vendors (id, shop_name), 
-      product_categories (id, name),
-      product_images (id, image_url)
+      product_categories (id, name)
     `)
     .eq('id', productId)
     .single();
@@ -97,43 +92,57 @@ const fetchProductById = async (productId: string): Promise<ProductDetailType | 
 
   if (data) {
     let processedSpecifications: ProductSpecification[] | undefined = undefined;
-    if (data.specifications && Array.isArray(data.specifications)) {
-      const potentialSpecifications = data.specifications as any[]; // Cast to iterate
-      const validSpecifications: ProductSpecification[] = [];
-      let allItemsValid = true;
-      for (const item of potentialSpecifications) {
-        // Check if item is an object and has 'key' and 'value' properties of type string
-        if (
-          typeof item === 'object' &&
-          item !== null &&
-          'key' in item &&
-          typeof item.key === 'string' &&
-          'value' in item &&
-          typeof item.value === 'string'
-        ) {
-          validSpecifications.push({ key: item.key, value: item.value });
-        } else {
-          allItemsValid = false;
-          console.warn("Invalid specification item:", item);
-          break; 
+    if (data.specifications && typeof data.specifications === 'object' && !Array.isArray(data.specifications)) {
+      // Attempt to parse if it's a single object or a JSON string representing an array
+      let specsArray: any[] = [];
+      if (typeof data.specifications === 'string') {
+        try {
+          specsArray = JSON.parse(data.specifications);
+        } catch (e) {
+          console.warn("Failed to parse specifications JSON string:", data.specifications, e);
+        }
+      } else if (typeof data.specifications === 'object' && data.specifications !== null) {
+        // If it's already an object but not an array, wrap it if it's a single spec
+        // This part might need refinement based on actual single object structure
+        // For now, assume it might be an array-like object or needs to be treated as an array of one
+         if (Array.isArray(data.specifications)) {
+           specsArray = data.specifications;
+         } else {
+            // If it's a single object like {key:"Color", value:"Red"}, this won't work directly
+            // The original code was expecting an array.
+            // The DB schema for `specifications` is jsonb. It could be `[{key:"k", value:"v"}]` or `{"key":"k", "value":"v"}`.
+            // The safest is to expect an array. If it's not, log a warning.
+            console.warn("Fetched specifications is an object but not an array as expected:", data.specifications);
+         }
+      }
+
+      if (Array.isArray(specsArray)) {
+        const validSpecifications: ProductSpecification[] = [];
+        let allItemsValid = true;
+        for (const item of specsArray) {
+          if (
+            typeof item === 'object' &&
+            item !== null &&
+            'key' in item &&
+            typeof item.key === 'string' &&
+            'value' in item &&
+            typeof item.value === 'string'
+          ) {
+            validSpecifications.push({ key: item.key, value: item.value });
+          } else {
+            allItemsValid = false;
+            console.warn("Invalid specification item:", item);
+            break; 
+          }
+        }
+        if (allItemsValid && validSpecifications.length > 0) {
+          processedSpecifications = validSpecifications;
+        } else if (!allItemsValid) {
+           console.warn("Fetched specifications array contains one or more invalid items:", specsArray);
         }
       }
-      if (allItemsValid && validSpecifications.length > 0) {
-        processedSpecifications = validSpecifications;
-      } else if (!allItemsValid) {
-         console.warn("Fetched specifications array contains one or more invalid items:", data.specifications);
-      }
-    } else if (data.specifications !== null && !Array.isArray(data.specifications)) {
-      // This case handles if specifications is a single object not in an array, or other non-array JSON
-      console.warn("Fetched specifications are not an array as expected:", data.specifications);
-      // Optionally, try to process if it's a single spec object
-      if (typeof data.specifications === 'object' && data.specifications !== null && 'key' in data.specifications && 'value' in data.specifications) {
-        // This check is a basic example; you might need more robust parsing if specs can be a single object
-         // processedSpecifications = [{ key: (data.specifications as any).key, value: (data.specifications as any).value }];
-         // For now, sticking to array expectation based on ProductSpecification[]
-      }
     } else if (data.specifications === null) {
-      // Specifications are null, which is fine, processedSpecifications remains undefined
+      // Specifications are null, which is fine
     }
 
 
@@ -145,6 +154,7 @@ const fetchProductById = async (productId: string): Promise<ProductDetailType | 
       original_price: data.original_price,
       stock_quantity: data.stock_quantity,
       main_image_url: data.main_image_url,
+      gallery_image_urls: data.gallery_image_urls as string[] | null,
       average_rating: data.average_rating,
       rating_count: data.rating_count,
       sold_count: data.sold_count,
@@ -155,7 +165,6 @@ const fetchProductById = async (productId: string): Promise<ProductDetailType | 
       return_policy: data.return_policy,
       vendors: data.vendors as Vendor | undefined,
       product_categories: data.product_categories as ProductCategory | undefined,
-      product_images: data.product_images as ProductImage[] | undefined,
       created_at: data.created_at,
     };
     console.log("Processed product data:", productDetailData);
@@ -246,10 +255,8 @@ export default function ProductDetail() {
   useEffect(() => {
     if (product?.main_image_url) {
       setSelectedImage(product.main_image_url);
-    } else if (product && !product.main_image_url && (!product.product_images || product.product_images.length === 0)) {
-      setSelectedImage(DEFAULT_PRODUCT_IMAGE);
-    } else if (product?.product_images && product.product_images.length > 0 && product.product_images[0]?.image_url) {
-      setSelectedImage(product.product_images[0].image_url);
+    } else if (product?.gallery_image_urls && product.gallery_image_urls.length > 0 && product.gallery_image_urls[0]) {
+      setSelectedImage(product.gallery_image_urls[0]);
     } else {
        setSelectedImage(DEFAULT_PRODUCT_IMAGE); // Fallback if no images at all
     }
@@ -365,17 +372,18 @@ export default function ProductDetail() {
     // Navigate to checkout with product info (assuming checkout page handles single item purchase)
     // This might need adjustment if checkout page expects an array of cartItems
     const itemToCheckout = {
+      cart_item_id: `buynow-${product.id}-${Date.now()}`, // Synthetic cart_item_id for Buy Now
       product_id: product.id,
       name: product.name,
       price: product.price,
       quantity: quantity,
-      image: product.main_image_url || DEFAULT_PRODUCT_IMAGE,
+      image: product.main_image_url || product.gallery_image_urls?.[0] || DEFAULT_PRODUCT_IMAGE,
       seller: product.vendors?.shop_name || "N/A",
       stock_quantity: product.stock_quantity,
-      max_quantity: product.stock_quantity, // This might not be needed in this context
+      max_quantity: product.stock_quantity, 
     };
     console.log(`Buying ${quantity} of ${product.name} now.`);
-    navigate('/marketplace/checkout', { state: { cartItems: [itemToCheckout], total: product.price * quantity } });
+    navigate('/marketplace/checkout', { state: { cartItems: [itemToCheckout], total: product.price * quantity, isBuyNow: true } });
   };
 
   const incrementQuantity = () => setQuantity(prev => Math.min(prev + 1, product?.stock_quantity || 1));
@@ -385,22 +393,24 @@ export default function ProductDetail() {
     ? Math.round(((product.original_price - product.price) / product.original_price) * 100)
     : 0;
 
-  const galleryImages = product?.product_images?.map(img => img.image_url).filter(Boolean) as string[] || [];
-  // Ensure main_image_url is first if it exists and is not already in galleryImages
-  const initialImage = product?.main_image_url;
+  // Create displayGallery using main_image_url and gallery_image_urls
   let displayGallery: string[] = [];
-  if (initialImage) {
-    displayGallery.push(initialImage);
+  if (product?.main_image_url) {
+    displayGallery.push(product.main_image_url);
   }
-  galleryImages.forEach(imgUrl => {
-    if (!initialImage || imgUrl !== initialImage) {
-      displayGallery.push(imgUrl);
-    }
-  });
+  if (product?.gallery_image_urls) {
+    product.gallery_image_urls.forEach(imgUrl => {
+      if (imgUrl && (!product.main_image_url || imgUrl !== product.main_image_url)) {
+        displayGallery.push(imgUrl);
+      }
+    });
+  }
   // If displayGallery is empty after all, add default image
   if (displayGallery.length === 0) {
     displayGallery.push(DEFAULT_PRODUCT_IMAGE);
   }
+  // Ensure no duplicates if main_image_url was also in gallery_image_urls
+  displayGallery = [...new Set(displayGallery)];
 
   if (isLoading) {
     return (
@@ -477,13 +487,13 @@ export default function ProductDetail() {
               />
             </div>
             <div className="flex gap-2 overflow-x-auto pb-1">
-              {displayGallery.length > 1 || (displayGallery.length === 1 && displayGallery[0] !== DEFAULT_PRODUCT_IMAGE) ? displayGallery.map((imageSrc, index) => (
+              {displayGallery.length > 0 && !(displayGallery.length === 1 && displayGallery[0] === DEFAULT_PRODUCT_IMAGE) ? displayGallery.map((imageSrc, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(imageSrc)}
                   className={cn(
                     "w-16 h-16 md:w-20 md:h-20 border rounded-md p-1 flex-shrink-0 hover:border-primary focus:outline-none focus:ring-2 focus:ring-primary",
-                    (selectedImage || product.main_image_url) === imageSrc ? "border-primary ring-2 ring-primary" : "border-gray-200"
+                    selectedImage === imageSrc ? "border-primary ring-2 ring-primary" : "border-gray-200"
                   )}
                 >
                   <img 
