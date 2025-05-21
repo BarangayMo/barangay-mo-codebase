@@ -57,6 +57,7 @@ export interface ProductDetailType {
 
 const fetchProductById = async (productId: string): Promise<ProductDetailType | null> => {
   if (!productId) return null;
+  console.log("Fetching product with ID:", productId);
   const { data, error } = await supabase
     .from("products")
     .select(`
@@ -72,6 +73,7 @@ const fetchProductById = async (productId: string): Promise<ProductDetailType | 
     console.error("Error fetching product by ID:", error);
     throw error;
   }
+  console.log("Product data:", data);
   return data as ProductDetailType | null;
 };
 
@@ -102,7 +104,7 @@ const fetchSimilarProducts = async (categoryId?: string | null, currentProductId
 
 
 export default function ProductDetail() {
-  const { id: productId } = useParams<{ id: string }>(); // Changed 'productId' to 'id' and aliased to productId
+  const { id } = useParams<{ id: string }>(); // This parameter name must match the route parameter in AppRoutes.tsx
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -110,15 +112,15 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   
   const { data: product, isLoading, error } = useQuery<ProductDetailType | null>({
-    queryKey: ['product', productId], // productId here is the 'id' from params
-    queryFn: () => fetchProductById(productId!),
-    enabled: !!productId,
+    queryKey: ['product', id], 
+    queryFn: () => fetchProductById(id!),
+    enabled: !!id,
   });
 
   const { data: similarProducts, isLoading: isLoadingSimilar } = useQuery<ProductCardType[]>({
-    queryKey: ['similarProducts', product?.product_categories?.id, productId], // productId here is the 'id' from params
-    queryFn: () => fetchSimilarProducts(product?.product_categories?.id, productId),
-    enabled: !!product, // Fetch only when main product data is available
+    queryKey: ['similarProducts', product?.product_categories?.id, id],
+    queryFn: () => fetchSimilarProducts(product?.product_categories?.id, id),
+    enabled: !!product,
   });
 
   const addToCartMutation = useMutation({

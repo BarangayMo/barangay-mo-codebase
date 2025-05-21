@@ -1,4 +1,3 @@
-
 import { Route, Routes } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import Index from "@/pages/Index";
@@ -115,7 +114,8 @@ export function AppRoutes() {
       <Route path="/settings" element={<Settings />} />
       <Route path="/menu" element={<Menu />} />
       <Route path="/messages" element={<Messages />} />
-      <Route path="/messages/:id" element={<Messages />} /> {/* Added dynamic route for individual messages */}
+      <Route path="/messages/:id" element={<Messages />} />
+      
       <Route path="/services" element={<Services />} />
       <Route path="/jobs" element={<Jobs />} />
       <Route path="/jobs/:id" element={<JobDetail />} />
@@ -129,11 +129,9 @@ export function AppRoutes() {
       
       <Route path="/admin/media-library" element={<MediaLibraryPage />} />
       
-      {/* Add the EditProfile route */}
       <Route path="/edit-profile" element={<EditProfile />} />
       
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
-
