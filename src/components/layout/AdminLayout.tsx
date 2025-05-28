@@ -265,7 +265,7 @@ export const AdminLayout = ({
           )}
           
           <main className="flex-1">
-            <div className={cn("container mx-auto px-4 md:px-6", hidePageHeader ? "py-4" : "py-4")}>
+            <div className={cn("container mx-auto px-4 md:px-6", hidePageHeader ? "py-2" : "py-2")}>
               {children}
             </div>
           </main>
