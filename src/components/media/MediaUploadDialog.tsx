@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -39,15 +40,6 @@ interface FileUpload {
   xhr?: XMLHttpRequest;
 }
 
-interface StorageBucket {
-  id: string;
-  name: string;
-  owner: string;
-  created_at: string;
-  updated_at: string;
-  public: boolean;
-}
-
 export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUploadDialogProps) {
   const { user, session } = useAuth();
   const [uploads, setUploads] = useState<FileUpload[]>([]);
@@ -63,7 +55,6 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
         const { data: buckets, error } = await supabase.storage.listBuckets();
         if (error) {
           console.error("Error fetching buckets:", error);
-          // Use default fallback
           setDefaultBucket('user_uploads');
           return;
         }
@@ -71,12 +62,10 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
         if (buckets && buckets.length > 0) {
           console.log("Available buckets for upload:", buckets);
           
-          // Look for user_uploads bucket first, then use the first available
           const userUploadsBucket = buckets.find(b => b.name === 'user_uploads');
           if (userUploadsBucket) {
             setDefaultBucket('user_uploads');
           } else {
-            // Use the first bucket available
             setDefaultBucket(buckets[0].name);
             console.log(`Using bucket: ${buckets[0].name}`);
           }
@@ -131,22 +120,31 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
     try {
       console.log(`Uploading file to bucket: ${defaultBucket}, path: ${filePath}`);
       
-      // Upload the file using Supabase Storage with progress tracking
+      // Upload the file using Supabase Storage without progress tracking initially
       const { data, error } = await supabase.storage
         .from(defaultBucket)
         .upload(filePath, file, {
-          cacheControl: '3600',
-          onUploadProgress: (progress) => {
-            const calculatedProgress = Math.round((progress.loaded / progress.total) * 100);
-            updateUpload(upload.id, { progress: calculatedProgress });
-          }
+          cacheControl: '3600'
         });
 
+      // Simulate progress for user feedback
+      const progressInterval = setInterval(() => {
+        setUploads(current => 
+          current.map(u => 
+            u.id === upload.id 
+              ? { ...u, progress: Math.min(u.progress + 10, 90) }
+              : u
+          )
+        );
+      }, 100);
+
       if (error) {
+        clearInterval(progressInterval);
         console.error("Storage upload error:", error);
         throw error;
       }
 
+      clearInterval(progressInterval);
       console.log("File uploaded successfully:", data);
 
       // Get the signed URL for the file (valid for 7 days)
