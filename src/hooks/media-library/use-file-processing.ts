@@ -119,21 +119,26 @@ export function useFileProcessing() {
     return processedFiles;
   }, [getBucketAndPath]);
 
-  // Improved recursive function to list all files in a directory
+  // Enhanced recursive function to list all files in a directory with better permissions handling
   const listFilesRecursively = useCallback(async (bucketName: string, path: string = ''): Promise<any[]> => {
     try {
       console.log(`[STORAGE SCAN] Listing files in bucket: ${bucketName}, path: "${path}"`);
       
-      // List all items in the current directory
+      // List all items in the current directory with increased limit and sorted
       const { data: items, error } = await supabase.storage
         .from(bucketName)
         .list(path, { 
           sortBy: { column: 'name', order: 'asc' },
-          limit: 1000 // Increase limit to ensure we get all files
+          limit: 1000 // Ensure we get all files
         });
         
       if (error) {
         console.error(`[STORAGE SCAN] Error listing path "${path}" in bucket ${bucketName}:`, error);
+        // If we get a permission error, try to continue with other paths
+        if (error.message?.includes('permission') || error.message?.includes('access')) {
+          console.warn(`[STORAGE SCAN] Permission denied for path "${path}" in bucket ${bucketName}, skipping...`);
+          return [];
+        }
         return [];
       }
       
@@ -142,7 +147,7 @@ export function useFileProcessing() {
         return [];
       }
       
-      console.log(`[STORAGE SCAN] Found ${items.length} items in bucket ${bucketName} at path "${path}":`, items.map(i => i.name));
+      console.log(`[STORAGE SCAN] Found ${items.length} items in bucket ${bucketName} at path "${path}":`, items.map(i => `${i.name} (${i.id ? 'file' : 'folder'})`));
       
       const allFiles: any[] = [];
       
@@ -154,8 +159,13 @@ export function useFileProcessing() {
         if (!item.id || item.metadata?.size === undefined) {
           console.log(`[STORAGE SCAN] Found folder: "${itemPath}" in bucket ${bucketName}`);
           // Recursively process the folder
-          const subFiles = await listFilesRecursively(bucketName, itemPath);
-          allFiles.push(...subFiles);
+          try {
+            const subFiles = await listFilesRecursively(bucketName, itemPath);
+            allFiles.push(...subFiles);
+          } catch (subError) {
+            console.error(`[STORAGE SCAN] Error processing subfolder "${itemPath}":`, subError);
+            // Continue with other items even if one subfolder fails
+          }
         } else {
           // This is a file
           console.log(`[STORAGE SCAN] Found file: "${itemPath}" in bucket ${bucketName}, size: ${item.metadata?.size || 'unknown'}`);
@@ -173,14 +183,14 @@ export function useFileProcessing() {
     }
   }, []);
 
-  // Enhanced function to load ALL files from ALL storage buckets
+  // Enhanced function to load ALL files from ALL storage buckets with better error handling
   const loadFilesFromStorage = useCallback(async (buckets: string[]) => {
     if (!buckets.length) {
       console.log('[STORAGE SCAN] No buckets provided to loadFilesFromStorage');
       return [];
     }
     
-    console.log(`[STORAGE SCAN] Starting comprehensive scan of ${buckets.length} storage buckets for ALL files`);
+    console.log(`[STORAGE SCAN] Starting comprehensive scan of ${buckets.length} storage buckets for ALL files (ADMIN MODE)`);
     const allFiles: MediaFile[] = [];
     
     // Process each bucket
@@ -199,8 +209,8 @@ export function useFileProcessing() {
         console.log(`[STORAGE SCAN] Found ${files.length} total files in bucket ${bucketName}:`);
         files.forEach((f, i) => console.log(`  ${i+1}. ${f.fullPath || f.name} (${f.metadata?.size || 'unknown size'})`));
         
-        // Process files in batches for better performance
-        const batchSize = 5; // Smaller batches for more stability
+        // Process files in smaller batches for better stability
+        const batchSize = 3; // Smaller batches to avoid rate limits
         for (let i = 0; i < files.length; i += batchSize) {
           const batch = files.slice(i, i + batchSize);
           console.log(`[STORAGE SCAN] Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(files.length/batchSize)} for bucket ${bucketName}`);
@@ -219,7 +229,7 @@ export function useFileProcessing() {
               
               if (signedUrlError) {
                 console.error(`[STORAGE SCAN] Error creating signed URL for ${fullPath}:`, signedUrlError);
-                return null;
+                // Still include the file even without signed URL
               }
               
               // Extract filename from path
@@ -262,7 +272,7 @@ export function useFileProcessing() {
                 category: 'uncategorized'
               };
               
-              console.log(`[STORAGE SCAN] Successfully processed: ${filename} (${mediaFile.file_size} bytes)`);
+              console.log(`[STORAGE SCAN] Successfully processed: ${filename} (${mediaFile.file_size} bytes) by user: ${mediaFile.user_id}`);
               return mediaFile;
             } catch (err) {
               console.error(`[STORAGE SCAN] Error processing file ${file.name}:`, err);
@@ -275,6 +285,11 @@ export function useFileProcessing() {
           allFiles.push(...validFiles);
           
           console.log(`[STORAGE SCAN] Batch completed: ${validFiles.length}/${batch.length} files processed successfully`);
+          
+          // Small delay between batches to avoid overwhelming the API
+          if (i + batchSize < files.length) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
         }
       } catch (err) {
         console.error(`[STORAGE SCAN] Error processing bucket ${bucketName}:`, err);
@@ -283,7 +298,7 @@ export function useFileProcessing() {
     
     console.log(`[STORAGE SCAN] === SCAN COMPLETE ===`);
     console.log(`[STORAGE SCAN] Total files loaded from ALL storage buckets: ${allFiles.length}`);
-    allFiles.forEach((f, i) => console.log(`  ${i+1}. ${f.filename} from ${f.bucket_name} (${f.file_size} bytes)`));
+    allFiles.forEach((f, i) => console.log(`  ${i+1}. ${f.filename} from ${f.bucket_name} (${f.file_size} bytes) - User: ${f.user_id}`));
     
     return allFiles;
   }, [listFilesRecursively]);

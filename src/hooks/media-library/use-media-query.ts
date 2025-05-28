@@ -28,11 +28,12 @@ export function useMediaQuery(
     error,
     refetch
   } = useQuery({
-    queryKey: ['media-files', filters, searchQuery, buckets.length],
+    queryKey: ['media-files', filters, searchQuery, buckets.length, isAdmin],
     queryFn: async () => {
       console.log("=== MEDIA QUERY START ===");
       console.log("Fetching ALL media files with filters:", filters);
       console.log("Search query:", searchQuery);
+      console.log("Is Admin:", isAdmin);
       console.log("Available buckets count:", buckets.length);
       console.log("Available buckets:", buckets);
       
@@ -74,8 +75,14 @@ export function useMediaQuery(
           .select('*')
           .order('uploaded_at', { ascending: false });
 
-        // Apply filters only if they are explicitly set by user
-        //if (filters.user) query = query.eq('user_id', filters.user);
+        // FOR ADMINS: Remove user-based filtering to get ALL database records
+        // FOR REGULAR USERS: Apply user filtering (if needed)
+        if (!isAdmin) {
+          // Only apply user filtering for non-admin users
+          if (filters.user) query = query.eq('user_id', filters.user);
+        }
+        
+        // Apply other filters regardless of admin status
         if (filters.category) query = query.eq('category', filters.category);
         if (filters.startDate) query = query.gte('uploaded_at', filters.startDate);
         if (filters.endDate) query = query.lte('uploaded_at', filters.endDate);
@@ -83,6 +90,8 @@ export function useMediaQuery(
         if (searchQuery) {
           query = query.ilike('filename', `%${searchQuery}%`);
         }
+
+        console.log(`Database query for ${isAdmin ? 'ADMIN' : 'USER'}: fetching ${isAdmin ? 'ALL' : 'filtered'} records`);
 
         const { data: dbFiles, error: dbError } = await query;
 
@@ -117,22 +126,24 @@ export function useMediaQuery(
               return storageFile;
             });
             
-            // Add any database files that don't exist in storage (orphaned records)
-            const storageUrls = new Set(allMediaFiles.map(f => f.file_url));
-            const orphanedDbFiles = dbFiles.filter(dbFile => !storageUrls.has(dbFile.file_url));
-            
-            if (orphanedDbFiles.length > 0) {
-              console.log(`Found ${orphanedDbFiles.length} orphaned database records (files deleted from storage)`);
-              // Process orphaned files to try to get signed URLs
-              const processedOrphans = await processMedia(orphanedDbFiles, buckets);
-              allMediaFiles.push(...processedOrphans);
+            // FOR ADMINS ONLY: Add any database files that don't exist in storage (orphaned records)
+            if (isAdmin) {
+              const storageUrls = new Set(allMediaFiles.map(f => f.file_url));
+              const orphanedDbFiles = dbFiles.filter(dbFile => !storageUrls.has(dbFile.file_url));
+              
+              if (orphanedDbFiles.length > 0) {
+                console.log(`Found ${orphanedDbFiles.length} orphaned database records (files deleted from storage)`);
+                // Process orphaned files to try to get signed URLs
+                const processedOrphans = await processMedia(orphanedDbFiles, buckets);
+                allMediaFiles.push(...processedOrphans);
+              }
             }
           }
         }
         
         console.log(`=== FINAL RESULT: ${allMediaFiles.length} total media files ===`);
         allMediaFiles.forEach((file, i) => {
-          console.log(`${i+1}. ${file.filename} (${file.bucket_name || 'unknown bucket'}) - ${file.file_size} bytes`);
+          console.log(`${i+1}. ${file.filename} (${file.bucket_name || 'unknown bucket'}) - ${file.file_size} bytes - User: ${file.user_id || 'storage-file'}`);
         });
         
         // Sort by uploaded_at descending
