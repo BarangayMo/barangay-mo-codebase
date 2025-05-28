@@ -30,10 +30,8 @@ export function MediaFileCard({ file, onSelect }: MediaFileCardProps) {
     }
   };
 
-  // Use signed URL if available, otherwise show file icon for images
-  const fileUrl = file.signedUrl;
-  const fileIcon = getFileIcon(file.content_type);
   const isImage = file.content_type.startsWith('image/');
+  const hasSignedUrl = file.signedUrl && file.signedUrl.trim() !== '';
   
   return (
     <div 
@@ -41,33 +39,33 @@ export function MediaFileCard({ file, onSelect }: MediaFileCardProps) {
       onClick={() => onSelect(file)}
     >
       <div className="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
-        {isImage && fileUrl && !imageError ? (
+        {isImage && hasSignedUrl && !imageError ? (
           <img 
-            src={fileUrl} 
+            src={file.signedUrl} 
             alt={file.filename} 
             className="w-full h-full object-cover"
             loading="lazy"
             onError={() => {
-              console.error('Image load error for:', file.filename, fileUrl);
+              console.error('Image load error for:', file.filename, file.signedUrl);
               setImageError(true);
             }}
           />
-        ) : isImage && imageError ? (
+        ) : isImage ? (
           <div className="flex items-center justify-center h-16 w-16">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-12 h-12 text-gray-400">
               <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path>
               <circle cx="12" cy="13" r="3"></circle>
             </svg>
           </div>
-        ) : file.content_type.startsWith('video/') && fileUrl ? (
+        ) : file.content_type.startsWith('video/') && hasSignedUrl ? (
           <video 
-            src={fileUrl}
+            src={file.signedUrl}
             className="w-full h-full object-cover"
             onError={() => {
-              console.error('Video load error for:', file.filename, fileUrl);
+              console.error('Video load error for:', file.filename, file.signedUrl);
             }}
           />
-        ) : fileIcon}
+        ) : getFileIcon(file.content_type)}
       </div>
       
       <div className="p-2">
