@@ -4,7 +4,7 @@ import { MediaLibraryTable } from "@/components/media/MediaLibraryTable";
 import { MediaLibraryGrid } from "@/components/media/MediaLibraryGrid";
 import { Button } from "@/components/ui/button";
 import { Upload, List, Grid, Search } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { MediaLibraryFilters } from "@/components/media/MediaLibraryFilters";
@@ -20,6 +20,13 @@ export default function MediaLibraryPage() {
   });
   const [searchQuery, setSearchQuery] = useState("");
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleUploadComplete = () => {
+    // Force refresh of the media components by incrementing the key
+    setRefreshKey(prev => prev + 1);
+    console.log("Gallery refreshed after upload completion");
+  };
 
   return (
     <AdminLayout title="Media Library">
@@ -89,11 +96,13 @@ export default function MediaLibraryPage() {
         
         {viewType === 'table' ? (
           <MediaLibraryTable 
+            key={`table-${refreshKey}`}
             filters={filters}
             searchQuery={searchQuery} 
           />
         ) : (
           <MediaLibraryGrid 
+            key={`grid-${refreshKey}`}
             filters={filters}
             searchQuery={searchQuery} 
           />
@@ -102,10 +111,7 @@ export default function MediaLibraryPage() {
         <MediaUploadDialog 
           open={uploadDialogOpen}
           onClose={() => setUploadDialogOpen(false)}
-          onUploadComplete={() => {
-            // Refresh the media list after upload completes
-            // Both components handle this internally with react-query
-          }}
+          onUploadComplete={handleUploadComplete}
         />
       </div>
     </AdminLayout>

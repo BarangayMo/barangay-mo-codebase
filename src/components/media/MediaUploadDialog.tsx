@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -211,6 +210,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
     if (!uploads.some(upload => upload.status === 'uploading')) {
       setUploads([]);
       onClose();
+      // Trigger gallery refresh when closing after successful uploads
       onUploadComplete();
     } else {
       toast.warning("Please wait for uploads to complete before closing");
