@@ -2,127 +2,12 @@
 import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MediaFile } from "./types";
-import { toast } from "sonner";
 
 /**
- * Custom hook for file processing operations in the media library
- * @returns File processing utility functions
+ * Custom hook for file processing operations in the media library - Storage Only Version
+ * @returns Storage-only file processing utility functions
  */
 export function useFileProcessing() {
-  // Helper function to determine bucket name and file path from file_url
-  const getBucketAndPath = useCallback((buckets: string[], fileUrl: string) => {
-    console.log(`Determining bucket and path for: ${fileUrl}`);
-    
-    // Check if the URL is already absolute (starts with http)
-    if (fileUrl.startsWith('http')) {
-      const urlParts = fileUrl.split('/');
-      // Try to extract bucket name from URL path
-      for (const bucketName of buckets) {
-        const bucketIndex = urlParts.findIndex(part => part === bucketName);
-        if (bucketIndex >= 0 && bucketIndex + 1 < urlParts.length) {
-          return {
-            bucketName,
-            filePath: urlParts.slice(bucketIndex + 1).join('/')
-          };
-        }
-      }
-      
-      // Default to user_uploads if we can't determine the bucket
-      return { 
-        bucketName: "user_uploads",
-        filePath: fileUrl.split('/').pop() || fileUrl // Just use the filename
-      };
-    }
-    
-    // Check if fileUrl contains user ID format (which indicates full path with bucket)
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\//i;
-    
-    // If the path starts with a UUID, it's likely the format "userId/filename.ext"
-    if (uuidRegex.test(fileUrl)) {
-      console.log(`UUID detected in path: ${fileUrl}`);
-      return { 
-        bucketName: "user_uploads", // Default bucket
-        filePath: fileUrl // Use full path
-      };
-    }
-    
-    // Check if path contains a slash indicating "bucketName/filePath" format
-    if (fileUrl.includes("/")) {
-      const parts = fileUrl.split("/");
-      const possibleBucket = parts[0];
-      
-      // Check if this matches a known bucket
-      if (buckets.length > 0 && buckets.includes(possibleBucket)) {
-        return {
-          bucketName: possibleBucket,
-          filePath: fileUrl.substring(fileUrl.indexOf("/") + 1)
-        };
-      }
-    }
-    
-    // Default fallback
-    console.log(`Using default bucket for: ${fileUrl}`);
-    return { 
-      bucketName: "user_uploads",
-      filePath: fileUrl
-    };
-  }, []);
-
-  // Preload and process media files
-  const processMedia = useCallback(async (dbFiles: any[], bucketNames: string[]) => {
-    if (!dbFiles || dbFiles.length === 0) return [];
-    
-    console.log(`Processing ${dbFiles.length} media files from database`);
-    const processedFiles: MediaFile[] = [];
-    
-    // Process files in batches to improve performance
-    const batchSize = 10;
-    for (let i = 0; i < dbFiles.length; i += batchSize) {
-      const batch = dbFiles.slice(i, i + batchSize);
-      const batchPromises = batch.map(async (file) => {
-        try {
-          // Determine bucket name and file path
-          const { bucketName, filePath } = getBucketAndPath(bucketNames, file.file_url);
-          
-          // Try to get a signed URL with 7-day expiration for the file
-          const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-            .from(bucketName)
-            .createSignedUrl(filePath, 604800); // 604800 seconds = 7 days
-
-          if (signedUrlError) {
-            console.warn(`Could not create signed URL for ${file.filename} (${bucketName}/${filePath}):`, signedUrlError.message);
-            
-            // Still add the file even if we couldn't get a signed URL
-            return {
-              ...file,
-              signedUrl: null,
-              bucket_name: bucketName
-            } as MediaFile;
-          }
-
-          // Add the file with signed URL
-          return {
-            ...file,
-            signedUrl: signedUrlData?.signedUrl || null,
-            bucket_name: bucketName
-          } as MediaFile;
-        } catch (error) {
-          console.error(`Error processing file ${file.filename}:`, error);
-          // Still add the file even if there was an error
-          return {
-            ...file,
-            bucket_name: "user_uploads" // Default fallback
-          } as MediaFile;
-        }
-      });
-      
-      const batchResults = await Promise.all(batchPromises);
-      processedFiles.push(...batchResults);
-    }
-    
-    return processedFiles;
-  }, [getBucketAndPath]);
-
   // Recursive function to list all files in a bucket, including subdirectories
   const listFilesRecursively = useCallback(async (bucketName: string, path: string = ''): Promise<any[]> => {
     console.log(`[RECURSIVE SCAN] Scanning bucket: ${bucketName}, path: "${path}"`);
@@ -180,7 +65,7 @@ export function useFileProcessing() {
       return [];
     }
     
-    console.log(`[STORAGE SCAN] Starting comprehensive scan of ${buckets.length} storage buckets using recursive approach`);
+    console.log(`[STORAGE SCAN] Starting comprehensive scan of ${buckets.length} storage buckets using recursive approach (STORAGE-ONLY MODE)`);
     const allFiles: MediaFile[] = [];
     
     // Process each bucket using the recursive scanning approach
@@ -300,7 +185,7 @@ export function useFileProcessing() {
       }
     }
     
-    console.log(`[STORAGE SCAN] === SCAN COMPLETE ===`);
+    console.log(`[STORAGE SCAN] === SCAN COMPLETE (STORAGE-ONLY MODE) ===`);
     console.log(`[STORAGE SCAN] Total files loaded from ALL storage buckets: ${allFiles.length}`);
     
     if (allFiles.length > 0) {
@@ -319,8 +204,7 @@ export function useFileProcessing() {
   }, [listFilesRecursively]);
 
   return {
-    processMedia,
     loadFilesFromStorage,
-    getBucketAndPath,
+    listFilesRecursively,
   };
 }
