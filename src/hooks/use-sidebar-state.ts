@@ -5,10 +5,8 @@ import { sidebarMenuItems } from '@/config/sidebar-menu';
 
 export const useSidebarState = () => {
   const { pathname } = useLocation();
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {
-    const savedState = localStorage.getItem("sidebar-state");
-    return savedState ? JSON.parse(savedState) : {};
-  });
+  // Start with empty state instead of restoring from localStorage
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
   
   const [activeSection, setActiveSection] = useState<string | null>(null);
 
@@ -21,7 +19,7 @@ export const useSidebarState = () => {
       parentPaths.push(path);
     }
 
-    const newOpenSections = { ...openSections };
+    const newOpenSections: Record<string, boolean> = {};
     let currentActiveSection = activeSection;
     let found = false;
     
@@ -42,28 +40,32 @@ export const useSidebarState = () => {
             return;
           }
           
-          // For other menu items, the usual logic applies
+          // For other menu items, only auto-expand if we're navigating to a nested route
           if (parentPaths.includes(item.path) && item.path !== "/admin") {
-            newOpenSections[item.path] = true;
-            currentActiveSection = item.path;
-            found = true;
-            
-            if (item.submenu) {
-              item.submenu.forEach((subItem: any) => {
-                if (parentPaths.includes(subItem.path)) {
-                  newOpenSections[item.path] = true;
-                  currentActiveSection = subItem.path;
-                  
-                  if (subItem.submenu) {
-                    subItem.submenu.forEach((deepSubItem: any) => {
-                      if (parentPaths.includes(deepSubItem.path)) {
-                        newOpenSections[subItem.path] = true;
-                        currentActiveSection = deepSubItem.path;
-                      }
-                    });
+            // Only expand if the current path is actually within this section
+            const isWithinSection = pathname.startsWith(item.path + '/') || pathname === item.path;
+            if (isWithinSection) {
+              newOpenSections[item.path] = true;
+              currentActiveSection = item.path;
+              found = true;
+              
+              if (item.submenu) {
+                item.submenu.forEach((subItem: any) => {
+                  if (parentPaths.includes(subItem.path)) {
+                    newOpenSections[item.path] = true;
+                    currentActiveSection = subItem.path;
+                    
+                    if (subItem.submenu) {
+                      subItem.submenu.forEach((deepSubItem: any) => {
+                        if (parentPaths.includes(deepSubItem.path)) {
+                          newOpenSections[subItem.path] = true;
+                          currentActiveSection = deepSubItem.path;
+                        }
+                      });
+                    }
                   }
-                }
-              });
+                });
+              }
             }
           }
         });

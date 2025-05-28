@@ -62,11 +62,6 @@ export const sidebarMenuItems = [
               { title: "Directory", path: "/admin/smarketplace/customers/all" },
               { title: "VIP", path: "/admin/smarketplace/customers/vip" }
             ]
-          },
-          {
-            title: "Media Library",
-            icon: Image,
-            path: "/admin/media-library"
           }
         ]
       }
