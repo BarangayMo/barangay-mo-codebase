@@ -123,73 +123,73 @@ export function useFileProcessing() {
     return processedFiles;
   }, [getBucketAndPath]);
 
-  // Enhanced recursive function to scan ALL directories and files in a bucket
-  const scanBucketCompletely = useCallback(async (bucketName: string): Promise<any[]> => {
-    console.log(`[COMPLETE SCAN] Starting comprehensive scan of bucket: ${bucketName}`);
+  // Recursive function to list all files in a bucket, including subdirectories
+  const listFilesRecursively = useCallback(async (bucketName: string, path: string = ''): Promise<any[]> => {
+    console.log(`[RECURSIVE SCAN] Scanning bucket: ${bucketName}, path: "${path}"`);
     
     try {
-      // Use direct SQL query to get ALL files from this bucket at once
-      // This bypasses the JS SDK limitations and gets the complete directory structure
-      const { data: allFiles, error } = await supabase
-        .from('storage.objects')
-        .select('*')
-        .eq('bucket_id', bucketName)
-        .order('name');
+      const { data: items, error } = await supabase.storage
+        .from(bucketName)
+        .list(path, {
+          limit: 1000,
+          offset: 0,
+        });
 
       if (error) {
-        console.error(`[COMPLETE SCAN] Error querying storage.objects for bucket ${bucketName}:`, error);
+        console.error(`[RECURSIVE SCAN] Error listing path "${path}" in bucket ${bucketName}:`, error);
         return [];
       }
 
-      if (!allFiles || allFiles.length === 0) {
-        console.log(`[COMPLETE SCAN] No files found in bucket ${bucketName}`);
+      if (!items || items.length === 0) {
+        console.log(`[RECURSIVE SCAN] No items found in path "${path}"`);
         return [];
       }
 
-      console.log(`[COMPLETE SCAN] Found ${allFiles.length} files in bucket ${bucketName}:`);
-      allFiles.forEach((file, i) => {
-        console.log(`  ${i + 1}. ${file.name} (${file.metadata?.size || 'unknown size'})`);
-      });
+      const allFiles: any[] = [];
 
-      // Filter out any folder entries (files without proper metadata)
-      const actualFiles = allFiles.filter(file => {
-        // A file should have size metadata or be a recognizable file type
-        return file.metadata?.size !== undefined || file.name.includes('.');
-      });
+      for (const item of items) {
+        const fullPath = path ? `${path}/${item.name}` : item.name;
+        
+        if (item.id === null) {
+          // This is a folder, recursively scan it
+          console.log(`[RECURSIVE SCAN] Found folder: ${fullPath}, scanning recursively...`);
+          const subFiles = await listFilesRecursively(bucketName, fullPath);
+          allFiles.push(...subFiles);
+        } else {
+          // This is a file
+          console.log(`[RECURSIVE SCAN] Found file: ${fullPath}`);
+          allFiles.push({
+            ...item,
+            fullPath: fullPath,
+            bucketName: bucketName
+          });
+        }
+      }
 
-      console.log(`[COMPLETE SCAN] Filtered to ${actualFiles.length} actual files`);
-
-      return actualFiles.map(file => ({
-        ...file,
-        fullPath: file.name, // Use the complete path from storage
-        id: file.id,
-        created_at: file.created_at,
-        metadata: file.metadata
-      }));
-
+      return allFiles;
     } catch (error) {
-      console.error(`[COMPLETE SCAN] Exception scanning bucket ${bucketName}:`, error);
+      console.error(`[RECURSIVE SCAN] Exception scanning path "${path}" in bucket ${bucketName}:`, error);
       return [];
     }
   }, []);
 
-  // Enhanced function to load ALL files from ALL storage buckets using direct SQL approach
+  // Enhanced function to load ALL files from ALL storage buckets using recursive scanning
   const loadFilesFromStorage = useCallback(async (buckets: string[]) => {
     if (!buckets.length) {
       console.log('[STORAGE SCAN] No buckets provided to loadFilesFromStorage');
       return [];
     }
     
-    console.log(`[STORAGE SCAN] Starting comprehensive scan of ${buckets.length} storage buckets using direct SQL approach`);
+    console.log(`[STORAGE SCAN] Starting comprehensive scan of ${buckets.length} storage buckets using recursive approach`);
     const allFiles: MediaFile[] = [];
     
-    // Process each bucket using the complete scanning approach
+    // Process each bucket using the recursive scanning approach
     for (const bucketName of buckets) {
       try {
         console.log(`[STORAGE SCAN] === Processing bucket: ${bucketName} ===`);
         
-        // Get ALL files from this bucket at once using SQL
-        const files = await scanBucketCompletely(bucketName);
+        // Get ALL files from this bucket recursively
+        const files = await listFilesRecursively(bucketName);
         
         if (!files || files.length === 0) {
           console.log(`[STORAGE SCAN] No files found in bucket ${bucketName}`);
@@ -316,7 +316,7 @@ export function useFileProcessing() {
     }
     
     return allFiles;
-  }, [scanBucketCompletely]);
+  }, [listFilesRecursively]);
 
   return {
     processMedia,
