@@ -107,7 +107,12 @@ export function SidebarMenuItem({
           </SidebarMenuButton>
         </CollapsibleTrigger>
         {!isCollapsed && (
-          <CollapsibleContent className="animate-accordion-down transition-all duration-300 ease-in-out">
+          /*<CollapsibleContent className="animate-accordion-down transition-all duration-300 ease-in-out">*/
+        <CollapsibleContent className={cn(
+  "overflow-hidden transition-[max-height] duration-300 ease-in-out",
+  isOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+)}>
+
             <div className={cn(
               "pl-4 relative border-l border-gray-200 ml-5 mt-1 space-y-0.5",
               level > 0 && "ml-4"
