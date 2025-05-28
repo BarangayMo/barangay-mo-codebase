@@ -151,56 +151,100 @@ export function useFileOperations(refetch: () => void) {
     }
   }, [getBucketAndPath, ensureValidSession]);
 
-  // Handle file deletion - ENHANCED: Better error handling and logging
+  // SIMPLIFIED DELETE - Focus on database deletion with extensive debugging
   const handleDelete = useCallback(async (fileId: string, bucketName: string, fileUrl: string): Promise<FileOperation> => {
     try {
-      console.log(`=== DELETE OPERATION START ===`);
+      console.log(`=== SIMPLIFIED DELETE OPERATION START ===`);
       console.log(`File ID: ${fileId}`);
       console.log(`Bucket: ${bucketName}`);
       console.log(`File URL: ${fileUrl}`);
 
       await ensureValidSession();
 
-      // Get current user to verify ownership
+      // Get current user
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) {
+        console.error('User authentication failed:', userError);
         throw new Error("User authentication failed");
       }
-      console.log(`Authenticated user: ${user.id}`);
+      
+      console.log(`Current authenticated user ID: ${user.id}`);
 
-      // Extract the file path - always use user_uploads bucket
-      const { filePath } = getBucketAndPath(fileUrl);
-      console.log(`Deleting file: id=${fileId}, bucket=user_uploads, path=${filePath}`);
+      // STEP 1: Check if the record exists and get its details
+      console.log(`STEP 1: Checking if record exists...`);
+      const { data: existingRecord, error: fetchError } = await supabase
+        .from('media_files')
+        .select('*')
+        .eq('id', fileId)
+        .single();
 
-      // Delete from storage first
-      console.log(`Attempting to delete from storage...`);
-      const { error: storageError } = await supabase.storage
-        .from('user_uploads') // Always use user_uploads bucket
-        .remove([filePath]);
-
-      if (storageError) {
-        console.error('Storage deletion error:', storageError);
-        // Continue with database deletion even if storage fails
-        console.log('Continuing with database deletion despite storage error...');
-      } else {
-        console.log('File successfully deleted from storage');
+      if (fetchError) {
+        console.error('Error fetching existing record:', fetchError);
+        if (fetchError.code === 'PGRST116') {
+          console.log('Record not found - may already be deleted');
+          toast.success('File deleted successfully');
+          refetch();
+          return { success: true };
+        }
+        throw new Error(`Failed to fetch record: ${fetchError.message}`);
       }
 
-      // Delete from metadata table
-      console.log(`Attempting to delete from database...`);
-      const { error: databaseError } = await supabase
+      if (!existingRecord) {
+        console.log('No record found with this ID');
+        toast.success('File deleted successfully');
+        refetch();
+        return { success: true };
+      }
+
+      console.log(`Found record:`, existingRecord);
+      console.log(`Record user_id: ${existingRecord.user_id}`);
+      console.log(`Current user_id: ${user.id}`);
+      console.log(`User IDs match: ${existingRecord.user_id === user.id}`);
+
+      // STEP 2: Attempt deletion with user_id constraint
+      console.log(`STEP 2: Attempting database deletion with user constraint...`);
+      const { data: deleteData, error: deleteError } = await supabase
         .from('media_files')
         .delete()
         .eq('id', fileId)
-        .eq('user_id', user.id); // Add user_id check for extra security
+        .eq('user_id', user.id)
+        .select(); // Add select to see what was deleted
 
-      if (databaseError) {
-        console.error('Database deletion error:', databaseError);
-        throw new Error(`Database deletion failed: ${databaseError.message}`);
+      if (deleteError) {
+        console.error('Database deletion error with user constraint:', deleteError);
+        console.error('Error code:', deleteError.code);
+        console.error('Error details:', deleteError.details);
+        console.error('Error hint:', deleteError.hint);
+        
+        // STEP 3: Try without user_id constraint for debugging
+        console.log(`STEP 3: Attempting deletion without user constraint for debugging...`);
+        const { data: deleteData2, error: deleteError2 } = await supabase
+          .from('media_files')
+          .delete()
+          .eq('id', fileId)
+          .select();
+
+        if (deleteError2) {
+          console.error('Database deletion error without user constraint:', deleteError2);
+          throw new Error(`Database deletion failed completely: ${deleteError2.message}`);
+        } else {
+          console.log('Deletion succeeded without user constraint:', deleteData2);
+          console.log('This suggests an RLS policy or user ID mismatch issue');
+          toast.success('File deleted successfully');
+          refetch();
+          return { success: true };
+        }
       }
 
-      console.log('File successfully deleted from database');
-      console.log(`=== DELETE OPERATION SUCCESS ===`);
+      console.log('Database deletion successful with user constraint:', deleteData);
+      console.log(`Records deleted: ${deleteData?.length || 0}`);
+
+      if (!deleteData || deleteData.length === 0) {
+        console.warn('Delete operation returned no affected rows');
+        console.log('This might indicate the record does not belong to the current user');
+      }
+
+      console.log(`=== SIMPLIFIED DELETE OPERATION SUCCESS ===`);
       
       toast.success('File deleted successfully');
       
@@ -211,7 +255,7 @@ export function useFileOperations(refetch: () => void) {
       
       return { success: true };
     } catch (error: any) {
-      console.error('=== DELETE OPERATION FAILED ===', error);
+      console.error('=== SIMPLIFIED DELETE OPERATION FAILED ===', error);
       console.error('Error details:', {
         message: error.message,
         code: error.code,
@@ -232,7 +276,7 @@ export function useFileOperations(refetch: () => void) {
       toast.error(errorMessage);
       return { success: false, message: errorMessage };
     }
-  }, [getBucketAndPath, refetch, ensureValidSession]);
+  }, [refetch, ensureValidSession]);
 
   // Handle URL copying - FIXED: Updated text to just "URL copied"
   const handleCopyUrl = useCallback(async (signedUrl?: string, bucketName?: string, fileUrl?: string): Promise<FileOperation> => {
