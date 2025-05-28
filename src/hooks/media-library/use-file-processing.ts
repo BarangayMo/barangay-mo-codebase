@@ -13,36 +13,75 @@ export function useFileProcessing() {
     console.log(`[RECURSIVE SCAN] Scanning bucket: ${bucketName}, path: "${path}"`);
     
     try {
+      // Try both with and without limit to see if that's the issue
+      const listOptions: any = {
+        limit: 1000,
+        offset: 0,
+      };
+      
+      console.log(`[RECURSIVE SCAN] Using list options:`, listOptions);
+      
       const { data: items, error } = await supabase.storage
         .from(bucketName)
-        .list(path, {
-          limit: 1000,
-          offset: 0,
-        });
+        .list(path, listOptions);
+
+      console.log(`[RECURSIVE SCAN] Raw response for path "${path}":`, { items, error });
 
       if (error) {
         console.error(`[RECURSIVE SCAN] Error listing path "${path}" in bucket ${bucketName}:`, error);
-        return [];
+        
+        // Try without any options as fallback
+        console.log(`[RECURSIVE SCAN] Trying fallback without options...`);
+        const { data: fallbackItems, error: fallbackError } = await supabase.storage
+          .from(bucketName)
+          .list(path);
+          
+        console.log(`[RECURSIVE SCAN] Fallback response:`, { fallbackItems, fallbackError });
+        
+        if (fallbackError) {
+          console.error(`[RECURSIVE SCAN] Fallback also failed:`, fallbackError);
+          return [];
+        }
+        
+        if (!fallbackItems || fallbackItems.length === 0) {
+          console.log(`[RECURSIVE SCAN] Fallback returned empty results for path "${path}"`);
+          return [];
+        }
+        
+        // Use fallback items
+        console.log(`[RECURSIVE SCAN] Using fallback items:`, fallbackItems);
+        items = fallbackItems;
       }
 
       if (!items || items.length === 0) {
-        console.log(`[RECURSIVE SCAN] No items found in path "${path}"`);
+        console.log(`[RECURSIVE SCAN] No items found in path "${path}" - this could mean empty directory or permission issue`);
         return [];
       }
+
+      console.log(`[RECURSIVE SCAN] Found ${items.length} items in path "${path}":`, items.map(item => ({ name: item.name, id: item.id, metadata: item.metadata })));
 
       const allFiles: any[] = [];
 
       for (const item of items) {
         const fullPath = path ? `${path}/${item.name}` : item.name;
         
-        if (item.id === null) {
+        console.log(`[RECURSIVE SCAN] Processing item:`, { 
+          name: item.name, 
+          id: item.id, 
+          fullPath,
+          hasId: !!item.id,
+          metadata: item.metadata 
+        });
+        
+        if (item.id === null || item.id === undefined) {
           // This is a folder, recursively scan it
           console.log(`[RECURSIVE SCAN] Found folder: ${fullPath}, scanning recursively...`);
           const subFiles = await listFilesRecursively(bucketName, fullPath);
+          console.log(`[RECURSIVE SCAN] Folder ${fullPath} returned ${subFiles.length} files`);
           allFiles.push(...subFiles);
         } else {
           // This is a file
-          console.log(`[RECURSIVE SCAN] Found file: ${fullPath}`);
+          console.log(`[RECURSIVE SCAN] Found file: ${fullPath} with ID: ${item.id}`);
           allFiles.push({
             ...item,
             fullPath: fullPath,
@@ -51,6 +90,7 @@ export function useFileProcessing() {
         }
       }
 
+      console.log(`[RECURSIVE SCAN] Total files found in path "${path}": ${allFiles.length}`);
       return allFiles;
     } catch (error) {
       console.error(`[RECURSIVE SCAN] Exception scanning path "${path}" in bucket ${bucketName}:`, error);
@@ -66,6 +106,32 @@ export function useFileProcessing() {
     }
     
     console.log(`[STORAGE SCAN] Starting comprehensive scan of ${buckets.length} storage buckets using recursive approach (STORAGE-ONLY MODE)`);
+    console.log(`[STORAGE SCAN] Buckets to scan:`, buckets);
+    
+    // First, let's verify bucket access by testing basic operations
+    for (const bucketName of buckets) {
+      try {
+        console.log(`[STORAGE SCAN] Testing bucket access for: ${bucketName}`);
+        
+        // Test bucket info
+        const { data: bucketData, error: bucketError } = await supabase.storage
+          .from(bucketName)
+          .list('', { limit: 1 });
+          
+        console.log(`[STORAGE SCAN] Bucket ${bucketName} test result:`, { 
+          hasData: !!bucketData, 
+          dataLength: bucketData?.length || 0, 
+          error: bucketError 
+        });
+        
+        if (bucketError) {
+          console.error(`[STORAGE SCAN] Cannot access bucket ${bucketName}:`, bucketError);
+        }
+      } catch (err) {
+        console.error(`[STORAGE SCAN] Exception testing bucket ${bucketName}:`, err);
+      }
+    }
+    
     const allFiles: MediaFile[] = [];
     
     // Process each bucket using the recursive scanning approach
@@ -81,7 +147,7 @@ export function useFileProcessing() {
           continue;
         }
         
-        console.log(`[STORAGE SCAN] Found ${files.length} files in bucket ${bucketName}`);
+        console.log(`[STORAGE SCAN] Found ${files.length} files in bucket ${bucketName}:`, files.map(f => f.fullPath || f.name));
         
         // Process files in smaller batches for better stability
         const batchSize = 5;
@@ -198,6 +264,19 @@ export function useFileProcessing() {
       Object.entries(filesByBucket).forEach(([bucket, count]) => {
         console.log(`  ${bucket}: ${count} files`);
       });
+      
+      console.log(`[STORAGE SCAN] Sample files found:`, allFiles.slice(0, 3).map(f => ({ 
+        filename: f.filename, 
+        path: f.file_url, 
+        bucket: f.bucket_name,
+        user: f.user_id 
+      })));
+    } else {
+      console.warn(`[STORAGE SCAN] No files found in any bucket! This could indicate:`);
+      console.warn(`  1. Buckets are empty`);
+      console.warn(`  2. Permission issues preventing file listing`);
+      console.warn(`  3. Files are stored in a different path structure than expected`);
+      console.warn(`  4. Storage API access issues`);
     }
     
     return allFiles;
