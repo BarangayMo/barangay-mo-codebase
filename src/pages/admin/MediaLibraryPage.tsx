@@ -62,6 +62,7 @@ export default function MediaLibraryPage() {
                 variant={viewType === 'grid' ? "default" : "outline"} 
                 size="sm" 
                 onClick={() => setViewType('grid')}
+                className={viewType === 'grid' ? "bg-blue-500 hover:bg-blue-600 text-white" : ""}
               >
                 <Grid className="h-4 w-4" />
               </Button>
@@ -70,12 +71,13 @@ export default function MediaLibraryPage() {
                 variant={viewType === 'table' ? "default" : "outline"} 
                 size="sm" 
                 onClick={() => setViewType('table')}
+                className={viewType === 'table' ? "bg-blue-500 hover:bg-blue-600 text-white" : ""}
               >
                 <List className="h-4 w-4" />
               </Button>
               
               <Button 
-                variant="default"
+                className="bg-blue-500 hover:bg-blue-600 text-white"
                 onClick={() => setUploadDialogOpen(true)}
               >
                 Upload files

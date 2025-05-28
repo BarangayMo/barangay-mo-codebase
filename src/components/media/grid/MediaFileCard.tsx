@@ -9,6 +9,8 @@ interface MediaFileCardProps {
 }
 
 export function MediaFileCard({ file, onSelect }: MediaFileCardProps) {
+  const [imageError, setImageError] = useState(false);
+
   // Helper function to get appropriate file icon based on content type
   const getFileIcon = (contentType: string) => {
     if (contentType.startsWith('image/')) {
@@ -28,9 +30,10 @@ export function MediaFileCard({ file, onSelect }: MediaFileCardProps) {
     }
   };
 
-  // Use signed URL if available
-  const fileUrl = file.signedUrl || null;
+  // Use signed URL if available, otherwise show file icon for images
+  const fileUrl = file.signedUrl;
   const fileIcon = getFileIcon(file.content_type);
+  const isImage = file.content_type.startsWith('image/');
   
   return (
     <div 
@@ -38,33 +41,30 @@ export function MediaFileCard({ file, onSelect }: MediaFileCardProps) {
       onClick={() => onSelect(file)}
     >
       <div className="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
-        {file.content_type.startsWith('image/') ? (
+        {isImage && fileUrl && !imageError ? (
           <img 
             src={fileUrl} 
             alt={file.filename} 
             className="w-full h-full object-cover"
             loading="lazy"
-            onError={(e) => {
-              console.error('Image load error:', fileUrl);
-              // Fallback to file icon if image fails to load
-              e.currentTarget.style.display = 'none';
-              e.currentTarget.parentElement?.classList.add('flex', 'items-center', 'justify-center');
-              const icon = document.createElement('div');
-              icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="w-12 h-12 text-gray-400"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>';
-              e.currentTarget.parentElement?.appendChild(icon);
+            onError={() => {
+              console.error('Image load error for:', file.filename, fileUrl);
+              setImageError(true);
             }}
           />
-        ) : file.content_type.startsWith('video/') ? (
+        ) : isImage && imageError ? (
+          <div className="flex items-center justify-center h-16 w-16">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-12 h-12 text-gray-400">
+              <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path>
+              <circle cx="12" cy="13" r="3"></circle>
+            </svg>
+          </div>
+        ) : file.content_type.startsWith('video/') && fileUrl ? (
           <video 
             src={fileUrl}
             className="w-full h-full object-cover"
-            onError={(e) => {
-              console.error('Video load error:', fileUrl);
-              e.currentTarget.style.display = 'none';
-              e.currentTarget.parentElement?.classList.add('flex', 'items-center', 'justify-center');
-              const icon = document.createElement('div');
-              icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="w-12 h-12 text-blue-500"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
-              e.currentTarget.parentElement?.appendChild(icon);
+            onError={() => {
+              console.error('Video load error for:', file.filename, fileUrl);
             }}
           />
         ) : fileIcon}
@@ -79,9 +79,8 @@ export function MediaFileCard({ file, onSelect }: MediaFileCardProps) {
       
       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
         <Button 
-          variant="secondary" 
+          className="bg-blue-500 hover:bg-blue-600 text-white shadow-lg rounded-lg"
           size="sm" 
-          className="shadow-lg rounded-lg"
           onClick={(e) => {
             e.stopPropagation();
             onSelect(file);

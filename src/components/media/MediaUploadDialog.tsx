@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -53,41 +52,45 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
   const { user, session } = useAuth();
   const [uploads, setUploads] = useState<FileUpload[]>([]);
   const [quote, setQuote] = useState(() => UPLOAD_QUOTES[Math.floor(Math.random() * UPLOAD_QUOTES.length)]);
-  const [availableBuckets, setAvailableBuckets] = useState<StorageBucket[]>([]);
   const [defaultBucket, setDefaultBucket] = useState('user_uploads');
   
-  // Fetch all available storage buckets
+  // Fetch the correct bucket name on dialog open
   useEffect(() => {
     if (!open) return;
     
-    const fetchBuckets = async () => {
+    const fetchCorrectBucket = async () => {
       try {
         const { data: buckets, error } = await supabase.storage.listBuckets();
         if (error) {
           console.error("Error fetching buckets:", error);
-          toast.error("Failed to fetch storage buckets");
+          // Use default fallback
+          setDefaultBucket('user_uploads');
           return;
         }
         
         if (buckets && buckets.length > 0) {
           console.log("Available buckets for upload:", buckets);
-          setAvailableBuckets(buckets);
           
-          // Set the default bucket to user_uploads if it exists, otherwise use the first bucket
+          // Look for user_uploads bucket first, then use the first available
           const userUploadsBucket = buckets.find(b => b.name === 'user_uploads');
           if (userUploadsBucket) {
             setDefaultBucket('user_uploads');
-          } else if (buckets.length > 0) {
+          } else {
+            // Use the first bucket available
             setDefaultBucket(buckets[0].name);
+            console.log(`Using bucket: ${buckets[0].name}`);
           }
+        } else {
+          console.warn("No buckets found, using default");
+          setDefaultBucket('user_uploads');
         }
       } catch (error) {
         console.error("Exception fetching buckets:", error);
-        toast.error("Failed to fetch storage buckets");
+        setDefaultBucket('user_uploads');
       }
     };
     
-    fetchBuckets();
+    fetchCorrectBucket();
   }, [open]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -126,40 +129,34 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
     const filePath = `${userId}/${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
 
     try {
-      // Create a custom upload with progress tracking
-      const xhr = new XMLHttpRequest();
-      const formData = new FormData();
-      formData.append('file', file);
+      console.log(`Uploading file to bucket: ${defaultBucket}, path: ${filePath}`);
       
-      // Store XHR reference for potential cancellation
-      updateUpload(upload.id, { xhr });
-      
-      // Set up progress tracking
-      xhr.upload.addEventListener('progress', (event) => {
-        if (event.lengthComputable) {
-          const calculatedProgress = Math.round((event.loaded / event.total) * 100);
-          updateUpload(upload.id, { progress: calculatedProgress });
-        }
-      });
-
-      // Make sure we have a valid bucket to upload to
-      const bucketToUse = defaultBucket || 'user_uploads';
-      
-      // Upload the file using Supabase Storage
+      // Upload the file using Supabase Storage with progress tracking
       const { data, error } = await supabase.storage
-        .from(bucketToUse)
+        .from(defaultBucket)
         .upload(filePath, file, {
-          cacheControl: '3600'
+          cacheControl: '3600',
+          onUploadProgress: (progress) => {
+            const calculatedProgress = Math.round((progress.loaded / progress.total) * 100);
+            updateUpload(upload.id, { progress: calculatedProgress });
+          }
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Storage upload error:", error);
+        throw error;
+      }
+
+      console.log("File uploaded successfully:", data);
 
       // Get the signed URL for the file (valid for 7 days)
       const { data: urlData, error: urlError } = await supabase.storage
-        .from(bucketToUse)
+        .from(defaultBucket)
         .createSignedUrl(filePath, 604800); // 7 days
 
-      if (urlError) throw urlError;
+      if (urlError) {
+        console.warn("Could not create signed URL:", urlError);
+      }
 
       // Save media file metadata to database
       const { error: dbError } = await supabase
@@ -169,11 +166,14 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
           category: determineCategory(file.type),
           content_type: file.type,
           filename: file.name,
-          file_url: filePath, // Store the path, including the bucket
+          file_url: filePath, // Store the path within the bucket
           file_size: file.size
         });
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        console.error("Database save error:", dbError);
+        throw dbError;
+      }
 
       // Update upload status to success
       updateUpload(upload.id, { 
@@ -287,14 +287,14 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
                 border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all 
                 flex flex-col items-center justify-center min-h-[300px]
                 ${isDragActive 
-                  ? 'border-primary bg-primary/5 shadow-[0_0_0_1px_rgba(59,130,246,0.3),0_0_0_4px_rgba(59,130,246,0.1)]' 
-                  : 'border-gray-300 hover:border-primary hover:shadow-[0_0_0_1px_rgba(59,130,246,0.2),0_0_0_4px_rgba(59,130,246,0.05)]'
+                  ? 'border-blue-500 bg-blue-50 shadow-[0_0_0_1px_rgba(59,130,246,0.3),0_0_0_4px_rgba(59,130,246,0.1)]' 
+                  : 'border-gray-300 hover:border-blue-500 hover:shadow-[0_0_0_1px_rgba(59,130,246,0.2),0_0_0_4px_rgba(59,130,246,0.05)]'
                 }
               `}
             >
               <input {...getInputProps()} />
-              <div className="p-6 rounded-full bg-primary/5 mb-6 shadow-[0_0_20px_5px_rgba(59,130,246,0.1)]">
-                <UploadCloud className="h-12 w-12 text-primary" />
+              <div className="p-6 rounded-full bg-blue-50 mb-6 shadow-[0_0_20px_5px_rgba(59,130,246,0.1)]">
+                <UploadCloud className="h-12 w-12 text-blue-500" />
               </div>
               <h3 className="text-xl font-medium mb-2">
                 {isDragActive ? 'Drop files here' : 'Drag & drop files here'}
@@ -304,8 +304,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
               </p>
               <Button 
                 size="lg" 
-                variant="default"
-                className="shadow-[0_6px_16px_rgba(59,130,246,0.3),0_2px_8px_rgba(59,130,246,0.15)] hover:shadow-[0_8px_20px_rgba(59,130,246,0.4),0_4px_10px_rgba(59,130,246,0.2)] transition-all duration-200 rounded-lg"
+                className="bg-blue-500 hover:bg-blue-600 text-white shadow-[0_6px_16px_rgba(59,130,246,0.3),0_2px_8px_rgba(59,130,246,0.15)] hover:shadow-[0_8px_20px_rgba(59,130,246,0.4),0_4px_10px_rgba(59,130,246,0.2)] transition-all duration-200 rounded-lg"
               >
                 Browse Files
               </Button>
@@ -315,7 +314,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
           {uploads.length > 0 && (
             <div className="space-y-6">
               <div className="flex flex-col items-center justify-center pb-6 pt-4">
-                <p className="text-lg text-center text-primary font-medium italic mb-2">"{quote}"</p>
+                <p className="text-lg text-center text-blue-600 font-medium italic mb-2">"{quote}"</p>
                 <p className="text-sm text-gray-500">
                   {uploads.filter(u => u.status === 'uploading').length} file(s) uploading
                 </p>
@@ -407,7 +406,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
 
                 {isDragActive && (
                   <div className="flex-1 flex items-center justify-center">
-                    <p className="text-sm font-medium text-primary">Drop files to upload</p>
+                    <p className="text-sm font-medium text-blue-600">Drop files to upload</p>
                   </div>
                 )}
 
@@ -424,8 +423,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
                   <Button
                     disabled={uploads.some(u => u.status === 'uploading')}
                     onClick={handleClose}
-                    variant="default"
-                    className="shadow-[0_4px_12px_rgba(59,130,246,0.2),0_2px_6px_rgba(59,130,246,0.15)] hover:shadow-[0_6px_16px_rgba(59,130,246,0.3),0_3px_8px_rgba(59,130,246,0.2)] transition-all duration-200 rounded-lg"
+                    className="bg-blue-500 hover:bg-blue-600 text-white shadow-[0_4px_12px_rgba(59,130,246,0.2),0_2px_6px_rgba(59,130,246,0.15)] hover:shadow-[0_6px_16px_rgba(59,130,246,0.3),0_3px_8px_rgba(59,130,246,0.2)] transition-all duration-200 rounded-lg"
                   >
                     {uploads.some(u => u.status === 'uploading') ? 'Uploading...' : 'Done'}
                   </Button>
