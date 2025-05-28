@@ -32,7 +32,7 @@ const AdminDashboard = () => {
     <AdminLayout title="Dashboard">
       <div className="space-y-6">
         <DashboardPageHeader
-          title="Platform Dashboard"
+          title="BarangayMo Administrative Dashboard"
           description="Overview of your platform's performance and activities"
           breadcrumbItems={[{ label: "Dashboard" }]}
         />
