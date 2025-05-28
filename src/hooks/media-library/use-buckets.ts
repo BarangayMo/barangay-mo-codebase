@@ -14,10 +14,44 @@ export function useBuckets() {
       console.log("Fetching storage buckets...");
       setLoadingBuckets(true);
       
+      // Check if session is valid, refresh if needed
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error("Session error:", sessionError);
+        // Try to refresh the session
+        const { error: refreshError } = await supabase.auth.refreshSession();
+        if (refreshError) {
+          console.error("Failed to refresh session:", refreshError);
+          toast.error("Authentication expired. Please log in again.");
+          return [];
+        }
+      }
+      
       const { data: buckets, error } = await supabase.storage.listBuckets();
       
       if (error) {
         console.error("Error fetching storage buckets:", error);
+        
+        // If JWT expired, try to refresh session and retry
+        if (error.message?.includes('jwt') || error.message?.includes('expired')) {
+          console.log("JWT expired, attempting to refresh session...");
+          const { error: refreshError } = await supabase.auth.refreshSession();
+          
+          if (!refreshError) {
+            // Retry the bucket fetch after refresh
+            const { data: retryBuckets, error: retryError } = await supabase.storage.listBuckets();
+            if (!retryError && retryBuckets) {
+              console.log(`Successfully found ${retryBuckets.length} storage buckets after refresh:`, retryBuckets.map(b => `${b.name} (${b.public ? 'public' : 'private'})`).join(', '));
+              setBuckets(retryBuckets);
+              return retryBuckets;
+            }
+          }
+          
+          toast.error("Session expired. Please refresh the page and log in again.");
+          return [];
+        }
+        
         toast.error(`Failed to fetch storage buckets: ${error.message}`);
         return [];
       }

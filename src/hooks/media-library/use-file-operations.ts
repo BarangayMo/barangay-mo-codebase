@@ -1,3 +1,4 @@
+
 import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MediaFile, FileOperation } from "./types";
@@ -7,6 +8,18 @@ import { useBuckets } from "./use-buckets";
 export function useFileOperations(refetch: () => void) {
   const { buckets } = useBuckets();
   const bucketNames = buckets.map(b => b.name);
+
+  // Helper function to ensure valid session
+  const ensureValidSession = useCallback(async () => {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    if (error || !session) {
+      const { error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError) {
+        throw new Error("Authentication required. Please log in again.");
+      }
+    }
+  }, []);
 
   // Extract bucket name and path from file_url
   const getBucketAndPath = useCallback((fileUrl: string) => {
@@ -76,6 +89,8 @@ export function useFileOperations(refetch: () => void) {
   // Handle file download
   const handleDownload = useCallback(async (bucketName: string, fileUrl: string, fileName: string, signedUrl?: string): Promise<FileOperation> => {
     try {
+      await ensureValidSession();
+      
       // If we have a signed URL, use that directly
       if (signedUrl) {
         console.log(`Downloading file using signed URL: ${fileName}`);
@@ -116,7 +131,7 @@ export function useFileOperations(refetch: () => void) {
       console.error('Download error:', error);
       return { success: false, message: 'Failed to download file' };
     }
-  }, [getBucketAndPath]);
+  }, [getBucketAndPath, ensureValidSession]);
 
   // Handle file deletion
   const handleDelete = useCallback(async (fileId: string, bucketName: string, fileUrl: string): Promise<FileOperation> => {
@@ -125,6 +140,8 @@ export function useFileOperations(refetch: () => void) {
       console.log(`File ID: ${fileId}`);
       console.log(`Bucket: ${bucketName}`);
       console.log(`File URL: ${fileUrl}`);
+
+      await ensureValidSession();
 
       // Extract the file path - always use user_uploads bucket
       const { filePath } = getBucketAndPath(fileUrl);
@@ -167,11 +184,13 @@ export function useFileOperations(refetch: () => void) {
       toast.error('Failed to delete file');
       return { success: false, message: 'Failed to delete file' };
     }
-  }, [getBucketAndPath, refetch]);
+  }, [getBucketAndPath, refetch, ensureValidSession]);
 
   // Handle URL copying
   const handleCopyUrl = useCallback(async (signedUrl?: string, bucketName?: string, fileUrl?: string): Promise<FileOperation> => {
     try {
+      await ensureValidSession();
+      
       // If we already have a signed URL, use that
       if (signedUrl) {
         await navigator.clipboard.writeText(signedUrl);
@@ -204,7 +223,7 @@ export function useFileOperations(refetch: () => void) {
       console.error('URL generation error:', error);
       return { success: false, message: 'Failed to generate URL' };
     }
-  }, [getBucketAndPath]);
+  }, [getBucketAndPath, ensureValidSession]);
 
   return {
     handleDownload,
