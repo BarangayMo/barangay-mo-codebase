@@ -123,92 +123,83 @@ export function useFileProcessing() {
     return processedFiles;
   }, [getBucketAndPath]);
 
-  // Enhanced recursive function to list all files in a directory with better permissions handling
-  const listFilesRecursively = useCallback(async (bucketName: string, path: string = ''): Promise<any[]> => {
+  // Enhanced recursive function to scan ALL directories and files in a bucket
+  const scanBucketCompletely = useCallback(async (bucketName: string): Promise<any[]> => {
+    console.log(`[COMPLETE SCAN] Starting comprehensive scan of bucket: ${bucketName}`);
+    
     try {
-      console.log(`[STORAGE SCAN] Listing files in bucket: ${bucketName}, path: "${path}"`);
-      
-      // List all items in the current directory with increased limit and sorted
-      const { data: items, error } = await supabase.storage
-        .from(bucketName)
-        .list(path, { 
-          sortBy: { column: 'name', order: 'asc' },
-          limit: 1000 // Ensure we get all files
-        });
-        
+      // Use direct SQL query to get ALL files from this bucket at once
+      // This bypasses the JS SDK limitations and gets the complete directory structure
+      const { data: allFiles, error } = await supabase
+        .from('storage.objects')
+        .select('*')
+        .eq('bucket_id', bucketName)
+        .order('name');
+
       if (error) {
-        console.error(`[STORAGE SCAN] Error listing path "${path}" in bucket ${bucketName}:`, error);
+        console.error(`[COMPLETE SCAN] Error querying storage.objects for bucket ${bucketName}:`, error);
         return [];
       }
-      
-      if (!items || items.length === 0) {
-        console.log(`[STORAGE SCAN] No items found in bucket ${bucketName} at path "${path}"`);
+
+      if (!allFiles || allFiles.length === 0) {
+        console.log(`[COMPLETE SCAN] No files found in bucket ${bucketName}`);
         return [];
       }
-      
-      console.log(`[STORAGE SCAN] Found ${items.length} items in bucket ${bucketName} at path "${path}"`);
-      
-      const allFiles: any[] = [];
-      
-      // Process each item - could be file or folder
-      for (const item of items) {
-        const itemPath = path ? `${path}/${item.name}` : item.name;
-        
-        // Check if item is a folder (has no id or metadata indicates it's a folder)
-        if (!item.id || item.metadata?.size === undefined) {
-          console.log(`[STORAGE SCAN] Found folder: "${itemPath}" in bucket ${bucketName}`);
-          // Recursively process the folder
-          try {
-            const subFiles = await listFilesRecursively(bucketName, itemPath);
-            allFiles.push(...subFiles);
-          } catch (subError) {
-            console.error(`[STORAGE SCAN] Error processing subfolder "${itemPath}":`, subError);
-            // Continue with other items even if one subfolder fails
-          }
-        } else {
-          // This is a file
-          console.log(`[STORAGE SCAN] Found file: "${itemPath}" in bucket ${bucketName}, size: ${item.metadata?.size || 'unknown'}`);
-          allFiles.push({
-            ...item,
-            fullPath: itemPath
-          });
-        }
-      }
-      
-      return allFiles;
+
+      console.log(`[COMPLETE SCAN] Found ${allFiles.length} files in bucket ${bucketName}:`);
+      allFiles.forEach((file, i) => {
+        console.log(`  ${i + 1}. ${file.name} (${file.metadata?.size || 'unknown size'})`);
+      });
+
+      // Filter out any folder entries (files without proper metadata)
+      const actualFiles = allFiles.filter(file => {
+        // A file should have size metadata or be a recognizable file type
+        return file.metadata?.size !== undefined || file.name.includes('.');
+      });
+
+      console.log(`[COMPLETE SCAN] Filtered to ${actualFiles.length} actual files`);
+
+      return actualFiles.map(file => ({
+        ...file,
+        fullPath: file.name, // Use the complete path from storage
+        id: file.id,
+        created_at: file.created_at,
+        metadata: file.metadata
+      }));
+
     } catch (error) {
-      console.error(`[STORAGE SCAN] Error in recursive listing for "${path}" in ${bucketName}:`, error);
+      console.error(`[COMPLETE SCAN] Exception scanning bucket ${bucketName}:`, error);
       return [];
     }
   }, []);
 
-  // Enhanced function to load ALL files from ALL storage buckets with better error handling
+  // Enhanced function to load ALL files from ALL storage buckets using direct SQL approach
   const loadFilesFromStorage = useCallback(async (buckets: string[]) => {
     if (!buckets.length) {
       console.log('[STORAGE SCAN] No buckets provided to loadFilesFromStorage');
       return [];
     }
     
-    console.log(`[STORAGE SCAN] Starting comprehensive scan of ${buckets.length} storage buckets for ALL files`);
+    console.log(`[STORAGE SCAN] Starting comprehensive scan of ${buckets.length} storage buckets using direct SQL approach`);
     const allFiles: MediaFile[] = [];
     
-    // Process each bucket
+    // Process each bucket using the complete scanning approach
     for (const bucketName of buckets) {
       try {
         console.log(`[STORAGE SCAN] === Processing bucket: ${bucketName} ===`);
         
-        // Get all files recursively, starting from the root
-        const files = await listFilesRecursively(bucketName);
+        // Get ALL files from this bucket at once using SQL
+        const files = await scanBucketCompletely(bucketName);
         
         if (!files || files.length === 0) {
           console.log(`[STORAGE SCAN] No files found in bucket ${bucketName}`);
           continue;
         }
         
-        console.log(`[STORAGE SCAN] Found ${files.length} total files in bucket ${bucketName}`);
+        console.log(`[STORAGE SCAN] Found ${files.length} files in bucket ${bucketName}`);
         
         // Process files in smaller batches for better stability
-        const batchSize = 5; // Smaller batches to avoid rate limits
+        const batchSize = 5;
         for (let i = 0; i < files.length; i += batchSize) {
           const batch = files.slice(i, i + batchSize);
           console.log(`[STORAGE SCAN] Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(files.length/batchSize)} for bucket ${bucketName}`);
@@ -232,6 +223,21 @@ export function useFileProcessing() {
               
               // Extract filename from path
               const filename = fullPath.split('/').pop() || fullPath;
+              
+              // Extract user information from path if possible
+              const pathParts = fullPath.split('/');
+              let extractedUserId = 'storage-file';
+              
+              if (pathParts.length > 1) {
+                const firstPart = pathParts[0];
+                // Check if it looks like a UUID or email
+                const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                
+                if (uuidRegex.test(firstPart) || emailRegex.test(firstPart)) {
+                  extractedUserId = firstPart;
+                }
+              }
               
               // Generate a unique ID for the file
               const fileId = file.id || `storage-${bucketName}-${fullPath.replace(/[\/\.]/g, '-')}-${Date.now()}`;
@@ -266,11 +272,11 @@ export function useFileProcessing() {
                 file_size: file.metadata?.size || 0,
                 uploaded_at: file.created_at || new Date().toISOString(),
                 signedUrl: signedUrlData?.signedUrl || null,
-                user_id: 'storage-file', // Placeholder for storage-only files
+                user_id: extractedUserId,
                 category: 'uncategorized'
               };
               
-              console.log(`[STORAGE SCAN] Successfully processed: ${filename} (${mediaFile.file_size} bytes)`);
+              console.log(`[STORAGE SCAN] Successfully processed: ${filename} (${mediaFile.file_size} bytes) - User: ${extractedUserId}`);
               return mediaFile;
             } catch (err) {
               console.error(`[STORAGE SCAN] Error processing file ${file.name}:`, err);
@@ -297,8 +303,20 @@ export function useFileProcessing() {
     console.log(`[STORAGE SCAN] === SCAN COMPLETE ===`);
     console.log(`[STORAGE SCAN] Total files loaded from ALL storage buckets: ${allFiles.length}`);
     
+    if (allFiles.length > 0) {
+      console.log(`[STORAGE SCAN] Files by bucket:`);
+      const filesByBucket = allFiles.reduce((acc, file) => {
+        acc[file.bucket_name] = (acc[file.bucket_name] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      
+      Object.entries(filesByBucket).forEach(([bucket, count]) => {
+        console.log(`  ${bucket}: ${count} files`);
+      });
+    }
+    
     return allFiles;
-  }, [listFilesRecursively]);
+  }, [scanBucketCompletely]);
 
   return {
     processMedia,
