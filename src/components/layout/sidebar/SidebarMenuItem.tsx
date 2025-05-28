@@ -18,7 +18,7 @@ interface MenuItemProps {
   level?: number;
   isCollapsed?: boolean;
   openSections: Record<string, boolean>;
-  onToggle: (sectionId: string, event: React.MouseEvent) => void;
+  onToggle: (sectionId: string, event?: React.MouseEvent) => void;
   activeSection: string | null;
   setActiveSection: (section: string | null) => void;
 }
@@ -39,7 +39,8 @@ export function SidebarMenuItem({
   
   useEffect(() => {
     if (isActive && hasSubmenu && !isOpen) {
-      onToggle(item.path, {} as React.MouseEvent);
+      // Call onToggle without an event object when auto-opening
+      onToggle(item.path);
     }
   }, [pathname]);
 
@@ -57,7 +58,7 @@ export function SidebarMenuItem({
               setActiveSection(item.path);
             }}
             className={cn(
-              "flex w-full items-center justify-between px-3 py-1.5 text-sm hover:bg-gray-100 rounded-lg transition-all duration-300 ease-in-out", // Reduced py from 2 to 1.5
+              "flex w-full items-center justify-between px-3 py-1.5 text-sm hover:bg-gray-100 rounded-lg transition-all duration-300 ease-in-out",
               isActive && !isOpen && "bg-blue-50 text-blue-600 font-medium",
               isOpen && "bg-gray-100 font-medium",
               isCollapsed && "px-0 justify-center"
@@ -108,7 +109,7 @@ export function SidebarMenuItem({
         {!isCollapsed && (
           <CollapsibleContent className="animate-accordion-down transition-all duration-300 ease-in-out">
             <div className={cn(
-              "pl-4 relative border-l border-gray-200 ml-5 mt-1 space-y-0.5", // Reduced space-y from 1 to 0.5
+              "pl-4 relative border-l border-gray-200 ml-5 mt-1 space-y-0.5",
               level > 0 && "ml-4"
             )}>
               <SidebarMenu>
@@ -138,7 +139,7 @@ export function SidebarMenuItem({
       to={item.path}
       onClick={() => setActiveSection(item.path)}
       className={cn(
-        "flex items-center gap-3 px-3 py-1.5 text-sm rounded-lg transition-all duration-200", // Reduced py from 2 to 1.5
+        "flex items-center gap-3 px-3 py-1.5 text-sm rounded-lg transition-all duration-200",
         isActive
           ? "bg-blue-50 text-blue-600 font-medium"
           : "hover:bg-gray-100",

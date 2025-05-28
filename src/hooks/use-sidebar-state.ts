@@ -82,9 +82,12 @@ export const useSidebarState = () => {
     localStorage.setItem("sidebar-state", JSON.stringify(openSections));
   }, [openSections]);
 
-  const toggleSection = (sectionId: string, event: React.MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
+  const toggleSection = (sectionId: string, event?: React.MouseEvent) => {
+    // Only prevent default if we have a real event object
+    if (event && typeof event.preventDefault === 'function') {
+      event.preventDefault();
+      event.stopPropagation();
+    }
     
     // Close all other sections except the one being toggled
     const newOpenSections = { ...openSections };
