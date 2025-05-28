@@ -5,9 +5,18 @@ import { DashboardPageHeader } from "@/components/dashboard/PageHeader";
 import { DashboardStats } from "@/components/dashboard/overview/DashboardStats";
 import { SystemGrowthChart } from "@/components/dashboard/overview/SystemGrowthChart";
 import { UserDistributionChart } from "@/components/dashboard/overview/UserDistributionChart";
+import { useMediaLibrary } from "@/hooks";
 
 const AdminDashboard = () => {
   const [dateRange, setDateRange] = useState<'today' | 'week' | 'month' | 'quarter'>('week');
+  
+  // Preload media library data for faster access when user opens media library
+  const { mediaFiles, loadingFiles } = useMediaLibrary({
+    user: null,
+    category: null, 
+    startDate: null,
+    endDate: null
+  }, "");
   
   // Platform-wide data (not just marketplace)
   const platformData = [
@@ -27,6 +36,8 @@ const AdminDashboard = () => {
     { name: 'Vendors', value: 58, color: '#8b5cf6' },
     { name: 'Admins', value: 12, color: '#f59e0b' },
   ];
+
+  console.log(`Preloading media library data: ${loadingFiles ? 'Loading...' : `${mediaFiles?.length || 0} files loaded`}`);
 
   return (
     <AdminLayout title="Dashboard">

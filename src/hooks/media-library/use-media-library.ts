@@ -35,7 +35,7 @@ export function useMediaLibrary(
     toggleAllFilesSimple 
   } = useFileSelection();
 
-  // Get media query results
+  // Get media query results - no admin filtering, show ALL media
   const {
     mediaFiles,
     isLoading: loadingFiles,
