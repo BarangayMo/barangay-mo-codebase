@@ -75,7 +75,7 @@ export function useMediaQuery(
           .order('uploaded_at', { ascending: false });
 
         // Apply filters only if they are explicitly set by user
-        if (filters.user) query = query.eq('user_id', filters.user);
+        //if (filters.user) query = query.eq('user_id', filters.user);
         if (filters.category) query = query.eq('category', filters.category);
         if (filters.startDate) query = query.gte('uploaded_at', filters.startDate);
         if (filters.endDate) query = query.lte('uploaded_at', filters.endDate);
