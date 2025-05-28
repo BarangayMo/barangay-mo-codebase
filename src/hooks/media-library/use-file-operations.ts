@@ -121,16 +121,26 @@ export function useFileOperations(refetch: () => void) {
   // Handle file deletion
   const handleDelete = useCallback(async (fileId: string, bucketName: string, fileUrl: string): Promise<FileOperation> => {
     try {
-      // Extract the file path
-      const { filePath } = getBucketAndPath(fileUrl);
-      console.log(`Deleting file: id=${fileId}, bucket=${bucketName}, path=${filePath}`);
+      console.log(`=== DELETE OPERATION START ===`);
+      console.log(`File ID: ${fileId}`);
+      console.log(`Bucket: ${bucketName}`);
+      console.log(`File URL: ${fileUrl}`);
 
-      // Delete from storage
+      // Extract the file path - always use user_uploads bucket
+      const { filePath } = getBucketAndPath(fileUrl);
+      console.log(`Deleting file: id=${fileId}, bucket=user_uploads, path=${filePath}`);
+
+      // Delete from storage first
       const { error: storageError } = await supabase.storage
-        .from(bucketName)
+        .from('user_uploads') // Always use user_uploads bucket
         .remove([filePath]);
 
-      if (storageError) throw storageError;
+      if (storageError) {
+        console.error('Storage deletion error:', storageError);
+        // Continue with database deletion even if storage fails
+      } else {
+        console.log('File successfully deleted from storage');
+      }
 
       // Delete from metadata table
       const { error: databaseError } = await supabase
@@ -139,16 +149,22 @@ export function useFileOperations(refetch: () => void) {
         .eq('id', fileId);
 
       if (databaseError) {
-        console.warn(`File was not in the database or other DB error: ${databaseError.message}`);
-        // Continue without throwing since we've already deleted from storage
+        console.error('Database deletion error:', databaseError);
+        throw databaseError;
       }
 
+      console.log('File successfully deleted from database');
+      console.log(`=== DELETE OPERATION SUCCESS ===`);
+      
       toast.success('File deleted successfully');
-      refetch(); // Refresh the media list
+      
+      // Force immediate refresh
+      refetch();
+      
       return { success: true };
     } catch (error) {
+      console.error('Delete operation failed:', error);
       toast.error('Failed to delete file');
-      console.error('Delete error:', error);
       return { success: false, message: 'Failed to delete file' };
     }
   }, [getBucketAndPath, refetch]);
