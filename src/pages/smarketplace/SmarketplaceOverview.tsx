@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { DashboardPageHeader } from "@/components/dashboard/PageHeader";
@@ -84,7 +85,6 @@ const SmarketplaceOverview = () => {
         title="Marketplace Overview"
         description="Analytics and insights for your marketplace"
         breadcrumbItems={[
-          { label: "Dashboard", href: "/admin" },
           { label: "Smarketplace", href: "/admin/smarketplace" },
           { label: "Overview" }
         ]}

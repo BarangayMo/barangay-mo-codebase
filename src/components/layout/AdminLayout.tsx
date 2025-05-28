@@ -3,8 +3,7 @@ import { EnhancedSidebar } from "./EnhancedSidebar";
 import { cn } from "@/lib/utils";
 import { Helmet } from "react-helmet";
 import { Button } from "@/components/ui/button";
-import { Menu, ChevronLeft, ChevronRight, User, LogOut, Settings as SettingsIcon, Bell, MessageSquare, Search, Plus, Command, ChevronDown // Ensure this import is here
-} from "lucide-react";
+import { Menu, ChevronLeft, ChevronRight, User, LogOut, Settings as SettingsIcon, Bell, MessageSquare, Search, Plus, Command, ChevronDown } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,13 +16,13 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 interface AdminLayoutProps {
   children: ReactNode;
   title: string;
-  hidePageHeader?: boolean; // Added hidePageHeader prop
+  hidePageHeader?: boolean;
 }
 
 export const AdminLayout = ({
   children,
   title,
-  hidePageHeader = false // Destructure and provide default value
+  hidePageHeader = false
 }: AdminLayoutProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
@@ -184,7 +183,7 @@ export const AdminLayout = ({
           </SheetContent>
         </Sheet>
         
-        <div className={cn("flex flex-col min-h-screen w-full transition-all duration-300", isSidebarCollapsed ? "md:pl-16" : "md:pl-64", hidePageHeader ? "md:pt-0" : "md:pt-16")}> {/* Adjust top padding based on hidePageHeader */}
+        <div className={cn("flex flex-col min-h-screen w-full transition-all duration-300", isSidebarCollapsed ? "md:pl-16" : "md:pl-64", hidePageHeader ? "md:pt-0" : "md:pt-0")}>
           <Helmet>
             <title>{title} - Barangay Mo Admin</title>
           </Helmet>
@@ -266,8 +265,7 @@ export const AdminLayout = ({
           )}
           
           <main className="flex-1">
-            {/* Adjusted padding for content area when header is hidden */}
-            <div className={cn("container mx-auto px-4 md:px-6", hidePageHeader ? "py-0" : "py-6")}>
+            <div className={cn("container mx-auto px-4 md:px-6", hidePageHeader ? "py-4" : "py-4")}>
               {children}
             </div>
           </main>

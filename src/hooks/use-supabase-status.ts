@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
 export function useSupabaseStatus() {
   const [isConnected, setIsConnected] = useState(false);
@@ -10,16 +10,7 @@ export function useSupabaseStatus() {
   useEffect(() => {
     const checkSupabaseConnection = async () => {
       try {
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-        const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-        
-        if (!supabaseUrl || !supabaseKey) {
-          throw new Error('Supabase URL or key is missing');
-        }
-        
-        const supabase = createClient(supabaseUrl, supabaseKey);
-        
-        // Try a simple query to check connection
+        // Try a simple query to check connection using the actual client
         const { error } = await supabase.from('Barangays').select('count', { count: 'exact' }).limit(1);
         
         if (error) {

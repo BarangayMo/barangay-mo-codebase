@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, ReactNode, useEffect, useRef } from "react";
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,71 +46,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   
   const isInitialMount = useRef(true);
   const redirectInProgress = useRef(false);
-  const lastAuthEvent = useRef<string | null>(null);
-  const wasTabHidden = useRef(false);
-  const isPerformingVisibilityRefresh = useRef(false);
-
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && wasTabHidden.current) {
-        console.log("Tab became visible - performing silent session refresh");
-        wasTabHidden.current = false;
-        isPerformingVisibilityRefresh.current = true;
-        
-        supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-          if (currentSession !== session) {
-            console.log("Session changed during visibility change");
-            setSession(currentSession);
-            setIsAuthenticated(!!currentSession);
-            
-            if (currentSession?.user) {
-              const userData = {
-                id: currentSession.user.id,
-                name: currentSession.user.email || '',
-                email: currentSession.user.email,
-                firstName: currentSession.user.user_metadata?.first_name,
-                lastName: currentSession.user.user_metadata?.last_name,
-              };
-              setUser(userData);
-              
-              if (currentSession.user.email) {
-                let role: UserRole = "resident";
-                if (currentSession.user.email.includes('official')) {
-                  role = 'official';
-                } else if (currentSession.user.email.includes('admin')) {
-                  role = 'superadmin';
-                }
-                setUserRole(role);
-              }
-            } else {
-              setUser(null);
-              setUserRole(null);
-              
-              if (isAuthenticated && !currentSession && 
-                  !currentPath.includes('/login') && 
-                  !currentPath.includes('/register') && 
-                  !redirectInProgress.current) {
-                console.log("Session expired during visibility change - redirecting to login");
-                redirectInProgress.current = true;
-                navigate('/login');
-                setTimeout(() => { redirectInProgress.current = false; }, 500);
-              }
-            }
-          }
-          setTimeout(() => {
-            if(isPerformingVisibilityRefresh.current) {
-              isPerformingVisibilityRefresh.current = false;
-            }
-          }, 100);
-        });
-      } else if (document.visibilityState === 'hidden') {
-        wasTabHidden.current = true;
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [navigate, session, isAuthenticated, currentPath]);
 
   useEffect(() => {
     console.log("Setting up auth state change listener");
@@ -117,24 +53,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log("Auth state changed:", event, session?.user?.email);
-        lastAuthEvent.current = event;
-
-        let localIsVisibilityRefresh = false;
-        if (isPerformingVisibilityRefresh.current) {
-          localIsVisibilityRefresh = true;
-          isPerformingVisibilityRefresh.current = false;
-          console.log("Auth event (", event, ") occurred during/after visibility refresh. Redirects might be suppressed.");
-        }
-        
-        if (event === 'INITIAL_SESSION' && !isInitialMount.current && !localIsVisibilityRefresh) {
-          console.log("Ignoring duplicate INITIAL_SESSION event");
-          return;
-        }
         
         const isSignInEvent = event === 'SIGNED_IN';
         const isSignOutEvent = event === 'SIGNED_OUT';
-        const isPasswordRecoveryEvent = event === 'PASSWORD_RECOVERY';
-        const isUserUpdatedEvent = event === 'USER_UPDATED';
         
         setSession(session);
         setIsAuthenticated(!!session);
@@ -161,20 +82,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             
             setUserRole(role);
             
-            if (isSignInEvent && !redirectInProgress.current && !localIsVisibilityRefresh) {
+            // Redirect after successful login
+            if (isSignInEvent && !redirectInProgress.current) {
               const redirectPath = role === 'official' 
                 ? '/official-dashboard' 
                 : role === 'superadmin' 
                   ? '/admin' 
                   : '/resident-home';
                 
-              if (currentPath !== redirectPath && !['/login', '/register', '/verify'].includes(currentPath)) {
-                console.log("Redirecting to:", redirectPath, "after SIGNED_IN event.");
+              if (currentPath === '/login' || currentPath === '/register') {
+                console.log("Redirecting to:", redirectPath, "after login");
                 redirectInProgress.current = true;
                 navigate(redirectPath);
                 setTimeout(() => { redirectInProgress.current = false; }, 500);
-              } else {
-                console.log("Redirect skipped: already on target or public path, or visibility refresh.");
               }
             }
           } else {
@@ -194,6 +114,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
     );
 
+    // Check for existing session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log("Initial session check:", session?.user?.email);
       
@@ -220,6 +141,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           }
           setUserRole(role);
           
+          // Redirect if user is on login/register page with existing session
           if ((currentPath === '/login' || currentPath === '/register') && !redirectInProgress.current) {
             const redirectPath = role === 'official' 
               ? '/official-dashboard' 
