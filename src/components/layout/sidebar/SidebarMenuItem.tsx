@@ -35,7 +35,12 @@ export function SidebarMenuItem({
   const { pathname } = useLocation();
   const hasSubmenu = item.submenu && item.submenu.length > 0;
   const isOpen = openSections[item.path] || false;
-  const isActive = pathname === item.path || pathname.startsWith(`${item.path}/`);
+  /*const isActive = pathname === item.path || pathname.startsWith(`${item.path}/`);*/
+  const isActive =
+  item.path === "/dashboard"
+    ? pathname === "/dashboard"
+    : pathname === item.path || pathname.startsWith(`${item.path}/`);
+
   
   useEffect(() => {
     if (isActive && hasSubmenu && !isOpen) {
