@@ -72,7 +72,7 @@ export function useMediaQuery(
         
         // 2. For admins or when no specific filters are applied, also load files directly from storage 
         // This ensures we show ALL files regardless of DB records
-        if (isAdmin && (!filters.user && !filters.category && !filters.startDate && !filters.endDate)) {
+        if ((!filters.user && !filters.category && !filters.startDate && !filters.endDate)) {
           console.log("Admin user detected or no filters - loading all files from storage buckets");
           
           if (buckets.length === 0) {

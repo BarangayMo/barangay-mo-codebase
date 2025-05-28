@@ -42,7 +42,7 @@ export function useMediaLibrary(
     isError,
     error,
     refetch
-  } = useMediaQuery(filters, searchQuery, buckets.map(b => b.name));
+  } = useMediaQuery(filters, searchQuery, isAdmin, buckets.map(b => b.name));
   
   // Get file operations
   const {
