@@ -27,6 +27,8 @@ export function useFileProcessing() {
 
       console.log(`[RECURSIVE SCAN] Raw response for path "${path}":`, { items, error });
 
+      let itemsToProcess = items;
+
       if (error) {
         console.error(`[RECURSIVE SCAN] Error listing path "${path}" in bucket ${bucketName}:`, error);
         
@@ -50,19 +52,19 @@ export function useFileProcessing() {
         
         // Use fallback items
         console.log(`[RECURSIVE SCAN] Using fallback items:`, fallbackItems);
-        items = fallbackItems;
+        itemsToProcess = fallbackItems;
       }
 
-      if (!items || items.length === 0) {
+      if (!itemsToProcess || itemsToProcess.length === 0) {
         console.log(`[RECURSIVE SCAN] No items found in path "${path}" - this could mean empty directory or permission issue`);
         return [];
       }
 
-      console.log(`[RECURSIVE SCAN] Found ${items.length} items in path "${path}":`, items.map(item => ({ name: item.name, id: item.id, metadata: item.metadata })));
+      console.log(`[RECURSIVE SCAN] Found ${itemsToProcess.length} items in path "${path}":`, itemsToProcess.map(item => ({ name: item.name, id: item.id, metadata: item.metadata })));
 
       const allFiles: any[] = [];
 
-      for (const item of items) {
+      for (const item of itemsToProcess) {
         const fullPath = path ? `${path}/${item.name}` : item.name;
         
         console.log(`[RECURSIVE SCAN] Processing item:`, { 
