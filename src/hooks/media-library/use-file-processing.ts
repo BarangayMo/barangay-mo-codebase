@@ -11,6 +11,8 @@ import { toast } from "sonner";
 export function useFileProcessing() {
   // Helper function to determine bucket name and file path from file_url
   const getBucketAndPath = useCallback((buckets: string[], fileUrl: string) => {
+    console.log(`Determining bucket and path for: ${fileUrl}`);
+    
     // Check if the URL is already absolute (starts with http)
     if (fileUrl.startsWith('http')) {
       const urlParts = fileUrl.split('/');
@@ -37,6 +39,7 @@ export function useFileProcessing() {
     
     // If the path starts with a UUID, it's likely the format "userId/filename.ext"
     if (uuidRegex.test(fileUrl)) {
+      console.log(`UUID detected in path: ${fileUrl}`);
       return { 
         bucketName: "user_uploads", // Default bucket
         filePath: fileUrl // Use full path
@@ -58,6 +61,7 @@ export function useFileProcessing() {
     }
     
     // Default fallback
+    console.log(`Using default bucket for: ${fileUrl}`);
     return { 
       bucketName: "user_uploads",
       filePath: fileUrl
@@ -86,7 +90,7 @@ export function useFileProcessing() {
             .createSignedUrl(filePath, 604800); // 604800 seconds = 7 days
 
           if (signedUrlError) {
-            console.error(`Error creating signed URL for ${file.filename}:`, signedUrlError);
+            console.warn(`Could not create signed URL for ${file.filename} (${bucketName}/${filePath}):`, signedUrlError.message);
             
             // Still add the file even if we couldn't get a signed URL
             return {
@@ -134,11 +138,6 @@ export function useFileProcessing() {
         
       if (error) {
         console.error(`[STORAGE SCAN] Error listing path "${path}" in bucket ${bucketName}:`, error);
-        // If we get a permission error, try to continue with other paths
-        if (error.message?.includes('permission') || error.message?.includes('access')) {
-          console.warn(`[STORAGE SCAN] Permission denied for path "${path}" in bucket ${bucketName}, skipping...`);
-          return [];
-        }
         return [];
       }
       
@@ -147,7 +146,7 @@ export function useFileProcessing() {
         return [];
       }
       
-      console.log(`[STORAGE SCAN] Found ${items.length} items in bucket ${bucketName} at path "${path}":`, items.map(i => `${i.name} (${i.id ? 'file' : 'folder'})`));
+      console.log(`[STORAGE SCAN] Found ${items.length} items in bucket ${bucketName} at path "${path}"`);
       
       const allFiles: any[] = [];
       
@@ -190,7 +189,7 @@ export function useFileProcessing() {
       return [];
     }
     
-    console.log(`[STORAGE SCAN] Starting comprehensive scan of ${buckets.length} storage buckets for ALL files (ADMIN MODE)`);
+    console.log(`[STORAGE SCAN] Starting comprehensive scan of ${buckets.length} storage buckets for ALL files`);
     const allFiles: MediaFile[] = [];
     
     // Process each bucket
@@ -206,11 +205,10 @@ export function useFileProcessing() {
           continue;
         }
         
-        console.log(`[STORAGE SCAN] Found ${files.length} total files in bucket ${bucketName}:`);
-        files.forEach((f, i) => console.log(`  ${i+1}. ${f.fullPath || f.name} (${f.metadata?.size || 'unknown size'})`));
+        console.log(`[STORAGE SCAN] Found ${files.length} total files in bucket ${bucketName}`);
         
         // Process files in smaller batches for better stability
-        const batchSize = 3; // Smaller batches to avoid rate limits
+        const batchSize = 5; // Smaller batches to avoid rate limits
         for (let i = 0; i < files.length; i += batchSize) {
           const batch = files.slice(i, i + batchSize);
           console.log(`[STORAGE SCAN] Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(files.length/batchSize)} for bucket ${bucketName}`);
@@ -228,7 +226,7 @@ export function useFileProcessing() {
                 .createSignedUrl(fullPath, 604800); // 604800 seconds = 7 days
               
               if (signedUrlError) {
-                console.error(`[STORAGE SCAN] Error creating signed URL for ${fullPath}:`, signedUrlError);
+                console.warn(`[STORAGE SCAN] Could not create signed URL for ${fullPath}:`, signedUrlError.message);
                 // Still include the file even without signed URL
               }
               
@@ -272,7 +270,7 @@ export function useFileProcessing() {
                 category: 'uncategorized'
               };
               
-              console.log(`[STORAGE SCAN] Successfully processed: ${filename} (${mediaFile.file_size} bytes) by user: ${mediaFile.user_id}`);
+              console.log(`[STORAGE SCAN] Successfully processed: ${filename} (${mediaFile.file_size} bytes)`);
               return mediaFile;
             } catch (err) {
               console.error(`[STORAGE SCAN] Error processing file ${file.name}:`, err);
@@ -298,7 +296,6 @@ export function useFileProcessing() {
     
     console.log(`[STORAGE SCAN] === SCAN COMPLETE ===`);
     console.log(`[STORAGE SCAN] Total files loaded from ALL storage buckets: ${allFiles.length}`);
-    allFiles.forEach((f, i) => console.log(`  ${i+1}. ${f.filename} from ${f.bucket_name} (${f.file_size} bytes) - User: ${f.user_id}`));
     
     return allFiles;
   }, [listFilesRecursively]);

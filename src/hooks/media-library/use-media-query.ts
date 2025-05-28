@@ -44,28 +44,28 @@ export function useMediaQuery(
         console.log("STEP 1: Loading ALL files from storage buckets");
         
         if (buckets.length === 0) {
-          console.warn("No buckets available - this may indicate storage is not properly configured");
+          console.warn("No buckets available - storage buckets may not be configured properly");
         } else {
           console.log(`Loading files from buckets: ${buckets.join(', ')}`);
-        }
-        
-        const storageFiles = await loadFilesFromStorage(buckets);
-        
-        if (storageFiles.length > 0) {
-          console.log(`SUCCESS: Found ${storageFiles.length} files directly from storage buckets`);
           
-          // Apply search filter if needed
-          const filteredStorageFiles = searchQuery 
-            ? storageFiles.filter(f => f.filename.toLowerCase().includes(searchQuery.toLowerCase()))
-            : storageFiles;
+          const storageFiles = await loadFilesFromStorage(buckets);
           
-          if (filteredStorageFiles.length !== storageFiles.length) {
-            console.log(`Search filter applied: ${filteredStorageFiles.length}/${storageFiles.length} files match "${searchQuery}"`);
+          if (storageFiles.length > 0) {
+            console.log(`SUCCESS: Found ${storageFiles.length} files directly from storage buckets`);
+            
+            // Apply search filter if needed
+            const filteredStorageFiles = searchQuery 
+              ? storageFiles.filter(f => f.filename.toLowerCase().includes(searchQuery.toLowerCase()))
+              : storageFiles;
+            
+            if (filteredStorageFiles.length !== storageFiles.length) {
+              console.log(`Search filter applied: ${filteredStorageFiles.length}/${storageFiles.length} files match "${searchQuery}"`);
+            }
+            
+            allMediaFiles = [...filteredStorageFiles];
+          } else {
+            console.log("No files found in storage buckets");
           }
-          
-          allMediaFiles = [...filteredStorageFiles];
-        } else {
-          console.log("No files found in storage buckets");
         }
         
         // STEP 2: Fetch database records to enhance storage files with metadata
