@@ -122,24 +122,27 @@ export function useFileProcessing() {
   // Improved recursive function to list all files in a directory
   const listFilesRecursively = useCallback(async (bucketName: string, path: string = ''): Promise<any[]> => {
     try {
-      console.log(`[DEBUG] Listing files in bucket: ${bucketName}, path: ${path || 'root'}`);
+      console.log(`[STORAGE SCAN] Listing files in bucket: ${bucketName}, path: "${path}"`);
       
       // List all items in the current directory
       const { data: items, error } = await supabase.storage
         .from(bucketName)
-        .list(path, { sortBy: { column: 'name', order: 'asc' } });
+        .list(path, { 
+          sortBy: { column: 'name', order: 'asc' },
+          limit: 1000 // Increase limit to ensure we get all files
+        });
         
       if (error) {
-        console.error(`Error listing path ${path} in bucket ${bucketName}:`, error);
+        console.error(`[STORAGE SCAN] Error listing path "${path}" in bucket ${bucketName}:`, error);
         return [];
       }
       
       if (!items || items.length === 0) {
-        console.log(`No items found in bucket ${bucketName} at path ${path || 'root'}`);
+        console.log(`[STORAGE SCAN] No items found in bucket ${bucketName} at path "${path}"`);
         return [];
       }
       
-      console.log(`Found ${items.length} items in bucket ${bucketName} at path ${path || 'root'}`);
+      console.log(`[STORAGE SCAN] Found ${items.length} items in bucket ${bucketName} at path "${path}":`, items.map(i => i.name));
       
       const allFiles: any[] = [];
       
@@ -147,15 +150,15 @@ export function useFileProcessing() {
       for (const item of items) {
         const itemPath = path ? `${path}/${item.name}` : item.name;
         
-        // Check if item is a folder (Supabase's API has . for files and has no .id for folders)
-        if (item.id === null) {
-          console.log(`Found folder: ${itemPath} in bucket ${bucketName}`);
+        // Check if item is a folder (has no id or metadata indicates it's a folder)
+        if (!item.id || item.metadata?.size === undefined) {
+          console.log(`[STORAGE SCAN] Found folder: "${itemPath}" in bucket ${bucketName}`);
           // Recursively process the folder
           const subFiles = await listFilesRecursively(bucketName, itemPath);
           allFiles.push(...subFiles);
         } else {
           // This is a file
-          console.log(`Found file: ${itemPath} in bucket ${bucketName}`);
+          console.log(`[STORAGE SCAN] Found file: "${itemPath}" in bucket ${bucketName}, size: ${item.metadata?.size || 'unknown'}`);
           allFiles.push({
             ...item,
             fullPath: itemPath
@@ -165,54 +168,57 @@ export function useFileProcessing() {
       
       return allFiles;
     } catch (error) {
-      console.error(`Error in recursive listing for ${path} in ${bucketName}:`, error);
+      console.error(`[STORAGE SCAN] Error in recursive listing for "${path}" in ${bucketName}:`, error);
       return [];
     }
   }, []);
 
-  // Improved function to load files directly from storage buckets
+  // Enhanced function to load ALL files from ALL storage buckets
   const loadFilesFromStorage = useCallback(async (buckets: string[]) => {
     if (!buckets.length) {
-      console.log('No buckets provided to loadFilesFromStorage');
+      console.log('[STORAGE SCAN] No buckets provided to loadFilesFromStorage');
       return [];
     }
     
-    console.log(`Loading files from ${buckets.length} storage buckets with recursive traversal`);
+    console.log(`[STORAGE SCAN] Starting comprehensive scan of ${buckets.length} storage buckets for ALL files`);
     const allFiles: MediaFile[] = [];
     
     // Process each bucket
     for (const bucketName of buckets) {
       try {
-        console.log(`[DEBUG] Processing bucket: ${bucketName}`);
+        console.log(`[STORAGE SCAN] === Processing bucket: ${bucketName} ===`);
         
         // Get all files recursively, starting from the root
         const files = await listFilesRecursively(bucketName);
         
         if (!files || files.length === 0) {
-          console.log(`No files found in bucket ${bucketName}`);
+          console.log(`[STORAGE SCAN] No files found in bucket ${bucketName}`);
           continue;
         }
         
-        console.log(`Found ${files.length} files in bucket ${bucketName}:`);
-        files.forEach((f, i) => console.log(`  ${i+1}. ${f.fullPath || f.name}`));
+        console.log(`[STORAGE SCAN] Found ${files.length} total files in bucket ${bucketName}:`);
+        files.forEach((f, i) => console.log(`  ${i+1}. ${f.fullPath || f.name} (${f.metadata?.size || 'unknown size'})`));
         
         // Process files in batches for better performance
-        const batchSize = 10;
+        const batchSize = 5; // Smaller batches for more stability
         for (let i = 0; i < files.length; i += batchSize) {
           const batch = files.slice(i, i + batchSize);
+          console.log(`[STORAGE SCAN] Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(files.length/batchSize)} for bucket ${bucketName}`);
           
           const batchPromises = batch.map(async (file) => {
             try {
               // Get full path including any parent directories
               const fullPath = file.fullPath || file.name;
               
-              // Get signed URL
+              console.log(`[STORAGE SCAN] Processing file: ${fullPath} in bucket ${bucketName}`);
+              
+              // Get signed URL with extended expiration
               const { data: signedUrlData, error: signedUrlError } = await supabase.storage
                 .from(bucketName)
                 .createSignedUrl(fullPath, 604800); // 604800 seconds = 7 days
               
               if (signedUrlError) {
-                console.error(`Error creating signed URL for ${fullPath}:`, signedUrlError);
+                console.error(`[STORAGE SCAN] Error creating signed URL for ${fullPath}:`, signedUrlError);
                 return null;
               }
               
@@ -220,34 +226,65 @@ export function useFileProcessing() {
               const filename = fullPath.split('/').pop() || fullPath;
               
               // Generate a unique ID for the file
-              const fileId = file.id || `${bucketName}-${fullPath.replace(/[\/\.]/g, '-')}`;
+              const fileId = file.id || `storage-${bucketName}-${fullPath.replace(/[\/\.]/g, '-')}-${Date.now()}`;
+              
+              // Determine content type from file extension if not available
+              const getContentType = (filename: string) => {
+                const ext = filename.split('.').pop()?.toLowerCase();
+                const typeMap: { [key: string]: string } = {
+                  'jpg': 'image/jpeg',
+                  'jpeg': 'image/jpeg',
+                  'png': 'image/png',
+                  'gif': 'image/gif',
+                  'webp': 'image/webp',
+                  'svg': 'image/svg+xml',
+                  'pdf': 'application/pdf',
+                  'doc': 'application/msword',
+                  'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                  'mp4': 'video/mp4',
+                  'mov': 'video/quicktime',
+                  'avi': 'video/x-msvideo'
+                };
+                return typeMap[ext || ''] || 'application/octet-stream';
+              };
               
               // Construct file object
-              return {
+              const mediaFile: MediaFile = {
                 id: fileId,
                 filename: filename,
                 file_url: fullPath,
                 bucket_name: bucketName,
-                content_type: file.metadata?.mimetype || 'application/octet-stream',
+                content_type: file.metadata?.mimetype || getContentType(filename),
                 file_size: file.metadata?.size || 0,
                 uploaded_at: file.created_at || new Date().toISOString(),
-                signedUrl: signedUrlData?.signedUrl || null
-              } as MediaFile;
+                signedUrl: signedUrlData?.signedUrl || null,
+                user_id: 'storage-file', // Placeholder for storage-only files
+                category: 'uncategorized'
+              };
+              
+              console.log(`[STORAGE SCAN] Successfully processed: ${filename} (${mediaFile.file_size} bytes)`);
+              return mediaFile;
             } catch (err) {
-              console.error(`Error processing file ${file.name}:`, err);
+              console.error(`[STORAGE SCAN] Error processing file ${file.name}:`, err);
               return null;
             }
           });
           
           const batchResults = await Promise.all(batchPromises);
-          allFiles.push(...batchResults.filter(Boolean) as MediaFile[]);
+          const validFiles = batchResults.filter(Boolean) as MediaFile[];
+          allFiles.push(...validFiles);
+          
+          console.log(`[STORAGE SCAN] Batch completed: ${validFiles.length}/${batch.length} files processed successfully`);
         }
       } catch (err) {
-        console.error(`Error processing bucket ${bucketName}:`, err);
+        console.error(`[STORAGE SCAN] Error processing bucket ${bucketName}:`, err);
       }
     }
     
-    console.log(`Total files loaded from storage: ${allFiles.length}`);
+    console.log(`[STORAGE SCAN] === SCAN COMPLETE ===`);
+    console.log(`[STORAGE SCAN] Total files loaded from ALL storage buckets: ${allFiles.length}`);
+    allFiles.forEach((f, i) => console.log(`  ${i+1}. ${f.filename} from ${f.bucket_name} (${f.file_size} bytes)`));
+    
     return allFiles;
   }, [listFilesRecursively]);
 

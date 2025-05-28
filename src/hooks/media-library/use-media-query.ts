@@ -20,7 +20,7 @@ export function useMediaQuery(
 ) {
   const { processMedia, loadFilesFromStorage } = useFileProcessing();
   
-  // Query to fetch media files from database and enhance with storage data
+  // Query to fetch ALL media files from storage and enhance with database metadata
   const { 
     data: mediaFiles, 
     isLoading, 
@@ -30,16 +30,45 @@ export function useMediaQuery(
   } = useQuery({
     queryKey: ['media-files', filters, searchQuery, buckets.length],
     queryFn: async () => {
+      console.log("=== MEDIA QUERY START ===");
       console.log("Fetching ALL media files with filters:", filters);
       console.log("Search query:", searchQuery);
       console.log("Available buckets count:", buckets.length);
       console.log("Available buckets:", buckets);
       
       try {
-        // Combined approach: Get files from both database AND storage
         let allMediaFiles: MediaFile[] = [];
         
-        // 1. First fetch ALL media file records from the database (no user filtering for admins)
+        // PRIORITY 1: Load ALL files from storage buckets (this is the source of truth)
+        console.log("STEP 1: Loading ALL files from storage buckets");
+        
+        if (buckets.length === 0) {
+          console.warn("No buckets available - this may indicate storage is not properly configured");
+        } else {
+          console.log(`Loading files from buckets: ${buckets.join(', ')}`);
+        }
+        
+        const storageFiles = await loadFilesFromStorage(buckets);
+        
+        if (storageFiles.length > 0) {
+          console.log(`SUCCESS: Found ${storageFiles.length} files directly from storage buckets`);
+          
+          // Apply search filter if needed
+          const filteredStorageFiles = searchQuery 
+            ? storageFiles.filter(f => f.filename.toLowerCase().includes(searchQuery.toLowerCase()))
+            : storageFiles;
+          
+          if (filteredStorageFiles.length !== storageFiles.length) {
+            console.log(`Search filter applied: ${filteredStorageFiles.length}/${storageFiles.length} files match "${searchQuery}"`);
+          }
+          
+          allMediaFiles = [...filteredStorageFiles];
+        } else {
+          console.log("No files found in storage buckets");
+        }
+        
+        // STEP 2: Fetch database records to enhance storage files with metadata
+        console.log("STEP 2: Fetching database records for metadata enhancement");
         let query = supabase
           .from('media_files')
           .select('*')
@@ -59,59 +88,59 @@ export function useMediaQuery(
 
         if (dbError) {
           console.error("Error fetching media files from database:", dbError);
-          throw dbError;
-        }
-
-        console.log(`Found ${dbFiles?.length || 0} media files in database`);
-        
-        // Process the database files to get signed URLs
-        if (dbFiles && dbFiles.length > 0) {
-          const processedDbFiles = await processMedia(dbFiles, buckets);
-          allMediaFiles = [...allMediaFiles, ...processedDbFiles];
-        }
-        
-        // 2. Always load files directly from storage to ensure complete coverage
-        // This ensures we show ALL files regardless of DB records for admins
-        console.log("Loading all files from storage buckets for complete coverage");
-        
-        if (buckets.length === 0) {
-          console.warn("No buckets available - this may indicate storage is not properly configured");
+          // Don't throw - we can still show storage files
         } else {
-          console.log(`Loading files from buckets: ${buckets.join(', ')}`);
-        }
-        
-        const storageFiles = await loadFilesFromStorage(buckets);
-        
-        if (storageFiles.length > 0) {
-          console.log(`Found ${storageFiles.length} files directly from storage buckets`);
+          console.log(`Found ${dbFiles?.length || 0} media file records in database`);
           
-          // Filter by search query if needed
-          const filteredStorageFiles = searchQuery 
-            ? storageFiles.filter(f => f.filename.toLowerCase().includes(searchQuery.toLowerCase()))
-            : storageFiles;
-          
-          if (filteredStorageFiles.length !== storageFiles.length) {
-            console.log(`Filtered storage files to ${filteredStorageFiles.length} based on search "${searchQuery}"`);
+          // STEP 3: Enhance storage files with database metadata where available
+          if (dbFiles && dbFiles.length > 0) {
+            console.log("STEP 3: Enhancing storage files with database metadata");
+            
+            // Create a map of database files by file_url for quick lookup
+            const dbFileMap = new Map();
+            dbFiles.forEach(dbFile => {
+              dbFileMap.set(dbFile.file_url, dbFile);
+            });
+            
+            // Enhance storage files with database metadata
+            allMediaFiles = allMediaFiles.map(storageFile => {
+              const dbFile = dbFileMap.get(storageFile.file_url);
+              if (dbFile) {
+                console.log(`Enhanced storage file ${storageFile.filename} with database metadata`);
+                return {
+                  ...storageFile,
+                  ...dbFile, // Database metadata takes precedence
+                  signedUrl: storageFile.signedUrl, // Keep the storage signed URL
+                  bucket_name: storageFile.bucket_name // Keep the storage bucket name
+                };
+              }
+              return storageFile;
+            });
+            
+            // Add any database files that don't exist in storage (orphaned records)
+            const storageUrls = new Set(allMediaFiles.map(f => f.file_url));
+            const orphanedDbFiles = dbFiles.filter(dbFile => !storageUrls.has(dbFile.file_url));
+            
+            if (orphanedDbFiles.length > 0) {
+              console.log(`Found ${orphanedDbFiles.length} orphaned database records (files deleted from storage)`);
+              // Process orphaned files to try to get signed URLs
+              const processedOrphans = await processMedia(orphanedDbFiles, buckets);
+              allMediaFiles.push(...processedOrphans);
+            }
           }
-          
-          // Remove duplicates by file_url (prefer DB records when there's overlap)
-          const dbFileUrls = new Set(allMediaFiles.map(f => f.file_url));
-          const uniqueStorageFiles = filteredStorageFiles.filter(f => !dbFileUrls.has(f.file_url));
-          
-          console.log(`Adding ${uniqueStorageFiles.length} unique storage files to results`);
-          allMediaFiles = [...allMediaFiles, ...uniqueStorageFiles];
-        } else {
-          console.log("No files found in storage buckets");
         }
         
-        console.log(`Total media files to display: ${allMediaFiles.length}`);
+        console.log(`=== FINAL RESULT: ${allMediaFiles.length} total media files ===`);
+        allMediaFiles.forEach((file, i) => {
+          console.log(`${i+1}. ${file.filename} (${file.bucket_name || 'unknown bucket'}) - ${file.file_size} bytes`);
+        });
         
         // Sort by uploaded_at descending
         return allMediaFiles.sort((a, b) => 
           new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime()
         );
       } catch (error) {
-        console.error("Error in queryFn:", error);
+        console.error("Error in media query:", error);
         throw error;
       }
     },
