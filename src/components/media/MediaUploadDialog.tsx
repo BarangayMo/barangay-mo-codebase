@@ -78,10 +78,14 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
     const userId = session.user.id;
     const { file } = upload;
     const fileExt = file.name.split('.').pop();
-    const filePath = `${userId}/${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+    const filePath = `${userId}/${fileName}`;
 
     try {
-      console.log(`Uploading file to user_uploads bucket, path: ${filePath}`);
+      console.log(`=== UPLOAD START ===`);
+      console.log(`File: ${file.name}`);
+      console.log(`Bucket: user_uploads`);
+      console.log(`Path: ${filePath}`);
       
       // Start progress simulation
       const progressInterval = setInterval(() => {
@@ -94,7 +98,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
         );
       }, 200);
 
-      // Upload the file using Supabase Storage
+      // Upload the file using Supabase Storage - FIXED: Always use 'user_uploads' bucket
       const { data, error } = await supabase.storage
         .from('user_uploads')
         .upload(filePath, file, {
@@ -119,7 +123,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
         console.warn("Could not create signed URL:", urlError);
       }
 
-      // Save media file metadata to database
+      // Save media file metadata to database - FIXED: Store the full path as file_url
       const { error: dbError } = await supabase
         .from('media_files')
         .insert({
@@ -127,7 +131,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
           category: determineCategory(file.type),
           content_type: file.type,
           filename: file.name,
-          file_url: filePath, // Store the path within the bucket
+          file_url: filePath, // Store the complete path within the bucket
           file_size: file.size
         });
 
@@ -135,6 +139,9 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
         console.error("Database save error:", dbError);
         throw dbError;
       }
+
+      console.log(`=== UPLOAD SUCCESS ===`);
+      console.log(`Database record created with file_url: ${filePath}`);
 
       // Update upload status to success
       updateUpload(upload.id, { 

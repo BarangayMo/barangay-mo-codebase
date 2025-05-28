@@ -101,13 +101,11 @@ export function useMediaQuery(
         
         for (const file of dbFiles) {
           try {
-            // Determine bucket name from file_url or use default
-            const bucketName = file.file_url.includes('/') ? 
-              file.file_url.split('/')[0] : 'user_uploads';
+            // FIXED: Always use 'user_uploads' bucket, file_url contains the path within the bucket
+            const bucketName = 'user_uploads';
+            const filePath = file.file_url; // This is the complete path within the bucket
             
-            // Get the actual file path
-            const filePath = file.file_url.includes('/') ?
-              file.file_url.substring(file.file_url.indexOf('/') + 1) : file.file_url;
+            console.log(`Processing file: ${file.filename}, bucket: ${bucketName}, path: ${filePath}`);
 
             // Try to get a signed URL for the file
             const { data: signedUrlData, error: signedUrlError } = await supabase.storage
@@ -129,6 +127,8 @@ export function useMediaQuery(
 
             if (signedUrlError) {
               console.warn(`Could not create signed URL for ${file.filename}:`, signedUrlError.message);
+            } else {
+              console.log(`Successfully created signed URL for ${file.filename}`);
             }
 
             processedFiles.push(processedFile);
@@ -152,6 +152,7 @@ export function useMediaQuery(
         
         console.log(`=== DATABASE QUERY COMPLETE ===`);
         console.log(`Total files processed: ${processedFiles.length}`);
+        console.log(`Files with signed URLs: ${processedFiles.filter(f => f.signedUrl).length}`);
         
         return processedFiles;
       } catch (error) {
