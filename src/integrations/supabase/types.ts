@@ -257,6 +257,7 @@ export type Database = {
       }
       media_files: {
         Row: {
+          alt_text: string | null
           category: string
           content_type: string
           deleted_at: string | null
@@ -268,6 +269,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          alt_text?: string | null
           category: string
           content_type: string
           deleted_at?: string | null
@@ -279,6 +281,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          alt_text?: string | null
           category?: string
           content_type?: string
           deleted_at?: string | null

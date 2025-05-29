@@ -8,7 +8,7 @@ import { MediaDetailsDialog } from "./grid/MediaDetailsDialog";
 import { DeleteConfirmDialog } from "./grid/DeleteConfirmDialog";
 import { MediaFile } from "@/hooks/media-library/types";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/enhanced-sonner";
 
 // Define types for our profiles
 interface Profile {
@@ -129,7 +129,7 @@ export function MediaLibraryTable({
       return;
     }
     
-    // Check if we're in selection mode (any files selected)
+    // Check if we're in selection mode (any files selected) or holding modifier keys
     if (selectedFiles.length > 0 || e.shiftKey || e.metaKey || e.ctrlKey) {
       handleToggleFileSelection(file, index, e);
       return;

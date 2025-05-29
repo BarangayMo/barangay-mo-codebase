@@ -1,227 +1,269 @@
 
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
-import { useQuery } from "@tanstack/react-query";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CalendarIcon, Search, X } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import { Badge } from "@/components/ui/badge";
-import { X, Users, FolderOpen, CalendarDays, Filter } from "lucide-react";
 
-export function MediaLibraryFilters({ filters, onFilterChange }) {
-  const [localFilters, setLocalFilters] = useState(filters);
+interface User {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  role?: string;
+}
 
-  // Fetch users for filtering
-  const { data: users } = useQuery({
-    queryKey: ['admin-users'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, first_name, last_name');
-      
-      if (error) throw error;
-      return data;
-    }
-  });
+interface MediaLibraryFilters {
+  user: string | null;
+  category: string | null;
+  startDate: Date | null;
+  endDate: Date | null;
+}
 
-  const handleApplyFilters = () => {
-    onFilterChange(localFilters);
+interface MediaLibraryFiltersProps {
+  filters: MediaLibraryFilters;
+  onFiltersChange: (filters: MediaLibraryFilters) => void;
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+}
+
+export function MediaLibraryFilters({
+  filters,
+  onFiltersChange,
+  searchQuery,
+  onSearchChange
+}: MediaLibraryFiltersProps) {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
+  // Fetch users for the filter dropdown
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setLoadingUsers(true);
+      try {
+        // Get profiles with user roles
+        const { data: profiles, error } = await supabase
+          .from('profiles')
+          .select(`
+            id,
+            first_name,
+            last_name,
+            user_roles (
+              role
+            )
+          `);
+
+        if (error) throw error;
+
+        const usersWithRoles = profiles?.map(profile => ({
+          id: profile.id,
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          role: profile.user_roles?.[0]?.role || 'user'
+        })) || [];
+
+        setUsers(usersWithRoles);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  const handleFilterChange = (key: keyof MediaLibraryFilters, value: any) => {
+    onFiltersChange({
+      ...filters,
+      [key]: value
+    });
   };
 
-  const handleClearFilters = () => {
-    const clearedFilters = {
+  const clearFilters = () => {
+    onFiltersChange({
       user: null,
       category: null,
       startDate: null,
       endDate: null
-    };
-    setLocalFilters(clearedFilters);
-    onFilterChange(clearedFilters);
+    });
+    onSearchChange("");
   };
 
-  const handleUserChange = (value: string) => {
-    setLocalFilters(prev => ({ 
-      ...prev, 
-      user: value === "all" ? null : value 
-    }));
+  const hasActiveFilters = filters.user || filters.category || filters.startDate || filters.endDate || searchQuery;
+
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case 'superadmin':
+        return 'bg-purple-100 text-purple-800';
+      case 'admin':
+        return 'bg-blue-100 text-blue-800';
+      case 'moderator':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   };
 
-  const handleCategoryChange = (value: string) => {
-    setLocalFilters(prev => ({ 
-      ...prev, 
-      category: value === "all" ? null : value 
-    }));
+  const formatRoleName = (role: string) => {
+    switch (role) {
+      case 'superadmin':
+        return 'Super Admin';
+      default:
+        return role.charAt(0).toUpperCase() + role.slice(1);
+    }
   };
-
-  const hasActiveFilters = localFilters.user || localFilters.category || localFilters.startDate || localFilters.endDate;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-4 p-6 bg-gray-50 rounded-lg border">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Filter className="h-5 w-5 text-blue-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
-        </div>
+        <h3 className="text-lg font-medium">Filters</h3>
         {hasActiveFilters && (
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleClearFilters}
+            onClick={clearFilters}
             className="text-gray-500 hover:text-gray-700"
           >
-            Clear all
+            <X className="h-4 w-4 mr-1" />
+            Clear All
           </Button>
         )}
       </div>
 
-      {/* Active Filters */}
-      {hasActiveFilters && (
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-gray-700">Active filters:</p>
-          <div className="flex flex-wrap gap-2">
-            {localFilters.user && (
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
-                <Users className="h-3 w-3 mr-1" />
-                User: {users?.find(u => u.id === localFilters.user)?.first_name || 'Unknown'}
-                <X 
-                  className="h-3 w-3 ml-1 cursor-pointer hover:text-blue-600"
-                  onClick={() => setLocalFilters(prev => ({ ...prev, user: null }))}
-                />
-              </Badge>
-            )}
-            {localFilters.category && (
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
-                <FolderOpen className="h-3 w-3 mr-1" />
-                Category: {localFilters.category}
-                <X 
-                  className="h-3 w-3 ml-1 cursor-pointer hover:text-blue-600"
-                  onClick={() => setLocalFilters(prev => ({ ...prev, category: null }))}
-                />
-              </Badge>
-            )}
-            {(localFilters.startDate || localFilters.endDate) && (
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
-                <CalendarDays className="h-3 w-3 mr-1" />
-                Date range
-                <X 
-                  className="h-3 w-3 ml-1 cursor-pointer hover:text-blue-600"
-                  onClick={() => setLocalFilters(prev => ({ ...prev, startDate: null, endDate: null }))}
-                />
-              </Badge>
-            )}
-          </div>
+      {/* Search */}
+      <div className="space-y-2">
+        <Label htmlFor="search">Search files</Label>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            id="search"
+            placeholder="Search by filename..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="pl-10"
+          />
         </div>
-      )}
+      </div>
 
       {/* User Filter */}
-      <Card className="border-gray-200 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-gray-700 flex items-center gap-2">
-            <Users className="h-4 w-4 text-blue-600" />
-            Filter by User
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <Select 
-            value={localFilters.user || "all"}
-            onValueChange={handleUserChange}
-          >
-            <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500">
-              <SelectValue placeholder="All users" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All users</SelectItem>
-              {users?.map(user => (
+      <div className="space-y-2">
+        <Label>User</Label>
+        <Select
+          value={filters.user || ""}
+          onValueChange={(value) => handleFilterChange('user', value || null)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="All users" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All users</SelectItem>
+            {loadingUsers ? (
+              <SelectItem value="" disabled>Loading users...</SelectItem>
+            ) : (
+              users.map((user) => (
                 <SelectItem key={user.id} value={user.id}>
-                  {user.first_name} {user.last_name}
+                  <div className="flex items-center justify-between w-full">
+                    <span>
+                      {user.first_name && user.last_name 
+                        ? `${user.first_name} ${user.last_name}`
+                        : user.first_name || user.last_name || 'Unknown User'
+                      }
+                    </span>
+                    <span className={cn(
+                      "ml-2 px-2 py-1 text-xs rounded-full font-medium",
+                      getRoleColor(user.role || 'user')
+                    )}>
+                      {formatRoleName(user.role || 'user')}
+                    </span>
+                  </div>
                 </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
+              ))
+            )}
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* Category Filter */}
-      <Card className="border-gray-200 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-gray-700 flex items-center gap-2">
-            <FolderOpen className="h-4 w-4 text-blue-600" />
-            Filter by Category
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <Select 
-            value={localFilters.category || "all"}
-            onValueChange={handleCategoryChange}
-          >
-            <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500">
-              <SelectValue placeholder="All categories" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All categories</SelectItem>
-              {['image', 'video', 'audio', 'document', 'other'].map(category => (
-                <SelectItem key={category} value={category}>
-                  {category.charAt(0).toUpperCase() + category.slice(1)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
+      <div className="space-y-2">
+        <Label>Category</Label>
+        <Select
+          value={filters.category || ""}
+          onValueChange={(value) => handleFilterChange('category', value || null)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="All categories" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All categories</SelectItem>
+            <SelectItem value="image">Images</SelectItem>
+            <SelectItem value="document">Documents</SelectItem>
+            <SelectItem value="video">Videos</SelectItem>
+            <SelectItem value="audio">Audio</SelectItem>
+            <SelectItem value="other">Other</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-      {/* Date Range Filter */}
-      <Card className="border-gray-200 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-gray-700 flex items-center gap-2">
-            <CalendarDays className="h-4 w-4 text-blue-600" />
-            Filter by Date Range
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <Calendar
-            mode="range"
-            selected={{ from: localFilters.startDate, to: localFilters.endDate }}
-            onSelect={(range) => setLocalFilters(prev => ({ 
-              ...prev, 
-              startDate: range?.from || null, 
-              endDate: range?.to || null
-            }))}
-            className="rounded-md border border-gray-200"
-            classNames={{
-              months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-              month: "space-y-4",
-              caption: "flex justify-center pt-1 relative items-center",
-              caption_label: "text-sm font-medium",
-              nav: "space-x-1 flex items-center",
-              nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
-              nav_button_previous: "absolute left-1",
-              nav_button_next: "absolute right-1",
-              table: "w-full border-collapse space-y-1",
-              head_row: "flex",
-              head_cell: "text-muted-foreground rounded-md w-8 font-normal text-[0.8rem]",
-              row: "flex w-full mt-2",
-              cell: "text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-              day: "h-8 w-8 p-0 font-normal aria-selected:opacity-100 hover:bg-blue-100 rounded-md",
-              day_selected: "bg-blue-600 text-white hover:bg-blue-600 hover:text-white focus:bg-blue-600 focus:text-white",
-              day_today: "bg-accent text-accent-foreground",
-              day_outside: "text-muted-foreground opacity-50",
-              day_disabled: "text-muted-foreground opacity-50",
-              day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
-              day_hidden: "invisible",
-            }}
-          />
-        </CardContent>
-      </Card>
+      {/* Date Range */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Start Date</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !filters.startDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {filters.startDate ? format(filters.startDate, "PPP") : "Pick a date"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={filters.startDate}
+                onSelect={(date) => handleFilterChange('startDate', date)}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
 
-      {/* Apply Button */}
-      <Button 
-        onClick={handleApplyFilters} 
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg shadow-sm transition-colors"
-      >
-        Apply Filters
-      </Button>
+        <div className="space-y-2">
+          <Label>End Date</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !filters.endDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {filters.endDate ? format(filters.endDate, "PPP") : "Pick a date"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={filters.endDate}
+                onSelect={(date) => handleFilterChange('endDate', date)}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
     </div>
   );
 }

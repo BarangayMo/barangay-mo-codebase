@@ -1,16 +1,7 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Import Google Fonts in index.html but provide local fallback here */
-body {
-  font-family: 'Inter', 'sans-serif';
-}
-
-/* Use Outfit for headings */
-h1, .font-heading, .font-outfit {
-  font-family: 'Outfit', 'sans-serif';
-}
 
 @layer base {
   :root {
@@ -22,40 +13,23 @@ h1, .font-heading, .font-outfit {
     --popover-foreground: 222.2 84% 4.9%;
     --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
     --radius: 0.5rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-    --official: 355 83% 57%;
-    --official-foreground: 0 0% 100%;
-    --official-light: 355 100% 93%;
-    --official-dark: 355 75% 44%;
-    --resident: 122 39% 49%;
-    --resident-foreground: 0 0% 100%;
-    --resident-light: 122 39% 95%;
-    --resident-dark: 122 65% 34%;
-    --resident-color: #1a237e; /* Dark blue for resident theme */
-    --resident-light: #534bae;
-    --resident-dark: #000051;
-    --official-color: #ea384c; /* Red for official theme */
-    --official-light: #ff6b78;
-    --official-dark: #b00024;
   }
 
   .dark {
@@ -78,72 +52,52 @@ h1, .font-heading, .font-outfit {
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-    --official: 355 70% 50%;
-    --official-foreground: 0 0% 100%;
-    --official-light: 355 30% 30%;
-    --official-dark: 355 80% 35%;
-    --resident: 122 39% 40%;
-    --resident-foreground: 0 0% 100%;
-    --resident-light: 122 30% 25%; 
-    --resident-dark: 122 50% 25%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
   }
-
-  /* Dashboard Button Variables */
-  --bm-button-padding-vertical: 8px;
-  --bm-button-padding-horizontal: 12px;
-  --bm-button-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --bm-button-font-size: 14px;
-  --bm-button-font-weight: 500;
-  --bm-button-text-color: #202223;
-  --bm-button-bg: #ffffff;
-  --bm-button-border-color: #c4cdd5;
-  --bm-button-border-radius: 10px;
-  --bm-button-hover-bg: #f6f6f7;
 }
 
 @layer base {
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground;
   }
 }
 
-@layer components {
-  .BarangayMo-Button {
-    @apply inline-flex items-center justify-center;
-    min-height: auto;
-    min-width: auto;
-    padding: var(--bm-button-padding-vertical) var(--bm-button-padding-horizontal);
-    font-family: var(--bm-button-font-family);
-    font-size: var(--bm-button-font-size);
-    font-weight: var(--bm-button-font-weight);
-    color: var(--bm-button-text-color);
-    background-color: var(--bm-button-bg);
-    border: 0px solid var(--bm-button-border-color);
-    border-radius: var(--bm-button-border-radius);
-    box-shadow: 0rem -0.0625rem 0rem 0rem #b5b5b5 inset, 
-                0rem 0rem 0rem 0.0625rem rgba(0, 0, 0, 0.1) inset,
-                0rem 0.03125rem 0rem 0.09375rem #ffffff inset;
-    transition: background-color 150ms ease, box-shadow 150ms ease;
-  }
+/* Toast progress bar styling */
+.toast-with-progress::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(to right, #3b82f6, #1d4ed8);
+  animation: toast-progress 4s linear forwards;
+  width: 100%;
+}
 
-  .BarangayMo-Button:hover {
-    background-color: var(--bm-button-hover-bg);
-    box-shadow: 0px 1px 4px rgba(0, 123, 255, 0.4);
+@keyframes toast-progress {
+  from {
+    width: 100%;
   }
+  to {
+    width: 0%;
+  }
+}
 
-  .BarangayMo-Button:disabled {
-    @apply bg-muted text-muted-foreground cursor-not-allowed;
-  }
+.toast-with-progress[data-type="error"]::after {
+  background: linear-gradient(to right, #ef4444, #dc2626);
+}
+
+.toast-with-progress[data-type="success"]::after {
+  background: linear-gradient(to right, #10b981, #059669);
+}
+
+.toast-with-progress[data-type="warning"]::after {
+  background: linear-gradient(to right, #f59e0b, #d97706);
 }
