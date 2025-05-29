@@ -507,3 +507,145 @@ const ProductEditPage = () => {
                       onChange={(e) => handleChange("sku", e.target.value)}
                       placeholder="####-###-###"
                       className="mt-1"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column - Additional Details */}
+          <div className="space-y-6">
+            {/* Status */}
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-sm font-medium text-gray-500 uppercase">STATUS</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Product Status</Label>
+                  <Switch
+                    checked={formData.is_active}
+                    onCheckedChange={(checked) => handleChange("is_active", checked)}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Pricing */}
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-sm font-medium text-gray-500 uppercase flex items-center gap-2">
+                  <DollarSign className="h-4 w-4" />
+                  PRICING
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium">Price</Label>
+                  <Input 
+                    type="number"
+                    value={formData.price}
+                    onChange={(e) => handleChange("price", e.target.value)}
+                    placeholder="0.00"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Compare at price</Label>
+                  <Input 
+                    type="number"
+                    value={formData.original_price}
+                    onChange={(e) => handleChange("original_price", e.target.value)}
+                    placeholder="0.00"
+                    className="mt-1"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Vendor */}
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-sm font-medium text-gray-500 uppercase flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  VENDOR
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div>
+                  <Label className="text-sm font-medium">Vendor</Label>
+                  <Select value={formData.vendor_id} onValueChange={(value) => handleChange("vendor_id", value)}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select vendor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {vendors?.map((vendor) => (
+                        <SelectItem key={vendor.id} value={vendor.id}>
+                          {vendor.shop_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Media Upload Dialog */}
+        <MediaUploadDialog
+          open={showMediaUpload}
+          onOpenChange={setShowMediaUpload}
+          onUploadComplete={() => {
+            refetchMedia();
+            setShowMediaUpload(false);
+          }}
+        />
+
+        {/* Create Collection Dialog */}
+        <Dialog open={showCreateCollection} onOpenChange={setShowCreateCollection}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Collection</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Collection Name</Label>
+                <Input
+                  value={newCollection.name}
+                  onChange={(e) => setNewCollection(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Enter collection name"
+                />
+              </div>
+              <div>
+                <Label>Description</Label>
+                <Textarea
+                  value={newCollection.description}
+                  onChange={(e) => setNewCollection(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Enter collection description"
+                />
+              </div>
+              <div>
+                <Label>Color</Label>
+                <Input
+                  type="color"
+                  value={newCollection.color}
+                  onChange={(e) => setNewCollection(prev => ({ ...prev, color: e.target.value }))}
+                />
+              </div>
+              <Button 
+                onClick={() => createCollection.mutate(newCollection)} 
+                className="w-full bg-blue-600 hover:bg-blue-700"
+              >
+                Create Collection
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </AdminLayout>
+  );
+};
+
+export default ProductEditPage;
