@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,16 +8,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { X, Users, FolderOpen, CalendarDays, Filter } from "lucide-react";
 
-export function MediaLibraryFilters({ filters, onFilterChange }) {
+export function MediaLibraryFilters({ filters, onFiltersChange }) {
   const [localFilters, setLocalFilters] = useState(filters);
 
-  // Fetch users for filtering
+  // Fetch users with their roles for filtering
   const { data: users } = useQuery({
-    queryKey: ['admin-users'],
+    queryKey: ['admin-users-with-roles'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name');
+        .select('id, first_name, last_name, role');
       
       if (error) throw error;
       return data;
@@ -26,7 +25,7 @@ export function MediaLibraryFilters({ filters, onFilterChange }) {
   });
 
   const handleApplyFilters = () => {
-    onFilterChange(localFilters);
+    onFiltersChange(localFilters);
   };
 
   const handleClearFilters = () => {
@@ -37,7 +36,7 @@ export function MediaLibraryFilters({ filters, onFilterChange }) {
       endDate: null
     };
     setLocalFilters(clearedFilters);
-    onFilterChange(clearedFilters);
+    onFiltersChange(clearedFilters);
   };
 
   const handleUserChange = (value: string) => {
@@ -55,6 +54,21 @@ export function MediaLibraryFilters({ filters, onFilterChange }) {
   };
 
   const hasActiveFilters = localFilters.user || localFilters.category || localFilters.startDate || localFilters.endDate;
+
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case 'superadmin':
+        return 'bg-purple-100 text-purple-700';
+      case 'admin':
+        return 'bg-blue-100 text-blue-700';
+      case 'moderator':
+        return 'bg-green-100 text-green-700';
+      case 'resident':
+        return 'bg-gray-100 text-gray-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -135,7 +149,15 @@ export function MediaLibraryFilters({ filters, onFilterChange }) {
               <SelectItem value="all">All users</SelectItem>
               {users?.map(user => (
                 <SelectItem key={user.id} value={user.id}>
-                  {user.first_name} {user.last_name}
+                  <div className="flex items-center justify-between w-full">
+                    <span>{user.first_name} {user.last_name}</span>
+                    <Badge 
+                      variant="secondary" 
+                      className={`ml-2 text-xs px-2 py-0.5 ${getRoleColor(user.role)}`}
+                    >
+                      {user.role}
+                    </Badge>
+                  </div>
                 </SelectItem>
               ))}
             </SelectContent>

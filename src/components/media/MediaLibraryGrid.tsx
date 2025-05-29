@@ -1,3 +1,4 @@
+
 import { useState, useRef } from "react";
 import { useMediaLibrary } from "@/hooks";
 import { MediaFile } from "@/hooks/media-library/types";
@@ -10,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast } from "../ui/sonner";
 
 // Define types for our profiles
 interface Profile {
@@ -146,17 +147,18 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
 
   const allSelected = selectedFiles.length === mediaFiles.length;
   const someSelected = selectedFiles.length > 0 && selectedFiles.length < mediaFiles.length;
+  const deletingCount = deletingFiles.size;
 
   return (
     <>
-      {/* Loading overlay when deleting files */}
-      {deletingFiles.size > 0 && (
+      {/* Loading overlay when deleting files - with dynamic count */}
+      {deletingCount > 0 && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 shadow-lg">
             <div className="flex items-center gap-3">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
               <p className="text-sm text-gray-600">
-                Deleting {deletingFiles.size} file{deletingFiles.size > 1 ? 's' : ''}...
+                Deleting {deletingCount} file{deletingCount > 1 ? 's' : ''}...
               </p>
             </div>
           </div>

@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -107,6 +108,12 @@ h1, .font-heading, .font-outfit {
   --bm-button-border-color: #c4cdd5;
   --bm-button-border-radius: 10px;
   --bm-button-hover-bg: #f6f6f7;
+
+  /* Toast progress bar animation */
+  @keyframes progress {
+    from { width: 100%; }
+    to { width: 0%; }
+  }
 }
 
 @layer base {
@@ -145,5 +152,10 @@ h1, .font-heading, .font-outfit {
 
   .BarangayMo-Button:disabled {
     @apply bg-muted text-muted-foreground cursor-not-allowed;
+  }
+
+  /* Toast progress bar styles */
+  .toast-progress {
+    animation: progress 4s linear forwards;
   }
 }
