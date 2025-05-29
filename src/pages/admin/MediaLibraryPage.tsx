@@ -3,7 +3,7 @@ import { AdminLayout } from "@/components/layout/AdminLayout";
 import { MediaLibraryTable } from "@/components/media/MediaLibraryTable";
 import { MediaLibraryGrid } from "@/components/media/MediaLibraryGrid";
 import { Button } from "@/components/ui/button";
-import { Upload, List, Grid, Search } from "lucide-react";
+import { Upload, List, Grid, Search, Filter } from "lucide-react";
 import { useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -22,6 +22,7 @@ export default function MediaLibraryPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [uploadingFiles, setUploadingFiles] = useState<any[]>([]);
 
   // Get media files count
   const { mediaFiles, loadingFiles, refetch } = useMediaLibrary(filters, searchQuery);
@@ -32,6 +33,10 @@ export default function MediaLibraryPage() {
     setRefreshKey(prev => prev + 1);
     refetch();
     console.log("Gallery refreshed after upload completion");
+  };
+
+  const handleUploadStart = (files: any[]) => {
+    setUploadingFiles(files);
   };
 
   return (
@@ -51,7 +56,7 @@ export default function MediaLibraryPage() {
           
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
                 placeholder="Search media..." 
                 value={searchQuery}
@@ -64,10 +69,11 @@ export default function MediaLibraryPage() {
               <Sheet>
                 <SheetTrigger asChild>
                   <Button variant="outline" size="sm" className="h-12 px-4">
+                    <Filter className="h-4 w-4 mr-2" />
                     Filters
                   </Button>
                 </SheetTrigger>
-                <SheetContent className="w-80">
+                <SheetContent className="w-96 overflow-y-auto">
                   <SheetHeader>
                     <SheetTitle>Filter Media</SheetTitle>
                   </SheetHeader>
@@ -114,12 +120,14 @@ export default function MediaLibraryPage() {
             key={`table-${refreshKey}`}
             filters={filters}
             searchQuery={searchQuery} 
+            uploadingFiles={uploadingFiles}
           />
         ) : (
           <MediaLibraryGrid 
             key={`grid-${refreshKey}`}
             filters={filters}
             searchQuery={searchQuery} 
+            uploadingFiles={uploadingFiles}
           />
         )}
 
@@ -127,6 +135,7 @@ export default function MediaLibraryPage() {
           open={uploadDialogOpen}
           onClose={() => setUploadDialogOpen(false)}
           onUploadComplete={handleUploadComplete}
+          onUploadStart={handleUploadStart}
         />
       </div>
     </AdminLayout>

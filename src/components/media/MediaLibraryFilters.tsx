@@ -6,10 +6,18 @@ import { Calendar } from "@/components/ui/calendar";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
-import { X, Users, FolderOpen, CalendarDays, Filter } from "lucide-react";
+import { X, Users, FolderOpen, CalendarDays, Filter, Image, Video, Music, FileText, File, Search } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 export function MediaLibraryFilters({ filters, onFiltersChange }) {
   const [localFilters, setLocalFilters] = useState(filters);
+  const [userSearchOpen, setUserSearchOpen] = useState(false);
+  const [categorySearchOpen, setCategorySearchOpen] = useState(false);
+  const [userSearch, setUserSearch] = useState("");
+  const [categorySearch, setCategorySearch] = useState("");
 
   // Fetch users with their roles for filtering
   const { data: users } = useQuery({
@@ -17,12 +25,20 @@ export function MediaLibraryFilters({ filters, onFiltersChange }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, role');
+        .select('id, first_name, last_name, role, avatar_url');
       
       if (error) throw error;
       return data;
     }
   });
+
+  const categories = [
+    { value: 'image', label: 'Image', icon: Image, color: 'text-blue-500' },
+    { value: 'video', label: 'Video', icon: Video, color: 'text-purple-500' },
+    { value: 'audio', label: 'Audio', icon: Music, color: 'text-green-500' },
+    { value: 'document', label: 'Document', icon: FileText, color: 'text-orange-500' },
+    { value: 'other', label: 'Other', icon: File, color: 'text-gray-500' }
+  ];
 
   const handleApplyFilters = () => {
     onFiltersChange(localFilters);
@@ -37,20 +53,6 @@ export function MediaLibraryFilters({ filters, onFiltersChange }) {
     };
     setLocalFilters(clearedFilters);
     onFiltersChange(clearedFilters);
-  };
-
-  const handleUserChange = (value: string) => {
-    setLocalFilters(prev => ({ 
-      ...prev, 
-      user: value === "all" ? null : value 
-    }));
-  };
-
-  const handleCategoryChange = (value: string) => {
-    setLocalFilters(prev => ({ 
-      ...prev, 
-      category: value === "all" ? null : value 
-    }));
   };
 
   const hasActiveFilters = localFilters.user || localFilters.category || localFilters.startDate || localFilters.endDate;
@@ -69,6 +71,23 @@ export function MediaLibraryFilters({ filters, onFiltersChange }) {
         return 'bg-gray-100 text-gray-700';
     }
   };
+
+  const getInitials = (firstName: string | null, lastName: string | null) => {
+    const first = firstName?.charAt(0).toUpperCase() || '';
+    const last = lastName?.charAt(0).toUpperCase() || '';
+    return first + last;
+  };
+
+  const filteredUsers = users?.filter(user => 
+    `${user.first_name} ${user.last_name}`.toLowerCase().includes(userSearch.toLowerCase())
+  );
+
+  const filteredCategories = categories.filter(category =>
+    category.label.toLowerCase().includes(categorySearch.toLowerCase())
+  );
+
+  const selectedUser = users?.find(user => user.id === localFilters.user);
+  const selectedCategory = categories.find(cat => cat.value === localFilters.category);
 
   return (
     <div className="space-y-6">
@@ -98,7 +117,7 @@ export function MediaLibraryFilters({ filters, onFiltersChange }) {
             {localFilters.user && (
               <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
                 <Users className="h-3 w-3 mr-1" />
-                User: {users?.find(u => u.id === localFilters.user)?.first_name || 'Unknown'}
+                User: {selectedUser?.first_name || 'Unknown'}
                 <X 
                   className="h-3 w-3 ml-1 cursor-pointer hover:text-blue-600"
                   onClick={() => setLocalFilters(prev => ({ ...prev, user: null }))}
@@ -108,7 +127,7 @@ export function MediaLibraryFilters({ filters, onFiltersChange }) {
             {localFilters.category && (
               <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
                 <FolderOpen className="h-3 w-3 mr-1" />
-                Category: {localFilters.category}
+                Category: {selectedCategory?.label}
                 <X 
                   className="h-3 w-3 ml-1 cursor-pointer hover:text-blue-600"
                   onClick={() => setLocalFilters(prev => ({ ...prev, category: null }))}
@@ -138,30 +157,76 @@ export function MediaLibraryFilters({ filters, onFiltersChange }) {
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
-          <Select 
-            value={localFilters.user || "all"}
-            onValueChange={handleUserChange}
-          >
-            <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500">
-              <SelectValue placeholder="All users" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All users</SelectItem>
-              {users?.map(user => (
-                <SelectItem key={user.id} value={user.id}>
-                  <div className="flex items-center justify-between w-full">
-                    <span>{user.first_name} {user.last_name}</span>
-                    <Badge 
-                      variant="secondary" 
-                      className={`ml-2 text-xs px-2 py-0.5 ${getRoleColor(user.role)}`}
-                    >
-                      {user.role}
+          <Popover open={userSearchOpen} onOpenChange={setUserSearchOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={userSearchOpen}
+                className="w-full justify-between border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+              >
+                {selectedUser ? (
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage src={selectedUser.avatar_url} />
+                      <AvatarFallback className="text-xs">
+                        {getInitials(selectedUser.first_name, selectedUser.last_name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span>{selectedUser.first_name} {selectedUser.last_name}</span>
+                    <Badge className={`text-xs px-2 py-0.5 ${getRoleColor(selectedUser.role)}`}>
+                      {selectedUser.role}
                     </Badge>
                   </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                ) : (
+                  "All users"
+                )}
+                <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-0" align="start">
+              <Command>
+                <CommandInput placeholder="Search users..." value={userSearch} onValueChange={setUserSearch} />
+                <CommandList>
+                  <CommandEmpty>No users found.</CommandEmpty>
+                  <CommandGroup>
+                    <CommandItem
+                      value="all"
+                      onSelect={() => {
+                        setLocalFilters(prev => ({ ...prev, user: null }));
+                        setUserSearchOpen(false);
+                      }}
+                    >
+                      All users
+                    </CommandItem>
+                    {filteredUsers?.map(user => (
+                      <CommandItem
+                        key={user.id}
+                        value={user.id}
+                        onSelect={() => {
+                          setLocalFilters(prev => ({ ...prev, user: user.id }));
+                          setUserSearchOpen(false);
+                        }}
+                      >
+                        <div className="flex items-center gap-2 w-full">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={user.avatar_url} />
+                            <AvatarFallback className="text-xs">
+                              {getInitials(user.first_name, user.last_name)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="flex-1">{user.first_name} {user.last_name}</span>
+                          <Badge className={`text-xs px-2 py-0.5 ${getRoleColor(user.role)}`}>
+                            {user.role}
+                          </Badge>
+                        </div>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </CardContent>
       </Card>
 
@@ -174,22 +239,60 @@ export function MediaLibraryFilters({ filters, onFiltersChange }) {
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
-          <Select 
-            value={localFilters.category || "all"}
-            onValueChange={handleCategoryChange}
-          >
-            <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500">
-              <SelectValue placeholder="All categories" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All categories</SelectItem>
-              {['image', 'video', 'audio', 'document', 'other'].map(category => (
-                <SelectItem key={category} value={category}>
-                  {category.charAt(0).toUpperCase() + category.slice(1)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover open={categorySearchOpen} onOpenChange={setCategorySearchOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={categorySearchOpen}
+                className="w-full justify-between border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+              >
+                {selectedCategory ? (
+                  <div className="flex items-center gap-2">
+                    <selectedCategory.icon className={`h-4 w-4 ${selectedCategory.color}`} />
+                    <span>{selectedCategory.label}</span>
+                  </div>
+                ) : (
+                  "All categories"
+                )}
+                <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-0" align="start">
+              <Command>
+                <CommandInput placeholder="Search categories..." value={categorySearch} onValueChange={setCategorySearch} />
+                <CommandList>
+                  <CommandEmpty>No categories found.</CommandEmpty>
+                  <CommandGroup>
+                    <CommandItem
+                      value="all"
+                      onSelect={() => {
+                        setLocalFilters(prev => ({ ...prev, category: null }));
+                        setCategorySearchOpen(false);
+                      }}
+                    >
+                      All categories
+                    </CommandItem>
+                    {filteredCategories.map(category => (
+                      <CommandItem
+                        key={category.value}
+                        value={category.value}
+                        onSelect={() => {
+                          setLocalFilters(prev => ({ ...prev, category: category.value }));
+                          setCategorySearchOpen(false);
+                        }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <category.icon className={`h-4 w-4 ${category.color}`} />
+                          <span>{category.label}</span>
+                        </div>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </CardContent>
       </Card>
 

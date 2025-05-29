@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "../ui/sonner";
+import { Progress } from "@/components/ui/progress";
 
 // Define types for our profiles
 interface Profile {
@@ -34,9 +35,10 @@ interface MediaLibraryFilters {
 interface MediaLibraryGridProps {
   filters: MediaLibraryFilters;
   searchQuery?: string;
+  uploadingFiles?: any[];
 }
 
-export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGridProps) {
+export function MediaLibraryGrid({ filters, searchQuery = "", uploadingFiles = [] }: MediaLibraryGridProps) {
   const [selectedMedia, setSelectedMedia] = useState<MediaFileWithProfile | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
@@ -58,8 +60,26 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
     refetch
   } = useMediaLibrary(filters, searchQuery);
 
+  // Combine actual files with uploading files for display
+  const allFiles = [...(mediaFiles || []), ...uploadingFiles.map(upload => ({
+    id: upload.id,
+    filename: upload.file.name,
+    file_url: '',
+    bucket_name: 'user_uploads',
+    content_type: upload.file.type,
+    file_size: upload.file.size,
+    uploaded_at: new Date().toISOString(),
+    user_id: '',
+    category: 'uploading',
+    signedUrl: null,
+    isUploading: true,
+    progress: upload.progress
+  }))];
+
   // Enhanced toggle function with range selection support
   const handleToggleFileSelection = (file: MediaFile, index: number, event: React.MouseEvent) => {
+    if (file.isUploading) return; // Don't allow selection of uploading files
+    
     if ((event.shiftKey || event.metaKey || event.ctrlKey) && lastSelectedIndex.current !== null && mediaFiles) {
       // Range selection
       const start = Math.min(lastSelectedIndex.current, index);
@@ -141,12 +161,12 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
     return <LoadingState />;
   }
 
-  if (!mediaFiles?.length) {
+  if (!allFiles?.length) {
     return <EmptyMediaState />;
   }
 
-  const allSelected = selectedFiles.length === mediaFiles.length;
-  const someSelected = selectedFiles.length > 0 && selectedFiles.length < mediaFiles.length;
+  const allSelected = mediaFiles && mediaFiles.length > 0 && selectedFiles.length === mediaFiles.length;
+  const someSelected = selectedFiles.length > 0 && mediaFiles && selectedFiles.length < mediaFiles.length;
   const deletingCount = deletingFiles.size;
 
   return (
@@ -205,17 +225,35 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
       )}
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        {mediaFiles.map((file, index) => (
-          <MediaFileCard 
-            key={file.id} 
-            file={file}
-            index={index}
-            onSelect={(file) => setSelectedMedia(file as MediaFileWithProfile)}
-            onToggleSelect={(event) => handleToggleFileSelection(file, index, event)}
-            isSelected={selectedFiles.includes(file.id)}
-            isDeleting={isDeleting(file.id)}
-          />
-        ))}
+        {allFiles.map((file, index) => {
+          if (file.isUploading) {
+            // Render uploading file card
+            return (
+              <div key={file.id} className="border border-dashed border-blue-300 rounded-lg p-2 bg-blue-50">
+                <div className="aspect-square bg-blue-100 rounded flex items-center justify-center mb-2">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs text-gray-600 truncate">{file.filename}</p>
+                  <Progress value={file.progress} className="h-1" />
+                  <p className="text-xs text-blue-600">{file.progress}% uploaded</p>
+                </div>
+              </div>
+            );
+          }
+          
+          return (
+            <MediaFileCard 
+              key={file.id} 
+              file={file}
+              index={index}
+              onSelect={(file) => setSelectedMedia(file as MediaFileWithProfile)}
+              onToggleSelect={(event) => handleToggleFileSelection(file, index, event)}
+              isSelected={selectedFiles.includes(file.id)}
+              isDeleting={isDeleting(file.id)}
+            />
+          );
+        })}
       </div>
 
       {/* Media details dialog */}

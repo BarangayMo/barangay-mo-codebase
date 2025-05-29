@@ -13,6 +13,7 @@ interface MediaUploadDialogProps {
   open: boolean;
   onClose: () => void;
   onUploadComplete: () => void;
+  onUploadStart?: (files: { id: string; file: File; progress: number; status: 'uploading' }[]) => void;
 }
 
 // Inspiring/humorous quotes for upload screen
@@ -39,7 +40,7 @@ interface FileUpload {
   xhr?: XMLHttpRequest;
 }
 
-export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUploadDialogProps) {
+export function MediaUploadDialog({ open, onClose, onUploadComplete, onUploadStart }: MediaUploadDialogProps) {
   const { user, session } = useAuth();
   const [uploads, setUploads] = useState<FileUpload[]>([]);
   const [quote, setQuote] = useState(() => UPLOAD_QUOTES[Math.floor(Math.random() * UPLOAD_QUOTES.length)]);
@@ -55,6 +56,14 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
       }));
       
       setUploads(current => [...current, ...newUploads]);
+      
+      // Notify parent component about upload start
+      if (onUploadStart) {
+        onUploadStart(newUploads);
+      }
+      
+      // Close modal immediately
+      onClose();
       
       // Process each file upload
       newUploads.forEach(upload => handleFileUpload(upload));
@@ -86,32 +95,50 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
       console.log(`Bucket: user_uploads`);
       console.log(`Path: ${filePath}`);
       
-      // Start progress simulation
-      const progressInterval = setInterval(() => {
-        setUploads(current => 
-          current.map(u => 
-            u.id === upload.id 
-              ? { ...u, progress: Math.min(u.progress + 15, 90) }
-              : u
-          )
-        );
-      }, 200);
+      // Real progress tracking with XMLHttpRequest
+      const xhr = new XMLHttpRequest();
+      
+      // Update upload with xhr reference for cancellation
+      updateUpload(upload.id, { xhr });
+      
+      // Track real upload progress
+      xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+          const percentComplete = Math.round((event.loaded / event.total) * 100);
+          updateUpload(upload.id, { progress: percentComplete });
+        }
+      });
 
-      // Upload the file using Supabase Storage - FIXED: Always use 'user_uploads' bucket
-      const { data, error } = await supabase.storage
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Get upload URL from Supabase
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('user_uploads')
-        .upload(filePath, file, {
-          cacheControl: '3600'
-        });
+        .createSignedUploadUrl(filePath);
 
-      clearInterval(progressInterval);
+      if (uploadError) throw uploadError;
 
-      if (error) {
-        console.error("Storage upload error:", error);
-        throw error;
-      }
+      // Upload using XMLHttpRequest for real progress tracking
+      await new Promise<void>((resolve, reject) => {
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve();
+          } else {
+            reject(new Error(`Upload failed with status ${xhr.status}`));
+          }
+        };
+        
+        xhr.onerror = () => reject(new Error('Upload failed'));
+        xhr.onabort = () => reject(new Error('Upload cancelled'));
+        
+        xhr.open('PUT', uploadData.signedUrl);
+        xhr.setRequestHeader('Content-Type', file.type);
+        xhr.send(file);
+      });
 
-      console.log("File uploaded successfully:", data);
+      console.log("File uploaded successfully");
 
       // Get the signed URL for the file (valid for 7 days)
       const { data: urlData, error: urlError } = await supabase.storage
@@ -122,7 +149,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
         console.warn("Could not create signed URL:", urlError);
       }
 
-      // Save media file metadata to database - FIXED: Store the full path as file_url
+      // Save media file metadata to database
       const { error: dbError } = await supabase
         .from('media_files')
         .insert({
@@ -130,7 +157,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
           category: determineCategory(file.type),
           content_type: file.type,
           filename: file.name,
-          file_url: filePath, // Store the complete path within the bucket
+          file_url: filePath,
           file_size: file.size
         });
 
@@ -149,6 +176,9 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
         url: urlData?.signedUrl,
         message: 'Upload completed successfully' 
       });
+      
+      // Trigger gallery refresh
+      onUploadComplete();
       
       setTimeout(() => {
         setUploads(current => current.filter(u => u.id !== upload.id));
@@ -244,216 +274,41 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-[0_10px_50px_-15px_rgba(0,0,0,0.3)] rounded-xl">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">Upload Media</DialogTitle>
         </DialogHeader>
         
         <div className="flex-1 overflow-y-auto p-1">
-          {uploads.length === 0 && (
-            <div 
-              {...getRootProps()} 
-              className={`
-                border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all 
-                flex flex-col items-center justify-center min-h-[300px]
-                ${isDragActive 
-                  ? 'border-blue-500 bg-blue-50 shadow-[0_0_0_1px_rgba(59,130,246,0.3),0_0_0_4px_rgba(59,130,246,0.1)]' 
-                  : 'border-gray-300 hover:border-blue-500 hover:shadow-[0_0_0_1px_rgba(59,130,246,0.2),0_0_0_4px_rgba(59,130,246,0.05)]'
-                }
-              `}
+          <div 
+            {...getRootProps()} 
+            className={`
+              border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all 
+              flex flex-col items-center justify-center min-h-[300px]
+              ${isDragActive 
+                ? 'border-blue-500 bg-blue-50 shadow-[0_0_0_1px_rgba(59,130,246,0.3),0_0_0_4px_rgba(59,130,246,0.1)]' 
+                : 'border-gray-300 hover:border-blue-500 hover:shadow-[0_0_0_1px_rgba(59,130,246,0.2),0_0_0_4px_rgba(59,130,246,0.05)]'
+              }
+            `}
+          >
+            <input {...getInputProps()} />
+            <div className="p-6 rounded-full bg-blue-50 mb-6 shadow-[0_0_20px_5px_rgba(59,130,246,0.1)]">
+              <UploadCloud className="h-12 w-12 text-blue-500" />
+            </div>
+            <h3 className="text-xl font-medium mb-2">
+              {isDragActive ? 'Drop files here' : 'Drag & drop files here'}
+            </h3>
+            <p className="text-sm text-gray-500 mb-6 max-w-md">
+              Upload your images, documents, and other files by dropping them here or click to browse your files
+            </p>
+            <Button 
+              size="lg" 
+              className="bg-blue-500 hover:bg-blue-600 text-white shadow-[0_6px_16px_rgba(59,130,246,0.3),0_2px_8px_rgba(59,130,246,0.15)] hover:shadow-[0_8px_20px_rgba(59,130,246,0.4),0_4px_10px_rgba(59,130,246,0.2)] transition-all duration-200 rounded-lg"
             >
-              <input {...getInputProps()} />
-              <div className="p-6 rounded-full bg-blue-50 mb-6 shadow-[0_0_20px_5px_rgba(59,130,246,0.1)]">
-                <UploadCloud className="h-12 w-12 text-blue-500" />
-              </div>
-              <h3 className="text-xl font-medium mb-2">
-                {isDragActive ? 'Drop files here' : 'Drag & drop files here'}
-              </h3>
-              <p className="text-sm text-gray-500 mb-6 max-w-md">
-                Upload your images, documents, and other files by dropping them here or click to browse your files
-              </p>
-              <Button 
-                size="lg" 
-                className="bg-blue-500 hover:bg-blue-600 text-white shadow-[0_6px_16px_rgba(59,130,246,0.3),0_2px_8px_rgba(59,130,246,0.15)] hover:shadow-[0_8px_20px_rgba(59,130,246,0.4),0_4px_10px_rgba(59,130,246,0.2)] transition-all duration-200 rounded-lg"
-              >
-                Browse Files
-              </Button>
-            </div>
-          )}
-          
-          {uploads.length > 0 && (
-            <div className="space-y-6">
-              <div className="flex flex-col items-center justify-center pb-6 pt-4">
-                <p className="text-lg text-center text-blue-600 font-medium italic mb-2">"{quote}"</p>
-                <p className="text-sm text-gray-500">
-                  {uploads.filter(u => u.status === 'uploading').length} file(s) uploading
-                </p>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-80 overflow-y-auto p-2">
-                {uploads.map(upload => {
-                  const filePreview = getFilePreview(upload.file);
-                  
-                  return (
-                    <div 
-                      key={upload.id} 
-                      className={`
-                        border rounded-lg p-4 relative transition-all shadow-sm hover:shadow
-                        ${upload.status === 'error' ? 'border-red-300 bg-red-50' : ''}
-                        ${upload.status === 'success' ? 'border-green-300 bg-green-50' : ''}
-                      `}
-                    >
-                      {/* Cancel button for uploads in progress */}
-                      {upload.status === 'uploading' && (
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="absolute top-1 right-1 h-6 w-6 p-0 rounded-full hover:bg-gray-200 z-30" 
-                          onClick={() => cancelUpload(upload.id)}
-                        >
-                          <X className="h-4 w-4" />
-                          <span className="sr-only">Cancel</span>
-                        </Button>
-                      )}
-                      
-                      <div className="flex items-start gap-3 mb-3">
-                        <div className="relative w-16 h-16 flex-shrink-0">
-                          {filePreview ? (
-                            <div className="w-16 h-16 rounded-md overflow-hidden bg-gray-50 relative">
-                              <img 
-                                src={filePreview} 
-                                alt={upload.file.name} 
-                                className="w-full h-full object-contain"
-                              />
-                              {upload.status === 'uploading' && (
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                  <div className="relative h-12 w-12">
-                                    <div 
-                                      className="absolute inset-0 rounded-full border-2 border-transparent"
-                                      style={{
-                                        borderTopColor: '#3b82f6',
-                                        borderRightColor: '#3b82f6',
-                                        transform: `rotate(${upload.progress * 3.6}deg)`,
-                                        transition: 'transform 0.2s ease',
-                                      }}
-                                    ></div>
-                                    <div className="absolute inset-1 bg-white/80 rounded-full flex items-center justify-center text-xs font-medium text-blue-600">
-                                      {Math.round(upload.progress)}%
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                              {upload.status === 'success' && (
-                                <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center">
-                                  <CheckCircle className="h-8 w-8 text-green-600" />
-                                </div>
-                              )}
-                              {upload.status === 'error' && (
-                                <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center">
-                                  <AlertOctagon className="h-8 w-8 text-red-600" />
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="w-16 h-16 rounded-md flex items-center justify-center bg-gray-100">
-                              {getFileIcon(upload.file.type)}
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{upload.file.name}</p>
-                          <p className="text-xs text-gray-500">{Math.round(upload.file.size / 1024)} KB</p>
-                          
-                          {upload.status === 'uploading' && !filePreview && (
-                            <div className="mt-2 w-full">
-                              <div className="h-1.5 w-full bg-gray-100 rounded overflow-hidden">
-                                <div 
-                                  className="h-full bg-blue-500 transition-all duration-300 ease-out" 
-                                  style={{ width: `${upload.progress}%` }}
-                                ></div>
-                              </div>
-                              <div className="flex justify-between items-center mt-1">
-                                <p className="text-xs text-gray-500">Uploading...</p>
-                                <p className="text-xs font-medium">{upload.progress}%</p>
-                              </div>
-                            </div>
-                          )}
-                          
-                          {upload.status === 'error' && (
-                            <div className="flex items-center gap-2 mt-2 text-red-600">
-                              <AlertOctagon className="h-4 w-4" />
-                              <p className="text-xs">{upload.message}</p>
-                            </div>
-                          )}
-                          
-                          {upload.status === 'success' && (
-                            <div className="flex items-center gap-2 mt-2 text-green-600">
-                              <CheckCircle className="h-4 w-4" />
-                              <p className="text-xs">Upload complete</p>
-                            </div>
-                          )}
-                        </div>
-                        
-                        {upload.status !== 'uploading' && (
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-7 w-7 p-0 flex-shrink-0" 
-                            onClick={() => cancelUpload(upload.id)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              
-              <div className="flex justify-between pt-4 border-t">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    if (uploads.some(u => u.status === 'uploading')) {
-                      toast.info("Waiting for uploads to complete");
-                      return;
-                    }
-                    setUploads([]);
-                  }}
-                  className="mr-2 rounded-lg"
-                  disabled={uploads.some(u => u.status === 'uploading')}
-                >
-                  Clear All
-                </Button>
-
-                {isDragActive && (
-                  <div className="flex-1 flex items-center justify-center">
-                    <p className="text-sm font-medium text-blue-600">Drop files to upload</p>
-                  </div>
-                )}
-
-                <div className="flex gap-2">
-                  <div {...getRootProps()}>
-                    <input {...getInputProps()} />
-                    <Button 
-                      variant="outline"
-                      className="shadow-sm hover:shadow-md rounded-lg"
-                    >
-                      Add More Files
-                    </Button>
-                  </div>
-                  <Button
-                    disabled={uploads.some(u => u.status === 'uploading')}
-                    onClick={handleClose}
-                    className="bg-blue-500 hover:bg-blue-600 text-white shadow-[0_4px_12px_rgba(59,130,246,0.2),0_2px_6px_rgba(59,130,246,0.15)] hover:shadow-[0_6px_16px_rgba(59,130,246,0.3),0_3px_8px_rgba(59,130,246,0.2)] transition-all duration-200 rounded-lg"
-                  >
-                    {uploads.some(u => u.status === 'uploading') ? 'Uploading...' : 'Done'}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
+              Browse Files
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
