@@ -2,10 +2,23 @@
 import { useState } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { DashboardPageHeader } from "@/components/dashboard/PageHeader";
-import { DashboardStats } from "@/components/dashboard/overview/DashboardStats";
+import { EnhancedDashboardStats } from "@/components/dashboard/overview/EnhancedDashboardStats";
 import { SystemGrowthChart } from "@/components/dashboard/overview/SystemGrowthChart";
 import { UserDistributionChart } from "@/components/dashboard/overview/UserDistributionChart";
+import { ModernTabs } from "@/components/dashboard/ModernTabs";
+import { LatestUsersTab } from "@/components/dashboard/tabs/LatestUsersTab";
+import { LatestProductsTab } from "@/components/dashboard/tabs/LatestProductsTab";
+import { MembershipRequestsTab } from "@/components/dashboard/tabs/MembershipRequestsTab";
+import { SupportTicketsTab } from "@/components/dashboard/tabs/SupportTicketsTab";
+import { TabsContent } from "@/components/ui/tabs";
 import { useMediaLibrary } from "@/hooks";
+import { 
+  BarChart, 
+  Users, 
+  Package, 
+  UserPlus, 
+  MessageSquare 
+} from "lucide-react";
 
 const AdminDashboard = () => {
   const [dateRange, setDateRange] = useState<'today' | 'week' | 'month' | 'quarter'>('week');
@@ -37,6 +50,14 @@ const AdminDashboard = () => {
     { name: 'Admins', value: 12, color: '#f59e0b' },
   ];
 
+  const tabItems = [
+    { value: "overview", label: "Overview", icon: <BarChart className="h-4 w-4" /> },
+    { value: "users", label: "Latest Users", icon: <Users className="h-4 w-4" /> },
+    { value: "products", label: "Latest Products", icon: <Package className="h-4 w-4" /> },
+    { value: "membership", label: "Membership Requests", icon: <UserPlus className="h-4 w-4" /> },
+    { value: "support", label: "Support Tickets", icon: <MessageSquare className="h-4 w-4" /> },
+  ];
+
   console.log(`Preloading media library data: ${loadingFiles ? 'Loading...' : `${mediaFiles?.length || 0} files loaded`}`);
 
   return (
@@ -48,16 +69,36 @@ const AdminDashboard = () => {
           breadcrumbItems={[{ label: "Dashboard" }]}
         />
 
-        <DashboardStats platformData={platformData} />
+        <EnhancedDashboardStats />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-          <SystemGrowthChart 
-            platformData={platformData}
-            dateRange={dateRange}
-            setDateRange={setDateRange}
-          />
-          <UserDistributionChart userDistribution={userDistribution} />
-        </div>
+        <ModernTabs defaultValue="overview" items={tabItems}>
+          <TabsContent value="overview" className="space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <SystemGrowthChart 
+                platformData={platformData}
+                dateRange={dateRange}
+                setDateRange={setDateRange}
+              />
+              <UserDistributionChart userDistribution={userDistribution} />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="users">
+            <LatestUsersTab />
+          </TabsContent>
+          
+          <TabsContent value="products">
+            <LatestProductsTab />
+          </TabsContent>
+          
+          <TabsContent value="membership">
+            <MembershipRequestsTab />
+          </TabsContent>
+          
+          <TabsContent value="support">
+            <SupportTicketsTab />
+          </TabsContent>
+        </ModernTabs>
       </div>
     </AdminLayout>
   );
