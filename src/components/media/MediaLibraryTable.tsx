@@ -1,5 +1,4 @@
-
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatDistanceToNow } from "date-fns";
@@ -38,6 +37,7 @@ export function MediaLibraryTable({
 }: MediaLibraryTableProps) {
   const [selectedMedia, setSelectedMedia] = useState<MediaFileWithProfile | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const lastSelectedIndex = useRef<number | null>(null);
 
   const {
     mediaFiles: files,
@@ -62,6 +62,27 @@ export function MediaLibraryTable({
     }
   }, [files]);
 
+  // Enhanced toggle function with range selection support
+  const handleToggleFileSelection = (file: MediaFile, index: number, event: React.MouseEvent) => {
+    if ((event.shiftKey || event.metaKey || event.ctrlKey) && lastSelectedIndex.current !== null && files) {
+      // Range selection
+      const start = Math.min(lastSelectedIndex.current, index);
+      const end = Math.max(lastSelectedIndex.current, index);
+      
+      // Select all files in the range
+      for (let i = start; i <= end; i++) {
+        const fileInRange = files[i];
+        if (fileInRange && !selectedFiles.includes(fileInRange.id)) {
+          toggleFileSelection(fileInRange.id);
+        }
+      }
+    } else {
+      // Single selection
+      toggleFileSelection(file.id);
+      lastSelectedIndex.current = index;
+    }
+  };
+
   // Handler for deleting the selected media
   const handleConfirmDelete = () => {
     if (selectedMedia) {
@@ -75,12 +96,19 @@ export function MediaLibraryTable({
     }
   };
 
-  // Handle row click
-  const handleRowClick = (file: MediaFile, e: React.MouseEvent) => {
+  // Handle row click with enhanced selection support
+  const handleRowClick = (file: MediaFile, index: number, e: React.MouseEvent) => {
     // Don't open dialog if clicking on checkbox
     if ((e.target as HTMLElement).closest('[data-checkbox]')) {
       return;
     }
+    
+    // Check if we're in selection mode (any files selected)
+    if (selectedFiles.length > 0 || e.shiftKey || e.metaKey || e.ctrlKey) {
+      handleToggleFileSelection(file, index, e);
+      return;
+    }
+    
     setSelectedMedia(file as MediaFileWithProfile);
   };
 
@@ -117,6 +145,7 @@ export function MediaLibraryTable({
                 <Checkbox 
                   checked={files && files.length > 0 && selectedFiles.length === files.length}
                   onCheckedChange={() => toggleAllFiles(files)}
+                  className="h-4 w-4"
                 />
               </TableHead>
               <TableHead>File name</TableHead>
@@ -127,17 +156,18 @@ export function MediaLibraryTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {files.map((file) => (
+            {files.map((file, index) => (
               <TableRow 
                 key={file.id} 
                 className="cursor-pointer hover:bg-gray-50"
-                onClick={(e) => handleRowClick(file, e)}
+                onClick={(e) => handleRowClick(file, index, e)}
               >
                 <TableCell>
                   <div data-checkbox onClick={(e) => e.stopPropagation()}>
                     <Checkbox 
                       checked={selectedFiles.includes(file.id)}
-                      onCheckedChange={() => toggleFileSelection(file.id)}
+                      onCheckedChange={(e) => handleToggleFileSelection(file, index, e as any)}
+                      className="h-4 w-4"
                     />
                   </div>
                 </TableCell>

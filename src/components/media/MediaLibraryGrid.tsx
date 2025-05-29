@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useMediaLibrary } from "@/hooks";
 import { MediaFile } from "@/hooks/media-library/types";
 import { MediaFileCard } from "./grid/MediaFileCard";
@@ -38,6 +37,7 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
   const [selectedMedia, setSelectedMedia] = useState<MediaFileWithProfile | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const lastSelectedIndex = useRef<number | null>(null);
   
   const {
     mediaFiles,
@@ -53,6 +53,27 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
     handleDelete,
     handleCopyUrl
   } = useMediaLibrary(filters, searchQuery);
+
+  // Enhanced toggle function with range selection support
+  const handleToggleFileSelection = (file: MediaFile, index: number, event: React.MouseEvent) => {
+    if ((event.shiftKey || event.metaKey || event.ctrlKey) && lastSelectedIndex.current !== null && mediaFiles) {
+      // Range selection
+      const start = Math.min(lastSelectedIndex.current, index);
+      const end = Math.max(lastSelectedIndex.current, index);
+      
+      // Select all files in the range
+      for (let i = start; i <= end; i++) {
+        const fileInRange = mediaFiles[i];
+        if (fileInRange && !selectedFiles.includes(fileInRange.id)) {
+          toggleFileSelection(fileInRange.id);
+        }
+      }
+    } else {
+      // Single selection
+      toggleFileSelection(file.id);
+      lastSelectedIndex.current = index;
+    }
+  };
 
   // Handler for deleting the selected media
   const handleConfirmDelete = () => {
@@ -123,7 +144,7 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
             <Checkbox
               checked={allSelected}
               onCheckedChange={() => toggleAllFiles(mediaFiles)}
-              className={`${someSelected ? "data-[state=checked]:bg-blue-500" : ""} data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500`}
+              className={`${someSelected ? "data-[state=checked]:bg-blue-500" : ""} data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500 h-4 w-4`}
             />
             <span className="text-sm font-medium text-blue-800">
               {selectedFiles.length > 0 
@@ -156,12 +177,13 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
       )}
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        {mediaFiles.map((file) => (
+        {mediaFiles.map((file, index) => (
           <MediaFileCard 
             key={file.id} 
             file={file}
+            index={index}
             onSelect={(file) => setSelectedMedia(file as MediaFileWithProfile)}
-            onToggleSelect={() => toggleFileSelection(file.id)}
+            onToggleSelect={(event) => handleToggleFileSelection(file, index, event)}
             isSelected={selectedFiles.includes(file.id)}
             isDeleting={isDeleting(file.id)}
           />

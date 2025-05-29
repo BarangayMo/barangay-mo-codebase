@@ -7,9 +7,10 @@ import { cn } from "@/lib/utils";
 interface MediaFileCardProps {
   file: MediaFile;
   onSelect: (file: MediaFile) => void;
-  onToggleSelect?: () => void;
+  onToggleSelect?: (event: React.MouseEvent) => void;
   isSelected?: boolean;
   isDeleting?: boolean;
+  index?: number;
 }
 
 export function MediaFileCard({ 
@@ -17,20 +18,36 @@ export function MediaFileCard({
   onSelect, 
   onToggleSelect, 
   isSelected = false, 
-  isDeleting = false 
+  isDeleting = false,
+  index = 0
 }: MediaFileCardProps) {
   
   const handleCardClick = (e: React.MouseEvent) => {
-    // Prevent card click when clicking checkbox
-    if ((e.target as HTMLElement).closest('[data-checkbox]')) {
-      return;
+    // If we have selection functionality and any files are selected, treat card click as selection
+    if (onToggleSelect) {
+      // Check if shift key is pressed for range selection
+      if (e.shiftKey || e.metaKey || e.ctrlKey) {
+        onToggleSelect(e);
+        return;
+      }
+      
+      // If not holding modifier keys, check if we should select or open details
+      const hasSelectedFiles = document.querySelectorAll('[data-file-selected="true"]').length > 0;
+      
+      if (hasSelectedFiles || isSelected) {
+        // In selection mode - toggle selection
+        onToggleSelect(e);
+        return;
+      }
     }
+    
+    // Default behavior - open details
     onSelect(file);
   };
 
   const handleCheckboxClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onToggleSelect?.();
+    onToggleSelect?.(e);
   };
 
   return (
@@ -41,6 +58,8 @@ export function MediaFileCard({
         isSelected && "ring-2 ring-blue-500 ring-offset-2"
       )}
       onClick={handleCardClick}
+      data-file-selected={isSelected}
+      data-file-index={index}
     >
       {/* Selection checkbox */}
       {onToggleSelect && (
@@ -51,7 +70,7 @@ export function MediaFileCard({
         >
           <Checkbox
             checked={isSelected}
-            className="bg-white shadow-lg border border-gray-300 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500 h-5 w-5"
+            className="bg-white/90 shadow-lg border border-gray-300 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500 h-4 w-4"
           />
         </div>
       )}
