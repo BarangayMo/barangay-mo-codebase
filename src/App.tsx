@@ -6,7 +6,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "@/components/ui/enhanced-sonner";
 import { SupabaseWarning } from "@/components/ui/supabase-warning";
-import AppRoutes from "./AppRoutes";
+import { AppRoutes } from "./AppRoutes";
 import "./App.css";
 
 // Create a client
