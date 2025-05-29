@@ -1,3 +1,4 @@
+
 import { ReactNode, useEffect, useState } from "react";
 import { EnhancedSidebar } from "./EnhancedSidebar";
 import { cn } from "@/lib/utils";
@@ -72,21 +73,21 @@ export const AdminLayout = ({
       <div className="flex min-h-screen bg-gray-50 w-full overflow-x-hidden">
         <CommandPalette open={isCommandOpen} onOpenChange={setIsCommandOpen} />
         
-        <div className="hidden md:block fixed h-full z-20 bg-white border-r shadow-sm transition-all duration-300 ease-in-out", isSidebarCollapsed ? "w-16" : "w-64")}>
+        <div className={cn("hidden md:block fixed h-full z-20 bg-white border-r shadow-sm transition-all duration-300 ease-in-out", isSidebarCollapsed ? "w-16" : "w-64")}>
           <div className="flex flex-col h-full">
             <div className="flex items-center justify-center h-16 px-4 border-b">
               <Link to="/" className={cn("flex items-center", isSidebarCollapsed ? "justify-center w-full" : "justify-start")}>
                 <img alt="Logo" className="h-8 w-8" src="/lovable-uploads/4dd4bcf0-747b-4dfd-bdfe-159cabf43926.jpg" />
                 {!isSidebarCollapsed && <span className="ml-2 text-lg font-semibold"></span>}
               </Link>
-              {!isSidebarCollapsed}
             </div>
 
             <div className="flex-1 overflow-hidden">
               <EnhancedSidebar isCollapsed={isSidebarCollapsed} />
             </div>
 
-            {isSidebarCollapsed && <div className="absolute -right-3 top-1/2 transform -translate-y-1/2">
+            {isSidebarCollapsed && (
+              <div className="absolute -right-3 top-1/2 transform -translate-y-1/2">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant="outline" size="icon" onClick={() => setIsSidebarCollapsed(false)} className="rounded-full h-6 w-6 border bg-white shadow-md transition-transform duration-300 ease-in-out">
@@ -97,9 +98,11 @@ export const AdminLayout = ({
                     Expand Menu
                   </TooltipContent>
                 </Tooltip>
-              </div>}
+              </div>
+            )}
 
-            {!isSidebarCollapsed && <div className="absolute -right-3 top-1/2 transform -translate-y-1/2">
+            {!isSidebarCollapsed && (
+              <div className="absolute -right-3 top-1/2 transform -translate-y-1/2">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant="outline" size="icon" onClick={() => setIsSidebarCollapsed(true)} className="rounded-full h-6 w-6 border bg-white shadow-md transition-transform duration-300 ease-in-out">
@@ -110,7 +113,8 @@ export const AdminLayout = ({
                     Collapse Menu
                   </TooltipContent>
                 </Tooltip>
-              </div>}
+              </div>
+            )}
 
             <div className={cn("border-t p-4", isSidebarCollapsed ? "flex justify-center" : "")}>
               <DropdownMenu>
@@ -120,10 +124,12 @@ export const AdminLayout = ({
                       <AvatarImage src="" />
                       <AvatarFallback>AD</AvatarFallback>
                     </Avatar>
-                    {!isSidebarCollapsed && <div className="text-left">
+                    {!isSidebarCollapsed && (
+                      <div className="text-left">
                         <div className="font-medium text-sm">Admin User</div>
                         <div className="text-xs text-muted-foreground">Superadmin</div>
-                      </div>}
+                      </div>
+                    )}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
@@ -193,7 +199,6 @@ export const AdminLayout = ({
               <div className="flex items-center h-16 px-4 border-b">
                 <Link to="/" className="flex items-center" onClick={() => setIsMobileMenuOpen(false)}>
                   <img alt="Logo" src="/lovable-uploads/02005d02-8f81-4c95-be8e-ba9d8eb3e0d1.jpg" className="h-8 w-8" />
-                  
                 </Link>
               </div>
               <div className="flex-1 overflow-hidden">
