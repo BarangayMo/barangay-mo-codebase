@@ -1,30 +1,18 @@
-// Final Shopify-style React component coming up...
-// Everything now structured for precision and visual alignment.
-// Rewriting full JSX with three-column layout, proper grouping, SEO preview, sticky Save button.
 
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import {
-  Input,
-  Textarea,
-  Button,
-  Label,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-  Badge,
-  Skeleton,
-  Separator
-} from "@/components/ui";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
 import { Plus, X } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 
@@ -104,29 +92,31 @@ const ProductEditPage = () => {
   }, [product]);
 
   const updateProduct = useMutation({
-    mutationFn: async (data) => {
+    mutationFn: async (data: any) => {
       const { error } = await supabase.from("products").update(data).eq("id", id);
       if (error) throw error;
+      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(["product", id]);
+      queryClient.invalidateQueries({ queryKey: ["product", id] });
       toast.success("Product updated.");
     },
-    onError: (err) => toast.error("Error: " + err.message)
+    onError: (err: any) => toast.error("Error: " + err.message)
   });
 
   const handleSave = () => {
-    updateProduct.mutate({
+    const updateData = {
       ...formData,
       price: parseFloat(formData.price) || 0,
       original_price: formData.original_price ? parseFloat(formData.original_price) : null,
       stock_quantity: parseInt(formData.stock_quantity) || 0
-    });
+    };
+    updateProduct.mutate(updateData);
   };
 
-  const handleChange = (key, value) => setFormData(prev => ({ ...prev, [key]: value }));
-  const addTag = (tag) => setFormData(prev => ({ ...prev, tags: [...prev.tags, tag] }));
-  const removeTag = (tag) => setFormData(prev => ({ ...prev, tags: prev.tags.filter(t => t !== tag) }));
+  const handleChange = (key: string, value: any) => setFormData(prev => ({ ...prev, [key]: value }));
+  const addTag = (tag: string) => setFormData(prev => ({ ...prev, tags: [...prev.tags, tag] }));
+  const removeTag = (tag: string) => setFormData(prev => ({ ...prev, tags: prev.tags.filter(t => t !== tag) }));
 
   if (isLoading) {
     return <AdminLayout title="Loading..."><Skeleton className="h-10 w-full" /></AdminLayout>;
@@ -142,11 +132,11 @@ const ProductEditPage = () => {
             <CardContent className="space-y-4">
               <div>
                 <Label>Title</Label>
-                <Input value={formData.name} onChange={(e) => handleChange("name", e.target.value)} />
+                <Input value={formData.name} onChange={(e) => handleChange("name", (e.target as HTMLInputElement).value)} />
               </div>
               <div>
                 <Label>Description</Label>
-                <Textarea value={formData.description} onChange={(e) => handleChange("description", e.target.value)} rows={4} />
+                <Textarea value={formData.description} onChange={(e) => handleChange("description", (e.target as HTMLTextAreaElement).value)} rows={4} />
               </div>
             </CardContent>
           </Card>
@@ -230,8 +220,9 @@ const ProductEditPage = () => {
               </div>
               <Input placeholder="Add tag..." onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  addTag(e.target.value);
-                  e.target.value = "";
+                  const target = e.target as HTMLInputElement;
+                  addTag(target.value);
+                  target.value = "";
                 }
               }} className="mt-2" />
             </CardContent>
