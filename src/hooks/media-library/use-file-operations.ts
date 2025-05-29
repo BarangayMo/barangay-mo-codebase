@@ -151,10 +151,10 @@ export function useFileOperations(refetch: () => void) {
     }
   }, [getBucketAndPath, ensureValidSession]);
 
-  // SIMPLIFIED DELETE - Focus on database deletion with extensive debugging
+  // FIXED DELETE - Verify database deletion before UI update
   const handleDelete = useCallback(async (fileId: string, bucketName: string, fileUrl: string): Promise<FileOperation> => {
     try {
-      console.log(`=== SIMPLIFIED DELETE OPERATION START ===`);
+      console.log(`=== VERIFIED DELETE OPERATION START ===`);
       console.log(`File ID: ${fileId}`);
       console.log(`Bucket: ${bucketName}`);
       console.log(`File URL: ${fileUrl}`);
@@ -170,8 +170,8 @@ export function useFileOperations(refetch: () => void) {
       
       console.log(`Current authenticated user ID: ${user.id}`);
 
-      // STEP 1: Check if the record exists and get its details
-      console.log(`STEP 1: Checking if record exists...`);
+      // STEP 1: Verify record exists and get user_id
+      console.log(`STEP 1: Checking if record exists and verifying ownership...`);
       const { data: existingRecord, error: fetchError } = await supabase
         .from('media_files')
         .select('*')
@@ -183,7 +183,7 @@ export function useFileOperations(refetch: () => void) {
         if (fetchError.code === 'PGRST116') {
           console.log('Record not found - may already be deleted');
           toast.success('File deleted successfully');
-          refetch();
+          refetch(); // Safe to refetch since record doesn't exist
           return { success: true };
         }
         throw new Error(`Failed to fetch record: ${fetchError.message}`);
@@ -192,7 +192,7 @@ export function useFileOperations(refetch: () => void) {
       if (!existingRecord) {
         console.log('No record found with this ID');
         toast.success('File deleted successfully');
-        refetch();
+        refetch(); // Safe to refetch since record doesn't exist
         return { success: true };
       }
 
@@ -200,6 +200,12 @@ export function useFileOperations(refetch: () => void) {
       console.log(`Record user_id: ${existingRecord.user_id}`);
       console.log(`Current user_id: ${user.id}`);
       console.log(`User IDs match: ${existingRecord.user_id === user.id}`);
+
+      // Check ownership
+      if (existingRecord.user_id !== user.id) {
+        console.error('User does not own this record');
+        throw new Error("You do not have permission to delete this file");
+      }
 
       // STEP 2: Attempt deletion with user_id constraint
       console.log(`STEP 2: Attempting database deletion with user constraint...`);
@@ -211,51 +217,50 @@ export function useFileOperations(refetch: () => void) {
         .select(); // Add select to see what was deleted
 
       if (deleteError) {
-        console.error('Database deletion error with user constraint:', deleteError);
-        console.error('Error code:', deleteError.code);
-        console.error('Error details:', deleteError.details);
-        console.error('Error hint:', deleteError.hint);
-        
-        // STEP 3: Try without user_id constraint for debugging
-        console.log(`STEP 3: Attempting deletion without user constraint for debugging...`);
-        const { data: deleteData2, error: deleteError2 } = await supabase
-          .from('media_files')
-          .delete()
-          .eq('id', fileId)
-          .select();
-
-        if (deleteError2) {
-          console.error('Database deletion error without user constraint:', deleteError2);
-          throw new Error(`Database deletion failed completely: ${deleteError2.message}`);
-        } else {
-          console.log('Deletion succeeded without user constraint:', deleteData2);
-          console.log('This suggests an RLS policy or user ID mismatch issue');
-          toast.success('File deleted successfully');
-          refetch();
-          return { success: true };
-        }
+        console.error('Database deletion error:', deleteError);
+        throw new Error(`Database deletion failed: ${deleteError.message}`);
       }
 
-      console.log('Database deletion successful with user constraint:', deleteData);
+      console.log('Database deletion result:', deleteData);
       console.log(`Records deleted: ${deleteData?.length || 0}`);
 
       if (!deleteData || deleteData.length === 0) {
-        console.warn('Delete operation returned no affected rows');
-        console.log('This might indicate the record does not belong to the current user');
+        console.error('Delete operation returned no affected rows');
+        throw new Error('Delete operation failed - no records were affected');
       }
 
-      console.log(`=== SIMPLIFIED DELETE OPERATION SUCCESS ===`);
+      // STEP 3: VERIFY the record is actually gone from database
+      console.log(`STEP 3: Verifying record was actually deleted...`);
+      const { data: verifyRecord, error: verifyError } = await supabase
+        .from('media_files')
+        .select('id')
+        .eq('id', fileId)
+        .single();
+
+      if (verifyError && verifyError.code === 'PGRST116') {
+        // Record not found - this is what we want!
+        console.log('✅ VERIFICATION SUCCESS: Record confirmed deleted from database');
+      } else if (verifyRecord) {
+        // Record still exists - deletion failed!
+        console.error('❌ VERIFICATION FAILED: Record still exists in database:', verifyRecord);
+        throw new Error('Database deletion verification failed - record still exists');
+      } else {
+        console.error('Unexpected error during verification:', verifyError);
+        throw new Error(`Verification error: ${verifyError?.message}`);
+      }
+
+      console.log(`=== VERIFIED DELETE OPERATION SUCCESS ===`);
       
       toast.success('File deleted successfully');
       
-      // Force immediate refresh
+      // Only refresh UI after confirming database deletion
       setTimeout(() => {
         refetch();
       }, 100);
       
       return { success: true };
     } catch (error: any) {
-      console.error('=== SIMPLIFIED DELETE OPERATION FAILED ===', error);
+      console.error('=== VERIFIED DELETE OPERATION FAILED ===', error);
       console.error('Error details:', {
         message: error.message,
         code: error.code,
@@ -267,13 +272,19 @@ export function useFileOperations(refetch: () => void) {
       let errorMessage = 'Failed to delete file';
       if (error.message?.includes('JWT') || error.message?.includes('auth')) {
         errorMessage = 'Authentication expired. Please refresh and try again.';
-      } else if (error.message?.includes('permission') || error.message?.includes('policy')) {
+      } else if (error.message?.includes('permission')) {
         errorMessage = 'You do not have permission to delete this file.';
       } else if (error.message?.includes('not found')) {
         errorMessage = 'File not found. It may have already been deleted.';
+      } else if (error.message?.includes('verification failed')) {
+        errorMessage = 'Delete failed - file still exists in database.';
+      } else if (error.message) {
+        errorMessage = error.message;
       }
       
       toast.error(errorMessage);
+      
+      // DO NOT call refetch() on error - keep UI showing the file since deletion failed
       return { success: false, message: errorMessage };
     }
   }, [refetch, ensureValidSession]);
