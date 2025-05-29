@@ -418,8 +418,7 @@ const ProductEditPage = () => {
             label: "Save Product",
             onClick: handleSave,
             variant: "default" as const,
-            icon: <Save className="h-4 w-4" />,
-            className: "bg-blue-600 hover:bg-blue-700"
+            icon: <Save className="h-4 w-4" />
           }}
         />
 
@@ -815,7 +814,7 @@ const ProductEditPage = () => {
                     <SelectContent>
                       {vendors?.map((vendor) => (
                         <SelectItem key={vendor.id} value={vendor.id}>
-                          {vendor.business_name || vendor.name}
+                          {vendor.shop_name}
                         </SelectItem>
                       ))}
                     </SelectContent>
