@@ -154,11 +154,6 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
         setUploads(current => current.filter(u => u.id !== upload.id));
       }, 2000);
       
-      if (uploads.length === 1) {
-        setTimeout(() => {
-          onUploadComplete();
-        }, 2000);
-      }
     } catch (error: any) {
       console.error("Upload error:", error);
       
@@ -210,7 +205,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
     if (!uploads.some(upload => upload.status === 'uploading')) {
       setUploads([]);
       onClose();
-      // Trigger gallery refresh when closing after successful uploads
+      // FIXED: Always trigger gallery refresh when closing
       onUploadComplete();
     } else {
       toast.warning("Please wait for uploads to complete before closing");

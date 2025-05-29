@@ -7,7 +7,9 @@ import { MediaDetailsDialog } from "./grid/MediaDetailsDialog";
 import { DeleteConfirmDialog } from "./grid/DeleteConfirmDialog";
 import { EmptyMediaState } from "./grid/EmptyMediaState";
 import { LoadingState } from "./grid/LoadingState";
-import { LoadingScreen } from "@/components/ui/loading";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Trash2 } from "lucide-react";
 
 // Define types for our profiles
 interface Profile {
@@ -35,6 +37,7 @@ interface MediaLibraryGridProps {
 export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGridProps) {
   const [selectedMedia, setSelectedMedia] = useState<MediaFileWithProfile | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   
   const {
     mediaFiles,
@@ -42,6 +45,10 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
     isError,
     deletingFiles,
     isDeleting,
+    selectedFiles,
+    toggleFileSelection,
+    toggleAllFiles,
+    clearSelections,
     handleDownload,
     handleDelete,
     handleCopyUrl
@@ -60,6 +67,24 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
     }
   };
 
+  // Handler for bulk delete
+  const handleBulkDelete = async () => {
+    if (selectedFiles.length === 0) return;
+
+    const filesToDelete = mediaFiles?.filter(file => selectedFiles.includes(file.id)) || [];
+    
+    for (const file of filesToDelete) {
+      await handleDelete(
+        file.id,
+        file.bucket_name || 'user_uploads',
+        file.file_url
+      );
+    }
+    
+    clearSelections();
+    setBulkDeleteOpen(false);
+  };
+
   if (isError) {
     return <EmptyMediaState isError={true} />;
   }
@@ -71,6 +96,9 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
   if (!mediaFiles?.length) {
     return <EmptyMediaState />;
   }
+
+  const allSelected = selectedFiles.length === mediaFiles.length;
+  const someSelected = selectedFiles.length > 0 && selectedFiles.length < mediaFiles.length;
 
   return (
     <>
@@ -88,12 +116,56 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
         </div>
       )}
 
+      {/* Bulk selection header */}
+      <div className="flex items-center justify-between mb-4 p-4 bg-gray-50 rounded-lg border">
+        <div className="flex items-center gap-3">
+          <Checkbox
+            checked={allSelected}
+            ref={(ref) => {
+              if (ref) {
+                ref.indeterminate = someSelected;
+              }
+            }}
+            onCheckedChange={() => toggleAllFiles(mediaFiles)}
+          />
+          <span className="text-sm font-medium text-gray-700">
+            {selectedFiles.length > 0 
+              ? `${selectedFiles.length} file${selectedFiles.length > 1 ? 's' : ''} selected`
+              : 'Select all files'
+            }
+          </span>
+        </div>
+        
+        {selectedFiles.length > 0 && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearSelections}
+            >
+              Clear Selection
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setBulkDeleteOpen(true)}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete Selected ({selectedFiles.length})
+            </Button>
+          </div>
+        )}
+      </div>
+
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
         {mediaFiles.map((file) => (
           <MediaFileCard 
             key={file.id} 
             file={file}
             onSelect={(file) => setSelectedMedia(file as MediaFileWithProfile)}
+            onToggleSelect={() => toggleFileSelection(file.id)}
+            isSelected={selectedFiles.includes(file.id)}
             isDeleting={isDeleting(file.id)}
           />
         ))}
@@ -114,6 +186,15 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
         isOpen={deleteConfirmOpen}
         onOpenChange={setDeleteConfirmOpen}
         onConfirm={handleConfirmDelete}
+      />
+
+      {/* Bulk delete confirmation dialog */}
+      <DeleteConfirmDialog 
+        isOpen={bulkDeleteOpen}
+        onOpenChange={setBulkDeleteOpen}
+        onConfirm={handleBulkDelete}
+        title={`Delete ${selectedFiles.length} files?`}
+        description={`Are you sure you want to delete ${selectedFiles.length} selected file${selectedFiles.length > 1 ? 's' : ''}? This action cannot be undone.`}
       />
     </>
   );

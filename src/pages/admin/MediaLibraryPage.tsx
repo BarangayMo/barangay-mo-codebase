@@ -24,12 +24,13 @@ export default function MediaLibraryPage() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Get media files count
-  const { mediaFiles, loadingFiles } = useMediaLibrary(filters, searchQuery);
+  const { mediaFiles, loadingFiles, refetch } = useMediaLibrary(filters, searchQuery);
   const mediaCount = mediaFiles?.length || 0;
 
   const handleUploadComplete = () => {
-    // Force refresh of the media components by incrementing the key
+    // Force refresh of the media components by incrementing the key and calling refetch
     setRefreshKey(prev => prev + 1);
+    refetch();
     console.log("Gallery refreshed after upload completion");
   };
 
@@ -50,23 +51,23 @@ export default function MediaLibraryPage() {
           
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input 
                 placeholder="Search media..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 w-full sm:w-64"
+                className="pl-10 w-full sm:w-80 h-12 text-base"
               />
             </div>
             
             <div className="flex gap-2">
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="h-12 px-4">
                     Filters
                   </Button>
                 </SheetTrigger>
-                <SheetContent>
+                <SheetContent className="w-80">
                   <SheetHeader>
                     <SheetTitle>Filter Media</SheetTitle>
                   </SheetHeader>
@@ -83,7 +84,7 @@ export default function MediaLibraryPage() {
                 variant={viewType === 'grid' ? "default" : "outline"} 
                 size="sm" 
                 onClick={() => setViewType('grid')}
-                className={viewType === 'grid' ? "bg-blue-500 hover:bg-blue-600 text-white" : ""}
+                className={`h-12 px-4 ${viewType === 'grid' ? "bg-blue-500 hover:bg-blue-600 text-white" : ""}`}
               >
                 <Grid className="h-4 w-4" />
               </Button>
@@ -92,13 +93,13 @@ export default function MediaLibraryPage() {
                 variant={viewType === 'table' ? "default" : "outline"} 
                 size="sm" 
                 onClick={() => setViewType('table')}
-                className={viewType === 'table' ? "bg-blue-500 hover:bg-blue-600 text-white" : ""}
+                className={`h-12 px-4 ${viewType === 'table' ? "bg-blue-500 hover:bg-blue-600 text-white" : ""}`}
               >
                 <List className="h-4 w-4" />
               </Button>
               
               <Button 
-                className="bg-blue-500 hover:bg-blue-600 text-white"
+                className="bg-blue-500 hover:bg-blue-600 text-white h-12 px-6"
                 onClick={() => setUploadDialogOpen(true)}
               >
                 Upload files
