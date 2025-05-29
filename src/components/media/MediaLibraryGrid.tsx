@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useMediaLibrary } from "@/hooks";
 import { MediaFile } from "@/hooks/media-library/types";
@@ -115,28 +116,29 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
         </div>
       )}
 
-      {/* Bulk selection header */}
-      <div className="flex items-center justify-between mb-4 p-4 bg-gray-50 rounded-lg border">
-        <div className="flex items-center gap-3">
-          <Checkbox
-            checked={allSelected}
-            onCheckedChange={() => toggleAllFiles(mediaFiles)}
-            className={someSelected ? "data-[state=indeterminate]:bg-blue-500" : ""}
-          />
-          <span className="text-sm font-medium text-gray-700">
-            {selectedFiles.length > 0 
-              ? `${selectedFiles.length} file${selectedFiles.length > 1 ? 's' : ''} selected`
-              : 'Select all files'
-            }
-          </span>
-        </div>
-        
-        {selectedFiles.length > 0 && (
+      {/* Bulk selection header - only show when items are selected */}
+      {selectedFiles.length > 0 && (
+        <div className="flex items-center justify-between mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="flex items-center gap-3">
+            <Checkbox
+              checked={allSelected}
+              onCheckedChange={() => toggleAllFiles(mediaFiles)}
+              className={`${someSelected ? "data-[state=checked]:bg-blue-500" : ""} data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500`}
+            />
+            <span className="text-sm font-medium text-blue-800">
+              {selectedFiles.length > 0 
+                ? `${selectedFiles.length} file${selectedFiles.length > 1 ? 's' : ''} selected`
+                : 'Select all files'
+              }
+            </span>
+          </div>
+          
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={clearSelections}
+              className="border-blue-300 text-blue-700 hover:bg-blue-100"
             >
               Clear Selection
             </Button>
@@ -150,8 +152,8 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
               Delete Selected ({selectedFiles.length})
             </Button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
         {mediaFiles.map((file) => (

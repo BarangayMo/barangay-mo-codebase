@@ -51,7 +51,7 @@ export function MediaFileCard({
         >
           <Checkbox
             checked={isSelected}
-            className="bg-white shadow-sm border-2"
+            className="bg-white shadow-lg border border-gray-300 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500 h-5 w-5"
           />
         </div>
       )}

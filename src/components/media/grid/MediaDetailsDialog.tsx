@@ -1,8 +1,11 @@
 
+import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Download, Trash2, Copy } from "lucide-react";
+import { Download, Trash2, Copy, Edit2, Save, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { bytesToSize } from "@/lib/utils";
 import { MediaFile } from "@/hooks/media-library/types";
@@ -25,6 +28,7 @@ interface MediaDetailsDialogProps {
   onDelete: () => void;
   onDownload: (bucketName: string, fileUrl: string, fileName: string, signedUrl?: string) => void;
   onCopyUrl: (signedUrl?: string, bucketName?: string, fileUrl?: string) => void;
+  onUpdateFile?: (fileId: string, updates: { filename?: string; alt_text?: string }) => void;
 }
 
 export function MediaDetailsDialog({ 
@@ -33,9 +37,39 @@ export function MediaDetailsDialog({
   onClose, 
   onDelete, 
   onDownload, 
-  onCopyUrl 
+  onCopyUrl,
+  onUpdateFile 
 }: MediaDetailsDialogProps) {
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [isEditingAlt, setIsEditingAlt] = useState(false);
+  const [editedName, setEditedName] = useState("");
+  const [editedAlt, setEditedAlt] = useState("");
+
   if (!file) return null;
+
+  const handleEditName = () => {
+    setEditedName(file.filename);
+    setIsEditingName(true);
+  };
+
+  const handleEditAlt = () => {
+    setEditedAlt(file.alt_text || "");
+    setIsEditingAlt(true);
+  };
+
+  const handleSaveName = () => {
+    if (onUpdateFile && editedName.trim() !== file.filename) {
+      onUpdateFile(file.id, { filename: editedName.trim() });
+    }
+    setIsEditingName(false);
+  };
+
+  const handleSaveAlt = () => {
+    if (onUpdateFile && editedAlt !== (file.alt_text || "")) {
+      onUpdateFile(file.id, { alt_text: editedAlt });
+    }
+    setIsEditingAlt(false);
+  };
 
   // Helper function to get file icon
   const getFileIcon = (contentType: string) => {
@@ -60,7 +94,35 @@ export function MediaDetailsDialog({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-auto p-0 rounded-xl border-none shadow-2xl">
         <DialogHeader className="px-6 pt-6 pb-2">
-          <DialogTitle className="text-xl font-semibold truncate">{file.filename}</DialogTitle>
+          <DialogTitle className="text-xl font-semibold flex items-center gap-2">
+            {isEditingName ? (
+              <div className="flex items-center gap-2 flex-1">
+                <Input
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  className="flex-1"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveName();
+                    if (e.key === 'Escape') setIsEditingName(false);
+                  }}
+                  autoFocus
+                />
+                <Button size="sm" onClick={handleSaveName}>
+                  <Save className="h-4 w-4" />
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setIsEditingName(false)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 flex-1">
+                <span className="truncate">{file.filename}</span>
+                <Button size="sm" variant="ghost" onClick={handleEditName}>
+                  <Edit2 className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </DialogTitle>
         </DialogHeader>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
@@ -142,28 +204,70 @@ export function MediaDetailsDialog({
                 </div>
               </div>
             </div>
+
+            {/* Alt Text Section */}
+            <div className="bg-white rounded-lg p-4 border shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-gray-700">Alt Text</h3>
+                {!isEditingAlt && (
+                  <Button size="sm" variant="ghost" onClick={handleEditAlt}>
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              {isEditingAlt ? (
+                <div className="space-y-2">
+                  <Textarea
+                    value={editedAlt}
+                    onChange={(e) => setEditedAlt(e.target.value)}
+                    placeholder="Add alt text for accessibility..."
+                    className="min-h-[80px]"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') setIsEditingAlt(false);
+                    }}
+                    autoFocus
+                  />
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={handleSaveAlt}>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setIsEditingAlt(false)}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-600">
+                  {file.alt_text || "No alt text provided"}
+                </p>
+              )}
+            </div>
             
-            <div className="space-y-3">
+            {/* Action Buttons - Inline */}
+            <div className="flex gap-2">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button 
                       variant="outline" 
-                      className="w-full justify-start bg-white hover:bg-gray-50 transition-all rounded-lg h-12 shadow-sm hover:shadow-md"
+                      size="sm"
+                      className="flex-1 bg-white hover:bg-gray-50 transition-all rounded-lg shadow-sm hover:shadow-md"
                       onClick={() => onCopyUrl(file.signedUrl, file.bucket_name, file.file_url)}
                     >
-                      <Copy className="mr-3 h-4 w-4" /> Copy URL (7 days)
+                      <Copy className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className="text-xs">Copy a shareable URL that works for 7 days</p>
+                    <p className="text-xs">Copy URL</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
               
               <Button 
                 variant="outline" 
-                className="w-full justify-start bg-white hover:bg-blue-50 text-blue-600 hover:text-blue-700 transition-all rounded-lg h-12 shadow-sm hover:shadow-md"
+                size="sm"
+                className="flex-1 bg-white hover:bg-blue-50 text-blue-600 hover:text-blue-700 transition-all rounded-lg shadow-sm hover:shadow-md"
                 onClick={() => onDownload(
                   file.bucket_name || 'user_uploads', 
                   file.file_url, 
@@ -171,15 +275,16 @@ export function MediaDetailsDialog({
                   file.signedUrl
                 )}
               >
-                <Download className="mr-3 h-4 w-4" /> Download
+                <Download className="h-4 w-4" />
               </Button>
               
               <Button 
                 variant="outline" 
-                className="w-full justify-start bg-white text-red-600 hover:text-red-700 hover:bg-red-50 transition-all rounded-lg h-12 shadow-sm hover:shadow-md"
+                size="sm"
+                className="flex-1 bg-white text-red-600 hover:text-red-700 hover:bg-red-50 transition-all rounded-lg shadow-sm hover:shadow-md"
                 onClick={onDelete}
               >
-                <Trash2 className="mr-3 h-4 w-4" /> Delete
+                <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           </div>

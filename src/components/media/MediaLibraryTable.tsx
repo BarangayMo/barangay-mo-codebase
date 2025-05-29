@@ -1,10 +1,24 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatDistanceToNow } from "date-fns";
 import { bytesToSize } from "@/lib/utils";
 import { useMediaLibrary } from "@/hooks";
+import { MediaDetailsDialog } from "./grid/MediaDetailsDialog";
+import { DeleteConfirmDialog } from "./grid/DeleteConfirmDialog";
+import { MediaFile } from "@/hooks/media-library/types";
+
+// Define types for our profiles
+interface Profile {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+}
+
+interface MediaFileWithProfile extends MediaFile {
+  profile?: Profile | null;
+}
 
 interface MediaLibraryFilters {
   user: string | null;
@@ -22,6 +36,9 @@ export function MediaLibraryTable({
   filters = { user: null, category: null, startDate: null, endDate: null }, 
   searchQuery = "" 
 }: MediaLibraryTableProps) {
+  const [selectedMedia, setSelectedMedia] = useState<MediaFileWithProfile | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
   const {
     mediaFiles: files,
     selectedFiles,
@@ -29,7 +46,10 @@ export function MediaLibraryTable({
     isError,
     error,
     toggleFileSelection,
-    toggleAllFiles
+    toggleAllFiles,
+    handleDownload,
+    handleDelete,
+    handleCopyUrl
   } = useMediaLibrary(filters, searchQuery);
 
   // For debugging purposes
@@ -41,6 +61,28 @@ export function MediaLibraryTable({
       }
     }
   }, [files]);
+
+  // Handler for deleting the selected media
+  const handleConfirmDelete = () => {
+    if (selectedMedia) {
+      handleDelete(
+        selectedMedia.id,
+        selectedMedia.bucket_name || 'user_uploads',
+        selectedMedia.file_url
+      );
+      setSelectedMedia(null);
+      setDeleteConfirmOpen(false);
+    }
+  };
+
+  // Handle row click
+  const handleRowClick = (file: MediaFile, e: React.MouseEvent) => {
+    // Don't open dialog if clicking on checkbox
+    if ((e.target as HTMLElement).closest('[data-checkbox]')) {
+      return;
+    }
+    setSelectedMedia(file as MediaFileWithProfile);
+  };
 
   if (isError) {
     console.error("Query error:", error);
@@ -66,60 +108,85 @@ export function MediaLibraryTable({
   </div>;
 
   return (
-    <div className="border rounded-lg">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-12">
-              <Checkbox 
-                checked={files && files.length > 0 && selectedFiles.length === files.length}
-                onCheckedChange={() => toggleAllFiles()}
-              />
-            </TableHead>
-            <TableHead>File name</TableHead>
-            <TableHead>Alt text</TableHead>
-            <TableHead>Date added</TableHead>
-            <TableHead>Size</TableHead>
-            <TableHead>References</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {files.map((file) => (
-            <TableRow key={file.id}>
-              <TableCell>
+    <>
+      <div className="border rounded-lg">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-12">
                 <Checkbox 
-                  checked={selectedFiles.includes(file.id)}
-                  onCheckedChange={() => toggleFileSelection(file.id)}
+                  checked={files && files.length > 0 && selectedFiles.length === files.length}
+                  onCheckedChange={() => toggleAllFiles(files)}
                 />
-              </TableCell>
-              <TableCell className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center">
-                  <img 
-                    src={file.signedUrl || ''} 
-                    alt={file.alt_text || file.filename}
-                    className="max-w-full max-h-full object-contain"
-                    onError={(e) => {
-                      console.error('Image load error:', file.signedUrl);
-                      e.currentTarget.style.display = 'none';
-                      const icon = document.createElement('div');
-                      icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="w-6 h-6 text-gray-400"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>';
-                      e.currentTarget.parentElement?.appendChild(icon);
-                    }}
-                  />
-                </div>
-                <div>
-                  <p className="font-medium">{file.filename}</p>
-                  <p className="text-sm text-gray-500">{file.filename.split('.').pop()?.toUpperCase()}</p>
-                </div>
-              </TableCell>
-              <TableCell>{file.alt_text || '—'}</TableCell>
-              <TableCell>{formatDistanceToNow(new Date(file.uploaded_at), { addSuffix: true })}</TableCell>
-              <TableCell>{bytesToSize(file.file_size)}</TableCell>
-              <TableCell>{file.references || '—'}</TableCell>
+              </TableHead>
+              <TableHead>File name</TableHead>
+              <TableHead>Alt text</TableHead>
+              <TableHead>Date added</TableHead>
+              <TableHead>Size</TableHead>
+              <TableHead>References</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {files.map((file) => (
+              <TableRow 
+                key={file.id} 
+                className="cursor-pointer hover:bg-gray-50"
+                onClick={(e) => handleRowClick(file, e)}
+              >
+                <TableCell>
+                  <div data-checkbox onClick={(e) => e.stopPropagation()}>
+                    <Checkbox 
+                      checked={selectedFiles.includes(file.id)}
+                      onCheckedChange={() => toggleFileSelection(file.id)}
+                    />
+                  </div>
+                </TableCell>
+                <TableCell className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center">
+                    <img 
+                      src={file.signedUrl || ''} 
+                      alt={file.alt_text || file.filename}
+                      className="max-w-full max-h-full object-contain"
+                      onError={(e) => {
+                        console.error('Image load error:', file.signedUrl);
+                        e.currentTarget.style.display = 'none';
+                        const icon = document.createElement('div');
+                        icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="w-6 h-6 text-gray-400"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>';
+                        e.currentTarget.parentElement?.appendChild(icon);
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <p className="font-medium">{file.filename}</p>
+                    <p className="text-sm text-gray-500">{file.filename.split('.').pop()?.toUpperCase()}</p>
+                  </div>
+                </TableCell>
+                <TableCell>{file.alt_text || '—'}</TableCell>
+                <TableCell>{formatDistanceToNow(new Date(file.uploaded_at), { addSuffix: true })}</TableCell>
+                <TableCell>{bytesToSize(file.file_size)}</TableCell>
+                <TableCell>{file.references || '—'}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Media details dialog */}
+      <MediaDetailsDialog 
+        file={selectedMedia}
+        isOpen={!!selectedMedia}
+        onClose={() => setSelectedMedia(null)}
+        onDelete={() => setDeleteConfirmOpen(true)}
+        onDownload={handleDownload}
+        onCopyUrl={handleCopyUrl}
+      />
+
+      {/* Delete confirmation dialog */}
+      <DeleteConfirmDialog 
+        isOpen={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        onConfirm={handleConfirmDelete}
+      />
+    </>
   );
 }
