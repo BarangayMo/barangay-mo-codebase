@@ -12,8 +12,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Plus, X, Bold, Italic, Underline, Link, List, AlignLeft, Upload, ChevronDown, Search } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  Plus, 
+  X, 
+  Bold, 
+  Italic, 
+  Underline, 
+  Link, 
+  List, 
+  AlignLeft, 
+  Upload, 
+  Search, 
+  Package,
+  Barcode,
+  Weight,
+  DollarSign,
+  Eye,
+  EyeOff,
+  Tag,
+  Truck
+} from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
+import { formatCurrency } from "@/lib/utils";
+import { DashboardPageHeader } from "@/components/dashboard/PageHeader";
 
 interface FormData {
   name: string;
@@ -34,6 +57,14 @@ interface FormData {
   return_policy: string;
   specifications: Record<string, any>;
   weight_kg?: string;
+}
+
+interface Collection {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  is_default: boolean;
 }
 
 const ProductEditPage = () => {
@@ -61,8 +92,7 @@ const ProductEditPage = () => {
     weight_kg: ""
   });
 
-  const [collections, setCollections] = useState<string[]>([]);
-  const [selectedCollection, setSelectedCollection] = useState("");
+  const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", id],
@@ -81,6 +111,28 @@ const ProductEditPage = () => {
       if (error) throw error;
       return data;
     }
+  });
+
+  const { data: collections } = useQuery({
+    queryKey: ["collections"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("collections").select("*").order("name");
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const { data: productCollections } = useQuery({
+    queryKey: ["product-collections", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("product_collections")
+        .select("collection_id")
+        .eq("product_id", id);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id
   });
 
   useEffect(() => {
@@ -109,6 +161,12 @@ const ProductEditPage = () => {
     }
   }, [product]);
 
+  useEffect(() => {
+    if (productCollections) {
+      setSelectedCollections(productCollections.map(pc => pc.collection_id));
+    }
+  }, [productCollections]);
+
   const updateProduct = useMutation({
     mutationFn: async (data: any) => {
       const { error } = await supabase.from("products").update(data).eq("id", id);
@@ -116,9 +174,29 @@ const ProductEditPage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["product", id] });
-      toast.success("Product updated.");
+      toast.success("Product updated successfully!");
     },
     onError: (err: any) => toast.error("Error: " + err.message)
+  });
+
+  const updateProductCollections = useMutation({
+    mutationFn: async (collectionIds: string[]) => {
+      // First, delete existing relationships
+      await supabase.from("product_collections").delete().eq("product_id", id);
+      
+      // Then, insert new relationships
+      if (collectionIds.length > 0) {
+        const relationships = collectionIds.map(collectionId => ({
+          product_id: id,
+          collection_id: collectionId
+        }));
+        const { error } = await supabase.from("product_collections").insert(relationships);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["product-collections", id] });
+    }
   });
 
   const handleChange = (key: keyof FormData, value: any) => setFormData(prev => ({ ...prev, [key]: value }));
@@ -131,6 +209,17 @@ const ProductEditPage = () => {
     if (tag && !formData.tags.includes(tag)) {
       setFormData(prev => ({ ...prev, tags: [...prev.tags, tag] }));
     }
+  };
+
+  const toggleCollection = (collectionId: string) => {
+    setSelectedCollections(prev => {
+      const newSelection = prev.includes(collectionId)
+        ? prev.filter(id => id !== collectionId)
+        : [...prev, collectionId];
+      
+      updateProductCollections.mutate(newSelection);
+      return newSelection;
+    });
   };
 
   const handleSave = () => {
@@ -152,41 +241,48 @@ const ProductEditPage = () => {
   }
 
   return (
-    <AdminLayout title="Edit Product" hidePageHeader>
-      <div className="bg-gray-50 min-h-screen">
-        {/* Header */}
-        <div className="bg-white border-b px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="text-sm text-gray-500">
-                📊 Catalog / Products / Edit product
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Button variant="outline">Save as Draft</Button>
-              <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
-                Save Product
-              </Button>
-            </div>
-          </div>
-          <h1 className="text-2xl font-semibold mt-4">Edit product</h1>
-        </div>
+    <AdminLayout title="Edit Product">
+      <div className="w-full">
+        <DashboardPageHeader
+          title="Edit product"
+          breadcrumbItems={[
+            { label: "Catalog", href: "/admin/smarketplace" },
+            { label: "Products", href: "/admin/smarketplace/products" },
+            { label: "Edit product" }
+          ]}
+          secondaryActions={[
+            {
+              label: "Save as Draft",
+              onClick: () => handleSave(),
+              variant: "outline" as const
+            }
+          ]}
+          actionButton={{
+            label: "Save Product",
+            onClick: handleSave,
+            variant: "default" as const
+          }}
+        />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Product Details */}
           <div className="lg:col-span-2 space-y-6">
             {/* Product Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm font-medium text-gray-500 uppercase">PRODUCT</CardTitle>
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-sm font-medium text-gray-500 uppercase flex items-center gap-2">
+                  <Package className="h-4 w-4" />
+                  PRODUCT
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 <div>
                   <Label className="text-sm font-medium">Title</Label>
                   <Input 
                     value={formData.name} 
                     onChange={(e) => handleChange("name", e.target.value)}
                     className="mt-1"
+                    placeholder="Enter product title"
                   />
                 </div>
                 
@@ -194,17 +290,29 @@ const ProductEditPage = () => {
                   <Label className="text-sm font-medium">Description</Label>
                   <div className="mt-1 border rounded-md">
                     <div className="flex items-center space-x-2 px-3 py-2 border-b bg-gray-50">
-                      <Button size="sm" variant="ghost"><Bold className="h-4 w-4" /></Button>
-                      <Button size="sm" variant="ghost"><Italic className="h-4 w-4" /></Button>
-                      <Button size="sm" variant="ghost"><Underline className="h-4 w-4" /></Button>
-                      <Button size="sm" variant="ghost"><Link className="h-4 w-4" /></Button>
-                      <Button size="sm" variant="ghost"><List className="h-4 w-4" /></Button>
-                      <Button size="sm" variant="ghost"><AlignLeft className="h-4 w-4" /></Button>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                        <Bold className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                        <Italic className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                        <Underline className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                        <Link className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                        <List className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                        <AlignLeft className="h-4 w-4" />
+                      </Button>
                     </div>
                     <Textarea 
                       value={formData.description}
                       onChange={(e) => handleChange("description", e.target.value)}
-                      className="border-0 resize-none min-h-[120px]"
+                      className="border-0 resize-none min-h-[120px] focus-visible:ring-0"
                       placeholder="Product description..."
                     />
                   </div>
@@ -213,22 +321,26 @@ const ProductEditPage = () => {
             </Card>
 
             {/* Inventory Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm font-medium text-gray-500 uppercase">INVENTORY</CardTitle>
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-sm font-medium text-gray-500 uppercase flex items-center gap-2">
+                  <Barcode className="h-4 w-4" />
+                  INVENTORY
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-6">
                   <div>
                     <Label className="text-sm font-medium">Quantity</Label>
                     <div className="flex items-center mt-1">
-                      <Button variant="outline" size="sm" className="px-2">-</Button>
+                      <Button variant="outline" size="sm" className="px-3 h-10 rounded-r-none border-r-0">-</Button>
                       <Input 
                         value={formData.stock_quantity}
                         onChange={(e) => handleChange("stock_quantity", e.target.value)}
-                        className="text-center mx-1"
+                        className="text-center rounded-none border-x-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                        type="number"
                       />
-                      <Button variant="outline" size="sm" className="px-2">+</Button>
+                      <Button variant="outline" size="sm" className="px-3 h-10 rounded-l-none border-l-0">+</Button>
                     </div>
                   </div>
                   <div>
@@ -241,32 +353,35 @@ const ProductEditPage = () => {
                     />
                   </div>
                 </div>
-                <div className="mt-4">
+                <div className="mt-6">
                   <div className="flex items-center space-x-2">
                     <Switch checked={true} />
-                    <span className="text-sm">Continue selling when out of stock</span>
+                    <span className="text-sm text-gray-600">Continue selling when out of stock</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Media Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm font-medium text-gray-500 uppercase">MEDIA</CardTitle>
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-sm font-medium text-gray-500 uppercase flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  MEDIA
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                  <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                  <p className="text-sm text-gray-600">Drag drop some files here, or click to select files</p>
-                  <p className="text-xs text-gray-400 mt-1">1080 x 1080 (1:1) recommended, up to 2MB each</p>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors">
+                  <Upload className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <p className="text-sm text-gray-600 mb-1">Drag drop some files here, or click to select files</p>
+                  <p className="text-xs text-gray-400">1080 x 1080 (1:1) recommended, up to 2MB each</p>
                 </div>
               </CardContent>
             </Card>
 
             {/* Variation Section */}
-            <Card>
-              <CardHeader>
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
                 <CardTitle className="text-sm font-medium text-gray-500 uppercase">VARIATION</CardTitle>
               </CardHeader>
               <CardContent>
@@ -278,18 +393,21 @@ const ProductEditPage = () => {
           {/* Right Column - Organization & Settings */}
           <div className="space-y-6">
             {/* Organization */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm font-medium text-gray-500 uppercase">ORGANIZATION</CardTitle>
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-sm font-medium text-gray-500 uppercase flex items-center gap-2">
+                  <Tag className="h-4 w-4" />
+                  ORGANIZATION
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 <div>
                   <Label className="text-sm font-medium">Tags</Label>
                   <div className="flex flex-wrap gap-2 mb-2">
                     {formData.tags.map((tag, idx) => (
-                      <Badge key={idx} variant="secondary" className="flex items-center gap-1">
+                      <Badge key={idx} variant="secondary" className="flex items-center gap-1 px-2 py-1">
                         {tag}
-                        <X className="h-3 w-3 cursor-pointer" onClick={() => removeTag(tag)} />
+                        <X className="h-3 w-3 cursor-pointer hover:text-red-500" onClick={() => removeTag(tag)} />
                       </Badge>
                     ))}
                   </div>
@@ -297,6 +415,7 @@ const ProductEditPage = () => {
                     placeholder="T-shirt, Black, Classic"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
+                        e.preventDefault();
                         addTag((e.target as HTMLInputElement).value);
                         (e.target as HTMLInputElement).value = "";
                       }
@@ -306,55 +425,65 @@ const ProductEditPage = () => {
 
                 <div>
                   <Label className="text-sm font-medium">Collections</Label>
-                  <Select value={selectedCollection} onValueChange={setSelectedCollection}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="My Collections" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="my-collections">My Collections</SelectItem>
-                      <SelectItem value="technology">Technology</SelectItem>
-                      <SelectItem value="branded">Branded</SelectItem>
-                    </SelectContent>
-                  </Select>
                   
                   <div className="mt-2 relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input placeholder="Search" className="pl-10" />
+                    <Input placeholder="Search collections..." className="pl-10" />
                   </div>
 
-                  <div className="mt-2 space-y-1">
-                    <div className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
-                      <span className="text-sm">My Collections</span>
-                      <div className="h-2 w-2 bg-orange-400 rounded-full"></div>
+                  <ScrollArea className="h-48 mt-3 border rounded-md">
+                    <div className="p-3 space-y-2">
+                      {collections?.map((collection: Collection) => (
+                        <div key={collection.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-md">
+                          <Checkbox
+                            checked={selectedCollections.includes(collection.id)}
+                            onCheckedChange={() => toggleCollection(collection.id)}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <div 
+                                className="h-3 w-3 rounded-full" 
+                                style={{ backgroundColor: collection.color }}
+                              ></div>
+                              <span className="text-sm font-medium truncate">{collection.name}</span>
+                            </div>
+                            {collection.description && (
+                              <p className="text-xs text-gray-500 truncate">{collection.description}</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    <div className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
-                      <span className="text-sm">Technology</span>
-                    </div>
-                    <div className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
-                      <span className="text-sm">Branded</span>
-                    </div>
-                  </div>
+                  </ScrollArea>
                 </div>
               </CardContent>
             </Card>
 
             {/* Shipping */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm font-medium text-gray-500 uppercase">SHIPPING</CardTitle>
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-sm font-medium text-gray-500 uppercase flex items-center gap-2">
+                  <Truck className="h-4 w-4" />
+                  SHIPPING
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div>
-                  <Label className="text-sm font-medium">Weight</Label>
+                  <Label className="text-sm font-medium flex items-center gap-2">
+                    <Weight className="h-4 w-4" />
+                    Weight
+                  </Label>
                   <div className="flex items-center mt-1">
                     <Input 
                       value={formData.weight_kg}
                       onChange={(e) => handleChange("weight_kg", e.target.value)}
                       placeholder="0"
                       className="flex-1"
+                      type="number"
+                      step="0.01"
                     />
-                    <Select defaultValue="g">
-                      <SelectTrigger className="w-16 ml-2">
+                    <Select defaultValue="kg">
+                      <SelectTrigger className="w-20 ml-2">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -363,7 +492,7 @@ const ProductEditPage = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 mt-2">
                     Used to calculate shipping rates at checkout and label prices during fulfillment.
                   </p>
                 </div>
@@ -371,47 +500,76 @@ const ProductEditPage = () => {
             </Card>
 
             {/* Pricing */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm font-medium text-gray-500 uppercase">PRICING</CardTitle>
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-sm font-medium text-gray-500 uppercase flex items-center gap-2">
+                  <DollarSign className="h-4 w-4" />
+                  PRICING
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   <div>
                     <Label className="text-sm font-medium">Price</Label>
                     <div className="flex items-center mt-1">
+                      <div className="flex items-center bg-gray-50 border border-r-0 rounded-l-md px-3 py-2 text-sm text-gray-500">
+                        ₱
+                      </div>
                       <Input 
                         value={formData.price}
                         onChange={(e) => handleChange("price", e.target.value)}
                         placeholder="0.00"
+                        className="rounded-l-none"
+                        type="number"
+                        step="0.01"
                       />
-                      <span className="ml-2 text-sm text-gray-500">USD</span>
                     </div>
+                    {formData.price && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {formatCurrency(parseFloat(formData.price) || 0, 'PHP')}
+                      </p>
+                    )}
                   </div>
                   <div>
-                    <Label className="text-sm font-medium">Sale price</Label>
+                    <Label className="text-sm font-medium">Compare at price</Label>
                     <div className="flex items-center mt-1">
+                      <div className="flex items-center bg-gray-50 border border-r-0 rounded-l-md px-3 py-2 text-sm text-gray-500">
+                        ₱
+                      </div>
                       <Input 
                         value={formData.original_price}
                         onChange={(e) => handleChange("original_price", e.target.value)}
                         placeholder="0.00"
+                        className="rounded-l-none"
+                        type="number"
+                        step="0.01"
                       />
-                      <span className="ml-2 text-sm text-gray-500">USD</span>
                     </div>
+                    {formData.original_price && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {formatCurrency(parseFloat(formData.original_price) || 0, 'PHP')}
+                      </p>
+                    )}
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Product Status */}
-            <Card>
-              <CardHeader>
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
                 <CardTitle className="text-sm font-medium text-gray-500 uppercase">PRODUCT STATUS</CardTitle>
               </CardHeader>
               <CardContent>
                 <div>
-                  <Label className="text-sm font-medium">Status</Label>
-                  <Select value={formData.is_active ? "active" : "draft"} onValueChange={(v) => handleChange("is_active", v === "active")}>
+                  <Label className="text-sm font-medium flex items-center gap-2">
+                    {formData.is_active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                    Status
+                  </Label>
+                  <Select 
+                    value={formData.is_active ? "active" : "draft"} 
+                    onValueChange={(v) => handleChange("is_active", v === "active")}
+                  >
                     <SelectTrigger className="mt-1">
                       <SelectValue />
                     </SelectTrigger>
@@ -420,6 +578,12 @@ const ProductEditPage = () => {
                       <SelectItem value="draft">Draft</SelectItem>
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-gray-500 mt-2">
+                    {formData.is_active 
+                      ? "This product will be visible to customers" 
+                      : "This product will be hidden from customers"
+                    }
+                  </p>
                 </div>
               </CardContent>
             </Card>
