@@ -43,12 +43,16 @@ interface MediaLibraryTableProps {
   filters?: MediaLibraryFilters;
   searchQuery?: string;
   uploadingFiles?: UploadingFile[];
+  onUploadProgress?: (fileId: string, progress: number) => void;
+  onUploadComplete?: (fileId?: string) => void;
 }
 
 export function MediaLibraryTable({ 
   filters = { user: null, category: null, startDate: null, endDate: null }, 
   searchQuery = "",
-  uploadingFiles = []
+  uploadingFiles = [],
+  onUploadProgress,
+  onUploadComplete
 }: MediaLibraryTableProps) {
   const [selectedMedia, setSelectedMedia] = useState<MediaFileWithProfile | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -173,25 +177,6 @@ export function MediaLibraryTable({
     setSelectedMedia(file as MediaFileWithProfile);
   };
 
-  // Combine actual files with uploading files for display
-  const allFiles: MediaFile[] = [
-    ...(files || []),
-    ...uploadingFiles.map(upload => ({
-      id: upload.id,
-      filename: upload.file.name,
-      file_url: '',
-      bucket_name: 'user_uploads',
-      content_type: upload.file.type,
-      file_size: upload.file.size,
-      uploaded_at: new Date().toISOString(),
-      user_id: '',
-      category: 'uploading',
-      signedUrl: null,
-      isUploading: true,
-      progress: upload.progress
-    } as MediaFile))
-  ];
-
   const deletingCount = deletingFiles.size;
   const allSelected = files && files.length > 0 && selectedFiles.length === files.length;
   const someSelected = selectedFiles.length > 0 && files && selectedFiles.length < files.length;
@@ -211,7 +196,7 @@ export function MediaLibraryTable({
     </svg>
   </div>;
 
-  if (!allFiles || allFiles.length === 0) return <div className="text-center py-16 border rounded-lg bg-gray-50">
+  if (!files?.length && !uploadingFiles.length) return <div className="text-center py-16 border rounded-lg bg-gray-50">
     <div className="mx-auto w-16 h-16 flex items-center justify-center rounded-full bg-gray-100">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8 text-gray-400"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg>
     </div>
@@ -294,42 +279,81 @@ export function MediaLibraryTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {allFiles.map((file, index) => (
+              {/* Uploading files */}
+              {uploadingFiles.map((uploadFile) => (
+                <TableRow key={uploadFile.id} className="bg-blue-50">
+                  <TableCell>
+                    <Checkbox disabled className="h-4 w-4" />
+                  </TableCell>
+                  <TableCell className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-100 rounded flex items-center justify-center relative">
+                      {/* Circular progress */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="relative w-8 h-8">
+                          <svg className="w-8 h-8 transform -rotate-90" viewBox="0 0 36 36">
+                            <path
+                              className="text-blue-200"
+                              stroke="currentColor"
+                              strokeWidth="3"
+                              fill="none"
+                              d="M18 2.0845 A 15.9155 15.9155 0 0 1 33.9155 18 A 15.9155 15.9155 0 0 1 18 33.9155 A 15.9155 15.9155 0 0 1 2.0845 18 A 15.9155 15.9155 0 0 1 18 2.0845"
+                            />
+                            <path
+                              className="text-blue-600"
+                              stroke="currentColor"
+                              strokeWidth="3"
+                              fill="none"
+                              strokeDasharray={`${uploadFile.progress}, 100`}
+                              d="M18 2.0845 A 15.9155 15.9155 0 0 1 33.9155 18 A 15.9155 15.9155 0 0 1 18 33.9155 A 15.9155 15.9155 0 0 1 2.0845 18 A 15.9155 15.9155 0 0 1 18 2.0845"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">{uploadFile.file.name}</p>
+                      <p className="text-sm text-blue-600">{uploadFile.progress}% uploaded</p>
+                    </div>
+                  </TableCell>
+                  <TableCell>—</TableCell>
+                  <TableCell>
+                    <span className="text-blue-600 text-sm">Uploading...</span>
+                  </TableCell>
+                  <TableCell>{bytesToSize(uploadFile.file.size)}</TableCell>
+                  <TableCell>—</TableCell>
+                </TableRow>
+              ))}
+
+              {/* Actual files */}
+              {files?.map((file, index) => (
                 <TableRow 
                   key={file.id} 
                   className="cursor-pointer hover:bg-gray-50"
-                  onClick={(e) => !file.isUploading && handleRowClick(file, index, e)}
+                  onClick={(e) => handleRowClick(file, index, e)}
                 >
                   <TableCell>
                     <div data-checkbox onClick={(e) => e.stopPropagation()}>
                       <Checkbox 
                         checked={selectedFiles.includes(file.id)}
-                        onCheckedChange={(e) => !file.isUploading && handleToggleFileSelection(file, index, e as any)}
+                        onCheckedChange={(e) => handleToggleFileSelection(file, index, e as any)}
                         className="h-4 w-4"
-                        disabled={file.isUploading}
                       />
                     </div>
                   </TableCell>
                   <TableCell className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center relative">
-                      {file.isUploading ? (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                        </div>
-                      ) : (
-                        <img 
-                          src={file.signedUrl || ''} 
-                          alt={file.alt_text || file.filename}
-                          className="max-w-full max-h-full object-contain"
-                          onError={(e) => {
-                            console.error('Image load error:', file.signedUrl);
-                            e.currentTarget.style.display = 'none';
-                            const icon = document.createElement('div');
-                            icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="w-6 h-6 text-gray-400"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>';
-                            e.currentTarget.parentElement?.appendChild(icon);
-                          }}
-                        />
-                      )}
+                      <img 
+                        src={file.signedUrl || ''} 
+                        alt={file.alt_text || file.filename}
+                        className="max-w-full max-h-full object-contain"
+                        onError={(e) => {
+                          console.error('Image load error:', file.signedUrl);
+                          e.currentTarget.style.display = 'none';
+                          const icon = document.createElement('div');
+                          icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="w-6 h-6 text-gray-400"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>';
+                          e.currentTarget.parentElement?.appendChild(icon);
+                        }}
+                      />
                       {isDeleting(file.id) && (
                         <div className="absolute inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center">
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -339,21 +363,11 @@ export function MediaLibraryTable({
                     <div className="flex-1">
                       <p className="font-medium">{file.filename}</p>
                       <p className="text-sm text-gray-500">{file.filename.split('.').pop()?.toUpperCase()}</p>
-                      {file.isUploading && (
-                        <div className="mt-1">
-                          <Progress value={file.progress || 0} className="h-1" />
-                          <p className="text-xs text-blue-600 mt-1">{file.progress || 0}% uploaded</p>
-                        </div>
-                      )}
                     </div>
                   </TableCell>
                   <TableCell>{file.alt_text || '—'}</TableCell>
                   <TableCell>
-                    {file.isUploading ? (
-                      <span className="text-blue-600 text-sm">Uploading...</span>
-                    ) : (
-                      formatDistanceToNow(new Date(file.uploaded_at), { addSuffix: true })
-                    )}
+                    {formatDistanceToNow(new Date(file.uploaded_at), { addSuffix: true })}
                   </TableCell>
                   <TableCell>{bytesToSize(file.file_size)}</TableCell>
                   <TableCell>{file.references || '—'}</TableCell>

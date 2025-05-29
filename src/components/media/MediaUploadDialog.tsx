@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -12,8 +13,9 @@ import { v4 as uuidv4 } from "uuid";
 interface MediaUploadDialogProps {
   open: boolean;
   onClose: () => void;
-  onUploadComplete: () => void;
+  onUploadComplete: (fileId?: string) => void;
   onUploadStart?: (files: { id: string; file: File; progress: number; status: 'uploading' }[]) => void;
+  onUploadProgress?: (fileId: string, progress: number) => void;
 }
 
 // Inspiring/humorous quotes for upload screen
@@ -40,7 +42,7 @@ interface FileUpload {
   xhr?: XMLHttpRequest;
 }
 
-export function MediaUploadDialog({ open, onClose, onUploadComplete, onUploadStart }: MediaUploadDialogProps) {
+export function MediaUploadDialog({ open, onClose, onUploadComplete, onUploadStart, onUploadProgress }: MediaUploadDialogProps) {
   const { user, session } = useAuth();
   const [uploads, setUploads] = useState<FileUpload[]>([]);
   const [quote, setQuote] = useState(() => UPLOAD_QUOTES[Math.floor(Math.random() * UPLOAD_QUOTES.length)]);
@@ -106,6 +108,11 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete, onUploadSta
         if (event.lengthComputable) {
           const percentComplete = Math.round((event.loaded / event.total) * 100);
           updateUpload(upload.id, { progress: percentComplete });
+          
+          // Notify parent about progress
+          if (onUploadProgress) {
+            onUploadProgress(upload.id, percentComplete);
+          }
         }
       });
 
@@ -177,12 +184,16 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete, onUploadSta
         message: 'Upload completed successfully' 
       });
       
-      // Trigger gallery refresh
-      onUploadComplete();
+      // Notify parent about completion
+      if (onUploadProgress) {
+        onUploadProgress(upload.id, 100);
+      }
       
+      // Trigger gallery refresh and remove from uploading list
       setTimeout(() => {
+        onUploadComplete(upload.id);
         setUploads(current => current.filter(u => u.id !== upload.id));
-      }, 2000);
+      }, 1000); // Small delay to show completion
       
     } catch (error: any) {
       console.error("Upload error:", error);
@@ -191,6 +202,12 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete, onUploadSta
         status: 'error', 
         message: determineErrorMessage(error) 
       });
+      
+      // Remove failed upload after delay
+      setTimeout(() => {
+        onUploadComplete(upload.id);
+        setUploads(current => current.filter(u => u.id !== upload.id));
+      }, 3000);
     }
   };
 
@@ -253,6 +270,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete, onUploadSta
     
     // Remove from uploads list
     setUploads(current => current.filter(u => u.id !== id));
+    onUploadComplete(id);
     toast.info('Upload canceled');
   };
 

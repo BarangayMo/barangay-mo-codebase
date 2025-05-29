@@ -43,9 +43,17 @@ interface MediaLibraryGridProps {
   filters: MediaLibraryFilters;
   searchQuery?: string;
   uploadingFiles?: UploadingFile[];
+  onUploadProgress?: (fileId: string, progress: number) => void;
+  onUploadComplete?: (fileId?: string) => void;
 }
 
-export function MediaLibraryGrid({ filters, searchQuery = "", uploadingFiles = [] }: MediaLibraryGridProps) {
+export function MediaLibraryGrid({ 
+  filters, 
+  searchQuery = "", 
+  uploadingFiles = [],
+  onUploadProgress,
+  onUploadComplete
+}: MediaLibraryGridProps) {
   const [selectedMedia, setSelectedMedia] = useState<MediaFileWithProfile | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
@@ -66,25 +74,6 @@ export function MediaLibraryGrid({ filters, searchQuery = "", uploadingFiles = [
     handleCopyUrl,
     refetch
   } = useMediaLibrary(filters, searchQuery);
-
-  // Combine actual files with uploading files for display
-  const allFiles: MediaFile[] = [
-    ...(mediaFiles || []),
-    ...uploadingFiles.map(upload => ({
-      id: upload.id,
-      filename: upload.file.name,
-      file_url: '',
-      bucket_name: 'user_uploads',
-      content_type: upload.file.type,
-      file_size: upload.file.size,
-      uploaded_at: new Date().toISOString(),
-      user_id: '',
-      category: 'uploading',
-      signedUrl: null,
-      isUploading: true,
-      progress: upload.progress
-    } as MediaFile))
-  ];
 
   // Enhanced toggle function with range selection support
   const handleToggleFileSelection = (file: MediaFile, index: number, event: React.MouseEvent) => {
@@ -171,7 +160,8 @@ export function MediaLibraryGrid({ filters, searchQuery = "", uploadingFiles = [
     return <LoadingState />;
   }
 
-  if (!allFiles?.length) {
+  // Only show actual media files, uploading files are handled separately
+  if (!mediaFiles?.length && !uploadingFiles.length) {
     return <EmptyMediaState />;
   }
 
@@ -235,35 +225,55 @@ export function MediaLibraryGrid({ filters, searchQuery = "", uploadingFiles = [
       )}
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        {allFiles.map((file, index) => {
-          if (file.isUploading) {
-            // Render uploading file card
-            return (
-              <div key={file.id} className="border border-dashed border-blue-300 rounded-lg p-2 bg-blue-50">
-                <div className="aspect-square bg-blue-100 rounded flex items-center justify-center mb-2">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-xs text-gray-600 truncate">{file.filename}</p>
-                  <Progress value={file.progress || 0} className="h-1" />
-                  <p className="text-xs text-blue-600">{file.progress || 0}% uploaded</p>
+        {/* Uploading files */}
+        {uploadingFiles.map((uploadFile) => (
+          <div key={uploadFile.id} className="border border-dashed border-blue-300 rounded-lg p-2 bg-blue-50 relative">
+            <div className="aspect-square bg-blue-100 rounded flex items-center justify-center mb-2 relative">
+              {/* Circular progress overlay */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="relative w-16 h-16">
+                  <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 36 36">
+                    <path
+                      className="text-blue-200"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      fill="none"
+                      d="M18 2.0845 A 15.9155 15.9155 0 0 1 33.9155 18 A 15.9155 15.9155 0 0 1 18 33.9155 A 15.9155 15.9155 0 0 1 2.0845 18 A 15.9155 15.9155 0 0 1 18 2.0845"
+                    />
+                    <path
+                      className="text-blue-600"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      fill="none"
+                      strokeDasharray={`${uploadFile.progress}, 100`}
+                      d="M18 2.0845 A 15.9155 15.9155 0 0 1 33.9155 18 A 15.9155 15.9155 0 0 1 18 33.9155 A 15.9155 15.9155 0 0 1 2.0845 18 A 15.9155 15.9155 0 0 1 18 2.0845"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-xs font-medium text-blue-700">{uploadFile.progress}%</span>
+                  </div>
                 </div>
               </div>
-            );
-          }
-          
-          return (
-            <MediaFileCard 
-              key={file.id} 
-              file={file}
-              index={index}
-              onSelect={(file) => setSelectedMedia(file as MediaFileWithProfile)}
-              onToggleSelect={(event) => handleToggleFileSelection(file, index, event)}
-              isSelected={selectedFiles.includes(file.id)}
-              isDeleting={isDeleting(file.id)}
-            />
-          );
-        })}
+            </div>
+            <div className="space-y-2">
+              <p className="text-xs text-gray-600 truncate">{uploadFile.file.name}</p>
+              <p className="text-xs text-blue-600">Uploading...</p>
+            </div>
+          </div>
+        ))}
+
+        {/* Actual media files */}
+        {mediaFiles?.map((file, index) => (
+          <MediaFileCard 
+            key={file.id} 
+            file={file}
+            index={index}
+            onSelect={(file) => setSelectedMedia(file as MediaFileWithProfile)}
+            onToggleSelect={(event) => handleToggleFileSelection(file, index, event)}
+            isSelected={selectedFiles.includes(file.id)}
+            isDeleting={isDeleting(file.id)}
+          />
+        ))}
       </div>
 
       {/* Media details dialog */}

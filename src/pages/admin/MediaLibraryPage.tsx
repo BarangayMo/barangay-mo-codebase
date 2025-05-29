@@ -1,143 +1,186 @@
 
-import { AdminLayout } from "@/components/layout/AdminLayout";
-import { MediaLibraryTable } from "@/components/media/MediaLibraryTable";
-import { MediaLibraryGrid } from "@/components/media/MediaLibraryGrid";
+import { useState, useCallback } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Upload, List, Grid, Search, Filter } from "lucide-react";
-import { useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
+import { UploadCloud, Search, Grid, List, Filter } from "lucide-react";
+import { MediaLibraryGrid } from "@/components/media/MediaLibraryGrid";
+import { MediaLibraryTable } from "@/components/media/MediaLibraryTable";
 import { MediaLibraryFilters } from "@/components/media/MediaLibraryFilters";
 import { MediaUploadDialog } from "@/components/media/MediaUploadDialog";
 import { useMediaLibrary } from "@/hooks";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+
+interface UploadingFile {
+  id: string;
+  file: File;
+  progress: number;
+  status: 'uploading';
+}
 
 export default function MediaLibraryPage() {
-  const [viewType, setViewType] = useState<'grid' | 'table'>('grid');
+  const [view, setView] = useState<'grid' | 'table'>('grid');
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({
     user: null,
     category: null,
     startDate: null,
     endDate: null
   });
-  const [searchQuery, setSearchQuery] = useState("");
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [uploadingFiles, setUploadingFiles] = useState<any[]>([]);
+  const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
 
-  // Get media files count
-  const { mediaFiles, loadingFiles, refetch } = useMediaLibrary(filters, searchQuery);
-  const mediaCount = mediaFiles?.length || 0;
+  const { refetch } = useMediaLibrary(filters, searchQuery);
 
-  const handleUploadComplete = () => {
-    // Force refresh of the media components by incrementing the key and calling refetch
-    setRefreshKey(prev => prev + 1);
+  const handleFiltersChange = useCallback((newFilters: any) => {
+    setFilters(newFilters);
+  }, []);
+
+  const handleUploadStart = useCallback((files: UploadingFile[]) => {
+    setUploadingFiles(prev => [...prev, ...files]);
+  }, []);
+
+  const handleUploadProgress = useCallback((fileId: string, progress: number) => {
+    setUploadingFiles(prev => 
+      prev.map(file => 
+        file.id === fileId ? { ...file, progress } : file
+      )
+    );
+  }, []);
+
+  const handleUploadComplete = useCallback((fileId?: string) => {
+    if (fileId) {
+      // Remove specific file from uploading list
+      setUploadingFiles(prev => prev.filter(file => file.id !== fileId));
+    } else {
+      // Clear all uploading files and refresh
+      setUploadingFiles([]);
+    }
     refetch();
-    console.log("Gallery refreshed after upload completion");
-  };
+  }, [refetch]);
 
-  const handleUploadStart = (files: any[]) => {
-    setUploadingFiles(files);
-  };
+  const activeFiltersCount = Object.values(filters).filter(Boolean).length;
 
   return (
-    <AdminLayout title="Media Library">
-      <div className="py-6">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-semibold">Media Library</h1>
-            <p className="text-sm text-gray-600 mt-1">
-              {loadingFiles ? (
-                "Loading..."
-              ) : (
-                `${mediaCount} file${mediaCount !== 1 ? 's' : ''} in gallery`
-              )}
-            </p>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search media..." 
+    <div className="space-y-6 p-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Media Library</h1>
+          <p className="text-gray-600 mt-1">Manage your uploaded files and media</p>
+        </div>
+        
+        <Button 
+          onClick={() => setUploadOpen(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white"
+        >
+          <UploadCloud className="h-4 w-4 mr-2" />
+          Upload Media
+        </Button>
+      </div>
+
+      {/* Search and Controls */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+            {/* Search */}
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search media..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 w-full sm:w-80 h-12 text-base"
+                className="pl-10"
               />
             </div>
-            
-            <div className="flex gap-2">
+
+            {/* Controls */}
+            <div className="flex items-center gap-3">
+              {/* Filters */}
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-12 px-4">
+                  <Button variant="outline" className="relative">
                     <Filter className="h-4 w-4 mr-2" />
                     Filters
+                    {activeFiltersCount > 0 && (
+                      <Badge className="ml-2 bg-blue-600 text-white min-w-[20px] h-5 text-xs flex items-center justify-center">
+                        {activeFiltersCount}
+                      </Badge>
+                    )}
                   </Button>
                 </SheetTrigger>
-                <SheetContent className="w-96 overflow-y-auto">
+                <SheetContent side="left" className="w-[400px] sm:w-[540px] overflow-y-auto">
                   <SheetHeader>
                     <SheetTitle>Filter Media</SheetTitle>
+                    <SheetDescription>
+                      Apply filters to narrow down your media search
+                    </SheetDescription>
                   </SheetHeader>
                   <div className="mt-6">
-                    <MediaLibraryFilters 
-                      filters={filters} 
-                      onFiltersChange={setFilters} 
+                    <MediaLibraryFilters
+                      filters={filters}
+                      onFiltersChange={handleFiltersChange}
                     />
                   </div>
                 </SheetContent>
               </Sheet>
-              
-              <Button 
-                variant={viewType === 'grid' ? "default" : "outline"} 
-                size="sm" 
-                onClick={() => setViewType('grid')}
-                className={`h-12 px-4 ${viewType === 'grid' ? "bg-blue-500 hover:bg-blue-600 text-white" : ""}`}
-              >
-                <Grid className="h-4 w-4" />
-              </Button>
-              
-              <Button 
-                variant={viewType === 'table' ? "default" : "outline"} 
-                size="sm" 
-                onClick={() => setViewType('table')}
-                className={`h-12 px-4 ${viewType === 'table' ? "bg-blue-500 hover:bg-blue-600 text-white" : ""}`}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-              
-              <Button 
-                className="bg-blue-500 hover:bg-blue-600 text-white h-12 px-6"
-                onClick={() => setUploadDialogOpen(true)}
-              >
-                Upload files
-                <Upload className="ml-2 h-4 w-4" />
-              </Button>
+
+              {/* View Toggle */}
+              <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+                <Button
+                  variant={view === 'grid' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setView('grid')}
+                  className={view === 'grid' ? 'bg-blue-600 hover:bg-blue-700 text-white' : ''}
+                >
+                  <Grid className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={view === 'table' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setView('table')}
+                  className={view === 'table' ? 'bg-blue-600 hover:bg-blue-700 text-white' : ''}
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-        
-        {viewType === 'table' ? (
-          <MediaLibraryTable 
-            key={`table-${refreshKey}`}
-            filters={filters}
-            searchQuery={searchQuery} 
-            uploadingFiles={uploadingFiles}
-          />
-        ) : (
-          <MediaLibraryGrid 
-            key={`grid-${refreshKey}`}
-            filters={filters}
-            searchQuery={searchQuery} 
-            uploadingFiles={uploadingFiles}
-          />
-        )}
+        </CardContent>
+      </Card>
 
-        <MediaUploadDialog 
-          open={uploadDialogOpen}
-          onClose={() => setUploadDialogOpen(false)}
-          onUploadComplete={handleUploadComplete}
-          onUploadStart={handleUploadStart}
-        />
-      </div>
-    </AdminLayout>
+      {/* Media Content */}
+      <Card>
+        <CardContent className="p-6">
+          {view === 'grid' ? (
+            <MediaLibraryGrid 
+              filters={filters} 
+              searchQuery={searchQuery}
+              uploadingFiles={uploadingFiles}
+              onUploadProgress={handleUploadProgress}
+              onUploadComplete={handleUploadComplete}
+            />
+          ) : (
+            <MediaLibraryTable 
+              filters={filters} 
+              searchQuery={searchQuery}
+              uploadingFiles={uploadingFiles}
+              onUploadProgress={handleUploadProgress}
+              onUploadComplete={handleUploadComplete}
+            />
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Upload Dialog */}
+      <MediaUploadDialog
+        open={uploadOpen}
+        onClose={() => setUploadOpen(false)}
+        onUploadComplete={handleUploadComplete}
+        onUploadStart={handleUploadStart}
+        onUploadProgress={handleUploadProgress}
+      />
+    </div>
   );
 }

@@ -1,294 +1,231 @@
 
 import { useState } from "react";
-import { formatDistanceToNow } from "date-fns";
-import { Download, Trash2, Copy, Edit2, Save, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
+import { Download, ExternalLink, Trash2, Edit, X, Check } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 import { bytesToSize } from "@/lib/utils";
-import { MediaFile } from "@/hooks/media-library/types";
 
-// Define types for our profiles
-interface Profile {
+interface MediaFile {
   id: string;
-  first_name: string | null;
-  last_name: string | null;
-}
-
-interface MediaFileWithProfile extends MediaFile {
-  profile?: Profile | null;
+  filename: string;
+  alt_text?: string;
+  uploaded_at: string;
+  file_size: number;
+  content_type: string;
+  bucket_name: string;
+  file_url: string;
+  references?: number;
+  signedUrl?: string;
+  category?: string;
 }
 
 interface MediaDetailsDialogProps {
-  file: MediaFileWithProfile | null;
+  file: MediaFile | null;
   isOpen: boolean;
   onClose: () => void;
   onDelete: () => void;
   onDownload: (bucketName: string, fileUrl: string, fileName: string, signedUrl?: string) => void;
   onCopyUrl: (signedUrl?: string, bucketName?: string, fileUrl?: string) => void;
-  onUpdateFile?: (fileId: string, updates: { filename?: string; alt_text?: string }) => void;
+  onUpdateFile: (fileId: string, updates: { filename?: string; alt_text?: string }) => void;
 }
 
-export function MediaDetailsDialog({ 
-  file, 
-  isOpen, 
-  onClose, 
-  onDelete, 
-  onDownload, 
+export function MediaDetailsDialog({
+  file,
+  isOpen,
+  onClose,
+  onDelete,
+  onDownload,
   onCopyUrl,
   onUpdateFile
 }: MediaDetailsDialogProps) {
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [isEditingAlt, setIsEditingAlt] = useState(false);
-  const [editedName, setEditedName] = useState("");
-  const [editedAlt, setEditedAlt] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedFilename, setEditedFilename] = useState("");
+  const [editedAltText, setEditedAltText] = useState("");
 
   if (!file) return null;
 
-  const handleEditName = () => {
-    setEditedName(file.filename);
-    setIsEditingName(true);
+  const handleEdit = () => {
+    setEditedFilename(file.filename);
+    setEditedAltText(file.alt_text || "");
+    setIsEditing(true);
   };
 
-  const handleEditAlt = () => {
-    setEditedAlt(file.alt_text || "");
-    setIsEditingAlt(true);
+  const handleSave = () => {
+    onUpdateFile(file.id, {
+      filename: editedFilename,
+      alt_text: editedAltText
+    });
+    setIsEditing(false);
   };
 
-  const handleSaveName = () => {
-    if (onUpdateFile && editedName.trim() !== file.filename) {
-      onUpdateFile(file.id, { filename: editedName.trim() });
-    }
-    setIsEditingName(false);
+  const handleCancel = () => {
+    setIsEditing(false);
+    setEditedFilename("");
+    setEditedAltText("");
   };
 
-  const handleSaveAlt = () => {
-    if (onUpdateFile && editedAlt !== (file.alt_text || "")) {
-      onUpdateFile(file.id, { alt_text: editedAlt });
-    }
-    setIsEditingAlt(false);
-  };
-
-  // Helper function to get file icon
-  const getFileIcon = (contentType: string) => {
-    if (contentType.startsWith('image/')) {
-      return null; // Will render the actual image
-    } else if (contentType.startsWith('video/')) {
-      return <div className="flex items-center justify-center h-16 w-16">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-12 h-12 text-blue-500"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-      </div>;
-    } else if (contentType.startsWith('audio/')) {
-      return <div className="flex items-center justify-center h-16 w-16">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-12 h-12 text-green-500"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
-      </div>;
-    } else {
-      return <div className="flex items-center justify-center h-16 w-16">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-12 h-12 text-gray-500"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-      </div>;
+  const getCategoryColor = (category?: string) => {
+    switch (category) {
+      case 'image': return 'bg-blue-100 text-blue-800';
+      case 'video': return 'bg-purple-100 text-purple-800';
+      case 'audio': return 'bg-green-100 text-green-800';
+      case 'document': return 'bg-orange-100 text-orange-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-auto p-0 rounded-xl border-none shadow-2xl">
-        <DialogHeader className="px-6 pt-6 pb-2">
-          <DialogTitle className="text-xl font-semibold flex items-center gap-2">
-            {isEditingName ? (
-              <div className="flex items-center gap-2 flex-1">
-                <Input
-                  value={editedName}
-                  onChange={(e) => setEditedName(e.target.value)}
-                  className="flex-1"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleSaveName();
-                    if (e.key === 'Escape') setIsEditingName(false);
-                  }}
-                  autoFocus
-                />
-                <Button size="sm" onClick={handleSaveName}>
-                  <Save className="h-4 w-4" />
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => setIsEditingName(false)}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 flex-1">
-                <span className="truncate">{file.filename}</span>
-                <Button size="sm" variant="ghost" onClick={handleEditName}>
-                  <Edit2 className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
-          </DialogTitle>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-semibold">Media Details</DialogTitle>
         </DialogHeader>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
-          <div className="bg-gray-50 rounded-xl flex items-center justify-center p-4 overflow-hidden">
-            {file.content_type.startsWith('image/') ? (
-              <img 
-                src={file.signedUrl} 
-                alt={file.filename}
-                className="max-w-full max-h-[350px] object-contain rounded-lg shadow-sm"
-                onError={(e) => {
-                  console.error('Detail view image load error:', file.file_url);
-                  e.currentTarget.style.display = 'none';
-                  const icon = document.createElement('div');
-                  icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="w-16 h-16 text-gray-400"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>';
-                  e.currentTarget.parentElement?.appendChild(icon);
-                }}
-              />
-            ) : file.content_type.startsWith('video/') ? (
-              <video 
-                src={file.signedUrl}
-                className="max-w-full max-h-[350px] rounded-lg shadow-sm"
-                controls
-                onError={(e) => {
-                  console.error('Detail view video load error:', file.file_url);
-                  e.currentTarget.style.display = 'none';
-                  const icon = document.createElement('div');
-                  icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="w-16 h-16 text-blue-500"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
-                  e.currentTarget.parentElement?.appendChild(icon);
-                }}
-              />
-            ) : (
-              <div className="h-40 w-40 flex items-center justify-center">
-                {getFileIcon(file.content_type)}
-              </div>
-            )}
-          </div>
-          
-          <div className="space-y-6">
-            <div className="bg-white rounded-lg p-4 border shadow-sm">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">File details</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Uploaded</span>
-                  <span className="text-sm font-medium">
-                    {formatDistanceToNow(new Date(file.uploaded_at), { addSuffix: true })}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">File size</span>
-                  <span className="text-sm font-medium">
-                    {bytesToSize(file.file_size)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Type</span>
-                  <span className="text-sm font-medium">
-                    {file.content_type}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Category</span>
-                  <span className="text-sm font-medium">
-                    {file.category || "—"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Bucket</span>
-                  <span className="text-sm font-medium">
-                    {file.bucket_name || "user_uploads"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Uploaded by</span>
-                  <span className="text-sm font-medium">
-                    {file.profile ? 
-                      `${file.profile.first_name || ''} ${file.profile.last_name || ''}`.trim() || 'Unknown User' 
-                      : 'Unknown User'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Alt Text Section */}
-            <div className="bg-white rounded-lg p-4 border shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-700">Alt Text</h3>
-                {!isEditingAlt && (
-                  <Button size="sm" variant="ghost" onClick={handleEditAlt}>
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-              {isEditingAlt ? (
-                <div className="space-y-2">
-                  <Textarea
-                    value={editedAlt}
-                    onChange={(e) => setEditedAlt(e.target.value)}
-                    placeholder="Add alt text for accessibility..."
-                    className="min-h-[80px]"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Escape') setIsEditingAlt(false);
-                    }}
-                    autoFocus
-                  />
-                  <div className="flex gap-2">
-                    <Button size="sm" onClick={handleSaveAlt}>
-                      <Save className="h-4 w-4 mr-2" />
-                      Save
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => setIsEditingAlt(false)}>
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Preview */}
+          <div className="space-y-4">
+            <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+              {file.signedUrl ? (
+                <img 
+                  src={file.signedUrl} 
+                  alt={file.alt_text || file.filename}
+                  className="max-w-full max-h-full object-contain"
+                />
               ) : (
-                <p className="text-sm text-gray-600">
-                  {file.alt_text || "No alt text provided"}
-                </p>
+                <div className="text-gray-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-16 h-16">
+                    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path>
+                    <circle cx="12" cy="13" r="3"></circle>
+                  </svg>
+                </div>
               )}
             </div>
             
-            {/* Action Buttons - Inline */}
-            <div className="flex gap-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="flex-1 bg-white hover:bg-gray-50 transition-all rounded-lg shadow-sm hover:shadow-md"
-                      onClick={() => onCopyUrl(file.signedUrl, file.bucket_name, file.file_url)}
-                    >
-                      <Copy className="h-4 w-4 mr-2" />
-                      Copy URL
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs">Copy URL to clipboard</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="flex-1 bg-white hover:bg-blue-50 text-blue-600 hover:text-blue-700 transition-all rounded-lg shadow-sm hover:shadow-md"
-                onClick={() => onDownload(
-                  file.bucket_name || 'user_uploads', 
-                  file.file_url, 
-                  file.filename,
-                  file.signedUrl
-                )}
+            {/* Actions */}
+            <div className="flex flex-wrap gap-2">
+              <Button
+                onClick={() => onDownload(file.bucket_name, file.file_url, file.filename, file.signedUrl)}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 <Download className="h-4 w-4 mr-2" />
                 Download
               </Button>
-              
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="flex-1 bg-white text-red-600 hover:text-red-700 hover:bg-red-50 transition-all rounded-lg shadow-sm hover:shadow-md"
+              <Button
+                variant="outline"
+                onClick={() => onCopyUrl(file.signedUrl, file.bucket_name, file.file_url)}
+                className="border-blue-300 text-blue-700 hover:bg-blue-50"
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Copy URL
+              </Button>
+              <Button
+                variant="destructive"
                 onClick={onDelete}
+                className="bg-red-500 hover:bg-red-600"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete
               </Button>
+            </div>
+          </div>
+
+          {/* Details */}
+          <div className="space-y-6">
+            {/* File Information */}
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="filename" className="text-sm font-medium text-gray-700">
+                  File Name
+                </Label>
+                {isEditing ? (
+                  <Input
+                    id="filename"
+                    value={editedFilename}
+                    onChange={(e) => setEditedFilename(e.target.value)}
+                    className="mt-1"
+                  />
+                ) : (
+                  <div className="mt-1 flex items-center justify-between">
+                    <p className="text-sm text-gray-900 break-all">{file.filename}</p>
+                    <Button variant="ghost" size="sm" onClick={handleEdit}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="alt-text" className="text-sm font-medium text-gray-700">
+                  Alt Text
+                </Label>
+                {isEditing ? (
+                  <Textarea
+                    id="alt-text"
+                    value={editedAltText}
+                    onChange={(e) => setEditedAltText(e.target.value)}
+                    placeholder="Describe this image for accessibility"
+                    className="mt-1"
+                  />
+                ) : (
+                  <p className="mt-1 text-sm text-gray-900">{file.alt_text || "No alt text provided"}</p>
+                )}
+              </div>
+
+              {isEditing && (
+                <div className="flex gap-2">
+                  <Button onClick={handleSave} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <Check className="h-4 w-4 mr-2" />
+                    Save
+                  </Button>
+                  <Button variant="outline" onClick={handleCancel} size="sm">
+                    <X className="h-4 w-4 mr-2" />
+                    Cancel
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Metadata */}
+            <div className="space-y-3 pt-4 border-t border-gray-200">
+              <h4 className="font-medium text-gray-900">File Information</h4>
+              
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-gray-500">File Size</p>
+                  <p className="font-medium">{bytesToSize(file.file_size)}</p>
+                </div>
+                
+                <div>
+                  <p className="text-gray-500">Type</p>
+                  <p className="font-medium">{file.content_type}</p>
+                </div>
+                
+                <div>
+                  <p className="text-gray-500">Uploaded</p>
+                  <p className="font-medium">
+                    {formatDistanceToNow(new Date(file.uploaded_at), { addSuffix: true })}
+                  </p>
+                </div>
+                
+                <div>
+                  <p className="text-gray-500">References</p>
+                  <p className="font-medium">{file.references || 0}</p>
+                </div>
+              </div>
+              
+              {file.category && (
+                <div>
+                  <p className="text-gray-500 text-sm">Category</p>
+                  <Badge className={`mt-1 ${getCategoryColor(file.category)}`}>
+                    {file.category}
+                  </Badge>
+                </div>
+              )}
             </div>
           </div>
         </div>
