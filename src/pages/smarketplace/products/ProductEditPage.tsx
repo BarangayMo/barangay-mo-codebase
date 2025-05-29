@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { 
   Plus, 
   X, 
@@ -32,10 +32,11 @@ import {
   Eye,
   EyeOff,
   Tag,
-  Truck
+  Truck,
+  Save
 } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
-import { formatCurrency } from "@/lib/utils";
+import { formatPHP } from "@/utils/currency";
 import { DashboardPageHeader } from "@/components/dashboard/PageHeader";
 
 interface FormData {
@@ -70,6 +71,7 @@ interface Collection {
 const ProductEditPage = () => {
   const { id } = useParams();
   const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -134,6 +136,16 @@ const ProductEditPage = () => {
     },
     enabled: !!id
   });
+
+  // Filter collections based on search term
+  const filteredCollections = useMemo(() => {
+    if (!collections) return [];
+    if (!searchTerm) return collections;
+    return collections.filter(collection => 
+      collection.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (collection.description && collection.description.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  }, [collections, searchTerm]);
 
   useEffect(() => {
     if (product) {
@@ -242,7 +254,7 @@ const ProductEditPage = () => {
 
   return (
     <AdminLayout title="Edit Product">
-      <div className="w-full">
+      <div className="w-full max-w-none">
         <DashboardPageHeader
           title="Edit product"
           breadcrumbItems={[
@@ -254,17 +266,19 @@ const ProductEditPage = () => {
             {
               label: "Save as Draft",
               onClick: () => handleSave(),
-              variant: "outline" as const
+              variant: "outline" as const,
+              icon: <Save className="h-4 w-4" />
             }
           ]}
           actionButton={{
             label: "Save Product",
             onClick: handleSave,
-            variant: "default" as const
+            variant: "default" as const,
+            icon: <Save className="h-4 w-4" />
           }}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-8">
           {/* Left Column - Product Details */}
           <div className="lg:col-span-2 space-y-6">
             {/* Product Section */}
@@ -288,31 +302,10 @@ const ProductEditPage = () => {
                 
                 <div>
                   <Label className="text-sm font-medium">Description</Label>
-                  <div className="mt-1 border rounded-md">
-                    <div className="flex items-center space-x-2 px-3 py-2 border-b bg-gray-50">
-                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                        <Bold className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                        <Italic className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                        <Underline className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                        <Link className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                        <List className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                        <AlignLeft className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <Textarea 
+                  <div className="mt-1">
+                    <RichTextEditor
                       value={formData.description}
-                      onChange={(e) => handleChange("description", e.target.value)}
-                      className="border-0 resize-none min-h-[120px] focus-visible:ring-0"
+                      onChange={(value) => handleChange("description", value)}
                       placeholder="Product description..."
                     />
                   </div>
@@ -392,6 +385,95 @@ const ProductEditPage = () => {
 
           {/* Right Column - Organization & Settings */}
           <div className="space-y-6">
+            {/* Product Status */}
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-sm font-medium text-gray-500 uppercase">PRODUCT STATUS</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div>
+                  <Label className="text-sm font-medium flex items-center gap-2">
+                    {formData.is_active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                    Status
+                  </Label>
+                  <Select 
+                    value={formData.is_active ? "active" : "draft"} 
+                    onValueChange={(v) => handleChange("is_active", v === "active")}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="draft">Draft</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500 mt-2">
+                    {formData.is_active 
+                      ? "This product will be visible to customers" 
+                      : "This product will be hidden from customers"
+                    }
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Pricing */}
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-sm font-medium text-gray-500 uppercase flex items-center gap-2">
+                  <DollarSign className="h-4 w-4" />
+                  PRICING
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium">Price</Label>
+                    <div className="flex items-center mt-1">
+                      <div className="flex items-center bg-gray-50 border border-r-0 rounded-l-md px-3 py-2 text-sm text-gray-500">
+                        ₱
+                      </div>
+                      <Input 
+                        value={formData.price}
+                        onChange={(e) => handleChange("price", e.target.value)}
+                        placeholder="0.00"
+                        className="rounded-l-none"
+                        type="number"
+                        step="0.01"
+                      />
+                    </div>
+                    {formData.price && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {formatPHP(parseFloat(formData.price) || 0)}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Compare at price</Label>
+                    <div className="flex items-center mt-1">
+                      <div className="flex items-center bg-gray-50 border border-r-0 rounded-l-md px-3 py-2 text-sm text-gray-500">
+                        ₱
+                      </div>
+                      <Input 
+                        value={formData.original_price}
+                        onChange={(e) => handleChange("original_price", e.target.value)}
+                        placeholder="0.00"
+                        className="rounded-l-none"
+                        type="number"
+                        step="0.01"
+                      />
+                    </div>
+                    {formData.original_price && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {formatPHP(parseFloat(formData.original_price) || 0)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Organization */}
             <Card className="shadow-sm">
               <CardHeader className="pb-4">
@@ -428,12 +510,17 @@ const ProductEditPage = () => {
                   
                   <div className="mt-2 relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input placeholder="Search collections..." className="pl-10" />
+                    <Input 
+                      placeholder="Search collections..." 
+                      className="pl-10"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
                   </div>
 
                   <ScrollArea className="h-48 mt-3 border rounded-md">
                     <div className="p-3 space-y-2">
-                      {collections?.map((collection: Collection) => (
+                      {filteredCollections?.map((collection) => (
                         <div key={collection.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-md">
                           <Checkbox
                             checked={selectedCollections.includes(collection.id)}
@@ -453,6 +540,11 @@ const ProductEditPage = () => {
                           </div>
                         </div>
                       ))}
+                      {filteredCollections?.length === 0 && (
+                        <div className="text-center py-4 text-gray-500 text-sm">
+                          {searchTerm ? 'No collections found' : 'No collections available'}
+                        </div>
+                      )}
                     </div>
                   </ScrollArea>
                 </div>
@@ -498,95 +590,27 @@ const ProductEditPage = () => {
                 </div>
               </CardContent>
             </Card>
+          </div>
+        </div>
 
-            {/* Pricing */}
-            <Card className="shadow-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-sm font-medium text-gray-500 uppercase flex items-center gap-2">
-                  <DollarSign className="h-4 w-4" />
-                  PRICING
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium">Price</Label>
-                    <div className="flex items-center mt-1">
-                      <div className="flex items-center bg-gray-50 border border-r-0 rounded-l-md px-3 py-2 text-sm text-gray-500">
-                        ₱
-                      </div>
-                      <Input 
-                        value={formData.price}
-                        onChange={(e) => handleChange("price", e.target.value)}
-                        placeholder="0.00"
-                        className="rounded-l-none"
-                        type="number"
-                        step="0.01"
-                      />
-                    </div>
-                    {formData.price && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        {formatCurrency(parseFloat(formData.price) || 0, 'PHP')}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium">Compare at price</Label>
-                    <div className="flex items-center mt-1">
-                      <div className="flex items-center bg-gray-50 border border-r-0 rounded-l-md px-3 py-2 text-sm text-gray-500">
-                        ₱
-                      </div>
-                      <Input 
-                        value={formData.original_price}
-                        onChange={(e) => handleChange("original_price", e.target.value)}
-                        placeholder="0.00"
-                        className="rounded-l-none"
-                        type="number"
-                        step="0.01"
-                      />
-                    </div>
-                    {formData.original_price && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        {formatCurrency(parseFloat(formData.original_price) || 0, 'PHP')}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Product Status */}
-            <Card className="shadow-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-sm font-medium text-gray-500 uppercase">PRODUCT STATUS</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div>
-                  <Label className="text-sm font-medium flex items-center gap-2">
-                    {formData.is_active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                    Status
-                  </Label>
-                  <Select 
-                    value={formData.is_active ? "active" : "draft"} 
-                    onValueChange={(v) => handleChange("is_active", v === "active")}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="draft">Draft</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-gray-500 mt-2">
-                    {formData.is_active 
-                      ? "This product will be visible to customers" 
-                      : "This product will be hidden from customers"
-                    }
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+        {/* Bottom Save Button */}
+        <div className="sticky bottom-0 bg-white border-t p-4 mt-8">
+          <div className="flex justify-end space-x-3">
+            <Button 
+              variant="outline" 
+              onClick={() => handleSave()}
+              className="flex items-center gap-2"
+            >
+              <Save className="h-4 w-4" />
+              Save as Draft
+            </Button>
+            <Button 
+              onClick={handleSave}
+              className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+            >
+              <Save className="h-4 w-4" />
+              Save Product
+            </Button>
           </div>
         </div>
       </div>
