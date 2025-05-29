@@ -29,7 +29,8 @@ export function useMediaLibrary(
     selectedFiles, 
     toggleFileSelection, 
     toggleAllFiles,
-    toggleAllFilesSimple 
+    toggleAllFilesSimple,
+    clearSelections
   } = useFileSelection();
 
   // Get delete state management
@@ -83,6 +84,7 @@ export function useMediaLibrary(
     toggleFileSelection,
     toggleAllFiles,
     toggleAllFilesSimple,
+    clearSelections,
     
     // File operations
     handleDownload,

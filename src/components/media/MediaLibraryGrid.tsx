@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useMediaLibrary } from "@/hooks";
 import { MediaFile } from "@/hooks/media-library/types";
@@ -121,12 +120,8 @@ export function MediaLibraryGrid({ filters, searchQuery = "" }: MediaLibraryGrid
         <div className="flex items-center gap-3">
           <Checkbox
             checked={allSelected}
-            ref={(ref) => {
-              if (ref) {
-                ref.indeterminate = someSelected;
-              }
-            }}
             onCheckedChange={() => toggleAllFiles(mediaFiles)}
+            className={someSelected ? "data-[state=indeterminate]:bg-blue-500" : ""}
           />
           <span className="text-sm font-medium text-gray-700">
             {selectedFiles.length > 0 
