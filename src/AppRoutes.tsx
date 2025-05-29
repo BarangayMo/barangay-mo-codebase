@@ -36,6 +36,7 @@ import MediaLibraryPage from "@/pages/admin/MediaLibraryPage";
 import SmarketplaceIndex from "@/pages/smarketplace/SmarketplaceIndex";
 import SmarketplaceOverview from "@/pages/smarketplace/SmarketplaceOverview";
 import ProductsAllPage from "@/pages/smarketplace/products/ProductsAllPage";
+import ProductEditPage from "@/pages/smarketplace/products/ProductEditPage";
 import CategoriesPage from "@/pages/smarketplace/products/CategoriesPage";
 import OrdersAllPage from "@/pages/smarketplace/orders/OrdersAllPage";
 import VendorsAllPage from "@/pages/smarketplace/vendors/VendorsAllPage";
@@ -90,6 +91,7 @@ export function AppRoutes() {
       <Route path="/admin/smarketplace" element={<SmarketplaceIndex />} />
       <Route path="/admin/smarketplace/overview" element={<SmarketplaceOverview />} />
       <Route path="/admin/smarketplace/products/all" element={<ProductsAllPage />} />
+      <Route path="/admin/smarketplace/products/edit/:id" element={<ProductEditPage />} />
       <Route path="/admin/smarketplace/products/categories" element={<CategoriesPage />} />
       <Route path="/admin/smarketplace/products/inventory" element={<ProductsAllPage />} />
       <Route path="/admin/smarketplace/orders/all" element={<OrdersAllPage />} />

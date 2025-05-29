@@ -1,46 +1,69 @@
 
 import { ReactNode } from "react";
-import { DashboardBreadcrumb as Breadcrumb } from "./Breadcrumb";
 import { Button } from "@/components/ui/button";
+import { Breadcrumb } from "./Breadcrumb";
+
+interface BreadcrumbItem {
+  label: string;
+  href?: string;
+}
+
+interface ActionButton {
+  label: string;
+  onClick: () => void;
+  icon?: ReactNode;
+  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | "dashboard";
+}
 
 interface DashboardPageHeaderProps {
   title: string;
   description?: string;
-  breadcrumbItems?: {
-    label: string;
-    href?: string;
-  }[];
-  actionButton?: {
-    label: string;
-    onClick: () => void;
-    variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | "dashboard";
-    icon?: ReactNode;
-  };
+  breadcrumbItems?: BreadcrumbItem[];
+  actionButton?: ActionButton;
+  secondaryActions?: ActionButton[];
 }
 
-export const DashboardPageHeader = ({
-  title,
-  description,
-  breadcrumbItems = [],
+export function DashboardPageHeader({ 
+  title, 
+  description, 
+  breadcrumbItems,
   actionButton,
-}: DashboardPageHeaderProps) => {
+  secondaryActions = []
+}: DashboardPageHeaderProps) {
   return (
-    <div className="mb-6">
-      <div className="flex items-center justify-between">
+    <div className="mb-8">
+      {breadcrumbItems && <Breadcrumb items={breadcrumbItems} />}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mt-4">
         <div>
-          <h1 className="text-2xl font-semibold">{title}</h1>
-          {description && <p className="text-gray-500">{description}</p>}
+          <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
+          {description && (
+            <p className="text-muted-foreground mt-2">{description}</p>
+          )}
         </div>
-        {actionButton && (
-          <Button variant={actionButton.variant} onClick={actionButton.onClick}>
-            {actionButton.icon}
-            {actionButton.label}
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {secondaryActions.map((action, index) => (
+            <Button
+              key={index}
+              variant={action.variant || "outline"}
+              onClick={action.onClick}
+              className="flex items-center gap-2"
+            >
+              {action.icon}
+              {action.label}
+            </Button>
+          ))}
+          {actionButton && (
+            <Button
+              variant={actionButton.variant || "default"}
+              onClick={actionButton.onClick}
+              className="flex items-center gap-2"
+            >
+              {actionButton.icon}
+              {actionButton.label}
+            </Button>
+          )}
+        </div>
       </div>
-      {breadcrumbItems.length > 0 && (
-        <Breadcrumb items={breadcrumbItems} className="mt-2" />
-      )}
     </div>
   );
-};
+}
