@@ -239,11 +239,11 @@ const ProductEditPage = () => {
             </CardHeader>
             <CardContent className="p-6 space-y-5">
               <div>
-                <Input className="border-gray-300 rounded-sm text-sm"
+                <Input
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
                   placeholder="Product title"
-                  className="text-lg font-medium"
+                  className="border-gray-300 rounded-sm text-lg font-medium"
                 />
               </div>
               <div>
@@ -292,20 +292,22 @@ const ProductEditPage = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium text-gray-600">Price</Label>
-                  <Input className="border-gray-300 rounded-sm text-sm"
+                  <Input
                     type="number"
                     value={formData.price}
                     onChange={(e) => handleInputChange('price', e.target.value)}
                     placeholder="0.00"
+                    className="border-gray-300 rounded-sm text-sm"
                   />
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-gray-600">Compare at price</Label>
-                  <Input className="border-gray-300 rounded-sm text-sm"
+                  <Input
                     type="number"
                     value={formData.original_price}
                     onChange={(e) => handleInputChange('original_price', e.target.value)}
                     placeholder="0.00"
+                    className="border-gray-300 rounded-sm text-sm"
                   />
                 </div>
               </div>
@@ -321,19 +323,21 @@ const ProductEditPage = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium text-gray-600">SKU</Label>
-                  <Input className="border-gray-300 rounded-sm text-sm"
+                  <Input
                     value={formData.sku}
                     onChange={(e) => handleInputChange('sku', e.target.value)}
                     placeholder="Product SKU"
+                    className="border-gray-300 rounded-sm text-sm"
                   />
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-gray-600">Quantity</Label>
-                  <Input className="border-gray-300 rounded-sm text-sm"
+                  <Input
                     type="number"
                     value={formData.stock_quantity}
                     onChange={(e) => handleInputChange('stock_quantity', e.target.value)}
                     placeholder="0"
+                    className="border-gray-300 rounded-sm text-sm"
                   />
                 </div>
               </div>
@@ -392,7 +396,7 @@ const ProductEditPage = () => {
                 <div key={index} className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-sm font-medium text-gray-600">{field.key}</Label>
-                    <Input className="border-gray-300 rounded-sm text-sm" value={field.value} readOnly className="bg-gray-50" />
+                    <Input value={field.value} readOnly className="bg-gray-50 border-gray-300 rounded-sm text-sm" />
                   </div>
                 </div>
               ))}
@@ -446,10 +450,11 @@ const ProductEditPage = () => {
             <CardContent className="space-y-4">
               <div>
                 <Label className="text-sm font-medium text-gray-600">Type</Label>
-                <Input className="border-gray-300 rounded-sm text-sm"
+                <Input
                   value={formData.brand}
                   onChange={(e) => handleInputChange('brand', e.target.value)}
                   placeholder="Product type"
+                  className="border-gray-300 rounded-sm text-sm"
                 />
               </div>
               <div>
@@ -490,9 +495,9 @@ const ProductEditPage = () => {
                     </Badge>
                   ))}
                 </div>
-                <Input className="border-gray-300 rounded-sm text-sm"
+                <Input
                   placeholder="Add tags..."
-                  className="mt-2"
+                  className="mt-2 border-gray-300 rounded-sm text-sm"
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
                       addTag(e.currentTarget.value);
