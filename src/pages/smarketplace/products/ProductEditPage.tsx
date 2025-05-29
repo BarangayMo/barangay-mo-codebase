@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { MediaUploadDialog } from "@/components/media/MediaUploadDialog";
 import { useMediaLibrary } from "@/hooks/media-library/use-media-library";
 import { 
@@ -210,7 +211,7 @@ const ProductEditPage = () => {
     if (product) {
       setFormData({
         name: product.name || "",
-        slug: product.slug || product.name?.toLowerCase().replace(/\s+/g, '-') || "",
+        slug: product.name?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') || "",
         description: product.description || "",
         price: product.price?.toString() || "",
         original_price: product.original_price?.toString() || "",
