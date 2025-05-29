@@ -49,14 +49,22 @@ const enhancedToast = {
       },
       jsx: (
         <div className="w-full">
-          <div>{message}</div>
+          <div className="flex items-center justify-between">
+            <span>{message}</span>
+            <button 
+              onClick={() => toast.dismiss()}
+              className="ml-2 p-1 hover:bg-gray-100 rounded transition-colors"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
           <div 
-            className="absolute bottom-0 left-0 h-1 bg-green-500 animate-[progress_4s_linear]"
+            className="absolute bottom-0 left-0 h-1 bg-green-500 toast-progress"
             style={{
               animation: 'progress 4s linear forwards',
             }}
           />
-          <style jsx>{`
+          <style>{`
             @keyframes progress {
               from { width: 100%; }
               to { width: 0%; }
@@ -76,14 +84,22 @@ const enhancedToast = {
       },
       jsx: (
         <div className="w-full">
-          <div>{message}</div>
+          <div className="flex items-center justify-between">
+            <span>{message}</span>
+            <button 
+              onClick={() => toast.dismiss()}
+              className="ml-2 p-1 hover:bg-gray-100 rounded transition-colors"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
           <div 
-            className="absolute bottom-0 left-0 h-1 bg-red-500"
+            className="absolute bottom-0 left-0 h-1 bg-red-500 toast-progress"
             style={{
               animation: 'progress 4s linear forwards',
             }}
           />
-          <style jsx>{`
+          <style>{`
             @keyframes progress {
               from { width: 100%; }
               to { width: 0%; }
@@ -103,14 +119,22 @@ const enhancedToast = {
       },
       jsx: (
         <div className="w-full">
-          <div>{message}</div>
+          <div className="flex items-center justify-between">
+            <span>{message}</span>
+            <button 
+              onClick={() => toast.dismiss()}
+              className="ml-2 p-1 hover:bg-gray-100 rounded transition-colors"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
           <div 
-            className="absolute bottom-0 left-0 h-1 bg-blue-500"
+            className="absolute bottom-0 left-0 h-1 bg-blue-500 toast-progress"
             style={{
               animation: 'progress 4s linear forwards',
             }}
           />
-          <style jsx>{`
+          <style>{`
             @keyframes progress {
               from { width: 100%; }
               to { width: 0%; }
