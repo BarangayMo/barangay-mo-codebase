@@ -452,6 +452,8 @@ export type Database = {
           price: number
           rating_count: number | null
           return_policy: string | null
+          seo_description: string | null
+          seo_title: string | null
           shipping_info: string | null
           sku: string | null
           sold_count: number | null
@@ -479,6 +481,8 @@ export type Database = {
           price: number
           rating_count?: number | null
           return_policy?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
           shipping_info?: string | null
           sku?: string | null
           sold_count?: number | null
@@ -506,6 +510,8 @@ export type Database = {
           price?: number
           rating_count?: number | null
           return_policy?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
           shipping_info?: string | null
           sku?: string | null
           sold_count?: number | null

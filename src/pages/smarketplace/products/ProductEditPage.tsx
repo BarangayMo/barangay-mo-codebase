@@ -14,15 +14,13 @@ import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MediaUploadDialog } from "@/components/media/MediaUploadDialog";
+import { useMediaLibrary } from "@/hooks/media-library/use-media-library";
 import { 
   Plus, 
   X, 
-  Bold, 
-  Italic, 
-  Underline, 
-  Link, 
-  List, 
-  AlignLeft, 
   Upload, 
   Search, 
   Package,
@@ -33,7 +31,15 @@ import {
   EyeOff,
   Tag,
   Truck,
-  Save
+  Save,
+  Palette,
+  Globe,
+  Users,
+  Settings,
+  ImageIcon,
+  VideoIcon,
+  Minus,
+  Link
 } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { formatPHP } from "@/utils/currency";
@@ -58,6 +64,8 @@ interface FormData {
   return_policy: string;
   specifications: Record<string, any>;
   weight_kg?: string;
+  seo_title: string;
+  seo_description: string;
 }
 
 interface Collection {
@@ -72,6 +80,15 @@ const ProductEditPage = () => {
   const { id } = useParams();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
+  const [showCreateCollection, setShowCreateCollection] = useState(false);
+  const [showMediaUpload, setShowMediaUpload] = useState(false);
+  const [showMediaDialog, setShowMediaDialog] = useState(false);
+  const [showImageUrlDialog, setShowImageUrlDialog] = useState(false);
+  const [showVideoUrlDialog, setShowVideoUrlDialog] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [newCollection, setNewCollection] = useState({ name: "", description: "", color: "#3b82f6" });
+  const [continueSellingOutOfStock, setContinueSellingOutOfStock] = useState(true);
 
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -91,10 +108,17 @@ const ProductEditPage = () => {
     shipping_info: "",
     return_policy: "",
     specifications: {},
-    weight_kg: ""
+    weight_kg: "",
+    seo_title: "",
+    seo_description: ""
   });
 
   const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
+  const [variations, setVariations] = useState<any[]>([]);
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
+
+  // Media library hook
+  const { mediaFiles, refetch: refetchMedia } = useMediaLibrary();
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", id],
@@ -137,6 +161,25 @@ const ProductEditPage = () => {
     enabled: !!id
   });
 
+  // Create collection mutation
+  const createCollection = useMutation({
+    mutationFn: async (collection: any) => {
+      const { data, error } = await supabase
+        .from("collections")
+        .insert([collection])
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["collections"] });
+      toast.success("Collection created successfully!");
+      setShowCreateCollection(false);
+      setNewCollection({ name: "", description: "", color: "#3b82f6" });
+    }
+  });
+
   // Filter collections based on search term
   const filteredCollections = useMemo(() => {
     if (!collections) return [];
@@ -168,8 +211,11 @@ const ProductEditPage = () => {
         return_policy: product.return_policy || "",
         specifications: (typeof product.specifications === 'object' && product.specifications !== null) ? 
           product.specifications as Record<string, any> : {},
-        weight_kg: product.weight_kg?.toString() || ""
+        weight_kg: product.weight_kg?.toString() || "",
+        seo_title: product.seo_title || "",
+        seo_description: product.seo_description || ""
       });
+      setSelectedImages(product.gallery_image_urls || []);
     }
   }, [product]);
 
@@ -193,10 +239,8 @@ const ProductEditPage = () => {
 
   const updateProductCollections = useMutation({
     mutationFn: async (collectionIds: string[]) => {
-      // First, delete existing relationships
       await supabase.from("product_collections").delete().eq("product_id", id);
       
-      // Then, insert new relationships
       if (collectionIds.length > 0) {
         const relationships = collectionIds.map(collectionId => ({
           product_id: id,
@@ -212,6 +256,106 @@ const ProductEditPage = () => {
   });
 
   const handleChange = (key: keyof FormData, value: any) => setFormData(prev => ({ ...prev, [key]: value }));
+
+  const handleQuantityChange = (delta: number) => {
+    const currentQty = parseInt(formData.stock_quantity) || 0;
+    const newQty = Math.max(0, currentQty + delta);
+    handleChange("stock_quantity", newQty.toString());
+  };
+
+  const addVariation = () => {
+    setVariations(prev => [...prev, { 
+      type: "color", 
+      name: "", 
+      values: [],
+      newValue: ""
+    }]);
+  };
+
+  const updateVariation = (index: number, field: string, value: any) => {
+    setVariations(prev => prev.map((v, i) => i === index ? { ...v, [field]: value } : v));
+  };
+
+  const addVariationValue = (index: number) => {
+    const variation = variations[index];
+    if (variation.newValue) {
+      setVariations(prev => prev.map((v, i) => 
+        i === index 
+          ? { 
+              ...v, 
+              values: [...v.values, {
+                value: v.newValue,
+                color: v.type === "color" ? generateRandomColor() : null
+              }],
+              newValue: ""
+            }
+          : v
+      ));
+    }
+  };
+
+  const removeVariation = (index: number) => {
+    setVariations(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeVariationValue = (variationIndex: number, valueIndex: number) => {
+    setVariations(prev => prev.map((v, i) => 
+      i === variationIndex 
+        ? { ...v, values: v.values.filter((_, vi) => vi !== valueIndex) }
+        : v
+    ));
+  };
+
+  const generateRandomColor = () => {
+    const colors = ["#ef4444", "#f97316", "#f59e0b", "#eab308", "#84cc16", "#22c55e", "#10b981", "#14b8a6", "#06b6d4", "#0ea5e9", "#3b82f6", "#6366f1", "#8b5cf6", "#a855f7", "#d946ef", "#ec4899", "#f43f5e"];
+    return colors[Math.floor(Math.random() * colors.length)];
+  };
+
+  const handleImageSelect = (imageUrl: string) => {
+    if (!selectedImages.includes(imageUrl)) {
+      const newImages = [...selectedImages, imageUrl];
+      setSelectedImages(newImages);
+      
+      // Set first image as main image
+      if (newImages.length === 1) {
+        handleChange("main_image_url", imageUrl);
+      }
+      
+      // Update gallery
+      handleChange("gallery_image_urls", newImages);
+    }
+  };
+
+  const removeImage = (imageUrl: string) => {
+    const newImages = selectedImages.filter(img => img !== imageUrl);
+    setSelectedImages(newImages);
+    
+    // Update main image if removed
+    if (formData.main_image_url === imageUrl && newImages.length > 0) {
+      handleChange("main_image_url", newImages[0]);
+    } else if (newImages.length === 0) {
+      handleChange("main_image_url", "");
+    }
+    
+    handleChange("gallery_image_urls", newImages);
+  };
+
+  const addImageFromUrl = () => {
+    if (imageUrl) {
+      handleImageSelect(imageUrl);
+      setImageUrl("");
+      setShowImageUrlDialog(false);
+    }
+  };
+
+  const addVideoFromUrl = () => {
+    if (videoUrl) {
+      const videoTag = `<video controls style="max-width: 100%; height: auto;"><source src="${videoUrl}" type="video/mp4">Your browser does not support the video tag.</video>`;
+      handleChange("description", formData.description + videoTag);
+      setVideoUrl("");
+      setShowVideoUrlDialog(false);
+    }
+  };
 
   const removeTag = (tag: string) => {
     setFormData(prev => ({ ...prev, tags: prev.tags.filter(t => t !== tag) }));
@@ -274,7 +418,8 @@ const ProductEditPage = () => {
             label: "Save Product",
             onClick: handleSave,
             variant: "default" as const,
-            icon: <Save className="h-4 w-4" />
+            icon: <Save className="h-4 w-4" />,
+            className: "bg-blue-600 hover:bg-blue-700"
           }}
         />
 
@@ -307,8 +452,70 @@ const ProductEditPage = () => {
                       value={formData.description}
                       onChange={(value) => handleChange("description", value)}
                       placeholder="Product description..."
+                      className="min-h-[200px] resize-y"
                     />
+                    <div className="flex gap-2 mt-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowImageUrlDialog(true)}
+                        className="flex items-center gap-2"
+                      >
+                        <ImageIcon className="h-4 w-4" />
+                        Add Image URL
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowVideoUrlDialog(true)}
+                        className="flex items-center gap-2"
+                      >
+                        <VideoIcon className="h-4 w-4" />
+                        Add Video URL
+                      </Button>
+                    </div>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* SEO Section */}
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-sm font-medium text-gray-500 uppercase flex items-center gap-2">
+                  <Globe className="h-4 w-4" />
+                  SEO
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium">SEO Title</Label>
+                  <Input 
+                    value={formData.seo_title} 
+                    onChange={(e) => handleChange("seo_title", e.target.value)}
+                    placeholder="SEO optimized title"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">SEO Description</Label>
+                  <Textarea 
+                    value={formData.seo_description} 
+                    onChange={(e) => handleChange("seo_description", e.target.value)}
+                    placeholder="SEO meta description"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Product Slug</Label>
+                  <Input 
+                    value={formData.slug} 
+                    onChange={(e) => handleChange("slug", e.target.value)}
+                    placeholder="product-url-slug"
+                    className="mt-1"
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -326,14 +533,30 @@ const ProductEditPage = () => {
                   <div>
                     <Label className="text-sm font-medium">Quantity</Label>
                     <div className="flex items-center mt-1">
-                      <Button variant="outline" size="sm" className="px-3 h-10 rounded-r-none border-r-0">-</Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="px-3 h-10 rounded-r-none border-r-0"
+                        onClick={() => handleQuantityChange(-1)}
+                        type="button"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
                       <Input 
                         value={formData.stock_quantity}
                         onChange={(e) => handleChange("stock_quantity", e.target.value)}
                         className="text-center rounded-none border-x-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                         type="number"
                       />
-                      <Button variant="outline" size="sm" className="px-3 h-10 rounded-l-none border-l-0">+</Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="px-3 h-10 rounded-l-none border-l-0"
+                        onClick={() => handleQuantityChange(1)}
+                        type="button"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                   <div>
@@ -348,7 +571,11 @@ const ProductEditPage = () => {
                 </div>
                 <div className="mt-6">
                   <div className="flex items-center space-x-2">
-                    <Switch checked={true} />
+                    <Switch 
+                      checked={continueSellingOutOfStock} 
+                      onCheckedChange={setContinueSellingOutOfStock}
+                      className="data-[state=checked]:bg-blue-600"
+                    />
                     <span className="text-sm text-gray-600">Continue selling when out of stock</span>
                   </div>
                 </div>
@@ -364,10 +591,55 @@ const ProductEditPage = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors">
-                  <Upload className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                  <p className="text-sm text-gray-600 mb-1">Drag drop some files here, or click to select files</p>
-                  <p className="text-xs text-gray-400">1080 x 1080 (1:1) recommended, up to 2MB each</p>
+                <div className="space-y-4">
+                  {/* Selected Images */}
+                  {selectedImages.length > 0 && (
+                    <div className="grid grid-cols-4 gap-4 mb-4">
+                      {selectedImages.map((imageUrl, index) => (
+                        <div key={index} className="relative group">
+                          <img 
+                            src={imageUrl} 
+                            alt={`Product ${index + 1}`}
+                            className="w-full h-24 object-cover rounded-md border"
+                          />
+                          {index === 0 && (
+                            <div className="absolute top-1 left-1 bg-blue-600 text-white text-xs px-2 py-1 rounded">
+                              Main
+                            </div>
+                          )}
+                          <button
+                            onClick={() => removeImage(imageUrl)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <Button
+                      onClick={() => setShowMediaUpload(true)}
+                      variant="outline"
+                      className="h-24 border-dashed border-2 hover:border-blue-500 hover:bg-blue-50"
+                    >
+                      <div className="text-center">
+                        <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                        <span className="text-sm text-gray-600">Upload Images</span>
+                      </div>
+                    </Button>
+                    <Button
+                      onClick={() => setShowMediaDialog(true)}
+                      variant="outline"
+                      className="h-24 border-dashed border-2 hover:border-blue-500 hover:bg-blue-50"
+                    >
+                      <div className="text-center">
+                        <ImageIcon className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                        <span className="text-sm text-gray-600">Choose from Library</span>
+                      </div>
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -375,10 +647,114 @@ const ProductEditPage = () => {
             {/* Variation Section */}
             <Card className="shadow-sm">
               <CardHeader className="pb-4">
-                <CardTitle className="text-sm font-medium text-gray-500 uppercase">VARIATION</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-500 uppercase flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Palette className="h-4 w-4" />
+                    VARIATIONS
+                  </div>
+                  <Button
+                    onClick={addVariation}
+                    size="sm"
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Variation
+                  </Button>
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-600">This product is variable: has different colors, size, weight, etc.</p>
+                {variations.length > 0 ? (
+                  <div className="space-y-6">
+                    {variations.map((variation, index) => (
+                      <div key={index} className="border rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="grid grid-cols-2 gap-4 flex-1">
+                            <div>
+                              <Label className="text-sm font-medium">Variation Type</Label>
+                              <Select 
+                                value={variation.type} 
+                                onValueChange={(value) => updateVariation(index, "type", value)}
+                              >
+                                <SelectTrigger className="mt-1">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="color">Color</SelectItem>
+                                  <SelectItem value="size">Size</SelectItem>
+                                  <SelectItem value="material">Material</SelectItem>
+                                  <SelectItem value="style">Style</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div>
+                              <Label className="text-sm font-medium">Variation Name</Label>
+                              <Input
+                                value={variation.name}
+                                onChange={(e) => updateVariation(index, "name", e.target.value)}
+                                placeholder="e.g., Color, Size"
+                                className="mt-1"
+                              />
+                            </div>
+                          </div>
+                          <Button
+                            onClick={() => removeVariation(index)}
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+
+                        <div className="space-y-3">
+                          <Label className="text-sm font-medium">Values</Label>
+                          <div className="flex flex-wrap gap-2">
+                            {variation.values.map((value: any, valueIndex: number) => (
+                              <div key={valueIndex} className="flex items-center gap-2 bg-gray-100 rounded-md px-3 py-1">
+                                {variation.type === "color" && value.color && (
+                                  <div 
+                                    className="w-4 h-4 rounded-full border"
+                                    style={{ backgroundColor: value.color }}
+                                  />
+                                )}
+                                <span className="text-sm">{value.value}</span>
+                                <button
+                                  onClick={() => removeVariationValue(index, valueIndex)}
+                                  className="text-red-500 hover:text-red-700"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex gap-2">
+                            <Input
+                              value={variation.newValue}
+                              onChange={(e) => updateVariation(index, "newValue", e.target.value)}
+                              placeholder={`Add ${variation.type} value`}
+                              className="flex-1"
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  addVariationValue(index);
+                                }
+                              }}
+                            />
+                            <Button
+                              onClick={() => addVariationValue(index)}
+                              size="sm"
+                              className="bg-blue-600 hover:bg-blue-700"
+                            >
+                              Add
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-600">No variations added. Click "Add Variation" to start.</p>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -414,6 +790,36 @@ const ProductEditPage = () => {
                       : "This product will be hidden from customers"
                     }
                   </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Vendor Assignment */}
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-sm font-medium text-gray-500 uppercase flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  VENDOR
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div>
+                  <Label className="text-sm font-medium">Assign to Vendor</Label>
+                  <Select 
+                    value={formData.vendor_id} 
+                    onValueChange={(value) => handleChange("vendor_id", value)}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select vendor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {vendors?.map((vendor) => (
+                        <SelectItem key={vendor.id} value={vendor.id}>
+                          {vendor.business_name || vendor.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </CardContent>
             </Card>
@@ -506,7 +912,18 @@ const ProductEditPage = () => {
                 </div>
 
                 <div>
-                  <Label className="text-sm font-medium">Collections</Label>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label className="text-sm font-medium">Collections</Label>
+                    <Button
+                      onClick={() => setShowCreateCollection(true)}
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Create
+                    </Button>
+                  </div>
                   
                   <div className="mt-2 relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -594,7 +1011,7 @@ const ProductEditPage = () => {
         </div>
 
         {/* Bottom Save Button */}
-        <div className="sticky bottom-0 bg-white border-t p-4 mt-8">
+        <div className="sticky bottom-0 bg-white border-t p-4 mt-8 shadow-lg">
           <div className="flex justify-end space-x-3">
             <Button 
               variant="outline" 
@@ -613,6 +1030,165 @@ const ProductEditPage = () => {
             </Button>
           </div>
         </div>
+
+        {/* Media Upload Dialog */}
+        <MediaUploadDialog
+          open={showMediaUpload}
+          onClose={() => setShowMediaUpload(false)}
+          onUploadComplete={() => {
+            refetchMedia();
+            setShowMediaUpload(false);
+          }}
+        />
+
+        {/* Media Library Dialog */}
+        <Dialog open={showMediaDialog} onOpenChange={setShowMediaDialog}>
+          <DialogContent className="max-w-4xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle>Select Images from Library</DialogTitle>
+            </DialogHeader>
+            <ScrollArea className="h-96">
+              <div className="grid grid-cols-4 gap-4 p-4">
+                {mediaFiles?.filter(file => file.content_type?.startsWith('image/')).map((file) => (
+                  <div key={file.id} className="relative group cursor-pointer">
+                    <img
+                      src={file.signedUrl || file.file_url}
+                      alt={file.filename}
+                      className="w-full h-24 object-cover rounded-md border hover:border-blue-500"
+                      onClick={() => {
+                        handleImageSelect(file.signedUrl || file.file_url);
+                        setShowMediaDialog(false);
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all rounded-md flex items-center justify-center">
+                      <span className="text-white opacity-0 group-hover:opacity-100 text-sm">Select</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
+
+        {/* Image URL Dialog */}
+        <Dialog open={showImageUrlDialog} onOpenChange={setShowImageUrlDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Image from URL</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Image URL</Label>
+                <Input
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={addImageFromUrl} className="bg-blue-600 hover:bg-blue-700">
+                  Add Image
+                </Button>
+                <Button variant="outline" onClick={() => setShowImageUrlDialog(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Video URL Dialog */}
+        <Dialog open={showVideoUrlDialog} onOpenChange={setShowVideoUrlDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Video from URL</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Video URL</Label>
+                <Input
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                  placeholder="https://example.com/video.mp4"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={addVideoFromUrl} className="bg-blue-600 hover:bg-blue-700">
+                  Add Video
+                </Button>
+                <Button variant="outline" onClick={() => setShowVideoUrlDialog(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Create Collection Dialog */}
+        <Dialog open={showCreateCollection} onOpenChange={setShowCreateCollection}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Palette className="h-5 w-5 text-blue-600" />
+                Create New Collection
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label className="text-sm font-medium">Collection Name</Label>
+                <Input
+                  value={newCollection.name}
+                  onChange={(e) => setNewCollection(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Enter collection name"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Description</Label>
+                <Textarea
+                  value={newCollection.description}
+                  onChange={(e) => setNewCollection(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Enter collection description"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Color</Label>
+                <div className="flex items-center gap-3 mt-1">
+                  <Input
+                    type="color"
+                    value={newCollection.color}
+                    onChange={(e) => setNewCollection(prev => ({ ...prev, color: e.target.value }))}
+                    className="w-16 h-10 p-1 rounded"
+                  />
+                  <Input
+                    value={newCollection.color}
+                    onChange={(e) => setNewCollection(prev => ({ ...prev, color: e.target.value }))}
+                    placeholder="#3b82f6"
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-3 pt-4">
+                <Button
+                  onClick={() => createCollection.mutate(newCollection)}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  disabled={!newCollection.name}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Collection
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowCreateCollection(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );
