@@ -596,7 +596,7 @@ const ProductEditPage = () => {
         {/* Media Upload Dialog */}
         <MediaUploadDialog
           open={showMediaUpload}
-          onOpenChange={setShowMediaUpload}
+          onClose={() => setShowMediaUpload(false)}
           onUploadComplete={() => {
             refetchMedia();
             setShowMediaUpload(false);
