@@ -32,7 +32,7 @@ function MediaLibraryPage() {
   });
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
 
-  const { refetch } = useMediaLibrary(filters, searchQuery);
+  const { mediaFiles, refetch } = useMediaLibrary(filters, searchQuery);
 
   const handleFiltersChange = useCallback((newFilters: any) => {
     setFilters(newFilters);
@@ -62,6 +62,7 @@ function MediaLibraryPage() {
   }, [refetch]);
 
   const activeFiltersCount = Object.values(filters).filter(Boolean).length;
+  const totalFiles = (mediaFiles?.length || 0) + uploadingFiles.length;
 
   return (
     <AdminLayout title="Media Library">
@@ -70,7 +71,9 @@ function MediaLibraryPage() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Media Library</h1>
-            <p className="text-gray-600 mt-1">Manage your uploaded files and media</p>
+            <p className="text-gray-600 mt-1">
+              Manage your uploaded files and media • {totalFiles} file{totalFiles !== 1 ? 's' : ''}
+            </p>
           </div>
           
           <Button 
@@ -112,7 +115,7 @@ function MediaLibraryPage() {
                       )}
                     </Button>
                   </SheetTrigger>
-                  <SheetContent side="left" className="w-[400px] sm:w-[540px] overflow-y-auto">
+                  <SheetContent side="right" className="w-[400px] sm:w-[540px] overflow-y-auto">
                     <SheetHeader>
                       <SheetTitle>Filter Media</SheetTitle>
                       <SheetDescription>

@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { useMediaLibrary } from "@/hooks";
 import { MediaFile } from "@/hooks/media-library/types";
@@ -77,8 +76,6 @@ export function MediaLibraryGrid({
 
   // Enhanced toggle function with range selection support
   const handleToggleFileSelection = (file: MediaFile, index: number, event: React.MouseEvent) => {
-    if (file.isUploading) return; // Don't allow selection of uploading files
-    
     if ((event.shiftKey || event.metaKey || event.ctrlKey) && lastSelectedIndex.current !== null && mediaFiles) {
       // Range selection
       const start = Math.min(lastSelectedIndex.current, index);

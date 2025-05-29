@@ -12,7 +12,6 @@ import { DeleteConfirmDialog } from "./grid/DeleteConfirmDialog";
 import { MediaFile } from "@/hooks/media-library/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Progress } from "@/components/ui/progress";
 
 // Define types for our profiles
 interface Profile {
@@ -75,16 +74,6 @@ export function MediaLibraryTable({
     handleCopyUrl,
     refetch
   } = useMediaLibrary(filters, searchQuery);
-
-  // For debugging purposes
-  useEffect(() => {
-    if (files) {
-      console.log("MediaLibraryTable received files:", files.length);
-      if (files.length > 0) {
-        console.log("Sample file:", files[0]);
-      }
-    }
-  }, [files]);
 
   // Enhanced toggle function with range selection support
   const handleToggleFileSelection = (file: MediaFile, index: number, event: React.MouseEvent) => {
@@ -168,7 +157,7 @@ export function MediaLibraryTable({
       return;
     }
     
-    // Check if we're in selection mode (any files selected)
+    // Check if we're in selection mode (any files selected) OR modifier keys are pressed
     if (selectedFiles.length > 0 || e.shiftKey || e.metaKey || e.ctrlKey) {
       handleToggleFileSelection(file, index, e);
       return;
@@ -264,13 +253,6 @@ export function MediaLibraryTable({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-12">
-                  <Checkbox 
-                    checked={allSelected}
-                    onCheckedChange={() => toggleAllFiles(files)}
-                    className="h-4 w-4"
-                  />
-                </TableHead>
                 <TableHead>File name</TableHead>
                 <TableHead>Alt text</TableHead>
                 <TableHead>Date added</TableHead>
@@ -282,9 +264,6 @@ export function MediaLibraryTable({
               {/* Uploading files */}
               {uploadingFiles.map((uploadFile) => (
                 <TableRow key={uploadFile.id} className="bg-blue-50">
-                  <TableCell>
-                    <Checkbox disabled className="h-4 w-4" />
-                  </TableCell>
                   <TableCell className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-blue-100 rounded flex items-center justify-center relative">
                       {/* Circular progress */}
@@ -331,7 +310,7 @@ export function MediaLibraryTable({
                   className="cursor-pointer hover:bg-gray-50"
                   onClick={(e) => handleRowClick(file, index, e)}
                 >
-                  <TableCell>
+                  <TableCell className="flex items-center gap-3">
                     <div data-checkbox onClick={(e) => e.stopPropagation()}>
                       <Checkbox 
                         checked={selectedFiles.includes(file.id)}
@@ -339,8 +318,6 @@ export function MediaLibraryTable({
                         className="h-4 w-4"
                       />
                     </div>
-                  </TableCell>
-                  <TableCell className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center relative">
                       <img 
                         src={file.signedUrl || ''} 
