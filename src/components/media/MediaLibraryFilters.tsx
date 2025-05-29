@@ -40,6 +40,20 @@ export function MediaLibraryFilters({ filters, onFilterChange }) {
     onFilterChange(clearedFilters);
   };
 
+  const handleUserChange = (value: string) => {
+    setLocalFilters(prev => ({ 
+      ...prev, 
+      user: value === "all" ? null : value 
+    }));
+  };
+
+  const handleCategoryChange = (value: string) => {
+    setLocalFilters(prev => ({ 
+      ...prev, 
+      category: value === "all" ? null : value 
+    }));
+  };
+
   const hasActiveFilters = localFilters.user || localFilters.category || localFilters.startDate || localFilters.endDate;
 
   return (
@@ -111,14 +125,14 @@ export function MediaLibraryFilters({ filters, onFilterChange }) {
         </CardHeader>
         <CardContent className="pt-0">
           <Select 
-            value={localFilters.user || ""}
-            onValueChange={(value) => setLocalFilters(prev => ({ ...prev, user: value || null }))}
+            value={localFilters.user || "all"}
+            onValueChange={handleUserChange}
           >
             <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500">
               <SelectValue placeholder="All users" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All users</SelectItem>
+              <SelectItem value="all">All users</SelectItem>
               {users?.map(user => (
                 <SelectItem key={user.id} value={user.id}>
                   {user.first_name} {user.last_name}
@@ -139,14 +153,14 @@ export function MediaLibraryFilters({ filters, onFilterChange }) {
         </CardHeader>
         <CardContent className="pt-0">
           <Select 
-            value={localFilters.category || ""}
-            onValueChange={(value) => setLocalFilters(prev => ({ ...prev, category: value || null }))}
+            value={localFilters.category || "all"}
+            onValueChange={handleCategoryChange}
           >
             <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500">
               <SelectValue placeholder="All categories" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All categories</SelectItem>
+              <SelectItem value="all">All categories</SelectItem>
               {['image', 'video', 'audio', 'document', 'other'].map(category => (
                 <SelectItem key={category} value={category}>
                   {category.charAt(0).toUpperCase() + category.slice(1)}
