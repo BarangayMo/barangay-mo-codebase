@@ -2,6 +2,8 @@
 import { useMembershipRequests } from "@/hooks/use-dashboard-data";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyStateWithIcon } from "@/components/dashboard/EmptyStateWithIcon";
+import { UserPlus } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 export const MembershipRequestsTab = () => {
@@ -17,12 +19,24 @@ export const MembershipRequestsTab = () => {
     );
   }
 
-  if (error || !requests) {
-    return <div className="text-center text-gray-500">Unable to load membership requests</div>;
+  if (error) {
+    return (
+      <EmptyStateWithIcon
+        icon={<UserPlus className="h-8 w-8 text-gray-400" />}
+        title="Unable to Load Requests"
+        description="There was an error loading membership requests. Please try again later."
+      />
+    );
   }
 
-  if (requests.length === 0) {
-    return <div className="text-center text-gray-500">No membership requests found</div>;
+  if (!requests || requests.length === 0) {
+    return (
+      <EmptyStateWithIcon
+        icon={<UserPlus className="h-8 w-8 text-gray-400" />}
+        title="No Membership Requests"
+        description="No membership requests have been submitted yet. Requests will appear here when users apply to join barangays."
+      />
+    );
   }
 
   const getStatusBadgeColor = (status: string) => {

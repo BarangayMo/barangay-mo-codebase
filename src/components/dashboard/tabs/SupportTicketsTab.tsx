@@ -2,6 +2,8 @@
 import { useSupportTickets } from "@/hooks/use-dashboard-data";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyStateWithIcon } from "@/components/dashboard/EmptyStateWithIcon";
+import { MessageSquare } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 export const SupportTicketsTab = () => {
@@ -17,12 +19,24 @@ export const SupportTicketsTab = () => {
     );
   }
 
-  if (error || !tickets) {
-    return <div className="text-center text-gray-500">Unable to load support tickets</div>;
+  if (error) {
+    return (
+      <EmptyStateWithIcon
+        icon={<MessageSquare className="h-8 w-8 text-gray-400" />}
+        title="Unable to Load Tickets"
+        description="There was an error loading support tickets. Please try again later."
+      />
+    );
   }
 
-  if (tickets.length === 0) {
-    return <div className="text-center text-gray-500">No support tickets found</div>;
+  if (!tickets || tickets.length === 0) {
+    return (
+      <EmptyStateWithIcon
+        icon={<MessageSquare className="h-8 w-8 text-gray-400" />}
+        title="No Support Tickets"
+        description="No support tickets have been created yet. Tickets will appear here when users need assistance."
+      />
+    );
   }
 
   const getStatusBadgeColor = (status: string) => {
@@ -37,10 +51,9 @@ export const SupportTicketsTab = () => {
 
   const getPriorityBadgeColor = (priority: string) => {
     switch (priority) {
-      case 'urgent': return 'bg-red-100 text-red-800';
-      case 'high': return 'bg-orange-100 text-orange-800';
+      case 'high': return 'bg-red-100 text-red-800';
       case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-blue-100 text-blue-800';
+      case 'low': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };

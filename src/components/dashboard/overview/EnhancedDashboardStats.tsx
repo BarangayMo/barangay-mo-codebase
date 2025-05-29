@@ -13,7 +13,7 @@ export const EnhancedDashboardStats = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} className="h-[140px] rounded-lg" />
+          <Skeleton key={i} className="h-[120px] rounded-lg" />
         ))}
       </div>
     );
@@ -37,7 +37,7 @@ export const EnhancedDashboardStats = () => {
           value={stats.totalUsers.toLocaleString()}
           change={{ value: stats.userGrowth, isPositive: stats.userGrowth >= 0 }}
           icon={<Users className="h-5 w-5 text-blue-500" />}
-          className="hover:shadow-lg transition-shadow"
+          className="hover:shadow-lg transition-shadow h-[120px]"
         />
       </div>
       <div onClick={() => navigate('/admin/smarketplace/products')} className="cursor-pointer">
@@ -47,15 +47,16 @@ export const EnhancedDashboardStats = () => {
           change={{ value: stats.productGrowth, isPositive: stats.productGrowth >= 0 }}
           icon={<Package className="h-5 w-5 text-green-500" />}
           iconColor="bg-green-50"
-          className="hover:shadow-lg transition-shadow"
+          className="hover:shadow-lg transition-shadow h-[120px]"
         />
       </div>
       <StatsCard 
-        title="Membership Requests"
+        title="Membership Req..."
         value={stats.pendingMembershipRequests.toString()}
         change={{ value: stats.pendingMembershipRequests, isPositive: false }}
         icon={<UserPlus className="h-5 w-5 text-purple-500" />}
         iconColor="bg-purple-50"
+        className="h-[120px]"
       />
       <StatsCard 
         title="Support Tickets"
@@ -63,6 +64,7 @@ export const EnhancedDashboardStats = () => {
         change={{ value: stats.openSupportTickets, isPositive: false }}
         icon={<MessageSquare className="h-5 w-5 text-amber-500" />}
         iconColor="bg-amber-50"
+        className="h-[120px]"
       />
     </div>
   );

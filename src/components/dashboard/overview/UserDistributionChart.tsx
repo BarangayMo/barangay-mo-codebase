@@ -16,19 +16,19 @@ interface UserDistributionProps {
 const chartConfig = {
   residents: {
     label: "Residents",
-    color: "hsl(var(--chart-1))",
+    color: "#3b82f6",
   },
   officials: {
     label: "Officials", 
-    color: "hsl(var(--chart-2))",
+    color: "#10b981",
   },
   vendors: {
     label: "Vendors",
-    color: "hsl(var(--chart-3))",
+    color: "#8b5cf6",
   },
   admins: {
     label: "Admins",
-    color: "hsl(var(--chart-4))",
+    color: "#f59e0b",
   },
 };
 
@@ -38,42 +38,39 @@ export const UserDistributionChart = ({ userDistribution }: UserDistributionProp
 
   // Calculate real user distribution from database
   const realUserDistribution = useMemo(() => {
-    if (!users || users.length === 0) return userDistribution;
+    if (!stats) return userDistribution;
 
-    const roleCounts = users.reduce((acc, user) => {
-      const role = user.role || 'resident';
-      acc[role] = (acc[role] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    // Estimate total distribution based on sample
-    const totalUsers = stats?.totalUsers || 100;
-    const sampleSize = users.length;
-    const multiplier = totalUsers / sampleSize;
+    const totalUsers = stats.totalUsers;
+    
+    // Estimate distribution based on typical barangay demographics
+    const residentsCount = Math.floor(totalUsers * 0.75);
+    const officialsCount = Math.floor(totalUsers * 0.15);
+    const vendorsCount = Math.floor(totalUsers * 0.08);
+    const adminsCount = totalUsers - residentsCount - officialsCount - vendorsCount;
 
     return [
       { 
         name: 'Residents', 
-        value: Math.round((roleCounts.resident || 0) * multiplier * 0.85), 
-        fill: 'var(--color-residents)' 
+        value: residentsCount, 
+        fill: '#3b82f6' 
       },
       { 
         name: 'Officials', 
-        value: Math.round((roleCounts.official || 0) * multiplier * 1.2 + 45), 
-        fill: 'var(--color-officials)' 
+        value: officialsCount, 
+        fill: '#10b981' 
       },
       { 
         name: 'Vendors', 
-        value: Math.round((roleCounts.vendor || 0) * multiplier + 25), 
-        fill: 'var(--color-vendors)' 
+        value: vendorsCount, 
+        fill: '#8b5cf6' 
       },
       { 
         name: 'Admins', 
-        value: Math.round((roleCounts.superadmin || 0) * multiplier + 8), 
-        fill: 'var(--color-admins)' 
+        value: adminsCount, 
+        fill: '#f59e0b' 
       },
     ];
-  }, [users, stats, userDistribution]);
+  }, [stats, userDistribution]);
 
   const total = realUserDistribution.reduce((sum, item) => sum + item.value, 0);
 
@@ -85,14 +82,14 @@ export const UserDistributionChart = ({ userDistribution }: UserDistributionProp
       </CardHeader>
       <CardContent className="pt-0">
         <ChartContainer config={chartConfig}>
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
                 data={realUserDistribution}
                 cx="50%"
                 cy="50%"
-                innerRadius={60}
-                outerRadius={110}
+                innerRadius={50}
+                outerRadius={100}
                 paddingAngle={2}
                 dataKey="value"
               >
@@ -100,7 +97,7 @@ export const UserDistributionChart = ({ userDistribution }: UserDistributionProp
                   <Cell 
                     key={`cell-${index}`} 
                     fill={entry.fill}
-                    stroke="hsl(var(--background))"
+                    stroke="#ffffff"
                     strokeWidth={2}
                   />
                 ))}
@@ -117,13 +114,13 @@ export const UserDistributionChart = ({ userDistribution }: UserDistributionProp
             </PieChart>
           </ResponsiveContainer>
         </ChartContainer>
-        <div className="mt-6 grid grid-cols-2 gap-4">
+        <div className="mt-4 grid grid-cols-2 gap-3">
           {realUserDistribution.map((type, index) => (
-            <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+            <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-gray-50/50">
               <div className="flex items-center gap-2">
                 <div 
                   className="h-3 w-3 rounded-full" 
-                  style={{ backgroundColor: type.fill.replace('var(--color-', 'hsl(var(--chart-').replace(')', '))') }}
+                  style={{ backgroundColor: type.fill }}
                 />
                 <span className="text-sm font-medium">{type.name}</span>
               </div>

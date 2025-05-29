@@ -1,9 +1,16 @@
 
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { Plus, User, Package, FileText, MessageSquare, Settings } from "lucide-react";
 import { ReactNode } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
 
-export interface TabItem {
+interface TabItem {
   value: string;
   label: string;
   icon?: ReactNode;
@@ -12,28 +19,62 @@ export interface TabItem {
 interface ModernTabsProps {
   defaultValue: string;
   items: TabItem[];
-  className?: string;
   children: ReactNode;
 }
 
-export function ModernTabs({ defaultValue, items, className, children }: ModernTabsProps) {
+export const ModernTabs = ({ defaultValue, items, children }: ModernTabsProps) => {
   return (
-    <Tabs defaultValue={defaultValue} className={cn("w-full", className)}>
-      <TabsList className="mb-6 border-b w-full rounded-none bg-transparent h-auto p-0 overflow-x-auto flex">
-        {items.map((item) => (
-          <TabsTrigger
-            key={item.value}
-            value={item.value}
-            className="py-3 px-5 rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:font-bold flex items-center gap-2 transition-all hover:bg-gray-50"
-          >
-            {item.icon && <span className="transition-transform">{item.icon}</span>}
-            <span>{item.label}</span>
-          </TabsTrigger>
-        ))}
-      </TabsList>
-      <div className="animate-fade-in">
-        {children}
+    <div className="w-full">
+      <div className="flex items-center justify-between mb-6">
+        <Tabs defaultValue={defaultValue} className="w-full">
+          <div className="flex items-center justify-between">
+            <TabsList className="grid w-auto grid-cols-5 bg-gray-100">
+              {items.map((item) => (
+                <TabsTrigger
+                  key={item.value}
+                  value={item.value}
+                  className="flex items-center gap-2 px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                >
+                  {item.icon}
+                  <span className="hidden sm:inline">{item.label}</span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700">
+                  <Plus className="h-4 w-4" />
+                  Create New
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+                  <User className="h-4 w-4" />
+                  New User
+                </DropdownMenuItem>
+                <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+                  <Package className="h-4 w-4" />
+                  New Product
+                </DropdownMenuItem>
+                <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+                  <FileText className="h-4 w-4" />
+                  New Document
+                </DropdownMenuItem>
+                <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+                  <MessageSquare className="h-4 w-4" />
+                  New Ticket
+                </DropdownMenuItem>
+                <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+                  <Settings className="h-4 w-4" />
+                  System Settings
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          {children}
+        </Tabs>
       </div>
-    </Tabs>
+    </div>
   );
-}
+};
