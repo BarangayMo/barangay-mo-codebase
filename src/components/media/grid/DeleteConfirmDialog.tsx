@@ -9,7 +9,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from "@/components/ui/alert-dialog";
-import { Trash2 } from "lucide-react";
 
 interface DeleteConfirmDialogProps {
   isOpen: boolean;
@@ -30,15 +29,8 @@ export function DeleteConfirmDialog({
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
       <AlertDialogContent className="rounded-lg">
         <AlertDialogHeader>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-              <Trash2 className="h-6 w-6 text-red-600" />
-            </div>
-            <div>
-              <AlertDialogTitle className="text-left">{title}</AlertDialogTitle>
-            </div>
-          </div>
-          <AlertDialogDescription className="text-left">
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>
             {description}
           </AlertDialogDescription>
         </AlertDialogHeader>

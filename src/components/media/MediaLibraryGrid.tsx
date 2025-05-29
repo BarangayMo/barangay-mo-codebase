@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { useMediaLibrary } from "@/hooks";
 import { MediaFile } from "@/hooks/media-library/types";

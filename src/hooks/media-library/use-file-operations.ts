@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/enhanced-sonner";
+import { toast } from "sonner";
 
 export function useFileOperations(refetch: () => void) {
   // Helper function to determine bucket name and file path from file_url

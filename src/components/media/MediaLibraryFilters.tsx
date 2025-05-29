@@ -1,216 +1,227 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { CalendarIcon, X } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
+import { X, Users, FolderOpen, CalendarDays, Filter } from "lucide-react";
 
-export interface MediaLibraryFiltersProps {
-  filters: {
-    user: string | null;
-    category: string | null;
-    startDate: Date | null;
-    endDate: Date | null;
-  };
-  onFiltersChange: (filters: {
-    user: string | null;
-    category: string | null;
-    startDate: Date | null;
-    endDate: Date | null;
-  }) => void;
-}
+export function MediaLibraryFilters({ filters, onFilterChange }) {
+  const [localFilters, setLocalFilters] = useState(filters);
 
-interface UserProfile {
-  id: string;
-  first_name: string | null;
-  last_name: string | null;
-  role: string | null;
-}
-
-export function MediaLibraryFilters({ filters, onFiltersChange }: MediaLibraryFiltersProps) {
-  const [users, setUsers] = useState<UserProfile[]>([]);
-
-  useEffect(() => {
-    const fetchUsers = async () => {
+  // Fetch users for filtering
+  const { data: users } = useQuery({
+    queryKey: ['admin-users'],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, role')
-        .order('first_name');
+        .select('id, first_name, last_name');
       
-      if (!error && data) {
-        setUsers(data);
-      }
-    };
+      if (error) throw error;
+      return data;
+    }
+  });
 
-    fetchUsers();
-  }, []);
-
-  const handleUserChange = (userId: string) => {
-    onFiltersChange({
-      ...filters,
-      user: userId === "all" ? null : userId,
-    });
+  const handleApplyFilters = () => {
+    onFilterChange(localFilters);
   };
 
-  const handleCategoryChange = (category: string) => {
-    onFiltersChange({
-      ...filters,
-      category: category === "all" ? null : category,
-    });
-  };
-
-  const handleStartDateChange = (date: Date | undefined) => {
-    onFiltersChange({
-      ...filters,
-      startDate: date || null,
-    });
-  };
-
-  const handleEndDateChange = (date: Date | undefined) => {
-    onFiltersChange({
-      ...filters,
-      endDate: date || null,
-    });
-  };
-
-  const clearFilters = () => {
-    onFiltersChange({
+  const handleClearFilters = () => {
+    const clearedFilters = {
       user: null,
       category: null,
       startDate: null,
-      endDate: null,
-    });
-  };
-
-  const hasActiveFilters = filters.user || filters.category || filters.startDate || filters.endDate;
-
-  const formatUserName = (user: UserProfile) => {
-    const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || 'Unknown User';
-    return name;
-  };
-
-  const getRoleBadge = (role: string | null) => {
-    if (!role) return null;
-    
-    const roleColors: Record<string, string> = {
-      admin: "bg-blue-100 text-blue-700",
-      moderator: "bg-purple-100 text-purple-700", 
-      user: "bg-gray-100 text-gray-700",
-      official: "bg-green-100 text-green-700",
-      resident: "bg-orange-100 text-orange-700"
+      endDate: null
     };
-
-    return (
-      <Badge 
-        variant="secondary" 
-        className={`ml-2 text-xs px-2 py-0.5 ${roleColors[role] || "bg-gray-100 text-gray-700"}`}
-      >
-        {role}
-      </Badge>
-    );
+    setLocalFilters(clearedFilters);
+    onFilterChange(clearedFilters);
   };
+
+  const handleUserChange = (value: string) => {
+    setLocalFilters(prev => ({ 
+      ...prev, 
+      user: value === "all" ? null : value 
+    }));
+  };
+
+  const handleCategoryChange = (value: string) => {
+    setLocalFilters(prev => ({ 
+      ...prev, 
+      category: value === "all" ? null : value 
+    }));
+  };
+
+  const hasActiveFilters = localFilters.user || localFilters.category || localFilters.startDate || localFilters.endDate;
 
   return (
-    <div className="flex flex-wrap gap-4 p-4 bg-gray-50 rounded-lg border">
-      <div className="flex flex-wrap gap-3 flex-1">
-        {/* User Filter */}
-        <Select value={filters.user || "all"} onValueChange={handleUserChange}>
-          <SelectTrigger className="w-[200px] bg-white">
-            <SelectValue placeholder="Filter by user" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Users</SelectItem>
-            {users.map((user) => (
-              <SelectItem key={user.id} value={user.id}>
-                <div className="flex items-center justify-between w-full">
-                  <span>{formatUserName(user)}</span>
-                  {getRoleBadge(user.role)}
-                </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {/* Category Filter */}
-        <Select value={filters.category || "all"} onValueChange={handleCategoryChange}>
-          <SelectTrigger className="w-[160px] bg-white">
-            <SelectValue placeholder="Category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            <SelectItem value="image">Images</SelectItem>
-            <SelectItem value="video">Videos</SelectItem>
-            <SelectItem value="document">Documents</SelectItem>
-            <SelectItem value="audio">Audio</SelectItem>
-          </SelectContent>
-        </Select>
-
-        {/* Start Date Filter */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                "w-[140px] justify-start text-left font-normal bg-white",
-                !filters.startDate && "text-muted-foreground"
-              )}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {filters.startDate ? format(filters.startDate, "MMM dd") : "Start date"}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={filters.startDate || undefined}
-              onSelect={handleStartDateChange}
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
-
-        {/* End Date Filter */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                "w-[140px] justify-start text-left font-normal bg-white",
-                !filters.endDate && "text-muted-foreground"
-              )}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {filters.endDate ? format(filters.endDate, "MMM dd") : "End date"}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={filters.endDate || undefined}
-              onSelect={handleEndDateChange}
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Filter className="h-5 w-5 text-blue-600" />
+          <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+        </div>
+        {hasActiveFilters && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleClearFilters}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            Clear all
+          </Button>
+        )}
       </div>
 
-      {/* Clear Filters */}
+      {/* Active Filters */}
       {hasActiveFilters && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={clearFilters}
-          className="text-gray-500 hover:text-gray-700"
-        >
-          <X className="h-4 w-4 mr-1" />
-          Clear
-        </Button>
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-gray-700">Active filters:</p>
+          <div className="flex flex-wrap gap-2">
+            {localFilters.user && (
+              <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
+                <Users className="h-3 w-3 mr-1" />
+                User: {users?.find(u => u.id === localFilters.user)?.first_name || 'Unknown'}
+                <X 
+                  className="h-3 w-3 ml-1 cursor-pointer hover:text-blue-600"
+                  onClick={() => setLocalFilters(prev => ({ ...prev, user: null }))}
+                />
+              </Badge>
+            )}
+            {localFilters.category && (
+              <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
+                <FolderOpen className="h-3 w-3 mr-1" />
+                Category: {localFilters.category}
+                <X 
+                  className="h-3 w-3 ml-1 cursor-pointer hover:text-blue-600"
+                  onClick={() => setLocalFilters(prev => ({ ...prev, category: null }))}
+                />
+              </Badge>
+            )}
+            {(localFilters.startDate || localFilters.endDate) && (
+              <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
+                <CalendarDays className="h-3 w-3 mr-1" />
+                Date range
+                <X 
+                  className="h-3 w-3 ml-1 cursor-pointer hover:text-blue-600"
+                  onClick={() => setLocalFilters(prev => ({ ...prev, startDate: null, endDate: null }))}
+                />
+              </Badge>
+            )}
+          </div>
+        </div>
       )}
+
+      {/* User Filter */}
+      <Card className="border-gray-200 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium text-gray-700 flex items-center gap-2">
+            <Users className="h-4 w-4 text-blue-600" />
+            Filter by User
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <Select 
+            value={localFilters.user || "all"}
+            onValueChange={handleUserChange}
+          >
+            <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500">
+              <SelectValue placeholder="All users" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All users</SelectItem>
+              {users?.map(user => (
+                <SelectItem key={user.id} value={user.id}>
+                  {user.first_name} {user.last_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
+
+      {/* Category Filter */}
+      <Card className="border-gray-200 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium text-gray-700 flex items-center gap-2">
+            <FolderOpen className="h-4 w-4 text-blue-600" />
+            Filter by Category
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <Select 
+            value={localFilters.category || "all"}
+            onValueChange={handleCategoryChange}
+          >
+            <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500">
+              <SelectValue placeholder="All categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All categories</SelectItem>
+              {['image', 'video', 'audio', 'document', 'other'].map(category => (
+                <SelectItem key={category} value={category}>
+                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
+
+      {/* Date Range Filter */}
+      <Card className="border-gray-200 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium text-gray-700 flex items-center gap-2">
+            <CalendarDays className="h-4 w-4 text-blue-600" />
+            Filter by Date Range
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <Calendar
+            mode="range"
+            selected={{ from: localFilters.startDate, to: localFilters.endDate }}
+            onSelect={(range) => setLocalFilters(prev => ({ 
+              ...prev, 
+              startDate: range?.from || null, 
+              endDate: range?.to || null
+            }))}
+            className="rounded-md border border-gray-200"
+            classNames={{
+              months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+              month: "space-y-4",
+              caption: "flex justify-center pt-1 relative items-center",
+              caption_label: "text-sm font-medium",
+              nav: "space-x-1 flex items-center",
+              nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
+              nav_button_previous: "absolute left-1",
+              nav_button_next: "absolute right-1",
+              table: "w-full border-collapse space-y-1",
+              head_row: "flex",
+              head_cell: "text-muted-foreground rounded-md w-8 font-normal text-[0.8rem]",
+              row: "flex w-full mt-2",
+              cell: "text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+              day: "h-8 w-8 p-0 font-normal aria-selected:opacity-100 hover:bg-blue-100 rounded-md",
+              day_selected: "bg-blue-600 text-white hover:bg-blue-600 hover:text-white focus:bg-blue-600 focus:text-white",
+              day_today: "bg-accent text-accent-foreground",
+              day_outside: "text-muted-foreground opacity-50",
+              day_disabled: "text-muted-foreground opacity-50",
+              day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
+              day_hidden: "invisible",
+            }}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Apply Button */}
+      <Button 
+        onClick={handleApplyFilters} 
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg shadow-sm transition-colors"
+      >
+        Apply Filters
+      </Button>
     </div>
   );
 }

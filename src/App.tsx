@@ -1,19 +1,21 @@
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ThemeProvider } from "@/components/theme-provider";
-import { LanguageProvider } from "@/contexts/LanguageContext";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { Toaster } from "@/components/ui/enhanced-sonner";
-import { SupabaseWarning } from "@/components/ui/supabase-warning";
-import { AppRoutes } from "./AppRoutes";
-import "./App.css";
+import { AuthProvider } from "./contexts/AuthContext";
+import { LanguageProvider } from "./contexts/LanguageContext";
+import { ThemeProvider } from "./components/theme-provider";
+import { AppRoutes } from "./AppRoutes"; 
+import FaviconManager from "./components/FaviconManager"; 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster as ShadcnToaster } from "@/components/ui/toaster";
+import { Toaster as SonnerToaster } from "@/components/ui/sonner";
+import { SupabaseWarning } from "./components/ui/supabase-warning";
+import { ScrollToTop } from "./components/ScrollToTop";
 
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
+      refetchOnWindowFocus: false,
       staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
     },
   },
 });
@@ -24,9 +26,14 @@ function App() {
       <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
         <LanguageProvider>
           <AuthProvider>
+            {/* Router component removed from here */}
+            <FaviconManager />
+            <ScrollToTop />
             <AppRoutes />
-            <Toaster />
+            <ShadcnToaster />
+            <SonnerToaster />
             <SupabaseWarning />
+            {/* Router component removed from here */}
           </AuthProvider>
         </LanguageProvider>
       </ThemeProvider>
@@ -35,3 +42,4 @@ function App() {
 }
 
 export default App;
+
