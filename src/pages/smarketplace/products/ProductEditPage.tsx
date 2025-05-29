@@ -181,7 +181,7 @@ const ProductEditPage = () => {
       <AdminLayout title="Edit Product">
         <div className="space-y-6">
           <Skeleton className="h-16 w-full" />
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-[3fr_1fr] gap-6">
             <div className="lg:col-span-2 space-y-6">
               <Skeleton className="h-96 w-full" />
               <Skeleton className="h-64 w-full" />
@@ -235,11 +235,11 @@ const ProductEditPage = () => {
           {/* Title and Description */}
           <Card>
             <CardHeader>
-              <CardTitle>Title</CardTitle>
+              <CardTitle className="text-lg font-semibold text-gray-800">Title</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-6 space-y-5">
               <div>
-                <Input
+                <Input className="border-gray-300 rounded-sm text-sm"
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
                   placeholder="Product title"
@@ -247,8 +247,8 @@ const ProductEditPage = () => {
                 />
               </div>
               <div>
-                <Label>Description</Label>
-                <div className="border rounded-md p-3 min-h-[200px]">
+                <Label className="text-sm font-medium text-gray-600">Description</Label>
+                <div className="border border-gray-300 rounded-md p-4 min-h-[200px] bg-white">
                   <Textarea
                     value={formData.description}
                     onChange={(e) => handleInputChange('description', e.target.value)}
@@ -263,7 +263,7 @@ const ProductEditPage = () => {
           {/* Media */}
           <Card>
             <CardHeader>
-              <CardTitle>Media</CardTitle>
+              <CardTitle className="text-lg font-semibold text-gray-800">Media</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4">
@@ -276,7 +276,7 @@ const ProductEditPage = () => {
                     />
                   </div>
                 )}
-                <div className="aspect-square bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-gray-400">
+                <div className="aspect-square bg-white border border-gray-300 rounded-md flex items-center justify-center cursor-pointer hover:shadow-sm transition">
                   <Plus className="h-8 w-8 text-gray-400" />
                 </div>
               </div>
@@ -286,13 +286,13 @@ const ProductEditPage = () => {
           {/* Pricing */}
           <Card>
             <CardHeader>
-              <CardTitle>Pricing</CardTitle>
+              <CardTitle className="text-lg font-semibold text-gray-800">Pricing</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Price</Label>
-                  <Input
+                  <Label className="text-sm font-medium text-gray-600">Price</Label>
+                  <Input className="border-gray-300 rounded-sm text-sm"
                     type="number"
                     value={formData.price}
                     onChange={(e) => handleInputChange('price', e.target.value)}
@@ -300,8 +300,8 @@ const ProductEditPage = () => {
                   />
                 </div>
                 <div>
-                  <Label>Compare at price</Label>
-                  <Input
+                  <Label className="text-sm font-medium text-gray-600">Compare at price</Label>
+                  <Input className="border-gray-300 rounded-sm text-sm"
                     type="number"
                     value={formData.original_price}
                     onChange={(e) => handleInputChange('original_price', e.target.value)}
@@ -315,21 +315,21 @@ const ProductEditPage = () => {
           {/* Inventory */}
           <Card>
             <CardHeader>
-              <CardTitle>Inventory</CardTitle>
+              <CardTitle className="text-lg font-semibold text-gray-800">Inventory</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>SKU</Label>
-                  <Input
+                  <Label className="text-sm font-medium text-gray-600">SKU</Label>
+                  <Input className="border-gray-300 rounded-sm text-sm"
                     value={formData.sku}
                     onChange={(e) => handleInputChange('sku', e.target.value)}
                     placeholder="Product SKU"
                   />
                 </div>
                 <div>
-                  <Label>Quantity</Label>
-                  <Input
+                  <Label className="text-sm font-medium text-gray-600">Quantity</Label>
+                  <Input className="border-gray-300 rounded-sm text-sm"
                     type="number"
                     value={formData.stock_quantity}
                     onChange={(e) => handleInputChange('stock_quantity', e.target.value)}
@@ -343,8 +343,8 @@ const ProductEditPage = () => {
           {/* Variants */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Variants</CardTitle>
-              <Button variant="outline" size="sm">
+              <CardTitle className="text-lg font-semibold text-gray-800">Variants</CardTitle>
+              <Button className="rounded-md px-3 py-2 text-sm" variant="outline" size="sm">
                 <Plus className="h-4 w-4 mr-2" />
                 Add variant
               </Button>
@@ -363,7 +363,7 @@ const ProductEditPage = () => {
                     <div></div>
                   </div>
                   {variants.map((variant) => (
-                    <div key={variant.id} className="grid grid-cols-4 gap-4 p-4 border-t">
+                    <div key={variant.id} className="grid grid-cols-4 gap-4 p-4 border-b hover:bg-gray-50">
                       <div className="flex items-center gap-2">
                         <div className="w-6 h-6 bg-yellow-400 rounded"></div>
                         <span>{variant.name}</span>
@@ -384,15 +384,15 @@ const ProductEditPage = () => {
           {/* Category metafields */}
           <Card>
             <CardHeader>
-              <CardTitle>Category metafields</CardTitle>
+              <CardTitle className="text-lg font-semibold text-gray-800">Category metafields</CardTitle>
               <div className="text-sm text-muted-foreground">Bracelets in Jewelry</div>
             </CardHeader>
             <CardContent className="space-y-4">
               {metafields.map((field, index) => (
                 <div key={index} className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>{field.key}</Label>
-                    <Input value={field.value} readOnly className="bg-gray-50" />
+                    <Label className="text-sm font-medium text-gray-600">{field.key}</Label>
+                    <Input className="border-gray-300 rounded-sm text-sm" value={field.value} readOnly className="bg-gray-50" />
                   </div>
                 </div>
               ))}
@@ -405,14 +405,14 @@ const ProductEditPage = () => {
           {/* Status */}
           <Card>
             <CardHeader>
-              <CardTitle>Status</CardTitle>
+              <CardTitle className="text-lg font-semibold text-gray-800">Status</CardTitle>
             </CardHeader>
             <CardContent>
               <Select 
                 value={formData.is_active ? "active" : "draft"} 
                 onValueChange={(value) => handleInputChange('is_active', value === "active")}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-10 bg-white border border-gray-300 rounded-sm text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -426,12 +426,12 @@ const ProductEditPage = () => {
           {/* Publishing */}
           <Card>
             <CardHeader>
-              <CardTitle>Publishing</CardTitle>
+              <CardTitle className="text-lg font-semibold text-gray-800">Publishing</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full bg-green-500"></div>
+                  <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
                   <span className="text-sm">Online Store</span>
                 </div>
               </div>
@@ -441,24 +441,24 @@ const ProductEditPage = () => {
           {/* Product organization */}
           <Card>
             <CardHeader>
-              <CardTitle>Product organization</CardTitle>
+              <CardTitle className="text-lg font-semibold text-gray-800">Product organization</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label>Type</Label>
-                <Input
+                <Label className="text-sm font-medium text-gray-600">Type</Label>
+                <Input className="border-gray-300 rounded-sm text-sm"
                   value={formData.brand}
                   onChange={(e) => handleInputChange('brand', e.target.value)}
                   placeholder="Product type"
                 />
               </div>
               <div>
-                <Label>Vendor</Label>
+                <Label className="text-sm font-medium text-gray-600">Vendor</Label>
                 <Select 
                   value={formData.vendor_id} 
                   onValueChange={(value) => handleInputChange('vendor_id', value)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10 bg-white border border-gray-300 rounded-sm text-sm">
                     <SelectValue placeholder="Select vendor" />
                   </SelectTrigger>
                   <SelectContent>
@@ -471,17 +471,17 @@ const ProductEditPage = () => {
                 </Select>
               </div>
               <div>
-                <Label>Collections</Label>
+                <Label className="text-sm font-medium text-gray-600">Collections</Label>
                 <div className="flex gap-2 flex-wrap mt-2">
                   <Badge variant="secondary">All Products</Badge>
                   <Badge variant="secondary">Bracelets</Badge>
                 </div>
               </div>
               <div>
-                <Label>Tags</Label>
+                <Label className="text-sm font-medium text-gray-600">Tags</Label>
                 <div className="flex gap-2 flex-wrap mt-2">
                   {formData.tags.map((tag, index) => (
-                    <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                    <Badge key={index} className="bg-gray-100 rounded-full text-sm px-3 py-1 flex items-center gap-1">
                       {tag}
                       <X 
                         className="h-3 w-3 cursor-pointer" 
@@ -490,7 +490,7 @@ const ProductEditPage = () => {
                     </Badge>
                   ))}
                 </div>
-                <Input
+                <Input className="border-gray-300 rounded-sm text-sm"
                   placeholder="Add tags..."
                   className="mt-2"
                   onKeyPress={(e) => {
