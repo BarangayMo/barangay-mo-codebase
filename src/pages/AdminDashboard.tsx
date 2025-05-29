@@ -62,7 +62,7 @@ const AdminDashboard = () => {
 
   return (
     <AdminLayout title="Dashboard">
-      <div className="space-y-8">
+      <div className="space-y-6">
         <DashboardPageHeader
           title="BarangayMo Administrative Dashboard"
           description="Overview of your platform's performance and activities"
