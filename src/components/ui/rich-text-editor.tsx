@@ -11,13 +11,17 @@ import {
   Image,
   Video,
   Youtube,
-  Code
+  Code,
+  Upload
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './dialog';
 import { Input } from './input';
 import { Label } from './label';
 import { Textarea } from './textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './tabs';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface RichTextEditorProps {
   value: string;
@@ -34,6 +38,49 @@ export const RichTextEditor = ({ value, onChange, placeholder, className }: Rich
   const [imageUrl, setImageUrl] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
   const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [uploading, setUploading] = useState(false);
+
+  const handleFileUpload = async (file: File, type: 'image' | 'video') => {
+    try {
+      setUploading(true);
+      
+      // Create a unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `uploads/${fileName}`;
+
+      // Upload to Supabase storage
+      const { error: uploadError } = await supabase.storage
+        .from('user_uploads')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data } = supabase.storage
+        .from('user_uploads')
+        .getPublicUrl(filePath);
+
+      const publicUrl = data.publicUrl;
+
+      // Insert the appropriate tag
+      if (type === 'image') {
+        const imgTag = `<img src="${publicUrl}" alt="Uploaded image" style="max-width: 100%; height: auto;" />`;
+        onChange(value + imgTag);
+        setShowImageDialog(false);
+      } else {
+        const videoTag = `<video controls style="max-width: 100%; height: auto;"><source src="${publicUrl}" type="${file.type}">Your browser does not support the video tag.</video>`;
+        onChange(value + videoTag);
+        setShowVideoDialog(false);
+      }
+
+      toast.success(`${type === 'image' ? 'Image' : 'Video'} uploaded successfully!`);
+    } catch (error: any) {
+      toast.error(`Upload failed: ${error.message}`);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const insertImage = () => {
     if (imageUrl) {
@@ -143,18 +190,39 @@ export const RichTextEditor = ({ value, onChange, placeholder, className }: Rich
               <DialogHeader>
                 <DialogTitle>Insert Image</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="imageUrl">Image URL</Label>
-                  <Input
-                    id="imageUrl"
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="https://example.com/image.jpg"
-                  />
-                </div>
-                <Button onClick={insertImage}>Insert Image</Button>
-              </div>
+              <Tabs defaultValue="url" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="url">From URL</TabsTrigger>
+                  <TabsTrigger value="upload">Upload File</TabsTrigger>
+                </TabsList>
+                <TabsContent value="url" className="space-y-4">
+                  <div>
+                    <Label htmlFor="imageUrl">Image URL</Label>
+                    <Input
+                      id="imageUrl"
+                      value={imageUrl}
+                      onChange={(e) => setImageUrl(e.target.value)}
+                      placeholder="https://example.com/image.jpg"
+                    />
+                  </div>
+                  <Button onClick={insertImage} className="bg-blue-600 hover:bg-blue-700">Insert Image</Button>
+                </TabsContent>
+                <TabsContent value="upload" className="space-y-4">
+                  <div>
+                    <Label htmlFor="imageFile">Choose Image File</Label>
+                    <Input
+                      id="imageFile"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleFileUpload(file, 'image');
+                      }}
+                    />
+                  </div>
+                  {uploading && <p className="text-sm text-gray-500">Uploading...</p>}
+                </TabsContent>
+              </Tabs>
             </DialogContent>
           </Dialog>
 
@@ -168,18 +236,39 @@ export const RichTextEditor = ({ value, onChange, placeholder, className }: Rich
               <DialogHeader>
                 <DialogTitle>Insert Video</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="videoUrl">Video URL</Label>
-                  <Input
-                    id="videoUrl"
-                    value={videoUrl}
-                    onChange={(e) => setVideoUrl(e.target.value)}
-                    placeholder="https://example.com/video.mp4"
-                  />
-                </div>
-                <Button onClick={insertVideo}>Insert Video</Button>
-              </div>
+              <Tabs defaultValue="url" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="url">From URL</TabsTrigger>
+                  <TabsTrigger value="upload">Upload File</TabsTrigger>
+                </TabsList>
+                <TabsContent value="url" className="space-y-4">
+                  <div>
+                    <Label htmlFor="videoUrl">Video URL</Label>
+                    <Input
+                      id="videoUrl"
+                      value={videoUrl}
+                      onChange={(e) => setVideoUrl(e.target.value)}
+                      placeholder="https://example.com/video.mp4"
+                    />
+                  </div>
+                  <Button onClick={insertVideo} className="bg-blue-600 hover:bg-blue-700">Insert Video</Button>
+                </TabsContent>
+                <TabsContent value="upload" className="space-y-4">
+                  <div>
+                    <Label htmlFor="videoFile">Choose Video File</Label>
+                    <Input
+                      id="videoFile"
+                      type="file"
+                      accept="video/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleFileUpload(file, 'video');
+                      }}
+                    />
+                  </div>
+                  {uploading && <p className="text-sm text-gray-500">Uploading...</p>}
+                </TabsContent>
+              </Tabs>
             </DialogContent>
           </Dialog>
 
@@ -203,7 +292,7 @@ export const RichTextEditor = ({ value, onChange, placeholder, className }: Rich
                     placeholder="https://www.youtube.com/watch?v=..."
                   />
                 </div>
-                <Button onClick={insertYoutube}>Insert YouTube Video</Button>
+                <Button onClick={insertYoutube} className="bg-blue-600 hover:bg-blue-700">Insert YouTube Video</Button>
               </div>
             </DialogContent>
           </Dialog>
