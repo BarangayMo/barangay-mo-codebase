@@ -141,13 +141,31 @@ export const useMembershipRequests = () => {
           request_message,
           status,
           requested_at,
-          profiles!inner(first_name, last_name)
+          user_id
         `)
         .order('requested_at', { ascending: false })
         .limit(10);
 
       if (error) throw error;
-      return data || [];
+
+      // Fetch user profiles separately
+      if (!data || data.length === 0) return [];
+
+      const userIds = data.map(request => request.user_id);
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name')
+        .in('id', userIds);
+
+      // Map profiles to requests
+      return data.map(request => ({
+        id: request.id,
+        barangay_name: request.barangay_name,
+        request_message: request.request_message,
+        status: request.status,
+        requested_at: request.requested_at,
+        profiles: profiles?.find(profile => profile.id === request.user_id) || null
+      }));
     },
   });
 };
@@ -165,13 +183,32 @@ export const useSupportTickets = () => {
           priority,
           category,
           created_at,
-          profiles!inner(first_name, last_name)
+          user_id
         `)
         .order('created_at', { ascending: false })
         .limit(10);
 
       if (error) throw error;
-      return data || [];
+
+      // Fetch user profiles separately
+      if (!data || data.length === 0) return [];
+
+      const userIds = data.map(ticket => ticket.user_id);
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name')
+        .in('id', userIds);
+
+      // Map profiles to tickets
+      return data.map(ticket => ({
+        id: ticket.id,
+        title: ticket.title,
+        status: ticket.status,
+        priority: ticket.priority,
+        category: ticket.category,
+        created_at: ticket.created_at,
+        profiles: profiles?.find(profile => profile.id === ticket.user_id) || null
+      }));
     },
   });
 };
