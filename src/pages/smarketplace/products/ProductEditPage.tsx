@@ -76,6 +76,14 @@ interface Collection {
   is_default: boolean;
 }
 
+// Predefined colors for tags
+const tagColors = [
+  "#ef4444", "#f97316", "#f59e0b", "#eab308", "#84cc16", 
+  "#22c55e", "#10b981", "#14b8a6", "#06b6d4", "#0ea5e9", 
+  "#3b82f6", "#6366f1", "#8b5cf6", "#a855f7", "#d946ef", 
+  "#ec4899", "#f43f5e"
+];
+
 const ProductEditPage = () => {
   const { id } = useParams();
   const queryClient = useQueryClient();
@@ -119,6 +127,12 @@ const ProductEditPage = () => {
 
   // Media library hook
   const { mediaFiles, refetch: refetchMedia } = useMediaLibrary();
+
+  // Function to get color for tag
+  const getTagColor = (tag: string) => {
+    const hash = tag.split('').reduce((acc, char) => char.charCodeAt(0) + acc, 0);
+    return tagColors[hash % tagColors.length];
+  };
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", id],
@@ -892,9 +906,21 @@ const ProductEditPage = () => {
                   <Label className="text-sm font-medium">Tags</Label>
                   <div className="flex flex-wrap gap-2 mb-2">
                     {formData.tags.map((tag, idx) => (
-                      <Badge key={idx} variant="secondary" className="flex items-center gap-1 px-2 py-1">
+                      <Badge 
+                        key={idx} 
+                        variant="outline" 
+                        className="flex items-center gap-1 px-2 py-1 border-2"
+                        style={{ 
+                          borderColor: getTagColor(tag), 
+                          color: getTagColor(tag),
+                          backgroundColor: `${getTagColor(tag)}10`
+                        }}
+                      >
                         {tag}
-                        <X className="h-3 w-3 cursor-pointer hover:text-red-500" onClick={() => removeTag(tag)} />
+                        <X 
+                          className="h-3 w-3 cursor-pointer hover:opacity-70" 
+                          onClick={() => removeTag(tag)} 
+                        />
                       </Badge>
                     ))}
                   </div>
