@@ -1,18 +1,28 @@
-
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
+import {
+  Input,
+  Textarea,
+  Button,
+  Label,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+  Badge,
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent
+} from "@/components/ui";
 import { Plus, X } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 
@@ -22,11 +32,13 @@ const ProductEditPage = () => {
 
   const [formData, setFormData] = useState({
     name: "",
+    slug: "",
     description: "",
     price: "",
     original_price: "",
     stock_quantity: "",
     sku: "",
+    barcode: "",
     brand: "",
     category_id: "",
     vendor_id: "",
@@ -39,19 +51,14 @@ const ProductEditPage = () => {
     specifications: {}
   });
 
-  const [metafields, setMetafields] = useState([
-    { key: "Color", value: "Gold" },
-    { key: "Jewelry material", value: "Gold" },
-    { key: "Age group", value: "Adults" },
-    { key: "Bracelet design", value: "Bangle" },
-    { key: "Jewelry type", value: "Imitation jewelry" },
-    { key: "Target gender", value: "Unisex" }
+  const [variants, setVariants] = useState([
+    { id: 1, name: "Gold", price: "7000.00", quantity: "2" }
   ]);
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("products").select("*, vendors(id,shop_name), product_categories(id,name)").eq("id", id).single();
+      const { data, error } = await supabase.from("products").select("*").eq("id", id).single();
       if (error) throw error;
       return data;
     },
@@ -69,122 +76,171 @@ const ProductEditPage = () => {
 
   useEffect(() => {
     if (product) {
-      setFormData({
-        ...formData,
-        name: product.name || "",
-        description: product.description || "",
-        price: product.price?.toString() || "",
-        original_price: product.original_price?.toString() || "",
-        stock_quantity: product.stock_quantity?.toString() || "",
-        sku: product.sku || "",
-        brand: product.brand || "",
-        category_id: product.category_id || "",
-        vendor_id: product.vendor_id || "",
-        is_active: product.is_active,
-        main_image_url: product.main_image_url || "",
-        gallery_image_urls: product.gallery_image_urls || [],
-        tags: product.tags || [],
-        shipping_info: product.shipping_info || "",
-        return_policy: product.return_policy || "",
-        specifications: typeof product.specifications === "object" ? product.specifications : {}
-      });
+      setFormData(prev => ({
+        ...prev,
+        ...product,
+        slug: product.name?.toLowerCase().replace(/\s+/g, '-') || ""
+      }));
     }
   }, [product]);
 
   const updateProduct = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data) => {
       const { error } = await supabase.from("products").update(data).eq("id", id);
       if (error) throw error;
-      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["product", id] });
+      queryClient.invalidateQueries(["product", id]);
       toast.success("Product updated.");
     },
-    onError: (err: any) => toast.error("Error: " + err.message)
+    onError: (err) => toast.error("Error: " + err.message)
   });
 
+  const handleChange = (key, value) => setFormData(prev => ({ ...prev, [key]: value }));
+
+  const removeTag = (tag) => {
+    setFormData(prev => ({ ...prev, tags: prev.tags.filter(t => t !== tag) }));
+  };
+
+  const addTag = (tag) => {
+    if (tag && !formData.tags.includes(tag)) {
+      setFormData(prev => ({ ...prev, tags: [...prev.tags, tag] }));
+    }
+  };
+
   const handleSave = () => {
-    const updateData = {
+    updateProduct.mutate({
       ...formData,
       price: parseFloat(formData.price) || 0,
       original_price: formData.original_price ? parseFloat(formData.original_price) : null,
       stock_quantity: parseInt(formData.stock_quantity) || 0
-    };
-    updateProduct.mutate(updateData);
+    });
   };
-
-  const handleChange = (key: string, value: any) => setFormData(prev => ({ ...prev, [key]: value }));
-  const addTag = (tag: string) => setFormData(prev => ({ ...prev, tags: [...prev.tags, tag] }));
-  const removeTag = (tag: string) => setFormData(prev => ({ ...prev, tags: prev.tags.filter(t => t !== tag) }));
-
-  if (isLoading) {
-    return <AdminLayout title="Loading..."><Skeleton className="h-10 w-full" /></AdminLayout>;
-  }
 
   return (
     <AdminLayout title="Edit Product">
-      <div className="grid grid-cols-1 xl:grid-cols-[2fr_1fr] gap-8 px-6 py-10 max-w-screen-2xl mx-auto">
-        <div className="space-y-8">
-          {/* Product Info */}
-          <Card className="shadow border rounded-xl">
-            <CardHeader><CardTitle>Product Details</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label>Title</Label>
-                <Input value={formData.name} onChange={(e) => handleChange("name", (e.target as HTMLInputElement).value)} />
-              </div>
-              <div>
-                <Label>Description</Label>
-                <Textarea value={formData.description} onChange={(e) => handleChange("description", (e.target as HTMLTextAreaElement).value)} rows={4} />
-              </div>
-            </CardContent>
-          </Card>
+      <div className="max-w-screen-2xl mx-auto grid grid-cols-1 xl:grid-cols-[2fr_1fr] gap-8 px-6 py-10">
+        <div className="space-y-6">
+          <Accordion type="multiple" className="space-y-6">
+            <AccordionItem value="product-details">
+              <AccordionTrigger>Product Details</AccordionTrigger>
+              <AccordionContent>
+                <Card>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label>Title</Label>
+                      <Input value={formData.name} onChange={(e) => handleChange("name", e.target.value)} />
+                    </div>
+                    <div>
+                      <Label>Description</Label>
+                      <Textarea rows={4} value={formData.description} onChange={(e) => handleChange("description", e.target.value)} />
+                    </div>
+                  </CardContent>
+                </Card>
+              </AccordionContent>
+            </AccordionItem>
 
-          {/* Media */}
-          <Card className="shadow border rounded-xl">
-            <CardHeader><CardTitle>Media</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {formData.main_image_url && (
-                <img src={formData.main_image_url} alt="" className="w-full aspect-square object-cover rounded-md" />
-              )}
-              <div className="flex items-center justify-center border border-dashed border-gray-300 rounded-md h-36 cursor-pointer">
-                <Plus />
-              </div>
-            </CardContent>
-          </Card>
+            <AccordionItem value="media">
+              <AccordionTrigger>Media</AccordionTrigger>
+              <AccordionContent>
+                <Card>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {formData.main_image_url && (
+                        <img src={formData.main_image_url} className="rounded-md object-cover w-full aspect-square" />
+                      )}
+                      <div className="flex items-center justify-center border-2 border-dashed border-gray-300 rounded-md h-32 cursor-pointer">
+                        <Plus />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </AccordionContent>
+            </AccordionItem>
 
-          {/* SEO Preview */}
-          <Card className="shadow border rounded-xl">
-            <CardHeader><CardTitle>Search engine listing preview</CardTitle></CardHeader>
-            <CardContent className="space-y-2 text-sm text-gray-700">
-              <p className="text-blue-600">https://yourstore.com/products/{formData.name.toLowerCase().replace(/\s+/g, '-') || "product"}</p>
-              <p className="font-medium text-black">{formData.name || "Product name"}</p>
-              <p>{formData.description || "Your product description will show up here."}</p>
-              <p className="font-semibold text-black">₦{parseFloat(formData.price || "0").toLocaleString()}</p>
-            </CardContent>
-          </Card>
+            <AccordionItem value="inventory">
+              <AccordionTrigger>Inventory</AccordionTrigger>
+              <AccordionContent>
+                <Card>
+                  <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label>SKU</Label>
+                      <Input value={formData.sku} onChange={(e) => handleChange("sku", e.target.value)} />
+                    </div>
+                    <div>
+                      <Label>Quantity</Label>
+                      <Input type="number" value={formData.stock_quantity} onChange={(e) => handleChange("stock_quantity", e.target.value)} />
+                    </div>
+                    <div>
+                      <Label>Barcode</Label>
+                      <Input value={formData.barcode} onChange={(e) => handleChange("barcode", e.target.value)} />
+                    </div>
+                  </CardContent>
+                </Card>
+              </AccordionContent>
+            </AccordionItem>
 
-          {/* Metafields */}
-          <Card className="shadow border rounded-xl">
-            <CardHeader><CardTitle>Category Metafields</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {metafields.map((field, index) => (
-                <div key={index}>
-                  <Label>{field.key}</Label>
-                  <Input value={field.value} readOnly className="bg-gray-100" />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+            <AccordionItem value="variants">
+              <AccordionTrigger>Variants</AccordionTrigger>
+              <AccordionContent>
+                <Card>
+                  <CardContent>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-gray-100">
+                          <tr>
+                            <th className="text-left p-2">Variant</th>
+                            <th className="text-left p-2">Price</th>
+                            <th className="text-left p-2">Quantity</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {variants.map(v => (
+                            <tr key={v.id} className="border-t">
+                              <td className="p-2">{v.name}</td>
+                              <td className="p-2">₦{v.price}</td>
+                              <td className="p-2">{v.quantity}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="seo">
+              <AccordionTrigger>Search Engine Listing</AccordionTrigger>
+              <AccordionContent>
+                <Card>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label>URL and handle</Label>
+                      <div className="text-sm text-blue-600">
+                        https://yourstore.com/products/<Input className="inline w-auto" value={formData.slug} onChange={(e) => handleChange("slug", e.target.value)} />
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Meta title</Label>
+                      <Input value={formData.name} onChange={(e) => handleChange("name", e.target.value)} />
+                    </div>
+                    <div>
+                      <Label>Meta description</Label>
+                      <Textarea rows={3} value={formData.description} onChange={(e) => handleChange("description", e.target.value)} />
+                    </div>
+                  </CardContent>
+                </Card>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
 
-        {/* Sidebar */}
         <div className="space-y-6">
-          <Card className="shadow border rounded-xl">
+          <Card>
             <CardHeader><CardTitle>Status</CardTitle></CardHeader>
             <CardContent>
-              <Select value={formData.is_active ? "active" : "draft"} onValueChange={(val) => handleChange("is_active", val === "active")}> 
+              <Select value={formData.is_active ? "active" : "draft"} onValueChange={(v) => handleChange("is_active", v === "active")}> 
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="active">Active</SelectItem>
@@ -194,10 +250,10 @@ const ProductEditPage = () => {
             </CardContent>
           </Card>
 
-          <Card className="shadow border rounded-xl">
+          <Card>
             <CardHeader><CardTitle>Vendor</CardTitle></CardHeader>
             <CardContent>
-              <Select value={formData.vendor_id} onValueChange={(val) => handleChange("vendor_id", val)}>
+              <Select value={formData.vendor_id} onValueChange={(v) => handleChange("vendor_id", v)}>
                 <SelectTrigger><SelectValue placeholder="Select vendor" /></SelectTrigger>
                 <SelectContent>
                   {vendors?.map((vendor) => (
@@ -208,21 +264,20 @@ const ProductEditPage = () => {
             </CardContent>
           </Card>
 
-          <Card className="shadow border rounded-xl">
+          <Card>
             <CardHeader><CardTitle>Tags</CardTitle></CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                {formData.tags.map((tag, index) => (
-                  <Badge key={index} className="bg-gray-100 rounded-full px-3 py-1 text-sm flex items-center gap-2">
-                    {tag}<X className="h-3 w-3 cursor-pointer" onClick={() => removeTag(tag)} />
+                {formData.tags.map((tag, idx) => (
+                  <Badge key={idx} className="bg-gray-100 rounded-full px-3 py-1 flex items-center gap-2">
+                    {tag} <X className="h-3 w-3 cursor-pointer" onClick={() => removeTag(tag)} />
                   </Badge>
                 ))}
               </div>
               <Input placeholder="Add tag..." onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  const target = e.target as HTMLInputElement;
-                  addTag(target.value);
-                  target.value = "";
+                  addTag(e.currentTarget.value);
+                  e.currentTarget.value = "";
                 }
               }} className="mt-2" />
             </CardContent>
@@ -230,9 +285,8 @@ const ProductEditPage = () => {
         </div>
       </div>
 
-      {/* Sticky Save Button */}
       <div className="sticky bottom-0 bg-white border-t px-6 py-4 flex justify-end z-50">
-        <Button className="bg-black text-white px-6 py-2 rounded-md" onClick={handleSave}>Save</Button>
+        <Button onClick={handleSave} className="bg-black text-white px-6 py-2 rounded-md">Save</Button>
       </div>
     </AdminLayout>
   );
