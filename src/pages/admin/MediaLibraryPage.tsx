@@ -74,7 +74,7 @@ export default function MediaLibraryPage() {
                   <div className="mt-6">
                     <MediaLibraryFilters 
                       filters={filters} 
-                      onFilterChange={setFilters} 
+                      onFiltersChange={setFilters} 
                     />
                   </div>
                 </SheetContent>
