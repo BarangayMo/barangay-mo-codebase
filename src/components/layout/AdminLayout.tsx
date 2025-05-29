@@ -12,6 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { CommandPalette } from "./CommandPalette";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -25,6 +26,7 @@ export const AdminLayout = ({
   hidePageHeader = false
 }: AdminLayoutProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCommandOpen, setIsCommandOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     const saved = localStorage.getItem("sidebar-collapsed");
     return saved ? JSON.parse(saved) : false;
@@ -34,7 +36,6 @@ export const AdminLayout = ({
     user
   } = useAuth();
   const navigate = useNavigate();
-  const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 
   useEffect(() => {
     localStorage.setItem("sidebar-collapsed", JSON.stringify(isSidebarCollapsed));
@@ -42,6 +43,23 @@ export const AdminLayout = ({
 
   useEffect(() => {
     window.scrollTo(0, 0);
+  }, []);
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "/" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        // Prevent typing "/" in input fields
+        if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+          return;
+        }
+        e.preventDefault();
+        setIsCommandOpen(true);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   const handleLogout = async () => {
@@ -52,7 +70,9 @@ export const AdminLayout = ({
   return (
     <SidebarProvider>
       <div className="flex min-h-screen bg-gray-50 w-full overflow-x-hidden">
-        <div className={cn("hidden md:block fixed h-full z-20 bg-white border-r shadow-sm transition-all duration-300 ease-in-out", isSidebarCollapsed ? "w-16" : "w-64")}>
+        <CommandPalette open={isCommandOpen} onOpenChange={setIsCommandOpen} />
+        
+        <div className="hidden md:block fixed h-full z-20 bg-white border-r shadow-sm transition-all duration-300 ease-in-out", isSidebarCollapsed ? "w-16" : "w-64")}>
           <div className="flex flex-col h-full">
             <div className="flex items-center justify-center h-16 px-4 border-b">
               <Link to="/" className={cn("flex items-center", isSidebarCollapsed ? "justify-center w-full" : "justify-start")}>
@@ -193,10 +213,15 @@ export const AdminLayout = ({
               <div className="flex items-center justify-between h-16 px-4">
                 <div className="relative w-64">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input placeholder="Search..." className="pl-9 h-9 w-full bg-gray-50 border-gray-200 focus-visible:ring-1" />
+                  <Input 
+                    placeholder="Search..." 
+                    className="pl-9 h-9 w-full bg-gray-50 border-gray-200 focus-visible:ring-1 cursor-pointer" 
+                    onClick={() => setIsCommandOpen(true)}
+                    readOnly
+                  />
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                     <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-white px-1.5 font-mono text-[10px] font-medium opacity-70">
-                      <span className="text-xs">{isMac ? '⌘' : 'Ctrl'}</span> <span className="text-xs">F</span>
+                      <span className="text-xs">/</span>
                     </kbd>
                   </div>
                 </div>
