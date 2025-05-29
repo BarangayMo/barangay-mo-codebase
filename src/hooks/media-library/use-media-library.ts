@@ -4,6 +4,7 @@ import { useFileSelection } from "./use-file-selection";
 import { useFileOperations } from "./use-file-operations";
 import { useAuthState } from "./use-auth-state";
 import { useMediaQuery } from "./use-media-query";
+import { useDeleteState } from "./use-delete-state";
 
 /**
  * Custom hook to manage media library functionality - Database Only Version
@@ -31,6 +32,9 @@ export function useMediaLibrary(
     toggleAllFilesSimple 
   } = useFileSelection();
 
+  // Get delete state management
+  const { deletingFiles, setDeleting, isDeleting } = useDeleteState();
+
   // Get media query results from database only
   const {
     mediaFiles,
@@ -40,13 +44,24 @@ export function useMediaLibrary(
     refetch
   } = useMediaQuery(filters, searchQuery, isAdmin, []); // Empty array for buckets since we don't use them
   
-  // Get file operations
+  // Get file operations with delete state management
   const {
     handleDownload,
-    handleDelete,
+    handleDelete: originalHandleDelete,
     handleCopyUrl,
     getBucketAndPath,
   } = useFileOperations(refetch);
+
+  // Enhanced delete function with loading state
+  const handleDelete = async (fileId: string, bucketName: string, fileUrl: string) => {
+    setDeleting(fileId, true);
+    try {
+      const result = await originalHandleDelete(fileId, bucketName, fileUrl);
+      return result;
+    } finally {
+      setDeleting(fileId, false);
+    }
+  };
 
   return {
     // State
@@ -59,6 +74,10 @@ export function useMediaLibrary(
     loadingFiles,
     isError,
     error,
+    
+    // Delete state
+    deletingFiles,
+    isDeleting,
     
     // File selection
     toggleFileSelection,

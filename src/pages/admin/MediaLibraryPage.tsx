@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { MediaLibraryFilters } from "@/components/media/MediaLibraryFilters";
 import { MediaUploadDialog } from "@/components/media/MediaUploadDialog";
+import { useMediaLibrary } from "@/hooks";
 
 export default function MediaLibraryPage() {
   const [viewType, setViewType] = useState<'grid' | 'table'>('grid');
@@ -22,6 +23,10 @@ export default function MediaLibraryPage() {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  // Get media files count
+  const { mediaFiles, loadingFiles } = useMediaLibrary(filters, searchQuery);
+  const mediaCount = mediaFiles?.length || 0;
+
   const handleUploadComplete = () => {
     // Force refresh of the media components by incrementing the key
     setRefreshKey(prev => prev + 1);
@@ -32,7 +37,16 @@ export default function MediaLibraryPage() {
     <AdminLayout title="Media Library">
       <div className="py-6">
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
-          <h1 className="text-2xl font-semibold">Media Library</h1>
+          <div>
+            <h1 className="text-2xl font-semibold">Media Library</h1>
+            <p className="text-sm text-gray-600 mt-1">
+              {loadingFiles ? (
+                "Loading..."
+              ) : (
+                `${mediaCount} file${mediaCount !== 1 ? 's' : ''} in gallery`
+              )}
+            </p>
+          </div>
           
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative">
