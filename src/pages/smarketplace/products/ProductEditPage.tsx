@@ -1,28 +1,17 @@
+
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import {
-  Input,
-  Textarea,
-  Button,
-  Label,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-  Badge,
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent
-} from "@/components/ui";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { Plus, X } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 
@@ -85,7 +74,7 @@ const ProductEditPage = () => {
   }, [product]);
 
   const updateProduct = useMutation({
-    mutationFn: async (data) => {
+    mutationFn: async (data: any) => {
       const { error } = await supabase.from("products").update(data).eq("id", id);
       if (error) throw error;
     },
@@ -93,16 +82,16 @@ const ProductEditPage = () => {
       queryClient.invalidateQueries(["product", id]);
       toast.success("Product updated.");
     },
-    onError: (err) => toast.error("Error: " + err.message)
+    onError: (err: any) => toast.error("Error: " + err.message)
   });
 
-  const handleChange = (key, value) => setFormData(prev => ({ ...prev, [key]: value }));
+  const handleChange = (key: string, value: any) => setFormData(prev => ({ ...prev, [key]: value }));
 
-  const removeTag = (tag) => {
+  const removeTag = (tag: string) => {
     setFormData(prev => ({ ...prev, tags: prev.tags.filter(t => t !== tag) }));
   };
 
-  const addTag = (tag) => {
+  const addTag = (tag: string) => {
     if (tag && !formData.tags.includes(tag)) {
       setFormData(prev => ({ ...prev, tags: [...prev.tags, tag] }));
     }
@@ -276,8 +265,8 @@ const ProductEditPage = () => {
               </div>
               <Input placeholder="Add tag..." onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  addTag(e.currentTarget.value);
-                  e.currentTarget.value = "";
+                  addTag((e.target as HTMLInputElement).value);
+                  (e.target as HTMLInputElement).value = "";
                 }
               }} className="mt-2" />
             </CardContent>
