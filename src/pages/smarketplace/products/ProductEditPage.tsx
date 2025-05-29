@@ -23,7 +23,6 @@ interface FormData {
   original_price: string;
   stock_quantity: string;
   sku: string;
-  barcode: string;
   brand: string;
   category_id: string;
   vendor_id: string;
@@ -49,7 +48,6 @@ const ProductEditPage = () => {
     original_price: "",
     stock_quantity: "",
     sku: "",
-    barcode: "",
     brand: "",
     category_id: "",
     vendor_id: "",
@@ -95,7 +93,6 @@ const ProductEditPage = () => {
         original_price: product.original_price?.toString() || "",
         stock_quantity: product.stock_quantity?.toString() || "",
         sku: product.sku || "",
-        barcode: product.barcode || "",
         brand: product.brand || "",
         category_id: product.category_id || "",
         vendor_id: product.vendor_id || "",
@@ -105,7 +102,8 @@ const ProductEditPage = () => {
         tags: product.tags || [],
         shipping_info: product.shipping_info || "",
         return_policy: product.return_policy || "",
-        specifications: product.specifications || {},
+        specifications: (typeof product.specifications === 'object' && product.specifications !== null) ? 
+          product.specifications as Record<string, any> : {},
         weight_kg: product.weight_kg?.toString() || ""
       });
     }
@@ -220,7 +218,7 @@ const ProductEditPage = () => {
                 <CardTitle className="text-sm font-medium text-gray-500 uppercase">INVENTORY</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-sm font-medium">Quantity</Label>
                     <div className="flex items-center mt-1">
@@ -239,15 +237,6 @@ const ProductEditPage = () => {
                       value={formData.sku}
                       onChange={(e) => handleChange("sku", e.target.value)}
                       placeholder="####-###-###"
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium">Barcode</Label>
-                    <Input 
-                      value={formData.barcode}
-                      onChange={(e) => handleChange("barcode", e.target.value)}
-                      placeholder="01234567"
                       className="mt-1"
                     />
                   </div>
