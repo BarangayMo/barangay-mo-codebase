@@ -14,12 +14,15 @@ import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { MediaUploadDialog } from "@/components/media/MediaUploadDialog";
-import { useMediaLibrary } from "@/hooks/media-library/use-media-library";
 import { 
   Plus, 
   X, 
+  Bold, 
+  Italic, 
+  Underline, 
+  Link, 
+  List, 
+  AlignLeft, 
   Upload, 
   Search, 
   Package,
@@ -30,14 +33,7 @@ import {
   EyeOff,
   Tag,
   Truck,
-  Save,
-  Palette,
-  Globe,
-  Users,
-  Settings,
-  ImageIcon,
-  VideoIcon,
-  Minus
+  Save
 } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { formatPHP } from "@/utils/currency";
@@ -62,8 +58,6 @@ interface FormData {
   return_policy: string;
   specifications: Record<string, any>;
   weight_kg?: string;
-  seo_title: string;
-  seo_description: string;
 }
 
 interface Collection {
@@ -78,9 +72,6 @@ const ProductEditPage = () => {
   const { id } = useParams();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
-  const [showCreateCollection, setShowCreateCollection] = useState(false);
-  const [showMediaUpload, setShowMediaUpload] = useState(false);
-  const [newCollection, setNewCollection] = useState({ name: "", description: "", color: "#3b82f6" });
 
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -100,17 +91,10 @@ const ProductEditPage = () => {
     shipping_info: "",
     return_policy: "",
     specifications: {},
-    weight_kg: "",
-    seo_title: "",
-    seo_description: ""
+    weight_kg: ""
   });
 
   const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
-  const [variations, setVariations] = useState<any[]>([]);
-  const [selectedImages, setSelectedImages] = useState<string[]>([]);
-
-  // Media library hook
-  const { mediaFiles, refetch: refetchMedia } = useMediaLibrary();
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", id],
@@ -153,25 +137,6 @@ const ProductEditPage = () => {
     enabled: !!id
   });
 
-  // Create collection mutation
-  const createCollection = useMutation({
-    mutationFn: async (collection: any) => {
-      const { data, error } = await supabase
-        .from("collections")
-        .insert([collection])
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["collections"] });
-      toast.success("Collection created successfully!");
-      setShowCreateCollection(false);
-      setNewCollection({ name: "", description: "", color: "#3b82f6" });
-    }
-  });
-
   // Filter collections based on search term
   const filteredCollections = useMemo(() => {
     if (!collections) return [];
@@ -203,9 +168,7 @@ const ProductEditPage = () => {
         return_policy: product.return_policy || "",
         specifications: (typeof product.specifications === 'object' && product.specifications !== null) ? 
           product.specifications as Record<string, any> : {},
-        weight_kg: product.weight_kg?.toString() || "",
-        seo_title: product.seo_title || "",
-        seo_description: product.seo_description || ""
+        weight_kg: product.weight_kg?.toString() || ""
       });
     }
   }, [product]);
@@ -249,77 +212,6 @@ const ProductEditPage = () => {
   });
 
   const handleChange = (key: keyof FormData, value: any) => setFormData(prev => ({ ...prev, [key]: value }));
-
-  const handleQuantityChange = (delta: number) => {
-    const currentQty = parseInt(formData.stock_quantity) || 0;
-    const newQty = Math.max(0, currentQty + delta);
-    handleChange("stock_quantity", newQty.toString());
-  };
-
-  const addVariation = () => {
-    setVariations(prev => [...prev, { 
-      type: "color", 
-      name: "", 
-      values: [],
-      newValue: ""
-    }]);
-  };
-
-  const updateVariation = (index: number, field: string, value: any) => {
-    setVariations(prev => prev.map((v, i) => i === index ? { ...v, [field]: value } : v));
-  };
-
-  const addVariationValue = (index: number) => {
-    const variation = variations[index];
-    if (variation.newValue) {
-      setVariations(prev => prev.map((v, i) => 
-        i === index 
-          ? { 
-              ...v, 
-              values: [...v.values, {
-                value: v.newValue,
-                color: v.type === "color" ? generateRandomColor() : null
-              }],
-              newValue: ""
-            }
-          : v
-      ));
-    }
-  };
-
-  const generateRandomColor = () => {
-    const colors = ["#ef4444", "#f97316", "#f59e0b", "#eab308", "#84cc16", "#22c55e", "#10b981", "#14b8a6", "#06b6d4", "#0ea5e9", "#3b82f6", "#6366f1", "#8b5cf6", "#a855f7", "#d946ef", "#ec4899", "#f43f5e"];
-    return colors[Math.floor(Math.random() * colors.length)];
-  };
-
-  const handleImageSelect = (imageUrl: string) => {
-    if (!selectedImages.includes(imageUrl)) {
-      const newImages = [...selectedImages, imageUrl];
-      setSelectedImages(newImages);
-      
-      // Set first image as main image
-      if (newImages.length === 1) {
-        handleChange("main_image_url", imageUrl);
-      }
-      
-      // Update gallery
-      handleChange("gallery_image_urls", newImages);
-    }
-  };
-
-  const removeImage = (imageUrl: string) => {
-    const newImages = selectedImages.filter(img => img !== imageUrl);
-    setSelectedImages(newImages);
-    
-    // Update main image if removed
-    if (formData.main_image_url === imageUrl && newImages.length > 0) {
-      handleChange("main_image_url", newImages[0]);
-    } else if (newImages.length === 0) {
-      handleChange("main_image_url", "");
-    }
-    
-    handleChange("gallery_image_urls", newImages);
-  };
 
   const removeTag = (tag: string) => {
     setFormData(prev => ({ ...prev, tags: prev.tags.filter(t => t !== tag) }));
@@ -415,48 +307,8 @@ const ProductEditPage = () => {
                       value={formData.description}
                       onChange={(value) => handleChange("description", value)}
                       placeholder="Product description..."
-                      className="min-h-[200px] resize-y"
                     />
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* SEO Section */}
-            <Card className="shadow-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-sm font-medium text-gray-500 uppercase flex items-center gap-2">
-                  <Globe className="h-4 w-4" />
-                  SEO
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label className="text-sm font-medium">SEO Title</Label>
-                  <Input 
-                    value={formData.seo_title} 
-                    onChange={(e) => handleChange("seo_title", e.target.value)}
-                    placeholder="SEO optimized title"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">SEO Description</Label>
-                  <Textarea 
-                    value={formData.seo_description} 
-                    onChange={(e) => handleChange("seo_description", e.target.value)}
-                    placeholder="SEO meta description"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Product Slug</Label>
-                  <Input 
-                    value={formData.slug} 
-                    onChange={(e) => handleChange("slug", e.target.value)}
-                    placeholder="product-url-slug"
-                    className="mt-1"
-                  />
                 </div>
               </CardContent>
             </Card>
@@ -474,30 +326,14 @@ const ProductEditPage = () => {
                   <div>
                     <Label className="text-sm font-medium">Quantity</Label>
                     <div className="flex items-center mt-1">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="px-3 h-10 rounded-r-none border-r-0"
-                        onClick={() => handleQuantityChange(-1)}
-                        type="button"
-                      >
-                        <Minus className="h-4 w-4" />
-                      </Button>
+                      <Button variant="outline" size="sm" className="px-3 h-10 rounded-r-none border-r-0">-</Button>
                       <Input 
                         value={formData.stock_quantity}
                         onChange={(e) => handleChange("stock_quantity", e.target.value)}
                         className="text-center rounded-none border-x-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                         type="number"
                       />
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="px-3 h-10 rounded-l-none border-l-0"
-                        onClick={() => handleQuantityChange(1)}
-                        type="button"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
+                      <Button variant="outline" size="sm" className="px-3 h-10 rounded-l-none border-l-0">+</Button>
                     </div>
                   </div>
                   <div>
@@ -510,24 +346,74 @@ const ProductEditPage = () => {
                     />
                   </div>
                 </div>
+                <div className="mt-6">
+                  <div className="flex items-center space-x-2">
+                    <Switch checked={true} />
+                    <span className="text-sm text-gray-600">Continue selling when out of stock</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Media Section */}
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-sm font-medium text-gray-500 uppercase flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  MEDIA
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors">
+                  <Upload className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <p className="text-sm text-gray-600 mb-1">Drag drop some files here, or click to select files</p>
+                  <p className="text-xs text-gray-400">1080 x 1080 (1:1) recommended, up to 2MB each</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Variation Section */}
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-sm font-medium text-gray-500 uppercase">VARIATION</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600">This product is variable: has different colors, size, weight, etc.</p>
               </CardContent>
             </Card>
           </div>
 
-          {/* Right Column - Additional Details */}
+          {/* Right Column - Organization & Settings */}
           <div className="space-y-6">
-            {/* Status */}
+            {/* Product Status */}
             <Card className="shadow-sm">
               <CardHeader className="pb-4">
-                <CardTitle className="text-sm font-medium text-gray-500 uppercase">STATUS</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-500 uppercase">PRODUCT STATUS</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">Product Status</Label>
-                  <Switch
-                    checked={formData.is_active}
-                    onCheckedChange={(checked) => handleChange("is_active", checked)}
-                  />
+                <div>
+                  <Label className="text-sm font-medium flex items-center gap-2">
+                    {formData.is_active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                    Status
+                  </Label>
+                  <Select 
+                    value={formData.is_active ? "active" : "draft"} 
+                    onValueChange={(v) => handleChange("is_active", v === "active")}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="draft">Draft</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500 mt-2">
+                    {formData.is_active 
+                      ? "This product will be visible to customers" 
+                      : "This product will be hidden from customers"
+                    }
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -540,109 +426,193 @@ const ProductEditPage = () => {
                   PRICING
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label className="text-sm font-medium">Price</Label>
-                  <Input 
-                    type="number"
-                    value={formData.price}
-                    onChange={(e) => handleChange("price", e.target.value)}
-                    placeholder="0.00"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Compare at price</Label>
-                  <Input 
-                    type="number"
-                    value={formData.original_price}
-                    onChange={(e) => handleChange("original_price", e.target.value)}
-                    placeholder="0.00"
-                    className="mt-1"
-                  />
+              <CardContent>
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium">Price</Label>
+                    <div className="flex items-center mt-1">
+                      <div className="flex items-center bg-gray-50 border border-r-0 rounded-l-md px-3 py-2 text-sm text-gray-500">
+                        ₱
+                      </div>
+                      <Input 
+                        value={formData.price}
+                        onChange={(e) => handleChange("price", e.target.value)}
+                        placeholder="0.00"
+                        className="rounded-l-none"
+                        type="number"
+                        step="0.01"
+                      />
+                    </div>
+                    {formData.price && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {formatPHP(parseFloat(formData.price) || 0)}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Compare at price</Label>
+                    <div className="flex items-center mt-1">
+                      <div className="flex items-center bg-gray-50 border border-r-0 rounded-l-md px-3 py-2 text-sm text-gray-500">
+                        ₱
+                      </div>
+                      <Input 
+                        value={formData.original_price}
+                        onChange={(e) => handleChange("original_price", e.target.value)}
+                        placeholder="0.00"
+                        className="rounded-l-none"
+                        type="number"
+                        step="0.01"
+                      />
+                    </div>
+                    {formData.original_price && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {formatPHP(parseFloat(formData.original_price) || 0)}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Vendor */}
+            {/* Organization */}
             <Card className="shadow-sm">
               <CardHeader className="pb-4">
                 <CardTitle className="text-sm font-medium text-gray-500 uppercase flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  VENDOR
+                  <Tag className="h-4 w-4" />
+                  ORGANIZATION
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <Label className="text-sm font-medium">Tags</Label>
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {formData.tags.map((tag, idx) => (
+                      <Badge key={idx} variant="secondary" className="flex items-center gap-1 px-2 py-1">
+                        {tag}
+                        <X className="h-3 w-3 cursor-pointer hover:text-red-500" onClick={() => removeTag(tag)} />
+                      </Badge>
+                    ))}
+                  </div>
+                  <Input 
+                    placeholder="T-shirt, Black, Classic"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addTag((e.target as HTMLInputElement).value);
+                        (e.target as HTMLInputElement).value = "";
+                      }
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium">Collections</Label>
+                  
+                  <div className="mt-2 relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input 
+                      placeholder="Search collections..." 
+                      className="pl-10"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+
+                  <ScrollArea className="h-48 mt-3 border rounded-md">
+                    <div className="p-3 space-y-2">
+                      {filteredCollections?.map((collection) => (
+                        <div key={collection.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-md">
+                          <Checkbox
+                            checked={selectedCollections.includes(collection.id)}
+                            onCheckedChange={() => toggleCollection(collection.id)}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <div 
+                                className="h-3 w-3 rounded-full" 
+                                style={{ backgroundColor: collection.color }}
+                              ></div>
+                              <span className="text-sm font-medium truncate">{collection.name}</span>
+                            </div>
+                            {collection.description && (
+                              <p className="text-xs text-gray-500 truncate">{collection.description}</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      {filteredCollections?.length === 0 && (
+                        <div className="text-center py-4 text-gray-500 text-sm">
+                          {searchTerm ? 'No collections found' : 'No collections available'}
+                        </div>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Shipping */}
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-sm font-medium text-gray-500 uppercase flex items-center gap-2">
+                  <Truck className="h-4 w-4" />
+                  SHIPPING
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div>
-                  <Label className="text-sm font-medium">Vendor</Label>
-                  <Select value={formData.vendor_id} onValueChange={(value) => handleChange("vendor_id", value)}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select vendor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {vendors?.map((vendor) => (
-                        <SelectItem key={vendor.id} value={vendor.id}>
-                          {vendor.shop_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label className="text-sm font-medium flex items-center gap-2">
+                    <Weight className="h-4 w-4" />
+                    Weight
+                  </Label>
+                  <div className="flex items-center mt-1">
+                    <Input 
+                      value={formData.weight_kg}
+                      onChange={(e) => handleChange("weight_kg", e.target.value)}
+                      placeholder="0"
+                      className="flex-1"
+                      type="number"
+                      step="0.01"
+                    />
+                    <Select defaultValue="kg">
+                      <SelectTrigger className="w-20 ml-2">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="g">g</SelectItem>
+                        <SelectItem value="kg">kg</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Used to calculate shipping rates at checkout and label prices during fulfillment.
+                  </p>
                 </div>
               </CardContent>
             </Card>
           </div>
         </div>
 
-        {/* Media Upload Dialog */}
-        <MediaUploadDialog
-          open={showMediaUpload}
-          onClose={() => setShowMediaUpload(false)}
-          onUploadComplete={() => {
-            refetchMedia();
-            setShowMediaUpload(false);
-          }}
-        />
-
-        {/* Create Collection Dialog */}
-        <Dialog open={showCreateCollection} onOpenChange={setShowCreateCollection}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Collection</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label>Collection Name</Label>
-                <Input
-                  value={newCollection.name}
-                  onChange={(e) => setNewCollection(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Enter collection name"
-                />
-              </div>
-              <div>
-                <Label>Description</Label>
-                <Textarea
-                  value={newCollection.description}
-                  onChange={(e) => setNewCollection(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Enter collection description"
-                />
-              </div>
-              <div>
-                <Label>Color</Label>
-                <Input
-                  type="color"
-                  value={newCollection.color}
-                  onChange={(e) => setNewCollection(prev => ({ ...prev, color: e.target.value }))}
-                />
-              </div>
-              <Button 
-                onClick={() => createCollection.mutate(newCollection)} 
-                className="w-full bg-blue-600 hover:bg-blue-700"
-              >
-                Create Collection
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        {/* Bottom Save Button */}
+        <div className="sticky bottom-0 bg-white border-t p-4 mt-8">
+          <div className="flex justify-end space-x-3">
+            <Button 
+              variant="outline" 
+              onClick={() => handleSave()}
+              className="flex items-center gap-2"
+            >
+              <Save className="h-4 w-4" />
+              Save as Draft
+            </Button>
+            <Button 
+              onClick={handleSave}
+              className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+            >
+              <Save className="h-4 w-4" />
+              Save Product
+            </Button>
+          </div>
+        </div>
       </div>
     </AdminLayout>
   );
