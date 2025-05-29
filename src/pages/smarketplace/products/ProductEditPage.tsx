@@ -39,7 +39,8 @@ import {
   ImageIcon,
   VideoIcon,
   Minus,
-  Link
+  Link,
+  ChevronDown
 } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { formatPHP } from "@/utils/currency";
@@ -95,8 +96,9 @@ const ProductEditPage = () => {
   const [showVideoUrlDialog, setShowVideoUrlDialog] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
-  const [newCollection, setNewCollection] = useState({ name: "", description: "", color: "#3b82f6" });
+  const [newCollection, setNewCollection] = useState({ name: "", description: "", color: "#2563eb" });
   const [continueSellingOutOfStock, setContinueSellingOutOfStock] = useState(true);
+  const [seoExpanded, setSeoExpanded] = useState(false);
 
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -190,7 +192,7 @@ const ProductEditPage = () => {
       queryClient.invalidateQueries({ queryKey: ["collections"] });
       toast.success("Collection created successfully!");
       setShowCreateCollection(false);
-      setNewCollection({ name: "", description: "", color: "#3b82f6" });
+      setNewCollection({ name: "", description: "", color: "#2563eb" });
     }
   });
 
@@ -208,7 +210,7 @@ const ProductEditPage = () => {
     if (product) {
       setFormData({
         name: product.name || "",
-        slug: product.name?.toLowerCase().replace(/\s+/g, '-') || "",
+        slug: product.slug || product.name?.toLowerCase().replace(/\s+/g, '-') || "",
         description: product.description || "",
         price: product.price?.toString() || "",
         original_price: product.original_price?.toString() || "",
@@ -226,8 +228,8 @@ const ProductEditPage = () => {
         specifications: (typeof product.specifications === 'object' && product.specifications !== null) ? 
           product.specifications as Record<string, any> : {},
         weight_kg: product.weight_kg?.toString() || "",
-        seo_title: product.seo_title || "",
-        seo_description: product.seo_description || ""
+        seo_title: product.seo_title || product.name || "",
+        seo_description: product.seo_description || product.description || ""
       });
       setSelectedImages(product.gallery_image_urls || []);
     }
@@ -494,45 +496,6 @@ const ProductEditPage = () => {
               </CardContent>
             </Card>
 
-            {/* SEO Section */}
-            <Card className="shadow-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-sm font-medium text-gray-500 uppercase flex items-center gap-2">
-                  <Globe className="h-4 w-4" />
-                  SEO
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label className="text-sm font-medium">SEO Title</Label>
-                  <Input 
-                    value={formData.seo_title} 
-                    onChange={(e) => handleChange("seo_title", e.target.value)}
-                    placeholder="SEO optimized title"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">SEO Description</Label>
-                  <Textarea 
-                    value={formData.seo_description} 
-                    onChange={(e) => handleChange("seo_description", e.target.value)}
-                    placeholder="SEO meta description"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Product Slug</Label>
-                  <Input 
-                    value={formData.slug} 
-                    onChange={(e) => handleChange("slug", e.target.value)}
-                    placeholder="product-url-slug"
-                    className="mt-1"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Inventory Section */}
             <Card className="shadow-sm">
               <CardHeader className="pb-4">
@@ -769,6 +732,55 @@ const ProductEditPage = () => {
                   <p className="text-sm text-gray-600">No variations added. Click "Add Variation" to start.</p>
                 )}
               </CardContent>
+            </Card>
+
+            {/* SEO Section - Now below variations */}
+            <Card className="shadow-sm">
+              <Collapsible open={seoExpanded} onOpenChange={setSeoExpanded}>
+                <CollapsibleTrigger className="w-full">
+                  <CardHeader className="pb-4 hover:bg-gray-50 transition-colors">
+                    <CardTitle className="text-sm font-medium text-gray-500 uppercase flex items-center gap-2 justify-between">
+                      <div className="flex items-center gap-2">
+                        <img src="/favicon.ico" alt="" className="h-4 w-4" />
+                        <Globe className="h-4 w-4" />
+                        SEO
+                      </div>
+                      <ChevronDown className={`h-4 w-4 transition-transform ${seoExpanded ? 'rotate-180' : ''}`} />
+                    </CardTitle>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label className="text-sm font-medium">SEO Title</Label>
+                      <Input 
+                        value={formData.seo_title} 
+                        onChange={(e) => handleChange("seo_title", e.target.value)}
+                        placeholder={formData.name || "SEO optimized title"}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">SEO Description</Label>
+                      <Textarea 
+                        value={formData.seo_description} 
+                        onChange={(e) => handleChange("seo_description", e.target.value)}
+                        placeholder={formData.description || "SEO meta description"}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">Product Slug</Label>
+                      <Input 
+                        value={formData.slug} 
+                        onChange={(e) => handleChange("slug", e.target.value)}
+                        placeholder="product-url-slug"
+                        className="mt-1"
+                      />
+                    </div>
+                  </CardContent>
+                </CollapsibleContent>
+              </Collapsible>
             </Card>
           </div>
 
@@ -1189,7 +1201,7 @@ const ProductEditPage = () => {
                   <Input
                     value={newCollection.color}
                     onChange={(e) => setNewCollection(prev => ({ ...prev, color: e.target.value }))}
-                    placeholder="#3b82f6"
+                    placeholder="#2563eb"
                     className="flex-1"
                   />
                 </div>
