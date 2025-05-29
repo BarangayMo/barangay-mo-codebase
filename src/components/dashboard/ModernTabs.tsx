@@ -10,7 +10,7 @@ import {
 import { Plus, User, Package, FileText, MessageSquare, Settings } from "lucide-react";
 import { ReactNode } from "react";
 
-interface TabItem {
+export interface TabItem {
   value: string;
   label: string;
   icon?: ReactNode;
