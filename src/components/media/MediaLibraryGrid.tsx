@@ -32,10 +32,17 @@ interface MediaLibraryFilters {
   endDate: Date | null;
 }
 
+interface UploadingFile {
+  id: string;
+  file: File;
+  progress: number;
+  status: 'uploading';
+}
+
 interface MediaLibraryGridProps {
   filters: MediaLibraryFilters;
   searchQuery?: string;
-  uploadingFiles?: any[];
+  uploadingFiles?: UploadingFile[];
 }
 
 export function MediaLibraryGrid({ filters, searchQuery = "", uploadingFiles = [] }: MediaLibraryGridProps) {
@@ -61,20 +68,23 @@ export function MediaLibraryGrid({ filters, searchQuery = "", uploadingFiles = [
   } = useMediaLibrary(filters, searchQuery);
 
   // Combine actual files with uploading files for display
-  const allFiles = [...(mediaFiles || []), ...uploadingFiles.map(upload => ({
-    id: upload.id,
-    filename: upload.file.name,
-    file_url: '',
-    bucket_name: 'user_uploads',
-    content_type: upload.file.type,
-    file_size: upload.file.size,
-    uploaded_at: new Date().toISOString(),
-    user_id: '',
-    category: 'uploading',
-    signedUrl: null,
-    isUploading: true,
-    progress: upload.progress
-  }))];
+  const allFiles: MediaFile[] = [
+    ...(mediaFiles || []),
+    ...uploadingFiles.map(upload => ({
+      id: upload.id,
+      filename: upload.file.name,
+      file_url: '',
+      bucket_name: 'user_uploads',
+      content_type: upload.file.type,
+      file_size: upload.file.size,
+      uploaded_at: new Date().toISOString(),
+      user_id: '',
+      category: 'uploading',
+      signedUrl: null,
+      isUploading: true,
+      progress: upload.progress
+    } as MediaFile))
+  ];
 
   // Enhanced toggle function with range selection support
   const handleToggleFileSelection = (file: MediaFile, index: number, event: React.MouseEvent) => {
@@ -235,8 +245,8 @@ export function MediaLibraryGrid({ filters, searchQuery = "", uploadingFiles = [
                 </div>
                 <div className="space-y-2">
                   <p className="text-xs text-gray-600 truncate">{file.filename}</p>
-                  <Progress value={file.progress} className="h-1" />
-                  <p className="text-xs text-blue-600">{file.progress}% uploaded</p>
+                  <Progress value={file.progress || 0} className="h-1" />
+                  <p className="text-xs text-blue-600">{file.progress || 0}% uploaded</p>
                 </div>
               </div>
             );

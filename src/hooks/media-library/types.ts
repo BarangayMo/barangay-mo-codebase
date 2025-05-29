@@ -24,6 +24,9 @@ export interface MediaFile {
   references?: number;
   signedUrl?: string;
   category?: string;
+  // Upload-related properties
+  isUploading?: boolean;
+  progress?: number;
 }
 
 export interface MediaLibraryFilters {
@@ -37,6 +40,14 @@ export interface FileOperation {
   success: boolean;
   message?: string;
   file?: MediaFile;
+}
+
+// Profile interface for the filters
+export interface UserProfile {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  role: string;
 }
 
 // Alias for backward compatibility

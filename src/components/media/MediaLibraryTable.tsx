@@ -32,10 +32,17 @@ interface MediaLibraryFilters {
   endDate: Date | null;
 }
 
+interface UploadingFile {
+  id: string;
+  file: File;
+  progress: number;
+  status: 'uploading';
+}
+
 interface MediaLibraryTableProps {
   filters?: MediaLibraryFilters;
   searchQuery?: string;
-  uploadingFiles?: any[];
+  uploadingFiles?: UploadingFile[];
 }
 
 export function MediaLibraryTable({ 
@@ -167,20 +174,23 @@ export function MediaLibraryTable({
   };
 
   // Combine actual files with uploading files for display
-  const allFiles = [...(files || []), ...uploadingFiles.map(upload => ({
-    id: upload.id,
-    filename: upload.file.name,
-    file_url: '',
-    bucket_name: 'user_uploads',
-    content_type: upload.file.type,
-    file_size: upload.file.size,
-    uploaded_at: new Date().toISOString(),
-    user_id: '',
-    category: 'uploading',
-    signedUrl: null,
-    isUploading: true,
-    progress: upload.progress
-  }))];
+  const allFiles: MediaFile[] = [
+    ...(files || []),
+    ...uploadingFiles.map(upload => ({
+      id: upload.id,
+      filename: upload.file.name,
+      file_url: '',
+      bucket_name: 'user_uploads',
+      content_type: upload.file.type,
+      file_size: upload.file.size,
+      uploaded_at: new Date().toISOString(),
+      user_id: '',
+      category: 'uploading',
+      signedUrl: null,
+      isUploading: true,
+      progress: upload.progress
+    } as MediaFile))
+  ];
 
   const deletingCount = deletingFiles.size;
   const allSelected = files && files.length > 0 && selectedFiles.length === files.length;
@@ -331,8 +341,8 @@ export function MediaLibraryTable({
                       <p className="text-sm text-gray-500">{file.filename.split('.').pop()?.toUpperCase()}</p>
                       {file.isUploading && (
                         <div className="mt-1">
-                          <Progress value={file.progress} className="h-1" />
-                          <p className="text-xs text-blue-600 mt-1">{file.progress}% uploaded</p>
+                          <Progress value={file.progress || 0} className="h-1" />
+                          <p className="text-xs text-blue-600 mt-1">{file.progress || 0}% uploaded</p>
                         </div>
                       )}
                     </div>

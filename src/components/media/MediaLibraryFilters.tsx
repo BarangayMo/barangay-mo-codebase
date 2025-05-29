@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -19,13 +20,13 @@ export function MediaLibraryFilters({ filters, onFiltersChange }) {
   const [userSearch, setUserSearch] = useState("");
   const [categorySearch, setCategorySearch] = useState("");
 
-  // Fetch users with their roles for filtering
+  // Fetch users with their roles for filtering - using only existing columns
   const { data: users } = useQuery({
     queryKey: ['admin-users-with-roles'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, role, avatar_url');
+        .select('id, first_name, last_name, role');
       
       if (error) throw error;
       return data;
@@ -79,7 +80,7 @@ export function MediaLibraryFilters({ filters, onFiltersChange }) {
   };
 
   const filteredUsers = users?.filter(user => 
-    `${user.first_name} ${user.last_name}`.toLowerCase().includes(userSearch.toLowerCase())
+    `${user.first_name || ''} ${user.last_name || ''}`.toLowerCase().includes(userSearch.toLowerCase())
   );
 
   const filteredCategories = categories.filter(category =>
@@ -168,7 +169,6 @@ export function MediaLibraryFilters({ filters, onFiltersChange }) {
                 {selectedUser ? (
                   <div className="flex items-center gap-2">
                     <Avatar className="h-6 w-6">
-                      <AvatarImage src={selectedUser.avatar_url} />
                       <AvatarFallback className="text-xs">
                         {getInitials(selectedUser.first_name, selectedUser.last_name)}
                       </AvatarFallback>
@@ -210,7 +210,6 @@ export function MediaLibraryFilters({ filters, onFiltersChange }) {
                       >
                         <div className="flex items-center gap-2 w-full">
                           <Avatar className="h-6 w-6">
-                            <AvatarImage src={user.avatar_url} />
                             <AvatarFallback className="text-xs">
                               {getInitials(user.first_name, user.last_name)}
                             </AvatarFallback>
