@@ -5,6 +5,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyStateWithIcon } from "@/components/dashboard/EmptyStateWithIcon";
 import { Users } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
 
 export const LatestUsersTab = () => {
   const { data: users, isLoading, error } = useLatestUsers();
@@ -50,40 +58,36 @@ export const LatestUsersTab = () => {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-gray-200">
-              <th className="text-left py-3 px-4 font-medium text-gray-700">Name</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-700">Role</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-700">Joined</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="py-3 px-4">
-                  <div className="font-medium text-gray-900">
-                    {user.first_name || user.last_name 
-                      ? `${user.first_name || ''} ${user.last_name || ''}`.trim()
-                      : 'Unknown User'
-                    }
-                  </div>
-                </td>
-                <td className="py-3 px-4">
-                  <Badge className={getRoleBadgeColor(user.role)}>
-                    {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                  </Badge>
-                </td>
-                <td className="py-3 px-4 text-sm text-gray-600">
-                  {formatDistanceToNow(new Date(user.created_at), { addSuffix: true })}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+    <div className="rounded-lg border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Role</TableHead>
+            <TableHead>Joined</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {users.map((user) => (
+            <TableRow key={user.id}>
+              <TableCell className="font-medium">
+                {user.first_name || user.last_name 
+                  ? `${user.first_name || ''} ${user.last_name || ''}`.trim()
+                  : 'Unknown User'
+                }
+              </TableCell>
+              <TableCell>
+                <Badge className={getRoleBadgeColor(user.role)}>
+                  {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-gray-600">
+                {formatDistanceToNow(new Date(user.created_at), { addSuffix: true })}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 };

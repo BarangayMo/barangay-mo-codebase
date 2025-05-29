@@ -5,6 +5,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyStateWithIcon } from "@/components/dashboard/EmptyStateWithIcon";
 import { Package } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
 
 export const LatestProductsTab = () => {
   const { data: products, isLoading, error } = useLatestProducts();
@@ -44,43 +52,39 @@ export const LatestProductsTab = () => {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-gray-200">
-              <th className="text-left py-3 px-4 font-medium text-gray-700">Product</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-700">Vendor</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-700">Price</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-700">Listed</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((product) => (
-              <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="py-3 px-4">
-                  <div className="font-medium text-gray-900">{product.name}</div>
-                </td>
-                <td className="py-3 px-4 text-sm text-gray-600">
-                  {product.vendor?.shop_name || 'Unknown Vendor'}
-                </td>
-                <td className="py-3 px-4 text-sm text-gray-600">
-                  ₱{product.price.toLocaleString()}
-                </td>
-                <td className="py-3 px-4">
-                  <Badge className={getStatusBadgeColor(product.is_active)}>
-                    {product.is_active ? 'Active' : 'Inactive'}
-                  </Badge>
-                </td>
-                <td className="py-3 px-4 text-sm text-gray-600">
-                  {formatDistanceToNow(new Date(product.created_at), { addSuffix: true })}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+    <div className="rounded-lg border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Product</TableHead>
+            <TableHead>Vendor</TableHead>
+            <TableHead>Price</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Listed</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {products.map((product) => (
+            <TableRow key={product.id}>
+              <TableCell className="font-medium">{product.name}</TableCell>
+              <TableCell className="text-gray-600">
+                {product.vendor?.shop_name || 'Unknown Vendor'}
+              </TableCell>
+              <TableCell className="text-gray-600">
+                ₱{product.price.toLocaleString()}
+              </TableCell>
+              <TableCell>
+                <Badge className={getStatusBadgeColor(product.is_active)}>
+                  {product.is_active ? 'Active' : 'Inactive'}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-gray-600">
+                {formatDistanceToNow(new Date(product.created_at), { addSuffix: true })}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 };

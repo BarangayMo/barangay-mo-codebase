@@ -5,6 +5,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyStateWithIcon } from "@/components/dashboard/EmptyStateWithIcon";
 import { MessageSquare } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
 
 export const SupportTicketsTab = () => {
   const { data: tickets, isLoading, error } = useSupportTickets();
@@ -59,52 +67,48 @@ export const SupportTicketsTab = () => {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-gray-200">
-              <th className="text-left py-3 px-4 font-medium text-gray-700">Title</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-700">User</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-700">Category</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-700">Priority</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-700">Created</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tickets.map((ticket) => (
-              <tr key={ticket.id} className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="py-3 px-4">
-                  <div className="font-medium text-gray-900">{ticket.title}</div>
-                </td>
-                <td className="py-3 px-4 text-sm text-gray-600">
-                  {ticket.profiles?.first_name || ticket.profiles?.last_name 
-                    ? `${ticket.profiles.first_name || ''} ${ticket.profiles.last_name || ''}`.trim()
-                    : 'Unknown User'
-                  }
-                </td>
-                <td className="py-3 px-4 text-sm text-gray-600">
-                  {ticket.category.charAt(0).toUpperCase() + ticket.category.slice(1)}
-                </td>
-                <td className="py-3 px-4">
-                  <Badge className={getPriorityBadgeColor(ticket.priority)}>
-                    {ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1)}
-                  </Badge>
-                </td>
-                <td className="py-3 px-4">
-                  <Badge className={getStatusBadgeColor(ticket.status)}>
-                    {ticket.status.replace('_', ' ').charAt(0).toUpperCase() + ticket.status.replace('_', ' ').slice(1)}
-                  </Badge>
-                </td>
-                <td className="py-3 px-4 text-sm text-gray-600">
-                  {formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true })}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+    <div className="rounded-lg border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Title</TableHead>
+            <TableHead>User</TableHead>
+            <TableHead>Category</TableHead>
+            <TableHead>Priority</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Created</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {tickets.map((ticket) => (
+            <TableRow key={ticket.id}>
+              <TableCell className="font-medium">{ticket.title}</TableCell>
+              <TableCell className="text-gray-600">
+                {ticket.profiles?.first_name || ticket.profiles?.last_name 
+                  ? `${ticket.profiles.first_name || ''} ${ticket.profiles.last_name || ''}`.trim()
+                  : 'Unknown User'
+                }
+              </TableCell>
+              <TableCell className="text-gray-600">
+                {ticket.category.charAt(0).toUpperCase() + ticket.category.slice(1)}
+              </TableCell>
+              <TableCell>
+                <Badge className={getPriorityBadgeColor(ticket.priority)}>
+                  {ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1)}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <Badge className={getStatusBadgeColor(ticket.status)}>
+                  {ticket.status.replace('_', ' ').charAt(0).toUpperCase() + ticket.status.replace('_', ' ').slice(1)}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-gray-600">
+                {formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true })}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 };

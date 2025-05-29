@@ -28,12 +28,12 @@ export const ModernTabs = ({ defaultValue, items, children }: ModernTabsProps) =
       <div className="flex items-center justify-between mb-6">
         <Tabs defaultValue={defaultValue} className="w-full">
           <div className="flex items-center justify-between">
-            <TabsList className="grid w-auto grid-cols-5 bg-gray-100">
+            <TabsList className="grid w-auto grid-cols-5">
               {items.map((item) => (
                 <TabsTrigger
                   key={item.value}
                   value={item.value}
-                  className="flex items-center gap-2 px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                  className="flex items-center gap-2 px-4 py-2"
                 >
                   {item.icon}
                   <span className="hidden sm:inline">{item.label}</span>
@@ -43,7 +43,7 @@ export const ModernTabs = ({ defaultValue, items, children }: ModernTabsProps) =
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700">
+                <Button className="flex items-center gap-2">
                   <Plus className="h-4 w-4" />
                   Create New
                 </Button>
