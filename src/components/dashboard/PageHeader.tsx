@@ -1,7 +1,7 @@
 
 import { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { Breadcrumb } from "./Breadcrumb";
+import { DashboardBreadcrumb } from "./Breadcrumb";
 
 interface BreadcrumbItem {
   label: string;
@@ -32,7 +32,7 @@ export function DashboardPageHeader({
 }: DashboardPageHeaderProps) {
   return (
     <div className="mb-8">
-      {breadcrumbItems && <Breadcrumb items={breadcrumbItems} />}
+      {breadcrumbItems && <DashboardBreadcrumb items={breadcrumbItems} />}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mt-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{title}</h1>

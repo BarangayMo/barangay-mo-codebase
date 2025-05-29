@@ -117,7 +117,9 @@ const ProductEditPage = () => {
         tags: product.tags || [],
         shipping_info: product.shipping_info || "",
         return_policy: product.return_policy || "",
-        specifications: product.specifications || {},
+        specifications: (typeof product.specifications === 'object' && product.specifications !== null) 
+          ? product.specifications as Record<string, any> 
+          : {},
       });
     }
   }, [product]);
