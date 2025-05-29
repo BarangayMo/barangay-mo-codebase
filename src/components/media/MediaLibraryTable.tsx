@@ -7,6 +7,8 @@ import { useMediaLibrary } from "@/hooks";
 import { MediaDetailsDialog } from "./grid/MediaDetailsDialog";
 import { DeleteConfirmDialog } from "./grid/DeleteConfirmDialog";
 import { MediaFile } from "@/hooks/media-library/types";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 // Define types for our profiles
 interface Profile {
@@ -49,7 +51,8 @@ export function MediaLibraryTable({
     toggleAllFiles,
     handleDownload,
     handleDelete,
-    handleCopyUrl
+    handleCopyUrl,
+    refetch
   } = useMediaLibrary(filters, searchQuery);
 
   // For debugging purposes
@@ -80,6 +83,29 @@ export function MediaLibraryTable({
       // Single selection
       toggleFileSelection(file.id);
       lastSelectedIndex.current = index;
+    }
+  };
+
+  // Add function to update file metadata
+  const handleUpdateFile = async (fileId: string, updates: { filename?: string; alt_text?: string }) => {
+    try {
+      const { error } = await supabase
+        .from('media_files')
+        .update(updates)
+        .eq('id', fileId);
+
+      if (error) throw error;
+
+      toast.success('File updated successfully');
+      refetch(); // Refresh the media list
+      
+      // Update the selected media if it's the same file
+      if (selectedMedia && selectedMedia.id === fileId) {
+        setSelectedMedia({ ...selectedMedia, ...updates });
+      }
+    } catch (error) {
+      console.error('Error updating file:', error);
+      toast.error('Failed to update file');
     }
   };
 
@@ -209,6 +235,7 @@ export function MediaLibraryTable({
         onDelete={() => setDeleteConfirmOpen(true)}
         onDownload={handleDownload}
         onCopyUrl={handleCopyUrl}
+        onUpdateFile={handleUpdateFile}
       />
 
       {/* Delete confirmation dialog */}

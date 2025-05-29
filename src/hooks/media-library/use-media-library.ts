@@ -51,6 +51,7 @@ export function useMediaLibrary(
     handleDelete: originalHandleDelete,
     handleCopyUrl,
     getBucketAndPath,
+    handleUpdateFile
   } = useFileOperations(refetch);
 
   // Enhanced delete function with loading state
@@ -90,6 +91,7 @@ export function useMediaLibrary(
     handleDownload,
     handleDelete,
     handleCopyUrl,
+    handleUpdateFile,
     getBucketAndPath,
     
     // Refresh

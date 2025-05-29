@@ -205,7 +205,7 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
     if (!uploads.some(upload => upload.status === 'uploading')) {
       setUploads([]);
       onClose();
-      // FIXED: Always trigger gallery refresh when closing
+      // Trigger gallery refresh when closing
       onUploadComplete();
     } else {
       toast.warning("Please wait for uploads to complete before closing");
@@ -224,6 +224,14 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
     // Remove from uploads list
     setUploads(current => current.filter(u => u.id !== id));
     toast.info('Upload canceled');
+  };
+
+  // Function to get file preview
+  const getFilePreview = (file: File): string | null => {
+    if (file.type.startsWith('image/')) {
+      return URL.createObjectURL(file);
+    }
+    return null;
   };
 
   const getFileIcon = (mimeType: string) => {
@@ -284,71 +292,123 @@ export function MediaUploadDialog({ open, onClose, onUploadComplete }: MediaUplo
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-80 overflow-y-auto p-2">
-                {uploads.map(upload => (
-                  <div 
-                    key={upload.id} 
-                    className={`
-                      border rounded-lg p-4 relative transition-all shadow-sm hover:shadow
-                      ${upload.status === 'error' ? 'border-red-300 bg-red-50' : ''}
-                      ${upload.status === 'success' ? 'border-green-300 bg-green-50' : ''}
-                    `}
-                  >
-                    {/* Cancel button for uploads in progress */}
-                    {upload.status === 'uploading' && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="absolute top-1 right-1 h-6 w-6 p-0 rounded-full hover:bg-gray-200" 
-                        onClick={() => cancelUpload(upload.id)}
-                      >
-                        <X className="h-4 w-4" />
-                        <span className="sr-only">Cancel</span>
-                      </Button>
-                    )}
-                    
-                    <div className="flex items-center gap-3 mb-3">
-                      {getFileIcon(upload.file.type)}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{upload.file.name}</p>
-                        <p className="text-xs text-gray-500">{Math.round(upload.file.size / 1024)} KB</p>
-                      </div>
-                      {upload.status !== 'uploading' && (
+                {uploads.map(upload => {
+                  const filePreview = getFilePreview(upload.file);
+                  
+                  return (
+                    <div 
+                      key={upload.id} 
+                      className={`
+                        border rounded-lg p-4 relative transition-all shadow-sm hover:shadow
+                        ${upload.status === 'error' ? 'border-red-300 bg-red-50' : ''}
+                        ${upload.status === 'success' ? 'border-green-300 bg-green-50' : ''}
+                      `}
+                    >
+                      {/* Cancel button for uploads in progress */}
+                      {upload.status === 'uploading' && (
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          className="h-7 w-7 p-0" 
+                          className="absolute top-1 right-1 h-6 w-6 p-0 rounded-full hover:bg-gray-200 z-30" 
                           onClick={() => cancelUpload(upload.id)}
                         >
                           <X className="h-4 w-4" />
+                          <span className="sr-only">Cancel</span>
                         </Button>
                       )}
-                    </div>
-                    
-                    {upload.status === 'uploading' && (
-                      <div className="space-y-2">
-                        <Progress value={upload.progress} className="h-2" />
-                        <div className="flex justify-between items-center">
-                          <p className="text-xs text-gray-500">Uploading...</p>
-                          <p className="text-xs font-medium">{upload.progress}%</p>
+                      
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className="relative w-16 h-16 flex-shrink-0">
+                          {filePreview ? (
+                            <div className="w-16 h-16 rounded-md overflow-hidden bg-gray-50 relative">
+                              <img 
+                                src={filePreview} 
+                                alt={upload.file.name} 
+                                className="w-full h-full object-contain"
+                              />
+                              {upload.status === 'uploading' && (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <div className="relative h-12 w-12">
+                                    <div 
+                                      className="absolute inset-0 rounded-full border-2 border-transparent"
+                                      style={{
+                                        borderTopColor: '#3b82f6',
+                                        borderRightColor: '#3b82f6',
+                                        transform: `rotate(${upload.progress * 3.6}deg)`,
+                                        transition: 'transform 0.2s ease',
+                                      }}
+                                    ></div>
+                                    <div className="absolute inset-1 bg-white/80 rounded-full flex items-center justify-center text-xs font-medium text-blue-600">
+                                      {Math.round(upload.progress)}%
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                              {upload.status === 'success' && (
+                                <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center">
+                                  <CheckCircle className="h-8 w-8 text-green-600" />
+                                </div>
+                              )}
+                              {upload.status === 'error' && (
+                                <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center">
+                                  <AlertOctagon className="h-8 w-8 text-red-600" />
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="w-16 h-16 rounded-md flex items-center justify-center bg-gray-100">
+                              {getFileIcon(upload.file.type)}
+                            </div>
+                          )}
                         </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{upload.file.name}</p>
+                          <p className="text-xs text-gray-500">{Math.round(upload.file.size / 1024)} KB</p>
+                          
+                          {upload.status === 'uploading' && !filePreview && (
+                            <div className="mt-2 w-full">
+                              <div className="h-1.5 w-full bg-gray-100 rounded overflow-hidden">
+                                <div 
+                                  className="h-full bg-blue-500 transition-all duration-300 ease-out" 
+                                  style={{ width: `${upload.progress}%` }}
+                                ></div>
+                              </div>
+                              <div className="flex justify-between items-center mt-1">
+                                <p className="text-xs text-gray-500">Uploading...</p>
+                                <p className="text-xs font-medium">{upload.progress}%</p>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {upload.status === 'error' && (
+                            <div className="flex items-center gap-2 mt-2 text-red-600">
+                              <AlertOctagon className="h-4 w-4" />
+                              <p className="text-xs">{upload.message}</p>
+                            </div>
+                          )}
+                          
+                          {upload.status === 'success' && (
+                            <div className="flex items-center gap-2 mt-2 text-green-600">
+                              <CheckCircle className="h-4 w-4" />
+                              <p className="text-xs">Upload complete</p>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {upload.status !== 'uploading' && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-7 w-7 p-0 flex-shrink-0" 
+                            onClick={() => cancelUpload(upload.id)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
-                    )}
-                    
-                    {upload.status === 'error' && (
-                      <div className="flex items-center gap-2 mt-2 text-red-600">
-                        <AlertOctagon className="h-4 w-4" />
-                        <p className="text-xs">{upload.message}</p>
-                      </div>
-                    )}
-                    
-                    {upload.status === 'success' && (
-                      <div className="flex items-center gap-2 mt-2 text-green-600">
-                        <CheckCircle className="h-4 w-4" />
-                        <p className="text-xs">Upload complete</p>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                    </div>
+                  );
+                })}
               </div>
               
               <div className="flex justify-between pt-4 border-t">

@@ -38,7 +38,7 @@ export function MediaDetailsDialog({
   onDelete, 
   onDownload, 
   onCopyUrl,
-  onUpdateFile 
+  onUpdateFile
 }: MediaDetailsDialogProps) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingAlt, setIsEditingAlt] = useState(false);
@@ -255,11 +255,12 @@ export function MediaDetailsDialog({
                       className="flex-1 bg-white hover:bg-gray-50 transition-all rounded-lg shadow-sm hover:shadow-md"
                       onClick={() => onCopyUrl(file.signedUrl, file.bucket_name, file.file_url)}
                     >
-                      <Copy className="h-4 w-4" />
+                      <Copy className="h-4 w-4 mr-2" />
+                      Copy URL
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className="text-xs">Copy URL</p>
+                    <p className="text-xs">Copy URL to clipboard</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -275,7 +276,8 @@ export function MediaDetailsDialog({
                   file.signedUrl
                 )}
               >
-                <Download className="h-4 w-4" />
+                <Download className="h-4 w-4 mr-2" />
+                Download
               </Button>
               
               <Button 
@@ -284,7 +286,8 @@ export function MediaDetailsDialog({
                 className="flex-1 bg-white text-red-600 hover:text-red-700 hover:bg-red-50 transition-all rounded-lg shadow-sm hover:shadow-md"
                 onClick={onDelete}
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
               </Button>
             </div>
           </div>
