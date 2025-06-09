@@ -1,6 +1,5 @@
 
 import {
-  BrowserRouter as Router,
   Routes,
   Route,
 } from "react-router-dom";
@@ -16,22 +15,20 @@ import NotificationsPage from "@/pages/admin/NotificationsPage";
 
 const AppRoutes = () => {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/verify" element={<Verify />} />
-        
-        {/* Admin routes */}
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/settings" element={<SettingsPage />} />
-        <Route path="/admin/media-library" element={<MediaLibraryPage />} />
-        <Route path="/admin/messages" element={<MessagesPage />} />
-        <Route path="/admin/notifications" element={<NotificationsPage />} />
-        
-      </Routes>
-    </Router>
+    <Routes>
+      <Route path="/" element={<Index />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/verify" element={<Verify />} />
+      
+      {/* Admin routes */}
+      <Route path="/admin/dashboard" element={<AdminDashboard />} />
+      <Route path="/admin/settings" element={<SettingsPage />} />
+      <Route path="/admin/media-library" element={<MediaLibraryPage />} />
+      <Route path="/admin/messages" element={<MessagesPage />} />
+      <Route path="/admin/notifications" element={<NotificationsPage />} />
+      
+    </Routes>
   );
 };
 
