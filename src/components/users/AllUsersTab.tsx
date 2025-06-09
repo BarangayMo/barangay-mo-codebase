@@ -1,11 +1,10 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Plus, MoreHorizontal, Loader2 } from "lucide-react";
+import { Search, Plus, MoreHorizontal, Loader2, Users, User, Badge as BadgeIcon, Circle, CircleDot } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,12 +17,12 @@ import { useUsers, useArchiveUser, User } from "@/hooks/use-users-data";
 import { formatDistanceToNow } from "date-fns";
 
 const filterOptions = [
-  { value: "All", label: "All" },
-  { value: "Resident", label: "Resident" },
-  { value: "Official", label: "Official" },
-  { value: "Online", label: "Online" },
-  { value: "Offline", label: "Offline" },
-  { value: "Archived", label: "Archived" },
+  { value: "All", label: "All", icon: Users },
+  { value: "Resident", label: "Resident", icon: User },
+  { value: "Official", label: "Official", icon: BadgeIcon },
+  { value: "Online", label: "Online", icon: CircleDot },
+  { value: "Offline", label: "Offline", icon: Circle },
+  { value: "Archived", label: "Archived", icon: Circle },
 ];
 
 export const AllUsersTab = () => {
@@ -135,21 +134,25 @@ export const AllUsersTab = () => {
       {/* Filters and Search */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          {filterOptions.map((filter) => (
-            <Button
-              key={filter.value}
-              variant={selectedFilter === filter.value ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedFilter(filter.value)}
-              className={`rounded-full ${
-                selectedFilter === filter.value 
-                  ? "bg-blue-600 text-white" 
-                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-              }`}
-            >
-              {filter.label}
-            </Button>
-          ))}
+          {filterOptions.map((filter) => {
+            const IconComponent = filter.icon;
+            return (
+              <Button
+                key={filter.value}
+                variant={selectedFilter === filter.value ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedFilter(filter.value)}
+                className={`rounded-full flex items-center gap-2 ${
+                  selectedFilter === filter.value 
+                    ? "bg-blue-600 text-white hover:bg-blue-700" 
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                }`}
+              >
+                <IconComponent className="h-4 w-4" />
+                {filter.label}
+              </Button>
+            );
+          })}
         </div>
 
         <div className="relative">
