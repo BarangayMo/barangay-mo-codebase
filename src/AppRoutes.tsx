@@ -1,40 +1,24 @@
 import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { LoadingScreen } from "@/components/ui/loading";
 
-// Lazy-loaded components
-const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
-const RegisterPage = lazy(() => import("@/pages/auth/RegisterPage"));
-const ForgotPasswordPage = lazy(() => import("@/pages/auth/ForgotPasswordPage"));
-const ResetPasswordPage = lazy(() => import("@/pages/auth/ResetPasswordPage"));
-const VerifyEmailPage = lazy(() => import("@/pages/auth/VerifyEmailPage"));
+// Lazy-loaded components - using existing pages
+const LoginPage = lazy(() => import("@/pages/Login"));
+const RegisterPage = lazy(() => import("@/pages/Register"));
 const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
 const ResidentsPage = lazy(() => import("@/pages/users/ResidentsPage"));
 const OfficialsPage = lazy(() => import("@/pages/users/OfficialsPage"));
 const UserProfilePage = lazy(() => import("@/pages/users/UserProfilePage"));
 const SmarketplaceIndex = lazy(() => import("@/pages/smarketplace/SmarketplaceIndex"));
-const ProductsPage = lazy(() => import("@/pages/smarketplace/ProductsPage"));
-const OrdersPage = lazy(() => import("@/pages/smarketplace/OrdersPage"));
-const VendorsPage = lazy(() => import("@/pages/smarketplace/VendorsPage"));
-const CustomersPage = lazy(() => import("@/pages/smarketplace/CustomersPage"));
-const ShippingPage = lazy(() => import("@/pages/smarketplace/ShippingPage"));
-const PromotionsPage = lazy(() => import("@/pages/smarketplace/PromotionsPage"));
-const FinancialsPage = lazy(() => import("@/pages/smarketplace/FinancialsPage"));
-const ReviewsPage = lazy(() => import("@/pages/smarketplace/ReviewsPage"));
-const SettingsPage = lazy(() => import("@/pages/smarketplace/SettingsPage"));
-const AddonsPage = lazy(() => import("@/pages/smarketplace/AddonsPage"));
 const ActivityLogsPage = lazy(() => import("@/pages/reports/ActivityLogsPage"));
 const FinancialReportsPage = lazy(() => import("@/pages/reports/FinancialReportsPage"));
-const MediaLibraryPage = lazy(() => import("@/pages/MediaLibraryPage"));
-const MessagesPage = lazy(() => import("@/pages/MessagesPage"));
-const SystemSettingsPage = lazy(() => import("@/pages/SystemSettingsPage"));
 const AllUsersPage = lazy(() => import("@/pages/users/AllUsersPage"));
 const UserRolesPage = lazy(() => import("@/pages/users/UserRolesPage"));
 
 export const AppRoutes = () => {
-  const { user, loading } = useAuth();
+  const { user, session } = useAuth();
+  const loading = !session && !user; // Derive loading state
 
   if (loading) {
     return <LoadingScreen />;
@@ -46,9 +30,6 @@ export const AppRoutes = () => {
         {/* Public Routes */}
         <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/admin" />} />
         <Route path="/register" element={!user ? <RegisterPage /> : <Navigate to="/admin" />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/verify-email" element={<VerifyEmailPage />} />
 
         {/* Admin Routes */}
         <Route path="/admin" element={<AdminDashboard />} />
@@ -67,25 +48,25 @@ export const AppRoutes = () => {
 
         {/* Smarketplace Routes */}
         <Route path="/admin/smarketplace" element={<SmarketplaceIndex />} />
-        <Route path="/admin/smarketplace/products" element={<ProductsPage />} />
-        <Route path="/admin/smarketplace/orders" element={<OrdersPage />} />
-        <Route path="/admin/smarketplace/vendors" element={<VendorsPage />} />
-        <Route path="/admin/smarketplace/customers" element={<CustomersPage />} />
-        <Route path="/admin/smarketplace/shipping" element={<ShippingPage />} />
-        <Route path="/admin/smarketplace/promotions" element={<PromotionsPage />} />
-        <Route path="/admin/smarketplace/financials" element={<FinancialsPage />} />
-        <Route path="/admin/smarketplace/reviews" element={<ReviewsPage />} />
-        <Route path="/admin/smarketplace/settings" element={<SettingsPage />} />
-        <Route path="/admin/smarketplace/addons" element={<AddonsPage />} />
+        <Route path="/admin/smarketplace/products" element={<SmarketplaceIndex />} />
+        <Route path="/admin/smarketplace/orders" element={<SmarketplaceIndex />} />
+        <Route path="/admin/smarketplace/vendors" element={<SmarketplaceIndex />} />
+        <Route path="/admin/smarketplace/customers" element={<SmarketplaceIndex />} />
+        <Route path="/admin/smarketplace/shipping" element={<SmarketplaceIndex />} />
+        <Route path="/admin/smarketplace/promotions" element={<SmarketplaceIndex />} />
+        <Route path="/admin/smarketplace/financials" element={<SmarketplaceIndex />} />
+        <Route path="/admin/smarketplace/reviews" element={<SmarketplaceIndex />} />
+        <Route path="/admin/smarketplace/settings" element={<SmarketplaceIndex />} />
+        <Route path="/admin/smarketplace/addons" element={<SmarketplaceIndex />} />
 
         {/* Reports Routes */}
         <Route path="/admin/reports/activity-logs" element={<ActivityLogsPage />} />
         <Route path="/admin/reports/financial-reports" element={<FinancialReportsPage />} />
 
-        {/* System Routes */}
-        <Route path="/admin/media-library" element={<MediaLibraryPage />} />
-        <Route path="/admin/messages" element={<MessagesPage />} />
-        <Route path="/admin/settings" element={<SystemSettingsPage />} />
+        {/* System Routes - using placeholders for now */}
+        <Route path="/admin/media-library" element={<AdminDashboard />} />
+        <Route path="/admin/messages" element={<AdminDashboard />} />
+        <Route path="/admin/settings" element={<AdminDashboard />} />
 
         {/* Default Routes */}
         <Route path="/" element={<Navigate to="/admin" />} />

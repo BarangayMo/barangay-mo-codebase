@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode, useEffect, useRef } from "react";
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +18,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   userRole: UserRole;
   user: UserData | null;
+  loading: boolean;
   login: (email: string, password: string) => Promise<{ error: Error | null }>;
   register: (email: string, password: string, userData: any) => Promise<{ error: Error | null }>;
   logout: (navigateToPath?: string) => void;
@@ -42,6 +42,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [user, setUser] = useState<UserData | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
   const [rbiCompleted, setRbiCompleted] = useState(false);
   
   const isInitialMount = useRef(true);
@@ -59,6 +60,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         
         setSession(session);
         setIsAuthenticated(!!session);
+        setLoading(false);
         
         if (session?.user) {
           const userData = {
@@ -120,6 +122,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       setSession(session);
       setIsAuthenticated(!!session);
+      setLoading(false);
       
       if (session?.user) {
         const userData = {
@@ -230,6 +233,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     isAuthenticated,
     userRole,
     user,
+    loading,
     login,
     register,
     logout,
