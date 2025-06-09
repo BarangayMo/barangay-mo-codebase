@@ -1,162 +1,98 @@
-import { Link, useLocation } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { Bell, User, ShoppingBag } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { HeaderLogo } from "./header/HeaderLogo";
-import { LocationDropdown } from "./header/LocationDropdown";
-import { DesktopNavItems } from "./header/DesktopNavItems";
-import { ProfileMenu } from "./ProfileMenu";
-import { LanguageSelector } from "./LanguageSelector";
-import { useCartSummary } from "@/hooks/useCartSummary";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { CartDrawerContent } from "@/components/cart/CartDrawerContent";
+
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { 
+  Search, 
+  Menu, 
+  Settings,
+  User,
+  LogOut,
+  ChevronDown
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 
-export const Header = () => {
-  const { isAuthenticated, userRole } = useAuth();
-  const isMobile = useIsMobile();
-  const location = useLocation();
-  const { cartItemCount } = useCartSummary();
-  const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
+interface HeaderProps {
+  onMenuClick?: () => void;
+}
 
-  const getDashboardRoute = () => {
-    switch (userRole) {
-      case "official":
-        return "/official-dashboard";
-      case "superadmin":
-        return "/admin";
-      case "resident":
-        return "/resident-home";
-      default:
-        return "/";
-    }
-  };
-
-  const showCartIcon = location.pathname.startsWith('/marketplace') || location.pathname.startsWith('/resident-home');
+export const Header = ({ onMenuClick }: HeaderProps) => {
+  const [searchQuery, setSearchQuery] = useState("");
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md shadow-sm">
-      <div className="mx-auto max-w-7xl px-2 md:px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-1 md:gap-2">
-          <HeaderLogo />
-          <LocationDropdown />
+    <header className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="flex items-center justify-between">
+        {/* Left section */}
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onMenuClick}
+            className="lg:hidden"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+          
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 w-64"
+            />
+          </div>
         </div>
 
-        {!isMobile && <DesktopNavItems />}
+        {/* Right section */}
+        <div className="flex items-center gap-4">
+          {/* Notifications Dropdown */}
+          <NotificationDropdown />
+          
+          {/* Settings */}
+          <Button variant="ghost" size="sm">
+            <Settings className="h-5 w-5" />
+          </Button>
 
-        <div className="flex items-center gap-0 md:gap-2">
-          {isAuthenticated ? (
-            <>
-              {!isMobile && (
-                <>
-                  <Button 
-                    size="sm" 
-                    asChild
-                    className={`bg-gradient-to-r ${
-                      userRole === "resident" 
-                        ? "from-[#1a237e] to-[#534bae]" 
-                        : "from-[#ea384c] to-[#ff6b78]"
-                    } text-white hover:opacity-90 transition-opacity`}
-                  >
-                    <Link to={getDashboardRoute()}>Dashboard</Link>
-                  </Button>
-                  <LanguageSelector />
-                </>
-              )}
-              <div className="flex items-center gap-0 md:gap-1">
-                {showCartIcon && (
-                  isMobile ? (
-                    <Button asChild variant="ghost" size="icon" className="relative w-8 h-8">
-                      <Link to="/marketplace/cart">
-                        <ShoppingBag className="h-4 w-4 md:h-5 md:w-5" />
-                        {cartItemCount > 0 && (
-                          <span className="absolute -top-0.5 -right-0.5 text-white text-[10px] md:text-xs rounded-full w-3.5 h-3.5 md:w-4 md:h-4 flex items-center justify-center bg-official">
-                            {cartItemCount}
-                          </span>
-                        )}
-                      </Link>
-                    </Button>
-                  ) : (
-                    <Sheet open={isCartDrawerOpen} onOpenChange={setIsCartDrawerOpen}>
-                      <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className="relative w-9 h-9">
-                          <ShoppingBag className="h-5 w-5" />
-                          {cartItemCount > 0 && (
-                            <span className="absolute -top-0.5 -right-0.5 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center bg-official">
-                              {cartItemCount}
-                            </span>
-                          )}
-                        </Button>
-                      </SheetTrigger>
-                      <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col">
-                        <CartDrawerContent onClose={() => setIsCartDrawerOpen(false)} />
-                      </SheetContent>
-                    </Sheet>
-                  )
-                )}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="relative w-8 h-8 md:w-9 md:h-9"
-                  asChild
-                >
-                  <Link to="/notifications">
-                    <Bell className="h-4 w-4 md:h-5 md:w-5" />
-                    <span className="absolute -top-0.5 -right-0.5 text-white text-[10px] md:text-xs rounded-full w-3.5 h-3.5 md:w-4 md:h-4 flex items-center justify-center bg-official">
-                      3 {/* This is a placeholder count */}
-                    </span>
-                  </Link>
-                </Button>
-                {!isMobile && <ProfileMenu />}
-              </div>
-              {isMobile && (
-                <Button asChild variant="ghost" size="icon" className="rounded-full w-8 h-8">
-                  <Link to="/resident-profile">
-                    <User className="h-4 w-4 md:h-5 md:w-5" />
-                  </Link>
-                </Button>
-              )}
-            </>
-          ) : (
-            <div className="flex items-center gap-0 md:gap-2">
-              {!isMobile && (
-                <>
-                  <LanguageSelector />
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link to="/login">Login</Link>
-                  </Button>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link to="/register">Register</Link>
-                  </Button>
-                </>
-              )}
-              {showCartIcon && (
-                isMobile ? ( 
-                  <Button asChild variant="ghost" size="icon" className="relative w-8 h-8">
-                    <Link to="/marketplace/cart">
-                      <ShoppingBag className="h-4 w-4 md:h-5 md:w-5" />
-                    </Link>
-                  </Button>
-                ) : ( 
-                  <Button asChild variant="ghost" size="icon" className="relative w-9 h-9">
-                     <Link to="/marketplace/cart">
-                       <ShoppingBag className="h-5 w-5" />
-                     </Link>
-                  </Button>
-                )
-              )}
-              {isMobile && (
-                <Button asChild variant="ghost" size="icon" className="rounded-full w-8 h-8">
-                  <Link to="/login">
-                    <User className="h-4 w-4 md:h-5 md:w-5" />
-                  </Link>
-                </Button>
-              )}
-            </div>
-          )}
+          {/* Profile Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="flex items-center gap-2">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src="/placeholder-avatar.jpg" />
+                  <AvatarFallback>
+                    <User className="h-4 w-4" />
+                  </AvatarFallback>
+                </Avatar>
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>
+                <User className="mr-2 h-4 w-4" />
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <LogOut className="mr-2 h-4 w-4" />
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>
   );
-}
+};
