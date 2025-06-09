@@ -1,30 +1,27 @@
+
 import {
   BrowserRouter as Router,
   Routes,
   Route,
 } from "react-router-dom";
-import { HomePage } from "@/pages/Home";
-import { SignInPage } from "@/pages/SignIn";
-import { SignUpPage } from "@/pages/SignUp";
-import { ForgotPasswordPage } from "@/pages/ForgotPassword";
-import { ResetPasswordPage } from "@/pages/ResetPassword";
-import { AccountVerificationPage } from "@/pages/AccountVerification";
-import { AdminDashboard } from "@/pages/admin/Dashboard";
-import { SettingsPage } from "@/pages/admin/Settings";
-import { MediaLibraryPage } from "@/pages/admin/MediaLibrary";
-import { MessagesPage } from "@/pages/admin/Messages";
+import Index from "@/pages/Index";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import Verify from "@/pages/Verify";
+import { AdminDashboard } from "@/pages/AdminDashboard";
+import { SettingsPage } from "@/pages/admin/SettingsPage";
+import { MediaLibraryPage } from "@/pages/admin/MediaLibraryPage";
+import { MessagesPage } from "@/pages/admin/MessagesPage";
 import NotificationsPage from "@/pages/admin/NotificationsPage";
 
 const AppRoutes = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/sign-in" element={<SignInPage />} />
-        <Route path="/sign-up" element={<SignUpPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/account-verification" element={<AccountVerificationPage />} />
+        <Route path="/" element={<Index />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/verify" element={<Verify />} />
         
         {/* Admin routes */}
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
