@@ -1,4 +1,3 @@
-
 import { Route, Routes } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import Index from "@/pages/Index";
@@ -61,6 +60,8 @@ import MyOrders from "@/pages/marketplace/MyOrders";
 // Import the EditProfile component
 import EditProfile from "./pages/EditProfile";
 
+import UserManagementPage from "@/pages/users/UserManagementPage";
+
 export function AppRoutes() {
   return (
     <Routes>
@@ -107,6 +108,7 @@ export function AppRoutes() {
       <Route path="/admin/reports/financial" element={<FinancialReportsPage />} />
       <Route path="/admin/reports/activity" element={<ActivityLogsPage />} />
       
+      <Route path="/admin/users" element={<UserManagementPage />} />
       <Route path="/admin/users/residents" element={<ResidentsPage />} />
       <Route path="/admin/users/officials" element={<OfficialsPage />} />
       <Route path="/admin/users/:id" element={<UserProfilePage />} />
