@@ -14,11 +14,12 @@ interface ModernTabsProps {
   items: TabItem[];
   className?: string;
   children: ReactNode;
+  onValueChange?: (value: string) => void;
 }
 
-export function ModernTabs({ defaultValue, items, className, children }: ModernTabsProps) {
+export function ModernTabs({ defaultValue, items, className, children, onValueChange }: ModernTabsProps) {
   return (
-    <Tabs defaultValue={defaultValue} className={cn("w-full", className)}>
+    <Tabs defaultValue={defaultValue} onValueChange={onValueChange} className={cn("w-full", className)}>
       <TabsList className="mb-6 border-b w-full rounded-none bg-transparent h-auto p-0 overflow-x-auto flex">
         {items.map((item) => (
           <TabsTrigger

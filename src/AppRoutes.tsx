@@ -109,8 +109,9 @@ export function AppRoutes() {
       <Route path="/admin/reports/activity" element={<ActivityLogsPage />} />
       
       <Route path="/admin/users" element={<UserManagementPage />} />
-      <Route path="/admin/users/residents" element={<ResidentsPage />} />
-      <Route path="/admin/users/officials" element={<OfficialsPage />} />
+      <Route path="/admin/users/all" element={<UserManagementPage />} />
+      <Route path="/admin/users/roles" element={<UserManagementPage />} />
+      <Route path="/admin/users/settings" element={<UserManagementPage />} />
       <Route path="/admin/users/:id" element={<UserProfilePage />} />
       
       <Route path="/admin/settings" element={<SettingsPage />} />

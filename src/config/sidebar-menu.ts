@@ -1,3 +1,4 @@
+
 import { Home, ShoppingBag, Package, User, Users, FileText, Settings, BarChart, Store, MessageSquare, Image, Library, Briefcase } from "lucide-react";
 
 export const sidebarMenuItems = [
@@ -93,9 +94,9 @@ export const sidebarMenuItems = [
         icon: Users,
         path: "/admin/users",
         submenu: [
-          { title: "User Management", path: "/admin/users" },
-          { title: "Residents", path: "/admin/users/residents" },
-          { title: "Officials", path: "/admin/users/officials" },
+          { title: "All Users", path: "/admin/users/all" },
+          { title: "User Roles", path: "/admin/users/roles" },
+          { title: "Settings", path: "/admin/users/settings" },
         ]
       },
       {

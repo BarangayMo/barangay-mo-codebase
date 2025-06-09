@@ -14,7 +14,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { InviteUsersModal } from "./InviteUsersModal";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface User {
   id: string;
@@ -25,6 +24,7 @@ interface User {
   lastLogin: string;
   status: 'Online' | 'Archived' | 'Never' | 'Offline';
   avatar?: string;
+  invitedBy?: string;
 }
 
 const mockUsers: User[] = [
@@ -36,7 +36,8 @@ const mockUsers: User[] = [
     joinDate: "07/27/2019",
     lastLogin: "5m ago",
     status: "Online",
-    avatar: ""
+    avatar: "",
+    invitedBy: "Thomas"
   },
   {
     id: "2",
@@ -46,7 +47,8 @@ const mockUsers: User[] = [
     joinDate: "05/24/2019",
     lastLogin: "4h ago",
     status: "Offline",
-    avatar: ""
+    avatar: "",
+    invitedBy: "Rebecca"
   },
   {
     id: "3",
@@ -56,7 +58,8 @@ const mockUsers: User[] = [
     joinDate: "01/01/2018",
     lastLogin: "Online",
     status: "Online",
-    avatar: ""
+    avatar: "",
+    invitedBy: "John"
   },
   {
     id: "4",
@@ -66,7 +69,8 @@ const mockUsers: User[] = [
     joinDate: "04/02/2019",
     lastLogin: "Archived",
     status: "Archived",
-    avatar: ""
+    avatar: "",
+    invitedBy: "Tina"
   },
   {
     id: "5",
@@ -76,8 +80,17 @@ const mockUsers: User[] = [
     joinDate: "01/24/2018",
     lastLogin: "6d ago",
     status: "Offline",
-    avatar: ""
+    avatar: "",
+    invitedBy: "Igor"
   }
+];
+
+const filterOptions = [
+  { value: "All", label: "All", count: mockUsers.length },
+  { value: "Invited", label: "Invited", count: 0 },
+  { value: "Enabled", label: "Enabled", count: mockUsers.filter(u => u.status === 'Online').length },
+  { value: "Disabled", label: "Disabled", count: 0 },
+  { value: "Archived", label: "Archived", count: mockUsers.filter(u => u.status === 'Archived').length },
 ];
 
 export const AllUsersTab = () => {
@@ -130,7 +143,9 @@ export const AllUsersTab = () => {
                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
     
     if (selectedFilter === "All") return matchesSearch;
-    return matchesSearch && user.status === selectedFilter;
+    if (selectedFilter === "Enabled") return matchesSearch && user.status === "Online";
+    if (selectedFilter === "Archived") return matchesSearch && user.status === "Archived";
+    return matchesSearch;
   });
 
   const handleSelectAll = (checked: boolean) => {
@@ -164,24 +179,24 @@ export const AllUsersTab = () => {
       </div>
 
       {/* Filters and Search */}
-      <div className="flex items-center justify-between">
-        <ToggleGroup type="single" value={selectedFilter} onValueChange={setSelectedFilter}>
-          <ToggleGroupItem value="All" className="data-[state=on]:bg-blue-100 data-[state=on]:text-blue-900">
-            All
-          </ToggleGroupItem>
-          <ToggleGroupItem value="Online" className="data-[state=on]:bg-blue-100 data-[state=on]:text-blue-900">
-            Online
-          </ToggleGroupItem>
-          <ToggleGroupItem value="Enabled" className="data-[state=on]:bg-blue-100 data-[state=on]:text-blue-900">
-            Enabled
-          </ToggleGroupItem>
-          <ToggleGroupItem value="Disabled" className="data-[state=on]:bg-blue-100 data-[state=on]:text-blue-900">
-            Disabled
-          </ToggleGroupItem>
-          <ToggleGroupItem value="Archived" className="data-[state=on]:bg-blue-100 data-[state=on]:text-blue-900">
-            Archived
-          </ToggleGroupItem>
-        </ToggleGroup>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          {filterOptions.map((filter) => (
+            <Button
+              key={filter.value}
+              variant={selectedFilter === filter.value ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedFilter(filter.value)}
+              className={`rounded-full ${
+                selectedFilter === filter.value 
+                  ? "bg-blue-600 text-white" 
+                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+              }`}
+            >
+              {filter.label}
+            </Button>
+          ))}
+        </div>
 
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -202,7 +217,7 @@ export const AllUsersTab = () => {
               <tr className="border-b border-gray-200 bg-gray-50">
                 <th className="w-12 px-6 py-3 text-left">
                   <Checkbox 
-                    checked={selectedUsers.length === filteredUsers.length}
+                    checked={selectedUsers.length === filteredUsers.length && filteredUsers.length > 0}
                     onCheckedChange={handleSelectAll}
                   />
                 </th>
@@ -255,7 +270,7 @@ export const AllUsersTab = () => {
                   <td className="px-6 py-4 text-sm text-gray-500">
                     <div>
                       <div>{user.joinDate}</div>
-                      <div className="text-xs text-gray-400">Invited by: Thomas</div>
+                      <div className="text-xs text-gray-400">Invited by: {user.invitedBy}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm">
