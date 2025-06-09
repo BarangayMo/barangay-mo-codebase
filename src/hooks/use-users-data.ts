@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -50,21 +49,15 @@ export const useUsers = () => {
 
       if (error) throw error;
 
-      // Get user emails from auth.users (we'll need to create a function for this)
+      // Get user emails from auth.users table through a join or separate query
       const userIds = profiles?.map(p => p.id) || [];
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
       
-      if (authError) {
-        console.warn('Could not fetch auth users:', authError);
-      }
-
-      const usersWithEmails = profiles?.map(profile => {
-        const authUser = authUsers?.users.find(u => u.id === profile.id);
-        return {
-          ...profile,
-          email: authUser?.email || 'unknown@example.com'
-        } as User;
-      }) || [];
+      // For now, we'll fetch users without emails since we can't access auth.users directly
+      // In a real implementation, this would require a database function or API endpoint
+      const usersWithEmails = profiles?.map(profile => ({
+        ...profile,
+        email: `user-${profile.id.slice(0, 8)}@example.com` // Placeholder email
+      } as User)) || [];
 
       return usersWithEmails;
     },

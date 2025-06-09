@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -16,7 +15,7 @@ export const UserSettingsTab = () => {
   const [localSettings, setLocalSettings] = useState<Record<string, any>>({});
 
   // Initialize local settings when data is loaded
-  React.useEffect(() => {
+  useEffect(() => {
     if (settings.length > 0) {
       const initialSettings: Record<string, any> = {};
       settings.forEach(setting => {
