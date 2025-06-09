@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Layout } from "@/components/layout/Layout";
+import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -74,8 +74,8 @@ export default function NotificationsPage() {
   const unreadCount = notifications.filter(n => n.status === 'unread').length;
 
   return (
-    <Layout>
-      <div className="h-screen bg-gray-50 flex flex-col">
+    <AdminLayout title="Notifications" hidePageHeader>
+      <div className="h-[calc(100vh-2rem)] bg-gray-50 flex flex-col -mx-6 -my-2">
         {/* Header */}
         <div className="bg-white border-b px-6 py-4">
           <div className="flex items-center justify-between">
@@ -185,7 +185,7 @@ export default function NotificationsPage() {
                                     size="sm"
                                     onClick={(e) => handleArchive(notification.id, e)}
                                     className="h-6 w-6 p-0"
-                                  >
+                                    >
                                     <Archive className="w-3 h-3" />
                                   </Button>
                                 </div>
@@ -319,6 +319,6 @@ export default function NotificationsPage() {
           </div>
         </div>
       </div>
-    </Layout>
+    </AdminLayout>
   );
 }
