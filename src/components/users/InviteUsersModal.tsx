@@ -17,7 +17,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, User, Shield } from "lucide-react";
+import { Mail, Shield, Loader2 } from "lucide-react";
+import { useCreateInvitation } from "@/hooks/use-users-data";
 
 interface InviteUsersModalProps {
   isOpen: boolean;
@@ -28,24 +29,48 @@ export const InviteUsersModal = ({ isOpen, onClose }: InviteUsersModalProps) => 
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [role, setRole] = useState("");
+  const [role, setRole] = useState<'resident' | 'official' | ''>("");
   const [message, setMessage] = useState("");
+
+  const createInvitationMutation = useCreateInvitation();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle invite logic here
-    console.log({ email, firstName, lastName, role, message });
-    onClose();
-    // Reset form
-    setEmail("");
-    setFirstName("");
-    setLastName("");
-    setRole("");
-    setMessage("");
+    
+    if (!email || !role) return;
+
+    createInvitationMutation.mutate({
+      email,
+      role: role as 'resident' | 'official',
+      first_name: firstName || undefined,
+      last_name: lastName || undefined,
+      welcome_message: message || undefined,
+    }, {
+      onSuccess: () => {
+        // Reset form
+        setEmail("");
+        setFirstName("");
+        setLastName("");
+        setRole("");
+        setMessage("");
+        onClose();
+      }
+    });
+  };
+
+  const handleClose = () => {
+    if (!createInvitationMutation.isPending) {
+      setEmail("");
+      setFirstName("");
+      setLastName("");
+      setRole("");
+      setMessage("");
+      onClose();
+    }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center text-lg font-semibold">
@@ -67,6 +92,7 @@ export const InviteUsersModal = ({ isOpen, onClose }: InviteUsersModalProps) => 
               onChange={(e) => setEmail(e.target.value)}
               required
               className="w-full"
+              disabled={createInvitationMutation.isPending}
             />
           </div>
 
@@ -80,6 +106,7 @@ export const InviteUsersModal = ({ isOpen, onClose }: InviteUsersModalProps) => 
                 placeholder="John"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
+                disabled={createInvitationMutation.isPending}
               />
             </div>
             <div className="space-y-2">
@@ -91,6 +118,7 @@ export const InviteUsersModal = ({ isOpen, onClose }: InviteUsersModalProps) => 
                 placeholder="Doe"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
+                disabled={createInvitationMutation.isPending}
               />
             </div>
           </div>
@@ -100,7 +128,12 @@ export const InviteUsersModal = ({ isOpen, onClose }: InviteUsersModalProps) => 
               <Shield className="h-4 w-4 mr-1" />
               Role *
             </Label>
-            <Select value={role} onValueChange={setRole} required>
+            <Select 
+              value={role} 
+              onValueChange={(value: 'resident' | 'official') => setRole(value)} 
+              required
+              disabled={createInvitationMutation.isPending}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select a role" />
               </SelectTrigger>
@@ -121,18 +154,27 @@ export const InviteUsersModal = ({ isOpen, onClose }: InviteUsersModalProps) => 
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={3}
+              disabled={createInvitationMutation.isPending}
             />
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={handleClose}
+              disabled={createInvitationMutation.isPending}
+            >
               Cancel
             </Button>
             <Button 
               type="submit" 
               className="bg-blue-600 hover:bg-blue-700 text-white"
-              disabled={!email || !role}
+              disabled={!email || !role || createInvitationMutation.isPending}
             >
+              {createInvitationMutation.isPending && (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              )}
               Send Invite
             </Button>
           </div>

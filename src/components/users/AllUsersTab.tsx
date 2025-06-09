@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Plus, MoreHorizontal } from "lucide-react";
+import { Search, Plus, MoreHorizontal, Loader2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,84 +14,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { InviteUsersModal } from "./InviteUsersModal";
-
-interface User {
-  id: string;
-  email: string;
-  fullName: string;
-  role: 'Resident' | 'Official';
-  joinDate: string;
-  lastLogin: string;
-  status: 'Online' | 'Archived' | 'Never' | 'Offline';
-  avatar?: string;
-  invitedBy?: string;
-}
-
-const mockUsers: User[] = [
-  {
-    id: "1",
-    email: "kaith.tolbeten@manity.io",
-    fullName: "Kaith Tolbeten",
-    role: "Official",
-    joinDate: "07/27/2019",
-    lastLogin: "5m ago",
-    status: "Online",
-    avatar: "",
-    invitedBy: "Thomas"
-  },
-  {
-    id: "2",
-    email: "yogarasa.gandhi@manity.io",
-    fullName: "Yogarasa Gandhi",
-    role: "Resident",
-    joinDate: "05/24/2019",
-    lastLogin: "4h ago",
-    status: "Offline",
-    avatar: "",
-    invitedBy: "Rebecca"
-  },
-  {
-    id: "3",
-    email: "igor.antonovich@gusky.com",
-    fullName: "Igor Antonovich",
-    role: "Official",
-    joinDate: "01/01/2018",
-    lastLogin: "Online",
-    status: "Online",
-    avatar: "",
-    invitedBy: "John"
-  },
-  {
-    id: "4",
-    email: "georges.embolo@aufity.it",
-    fullName: "Georges Embolo",
-    role: "Resident",
-    joinDate: "04/02/2019",
-    lastLogin: "Archived",
-    status: "Archived",
-    avatar: "",
-    invitedBy: "Tina"
-  },
-  {
-    id: "5",
-    email: "cecilia.pozo@melan.ai",
-    fullName: "Cecilia Pozo",
-    role: "Official",
-    joinDate: "01/24/2018",
-    lastLogin: "6d ago",
-    status: "Offline",
-    avatar: "",
-    invitedBy: "Igor"
-  }
-];
+import { useUsers, useArchiveUser, User } from "@/hooks/use-users-data";
+import { formatDistanceToNow } from "date-fns";
 
 const filterOptions = [
-  { value: "All", label: "All", count: mockUsers.length },
-  { value: "Resident", label: "Resident", count: mockUsers.filter(u => u.role === 'Resident').length },
-  { value: "Official", label: "Official", count: mockUsers.filter(u => u.role === 'Official').length },
-  { value: "Enabled", label: "Enabled", count: mockUsers.filter(u => u.status === 'Online').length },
-  { value: "Disabled", label: "Disabled", count: 0 },
-  { value: "Archived", label: "Archived", count: mockUsers.filter(u => u.status === 'Archived').length },
+  { value: "All", label: "All" },
+  { value: "Resident", label: "Resident" },
+  { value: "Official", label: "Official" },
+  { value: "Online", label: "Online" },
+  { value: "Offline", label: "Offline" },
+  { value: "Archived", label: "Archived" },
 ];
 
 export const AllUsersTab = () => {
@@ -100,17 +32,17 @@ export const AllUsersTab = () => {
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
+  const { data: users = [], isLoading, error } = useUsers();
+  const archiveUserMutation = useArchiveUser();
+
+  const getInitials = (firstName?: string | null, lastName?: string | null) => {
+    const first = firstName || "";
+    const last = lastName || "";
+    return `${first.charAt(0)}${last.charAt(0)}`.toUpperCase() || "U";
   };
 
   const getRoleBadgeColor = (role: string) => {
-    switch (role.toLowerCase()) {
+    switch (role?.toLowerCase()) {
       case 'official':
         return 'bg-blue-100 text-blue-800';
       case 'resident':
@@ -120,28 +52,33 @@ export const AllUsersTab = () => {
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string | null, lastLogin: string | null) => {
     switch (status) {
-      case 'Online':
+      case 'online':
         return <Badge className="bg-green-500 text-white">Online</Badge>;
-      case 'Archived':
+      case 'archived':
         return <Badge className="bg-orange-500 text-white">Archived</Badge>;
-      case 'Never':
-        return <Badge className="bg-red-500 text-white">Never</Badge>;
+      case 'offline':
       default:
-        return <span className="text-gray-500">{status}</span>;
+        if (lastLogin) {
+          const timeAgo = formatDistanceToNow(new Date(lastLogin), { addSuffix: true });
+          return <span className="text-gray-500">{timeAgo}</span>;
+        }
+        return <Badge className="bg-red-500 text-white">Never</Badge>;
     }
   };
 
-  const filteredUsers = mockUsers.filter(user => {
-    const matchesSearch = user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredUsers = users.filter(user => {
+    const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+    const matchesSearch = fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
     
     if (selectedFilter === "All") return matchesSearch;
-    if (selectedFilter === "Resident") return matchesSearch && user.role === "Resident";
-    if (selectedFilter === "Official") return matchesSearch && user.role === "Official";
-    if (selectedFilter === "Enabled") return matchesSearch && user.status === "Online";
-    if (selectedFilter === "Archived") return matchesSearch && user.status === "Archived";
+    if (selectedFilter === "Resident") return matchesSearch && user.role === "resident";
+    if (selectedFilter === "Official") return matchesSearch && user.role === "official";
+    if (selectedFilter === "Online") return matchesSearch && user.status === "online";
+    if (selectedFilter === "Offline") return matchesSearch && user.status === "offline";
+    if (selectedFilter === "Archived") return matchesSearch && user.status === "archived";
     return matchesSearch;
   });
 
@@ -160,6 +97,26 @@ export const AllUsersTab = () => {
       setSelectedUsers(selectedUsers.filter(id => id !== userId));
     }
   };
+
+  const handleArchiveUser = (userId: string) => {
+    archiveUserMutation.mutate(userId);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center text-red-600 p-8">
+        Error loading users. Please try again.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -248,30 +205,32 @@ export const AllUsersTab = () => {
                   <td className="px-6 py-4">
                     <div className="flex items-center">
                       <Avatar className="h-8 w-8 mr-3">
-                        <AvatarImage src={user.avatar} />
+                        <AvatarImage src={user.avatar_url || undefined} />
                         <AvatarFallback className="bg-gray-100 text-gray-600 text-sm">
-                          {getInitials(user.fullName)}
+                          {getInitials(user.first_name, user.last_name)}
                         </AvatarFallback>
                       </Avatar>
                       <span className="text-sm text-gray-900">{user.email}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-900">
-                    {user.fullName}
+                    {`${user.first_name || ''} ${user.last_name || ''}`.trim() || 'N/A'}
                   </td>
                   <td className="px-6 py-4">
-                    <Badge className={getRoleBadgeColor(user.role)}>
-                      {user.role}
+                    <Badge className={getRoleBadgeColor(user.role || '')}>
+                      {user.role === 'resident' ? 'Resident' : user.role === 'official' ? 'Official' : user.role || 'N/A'}
                     </Badge>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
                     <div>
-                      <div>{user.joinDate}</div>
-                      <div className="text-xs text-gray-400">Invited by: {user.invitedBy}</div>
+                      <div>{user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}</div>
+                      {user.invited_by && (
+                        <div className="text-xs text-gray-400">Invited by admin</div>
+                      )}
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm">
-                    {getStatusBadge(user.status)}
+                    {getStatusBadge(user.status, user.last_login)}
                   </td>
                   <td className="px-6 py-4">
                     <DropdownMenu>
@@ -284,8 +243,12 @@ export const AllUsersTab = () => {
                         <DropdownMenuItem>View Profile</DropdownMenuItem>
                         <DropdownMenuItem>Edit User</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-600">
-                          Remove User
+                        <DropdownMenuItem 
+                          className="text-red-600"
+                          onClick={() => handleArchiveUser(user.id)}
+                          disabled={archiveUserMutation.isPending}
+                        >
+                          Archive User
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -299,13 +262,10 @@ export const AllUsersTab = () => {
         {/* Pagination */}
         <div className="px-6 py-3 border-t border-gray-200 flex items-center justify-between">
           <div className="text-sm text-gray-500">
-            Displaying 25 out of 1721
+            Displaying {filteredUsers.length} users
           </div>
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-500">1 - 25</span>
-            <Button variant="outline" size="sm">
-              Next
-            </Button>
+            <span className="text-sm text-gray-500">1 - {filteredUsers.length}</span>
           </div>
         </div>
       </div>

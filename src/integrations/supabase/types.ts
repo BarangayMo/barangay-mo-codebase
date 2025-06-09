@@ -541,33 +541,45 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           barangay: string | null
           "Barangay Reference": string | null
           created_at: string | null
           first_name: string | null
           id: string
+          invited_by: string | null
+          last_login: string | null
           last_name: string | null
           role: Database["public"]["Enums"]["user_role"] | null
+          status: string | null
           updated_at: string | null
         }
         Insert: {
+          avatar_url?: string | null
           barangay?: string | null
           "Barangay Reference"?: string | null
           created_at?: string | null
           first_name?: string | null
           id: string
+          invited_by?: string | null
+          last_login?: string | null
           last_name?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
+          status?: string | null
           updated_at?: string | null
         }
         Update: {
+          avatar_url?: string | null
           barangay?: string | null
           "Barangay Reference"?: string | null
           created_at?: string | null
           first_name?: string | null
           id?: string
+          invited_by?: string | null
+          last_login?: string | null
           last_name?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
+          status?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -718,6 +730,75 @@ export type Database = {
         }
         Relationships: []
       }
+      user_invitations: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          first_name: string | null
+          id: string
+          invited_by: string | null
+          last_name: string | null
+          role: string
+          status: string
+          updated_at: string
+          welcome_message: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at?: string
+          first_name?: string | null
+          id?: string
+          invited_by?: string | null
+          last_name?: string | null
+          role: string
+          status?: string
+          updated_at?: string
+          welcome_message?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          first_name?: string | null
+          id?: string
+          invited_by?: string | null
+          last_name?: string | null
+          role?: string
+          status?: string
+          updated_at?: string
+          welcome_message?: string | null
+        }
+        Relationships: []
+      }
+      user_role_settings: {
+        Row: {
+          created_at: string
+          id: string
+          permissions: Json
+          role: string
+          updated_at: string
+          user_count: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          permissions?: Json
+          role: string
+          updated_at?: string
+          user_count?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          permissions?: Json
+          role?: string
+          updated_at?: string
+          user_count?: number | null
+        }
+        Relationships: []
+      }
       user_settings: {
         Row: {
           address: Json | null
@@ -751,6 +832,33 @@ export type Database = {
           phone_number?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_system_settings: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          setting_key: string
+          setting_value: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          setting_key: string
+          setting_value: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          setting_key?: string
+          setting_value?: Json
+          updated_at?: string
         }
         Relationships: []
       }
@@ -803,6 +911,14 @@ export type Database = {
       get_user_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
+      }
+      update_role_user_counts: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      update_user_last_login: {
+        Args: { user_id: string }
+        Returns: undefined
       }
     }
     Enums: {
