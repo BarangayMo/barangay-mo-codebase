@@ -74,8 +74,8 @@ export default function NotificationsPage() {
   const unreadCount = notifications.filter(n => n.status === 'unread').length;
 
   return (
-    <AdminLayout title="Notifications" hidePageHeader>
-      <div className="h-[calc(100vh-2rem)] bg-gray-50 flex flex-col -mx-6 -my-2">
+    <AdminLayout title="Notifications">
+      <div className="h-[calc(100vh-8rem)] bg-white flex flex-col rounded-lg shadow-sm border">
         {/* Header */}
         <div className="bg-white border-b px-6 py-4">
           <div className="flex items-center justify-between">
@@ -185,7 +185,7 @@ export default function NotificationsPage() {
                                     size="sm"
                                     onClick={(e) => handleArchive(notification.id, e)}
                                     className="h-6 w-6 p-0"
-                                    >
+                                  >
                                     <Archive className="w-3 h-3" />
                                   </Button>
                                 </div>
