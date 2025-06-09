@@ -1,3 +1,4 @@
+
 import {
   BarChart,
   Users,
@@ -160,3 +161,6 @@ export const menuItems = [
     roles: ["superadmin", "admin"],
   },
 ];
+
+// Export as sidebarMenuItems for backward compatibility
+export const sidebarMenuItems = menuItems;
