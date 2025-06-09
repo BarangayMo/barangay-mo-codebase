@@ -1,10 +1,11 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Plus, MoreHorizontal, Loader2, Users, User, Badge as BadgeIcon, Circle, CircleDot } from "lucide-react";
+import { Search, Plus, MoreHorizontal, Loader2, Users, User as UserIcon, Badge as BadgeIcon, Circle, CircleDot } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,7 +19,7 @@ import { formatDistanceToNow } from "date-fns";
 
 const filterOptions = [
   { value: "All", label: "All", icon: Users },
-  { value: "Resident", label: "Resident", icon: User },
+  { value: "Resident", label: "Resident", icon: UserIcon },
   { value: "Official", label: "Official", icon: BadgeIcon },
   { value: "Online", label: "Online", icon: CircleDot },
   { value: "Offline", label: "Offline", icon: Circle },
