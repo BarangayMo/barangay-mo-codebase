@@ -6,11 +6,18 @@ import { Shield, Users, Plus } from "lucide-react";
 
 export const UserRolesTab = () => {
   const roles = [
-    { name: "Super Admin", userCount: 2, color: "bg-red-100 text-red-800", permissions: ["All permissions"] },
-    { name: "Admin", userCount: 5, color: "bg-blue-100 text-blue-800", permissions: ["User management", "Content management"] },
-    { name: "HR Lead", userCount: 12, color: "bg-green-100 text-green-800", permissions: ["User management", "Reports"] },
-    { name: "HR Manager", userCount: 8, color: "bg-orange-100 text-orange-800", permissions: ["Basic user management"] },
-    { name: "Account Manager", userCount: 25, color: "bg-purple-100 text-purple-800", permissions: ["View only"] },
+    { 
+      name: "Official", 
+      userCount: 15, 
+      color: "bg-blue-100 text-blue-800", 
+      permissions: ["User management", "Content management", "Administrative access"] 
+    },
+    { 
+      name: "Resident", 
+      userCount: 125, 
+      color: "bg-green-100 text-green-800", 
+      permissions: ["View content", "Submit requests", "Access marketplace"] 
+    },
   ];
 
   return (
