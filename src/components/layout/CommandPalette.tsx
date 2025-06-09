@@ -58,10 +58,9 @@ const commandItems: CommandItem[] = [
   { id: "financials", title: "Financials", description: "Reports and revenue", icon: ChartBar, path: "/admin/smarketplace/financials", group: "Smarketplace" },
   { id: "reviews", title: "Reviews", description: "Moderate reviews", icon: Star, path: "/admin/smarketplace/reviews", group: "Smarketplace" },
   
-  // Users - Updated structure
-  { id: "all-users", title: "All Users", description: "Manage all system users", icon: Users, path: "/admin/users/all", group: "Users" },
-  { id: "user-roles", title: "User Roles", description: "Manage user roles and permissions", icon: UserPlus, path: "/admin/users/roles", group: "Users" },
-  { id: "user-settings", title: "User Settings", description: "Configure user settings", icon: Settings, path: "/admin/users/settings", group: "Users" },
+  // Users
+  { id: "residents", title: "Residents", description: "Manage resident users", icon: Users, path: "/admin/users/residents", group: "Users" },
+  { id: "officials", title: "Officials", description: "Manage official users", icon: Building, path: "/admin/users/officials", group: "Users" },
   
   // Reports
   { id: "activity-logs", title: "Activity Logs", description: "View system activity", icon: FileText, path: "/admin/reports/activity-logs", group: "Reports" },

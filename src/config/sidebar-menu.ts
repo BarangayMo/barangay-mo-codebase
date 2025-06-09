@@ -1,166 +1,127 @@
 
-import {
-  BarChart,
-  Users,
-  Package,
-  ShoppingBag,
-  User,
-  Truck,
-  Gift,
-  ChartBar,
-  Star,
-  Cog,
-  Puzzle,
-  FileText,
-  CreditCard,
-  MessageSquare,
-  Settings,
-  ShieldCheck,
-} from "lucide-react";
+import { Home, ShoppingBag, Package, User, Users, FileText, Settings, BarChart, Store, MessageSquare, Image, Library, Briefcase } from "lucide-react";
 
-export const menuItems = [
+export const sidebarMenuItems = [
   {
-    label: "Dashboard",
-    href: "/admin",
-    icon: BarChart,
-    roles: ["superadmin", "admin"],
+    groupLabel: "General",
+    items: [
+      {
+        title: "Dashboard",
+        icon: Home,
+        path: "/admin"
+      },
+    ]
   },
   {
-    label: "Users",
-    icon: Users,
-    roles: ["superadmin", "admin"],
-    children: [
+    groupLabel: "Marketplace",
+    items: [
       {
-        label: "All Users",
-        href: "/admin/users/all",
-        icon: Users,
-        roles: ["superadmin", "admin"],
-      },
-      {
-        label: "User Roles", 
-        href: "/admin/users/roles",
-        icon: ShieldCheck,
-        roles: ["superadmin", "admin"],
-      },
-      {
-        label: "Settings",
-        href: "/admin/users/settings", 
-        icon: Settings,
-        roles: ["superadmin", "admin"],
+        title: "Smarketplace",
+        icon: Store,
+        path: "/admin/smarketplace",
+        submenu: [
+          {
+            title: "Overview",
+            icon: BarChart,
+            path: "/admin/smarketplace/overview",
+          },
+          {
+            title: "Products",
+            icon: ShoppingBag,
+            path: "/admin/smarketplace/products",
+            submenu: [
+              { title: "All Products", path: "/admin/smarketplace/products/all" },
+              { title: "Categories", path: "/admin/smarketplace/products/categories" },
+              { title: "Inventory", path: "/admin/smarketplace/products/inventory" }
+            ]
+          },
+          {
+            title: "Orders",
+            icon: Package,
+            path: "/admin/smarketplace/orders",
+            submenu: [
+              { title: "All Orders", path: "/admin/smarketplace/orders/all" },
+              { title: "Processing", path: "/admin/smarketplace/orders/processing" },
+              { title: "Completed", path: "/admin/smarketplace/orders/completed" }
+            ]
+          },
+          {
+            title: "Vendors",
+            icon: Users,
+            path: "/admin/smarketplace/vendors",
+            submenu: [
+              { title: "Directory", path: "/admin/smarketplace/vendors/all" },
+              { title: "Applications", path: "/admin/smarketplace/vendors/applications" }
+            ]
+          },
+          {
+            title: "Customers",
+            icon: User,
+            path: "/admin/smarketplace/customers",
+            submenu: [
+              { title: "Directory", path: "/admin/smarketplace/customers/all" },
+              { title: "VIP", path: "/admin/smarketplace/customers/vip" }
+            ]
+          }
+        ]
       }
     ]
   },
   {
-    label: "Smarketplace",
-    icon: ShoppingBag,
-    roles: ["superadmin", "admin"],
-    children: [
+    groupLabel: "Communication",
+    items: [
       {
-        label: "Overview",
-        href: "/admin/smarketplace",
-        icon: BarChart,
-        roles: ["superadmin", "admin"],
-      },
-      {
-        label: "Products",
-        href: "/admin/smarketplace/products",
-        icon: Package,
-        roles: ["superadmin", "admin"],
-      },
-      {
-        label: "Orders",
-        href: "/admin/smarketplace/orders",
-        icon: ShoppingBag,
-        roles: ["superadmin", "admin"],
-      },
-      {
-        label: "Vendors",
-        href: "/admin/smarketplace/vendors",
-        icon: Users,
-        roles: ["superadmin", "admin"],
-      },
-      {
-        label: "Customers",
-        href: "/admin/smarketplace/customers",
-        icon: User,
-        roles: ["superadmin", "admin"],
-      },
-      {
-        label: "Shipping",
-        href: "/admin/smarketplace/shipping",
-        icon: Truck,
-        roles: ["superadmin", "admin"],
-      },
-      {
-        label: "Promotions",
-        href: "/admin/smarketplace/promotions",
-        icon: Gift,
-        roles: ["superadmin", "admin"],
-      },
-      {
-        label: "Financials",
-        href: "/admin/smarketplace/financials",
-        icon: ChartBar,
-        roles: ["superadmin", "admin"],
-      },
-      {
-        label: "Reviews",
-        href: "/admin/smarketplace/reviews",
-        icon: Star,
-        roles: ["superadmin", "admin"],
-      },
-      {
-        label: "Settings",
-        href: "/admin/smarketplace/settings",
-        icon: Settings,
-        roles: ["superadmin", "admin"],
-      },
-      {
-        label: "Add-ons",
-        href: "/admin/smarketplace/addons",
-        icon: Puzzle,
-        roles: ["superadmin", "admin"],
-      },
+        title: "Messaging",
+        icon: MessageSquare,
+        path: "/admin/messages",
+      }
     ]
   },
   {
-    label: "Reports",
-    icon: FileText,
-    roles: ["superadmin", "admin"],
-    children: [
+    groupLabel: "Data",
+    items: [
       {
-        label: "Activity Logs",
-        href: "/admin/reports/activity-logs",
+        title: "Reports",
         icon: FileText,
-        roles: ["superadmin", "admin"],
+        path: "/admin/reports",
+        submenu: [
+          { title: "Financial", path: "/admin/reports/financial" },
+          { title: "Activity", path: "/admin/reports/activity" },
+        ]
       },
       {
-        label: "Financial Reports",
-        href: "/admin/reports/financial-reports",
-        icon: CreditCard,
-        roles: ["superadmin", "admin"],
+        title: "Users",
+        icon: Users,
+        path: "/admin/users",
+        submenu: [
+          { title: "Residents", path: "/admin/users/residents" },
+          { title: "Officials", path: "/admin/users/officials" },
+        ]
+      },
+      {
+        title: "Jobs",
+        icon: Briefcase,
+        path: "/admin/jobs",
+        submenu: [
+          { title: "All Jobs", path: "/admin/jobs/all" },
+          { title: "Applications", path: "/admin/jobs/applications" },
+        ]
+      },
+      {
+        title: "Media Library",
+        icon: Library,
+        path: "/admin/media-library"
       },
     ]
   },
   {
-    label: "Media Library",
-    href: "/admin/media-library",
-    icon: FileText,
-    roles: ["superadmin", "admin"],
-  },
-  {
-    label: "Messages",
-    href: "/admin/messages",
-    icon: MessageSquare,
-    roles: ["superadmin", "admin"],
-  },
-  {
-    label: "Settings",
-    href: "/admin/settings",
-    icon: Settings,
-    roles: ["superadmin", "admin"],
-  },
+    groupLabel: "System",
+    items: [
+      {
+        title: "Settings",
+        icon: Settings,
+        path: "/admin/settings"
+      }
+    ]
+  }
 ];
-
-// Export as sidebarMenuItems for backward compatibility
-export const sidebarMenuItems = menuItems;

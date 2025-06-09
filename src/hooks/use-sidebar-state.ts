@@ -31,45 +31,44 @@ export const useSidebarState = () => {
     };
     
     const checkMenuItems = (items: any[]) => {
-      items.forEach((item: any) => {
-        // Special case for Dashboard - only set it as active if the path exactly matches
-        if (isDashboardPath(item.href || item.path)) {
-          currentActiveSection = item.href || item.path;
-          found = true;
-          return;
-        }
-        
-        const itemPath = item.href || item.path;
-        // For other menu items, only auto-expand if we're navigating to a nested route
-        if (parentPaths.includes(itemPath) && itemPath !== "/admin") {
-          // Only expand if the current path is actually within this section
-          const isWithinSection = pathname.startsWith(itemPath + '/') || pathname === itemPath;
-          if (isWithinSection) {
-            newOpenSections[itemPath] = true;
-            currentActiveSection = itemPath;
+      items.forEach(group => {
+        group.items.forEach((item: any) => {
+          // Special case for Dashboard - only set it as active if the path exactly matches
+          if (isDashboardPath(item.path)) {
+            currentActiveSection = item.path;
             found = true;
-            
-            if (item.children) {
-              item.children.forEach((subItem: any) => {
-                const subItemPath = subItem.href || subItem.path;
-                if (parentPaths.includes(subItemPath)) {
-                  newOpenSections[itemPath] = true;
-                  currentActiveSection = subItemPath;
-                  
-                  if (subItem.children) {
-                    subItem.children.forEach((deepSubItem: any) => {
-                      const deepSubItemPath = deepSubItem.href || deepSubItem.path;
-                      if (parentPaths.includes(deepSubItemPath)) {
-                        newOpenSections[subItemPath] = true;
-                        currentActiveSection = deepSubItemPath;
-                      }
-                    });
+            return;
+          }
+          
+          // For other menu items, only auto-expand if we're navigating to a nested route
+          if (parentPaths.includes(item.path) && item.path !== "/admin") {
+            // Only expand if the current path is actually within this section
+            const isWithinSection = pathname.startsWith(item.path + '/') || pathname === item.path;
+            if (isWithinSection) {
+              newOpenSections[item.path] = true;
+              currentActiveSection = item.path;
+              found = true;
+              
+              if (item.submenu) {
+                item.submenu.forEach((subItem: any) => {
+                  if (parentPaths.includes(subItem.path)) {
+                    newOpenSections[item.path] = true;
+                    currentActiveSection = subItem.path;
+                    
+                    if (subItem.submenu) {
+                      subItem.submenu.forEach((deepSubItem: any) => {
+                        if (parentPaths.includes(deepSubItem.path)) {
+                          newOpenSections[subItem.path] = true;
+                          currentActiveSection = deepSubItem.path;
+                        }
+                      });
+                    }
                   }
-                }
-              });
+                });
+              }
             }
           }
-        }
+        });
       });
     };
 
@@ -101,15 +100,20 @@ export const useSidebarState = () => {
     } else {
       // Find all sections at the same level and close them
       const findSectionLevel = (items: any[], targetPath: string, level = 0): number => {
-        for (const item of items) {
-          const itemPath = item.href || item.path;
-          if (itemPath === targetPath) {
-            return level;
-          }
-          if (item.children) {
-            const foundLevel = findSectionLevel(item.children, targetPath, level + 1);
-            if (foundLevel > level) {
-              return foundLevel;
+        for (const group of items) {
+          for (const item of group.items) {
+            if (item.path === targetPath) {
+              return level;
+            }
+            if (item.submenu) {
+              const foundLevel = findSectionLevel(
+                [{ items: item.submenu }], 
+                targetPath, 
+                level + 1
+              );
+              if (foundLevel > level) {
+                return foundLevel;
+              }
             }
           }
         }
@@ -121,17 +125,24 @@ export const useSidebarState = () => {
       // Close all sections at the same level
       const closeSectionsAtSameLevel = (items: any[], level: number, currentLevel = 0) => {
         if (level === currentLevel) {
-          items.forEach((item: any) => {
-            const itemPath = item.href || item.path;
-            if (itemPath !== sectionId) {
-              newOpenSections[itemPath] = false;
-            }
+          items.forEach(group => {
+            group.items.forEach((item: any) => {
+              if (item.path !== sectionId) {
+                newOpenSections[item.path] = false;
+              }
+            });
           });
         } else {
-          items.forEach((item: any) => {
-            if (item.children) {
-              closeSectionsAtSameLevel(item.children, level, currentLevel + 1);
-            }
+          items.forEach(group => {
+            group.items.forEach((item: any) => {
+              if (item.submenu) {
+                closeSectionsAtSameLevel(
+                  [{ items: item.submenu }], 
+                  level, 
+                  currentLevel + 1
+                );
+              }
+            });
           });
         }
       };
