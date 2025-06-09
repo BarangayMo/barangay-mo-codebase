@@ -19,7 +19,7 @@ interface User {
   id: string;
   email: string;
   fullName: string;
-  role: string;
+  role: 'Resident' | 'Official';
   joinDate: string;
   lastLogin: string;
   status: 'Online' | 'Archived' | 'Never' | 'Offline';
@@ -32,7 +32,7 @@ const mockUsers: User[] = [
     id: "1",
     email: "kaith.tolbeten@manity.io",
     fullName: "Kaith Tolbeten",
-    role: "HR Lead",
+    role: "Official",
     joinDate: "07/27/2019",
     lastLogin: "5m ago",
     status: "Online",
@@ -43,7 +43,7 @@ const mockUsers: User[] = [
     id: "2",
     email: "yogarasa.gandhi@manity.io",
     fullName: "Yogarasa Gandhi",
-    role: "Account Manager",
+    role: "Resident",
     joinDate: "05/24/2019",
     lastLogin: "4h ago",
     status: "Offline",
@@ -54,7 +54,7 @@ const mockUsers: User[] = [
     id: "3",
     email: "igor.antonovich@gusky.com",
     fullName: "Igor Antonovich",
-    role: "HR Director",
+    role: "Official",
     joinDate: "01/01/2018",
     lastLogin: "Online",
     status: "Online",
@@ -65,7 +65,7 @@ const mockUsers: User[] = [
     id: "4",
     email: "georges.embolo@aufity.it",
     fullName: "Georges Embolo",
-    role: "HR Manager",
+    role: "Resident",
     joinDate: "04/02/2019",
     lastLogin: "Archived",
     status: "Archived",
@@ -76,7 +76,7 @@ const mockUsers: User[] = [
     id: "5",
     email: "cecilia.pozo@melan.ai",
     fullName: "Cecilia Pozo",
-    role: "Head of HR",
+    role: "Official",
     joinDate: "01/24/2018",
     lastLogin: "6d ago",
     status: "Offline",
@@ -87,7 +87,8 @@ const mockUsers: User[] = [
 
 const filterOptions = [
   { value: "All", label: "All", count: mockUsers.length },
-  { value: "Invited", label: "Invited", count: 0 },
+  { value: "Resident", label: "Resident", count: mockUsers.filter(u => u.role === 'Resident').length },
+  { value: "Official", label: "Official", count: mockUsers.filter(u => u.role === 'Official').length },
   { value: "Enabled", label: "Enabled", count: mockUsers.filter(u => u.status === 'Online').length },
   { value: "Disabled", label: "Disabled", count: 0 },
   { value: "Archived", label: "Archived", count: mockUsers.filter(u => u.status === 'Archived').length },
@@ -110,16 +111,10 @@ export const AllUsersTab = () => {
 
   const getRoleBadgeColor = (role: string) => {
     switch (role.toLowerCase()) {
-      case 'hr lead':
+      case 'official':
         return 'bg-blue-100 text-blue-800';
-      case 'account manager':
+      case 'resident':
         return 'bg-green-100 text-green-800';
-      case 'hr director':
-        return 'bg-purple-100 text-purple-800';
-      case 'hr manager':
-        return 'bg-orange-100 text-orange-800';
-      case 'head of hr':
-        return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -143,6 +138,8 @@ export const AllUsersTab = () => {
                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
     
     if (selectedFilter === "All") return matchesSearch;
+    if (selectedFilter === "Resident") return matchesSearch && user.role === "Resident";
+    if (selectedFilter === "Official") return matchesSearch && user.role === "Official";
     if (selectedFilter === "Enabled") return matchesSearch && user.status === "Online";
     if (selectedFilter === "Archived") return matchesSearch && user.status === "Archived";
     return matchesSearch;

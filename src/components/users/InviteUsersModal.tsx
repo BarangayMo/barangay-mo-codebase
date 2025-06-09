@@ -107,10 +107,6 @@ export const InviteUsersModal = ({ isOpen, onClose }: InviteUsersModalProps) => 
               <SelectContent>
                 <SelectItem value="resident">Resident</SelectItem>
                 <SelectItem value="official">Official</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="hr_lead">HR Lead</SelectItem>
-                <SelectItem value="hr_manager">HR Manager</SelectItem>
-                <SelectItem value="account_manager">Account Manager</SelectItem>
               </SelectContent>
             </Select>
           </div>
