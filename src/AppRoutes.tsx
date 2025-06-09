@@ -8,10 +8,10 @@ import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Verify from "@/pages/Verify";
-import { AdminDashboard } from "@/pages/AdminDashboard";
-import { SettingsPage } from "@/pages/admin/SettingsPage";
-import { MediaLibraryPage } from "@/pages/admin/MediaLibraryPage";
-import { MessagesPage } from "@/pages/admin/MessagesPage";
+import AdminDashboard from "@/pages/AdminDashboard";
+import SettingsPage from "@/pages/admin/SettingsPage";
+import MediaLibraryPage from "@/pages/admin/MediaLibraryPage";
+import MessagesPage from "@/pages/admin/MessagesPage";
 import NotificationsPage from "@/pages/admin/NotificationsPage";
 
 const AppRoutes = () => {
