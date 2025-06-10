@@ -15,24 +15,11 @@ export const JobMap = ({ location, className }: JobMapProps) => {
   const map = useRef<mapboxgl.Map | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<string>('');
 
   useEffect(() => {
     const initializeMap = async () => {
       console.log('🗺️ JobMap: Starting map initialization');
       console.log('🗺️ JobMap: Location:', location);
-      console.log('🗺️ JobMap: Map container current:', mapContainer.current);
-      console.log('🗺️ JobMap: Existing map instance:', !!map.current);
-
-      // Wait a bit for the DOM to be ready
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      if (!mapContainer.current) {
-        console.log('❌ JobMap: Map container not available after timeout');
-        setError('Map container not available');
-        setLoading(false);
-        return;
-      }
 
       if (!location) {
         console.log('❌ JobMap: No location provided');
@@ -46,10 +33,19 @@ export const JobMap = ({ location, className }: JobMapProps) => {
         return;
       }
 
+      // Wait for container to be ready
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      if (!mapContainer.current) {
+        console.log('❌ JobMap: Map container not available');
+        setError('Map container not available');
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
-        setDebugInfo('Fetching API key...');
 
         console.log('🔑 JobMap: Calling edge function for API key...');
 
@@ -71,7 +67,6 @@ export const JobMap = ({ location, className }: JobMapProps) => {
         }
 
         console.log('✅ JobMap: API key received successfully');
-        setDebugInfo('Geocoding location...');
 
         // Set Mapbox access token
         mapboxgl.accessToken = data.apiKey;
@@ -100,7 +95,6 @@ export const JobMap = ({ location, className }: JobMapProps) => {
 
         const [lng, lat] = geocodeData.features[0].center;
         console.log('📍 JobMap: Coordinates found:', { lng, lat });
-        setDebugInfo('Initializing map...');
 
         // Double-check container is still available
         if (!mapContainer.current) {
@@ -155,14 +149,12 @@ export const JobMap = ({ location, className }: JobMapProps) => {
         map.current.on('load', () => {
           console.log('✅ JobMap: Map loaded successfully');
           setLoading(false);
-          setDebugInfo('Map loaded successfully');
         });
 
         map.current.on('error', (e) => {
           console.error('❌ JobMap: Map error:', e);
           setError('Map failed to load');
           setLoading(false);
-          setDebugInfo(`Map error: ${e.error?.message || 'Unknown error'}`);
         });
 
         console.log('🗺️ JobMap: Map initialization completed');
@@ -171,7 +163,6 @@ export const JobMap = ({ location, className }: JobMapProps) => {
         console.error('❌ JobMap: Map initialization error:', err);
         const errorMessage = err instanceof Error ? err.message : 'Failed to load map';
         setError(errorMessage);
-        setDebugInfo(`Error: ${errorMessage}`);
         setLoading(false);
       }
     };
@@ -197,9 +188,6 @@ export const JobMap = ({ location, className }: JobMapProps) => {
         <div className="flex flex-col items-center gap-2">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           <span className="text-sm text-muted-foreground">Loading map...</span>
-          {debugInfo && (
-            <span className="text-xs text-muted-foreground">{debugInfo}</span>
-          )}
         </div>
       </div>
     );
