@@ -1,11 +1,11 @@
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { ChevronLeft, SkipForward } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import { RoleButton } from "@/components/ui/role-button";
 
 export default function Phone() {
   const location = useLocation();
@@ -75,14 +75,14 @@ export default function Phone() {
         >
           <div className="flex gap-2">
             <div className="w-[100px]">
-              <Button variant="outline" className="w-full h-10 flex items-center gap-2 justify-between pl-2 pr-3">
+              <RoleButton variant="outline" className="w-full h-10 flex items-center gap-2 justify-between pl-2 pr-3">
                 <img
                   src="/lovable-uploads/69289dcf-6417-4971-9806-b93b578586d6.png"
                   alt="Philippines Flag"
                   className="h-5 w-5"
                 />
                 <span>+63</span>
-              </Button>
+              </RoleButton>
             </div>
             <Input
               value={phoneNumber}
@@ -94,11 +94,11 @@ export default function Phone() {
           </div>
 
           <div className="space-y-3">
-            <Button type="submit" className="w-full h-12 bg-emerald-600 hover:bg-emerald-700">
+            <RoleButton type="submit" className="w-full h-12 text-white font-medium">
               Submit
-            </Button>
+            </RoleButton>
             
-            <Button 
+            <RoleButton 
               type="button"
               variant="ghost"
               onClick={handleSkip}
@@ -106,7 +106,7 @@ export default function Phone() {
             >
               <SkipForward className="w-5 h-5" />
               Skip Verification
-            </Button>
+            </RoleButton>
           </div>
         </motion.form>
 

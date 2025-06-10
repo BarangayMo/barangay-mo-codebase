@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronLeft, SkipForward } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
@@ -8,6 +7,7 @@ import { motion } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { RoleButton } from "@/components/ui/role-button";
 
 export default function Verify() {
   const [otp, setOtp] = useState("");
@@ -75,7 +75,7 @@ export default function Verify() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-emerald-50 flex flex-col p-6">
+    <div className="min-h-screen bg-white flex flex-col p-6">
       <Link to="/phone" className="flex items-center gap-2 text-gray-600 mb-6 hover:text-gray-800 transition-colors">
         <ChevronLeft className="h-5 w-5" />
         Back
@@ -147,15 +147,15 @@ export default function Verify() {
           </div>
 
           <div className="space-y-3">
-            <Button 
+            <RoleButton 
               onClick={handleVerify}
               disabled={otp.length !== 4 || isLoading}
-              className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full h-12 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? "Verifying..." : "Verify"}
-            </Button>
+            </RoleButton>
 
-            <Button 
+            <RoleButton 
               type="button"
               variant="ghost"
               onClick={handleSkip}
@@ -164,7 +164,7 @@ export default function Verify() {
             >
               <SkipForward className="w-5 h-5" />
               {isCheckingRbi ? "Checking..." : "Skip Verification"}
-            </Button>
+            </RoleButton>
           </div>
         </motion.div>
 

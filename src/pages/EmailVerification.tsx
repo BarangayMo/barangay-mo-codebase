@@ -1,12 +1,12 @@
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { ChevronLeft, Mail } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { RoleButton } from "@/components/ui/role-button";
 
 export default function EmailVerification() {
   const [isResending, setIsResending] = useState(false);
@@ -84,7 +84,7 @@ export default function EmailVerification() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-emerald-50 flex flex-col p-6">
+    <div className="min-h-screen bg-white flex flex-col p-6">
       <Link to="/register" className="flex items-center gap-2 text-gray-600 mb-6 hover:text-gray-800 transition-colors">
         <ChevronLeft className="h-5 w-5" />
         Back
@@ -140,12 +140,12 @@ export default function EmailVerification() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.6 }}
         >
-          <Button 
+          <RoleButton 
             onClick={handleOpenEmailApp}
-            className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+            className="w-full h-12 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
           >
             Open Email App
-          </Button>
+          </RoleButton>
 
           <div className="text-center">
             <p className="text-sm text-gray-500 mb-2">
