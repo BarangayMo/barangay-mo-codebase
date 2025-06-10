@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { AdminLayout } from "@/components/layout/AdminLayout";
@@ -20,6 +19,7 @@ import type { Notification } from '@/hooks/useNotifications';
 const getCategoryIcon = (category: string) => {
   switch (category) {
     case 'system':
+    case 'general':
       return <Info className="h-5 w-5 text-blue-500" />;
     case 'registration':
       return <UserCheck className="h-5 w-5 text-green-500" />;
@@ -27,11 +27,18 @@ const getCategoryIcon = (category: string) => {
       return <MessageSquare className="h-5 w-5 text-purple-500" />;
     case 'approval':
       return <FileText className="h-5 w-5 text-orange-500" />;
+    case 'finance':
+      return <FileText className="h-5 w-5 text-green-500" />;
+    case 'meeting':
+      return <Users className="h-5 w-5 text-blue-500" />;
+    case 'feedback':
+      return <MessageSquare className="h-5 w-5 text-purple-500" />;
+    case 'project':
+      return <CheckCircle className="h-5 w-5 text-green-500" />;
     case 'task':
     case 'deadline':
       return <AlertTriangle className="h-5 w-5 text-orange-500" />;
     case 'milestone':
-    case 'project':
       return <CheckCircle className="h-5 w-5 text-green-500" />;
     default:
       return <Bell className="h-5 w-5 text-gray-500" />;
@@ -69,6 +76,7 @@ const getActionButtons = (notification: Notification) => {
       );
       break;
     case 'message':
+    case 'feedback':
       buttons.push(
         <Button key="reply" size="sm" variant="outline">
           <MessageSquare className="h-3 w-3 mr-1" />
@@ -83,6 +91,7 @@ const getActionButtons = (notification: Notification) => {
       );
       break;
     case 'approval':
+    case 'finance':
       buttons.push(
         <Button key="review" size="sm">
           <FileText className="h-3 w-3 mr-1" />
@@ -90,6 +99,14 @@ const getActionButtons = (notification: Notification) => {
         </Button>,
         <Button key="approve" size="sm" className="bg-green-600 hover:bg-green-700 text-white">
           Approve
+        </Button>
+      );
+      break;
+    case 'meeting':
+      buttons.push(
+        <Button key="join" size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Users className="h-3 w-3 mr-1" />
+          Join Meeting
         </Button>
       );
       break;
@@ -313,17 +330,26 @@ export default function Notifications() {
     isMarkingAllAsRead
   } = useNotifications();
 
-  // Filter notifications based on user role
+  // Updated role-based filtering to include actual database categories
   const roleBasedNotifications = notifications.filter(notification => {
+    // General notifications are visible to everyone
+    if (notification.category === 'general' || notification.category === 'system') {
+      return true;
+    }
+
     switch (userRole) {
       case 'superadmin':
-        return ['registration', 'message', 'approval', 'system'].includes(notification.category);
-      case 'official':
-        return ['task', 'deadline', 'milestone', 'message'].includes(notification.category);
-      case 'resident':
-        return ['approval', 'message', 'system'].includes(notification.category);
-      default:
+        // Superadmins can see all notifications
         return true;
+      case 'official':
+        // Officials can see work-related notifications
+        return ['task', 'deadline', 'milestone', 'message', 'finance', 'meeting', 'project', 'feedback'].includes(notification.category);
+      case 'resident':
+        // Residents can see personal and approval notifications
+        return ['approval', 'message', 'feedback', 'registration'].includes(notification.category);
+      default:
+        // Fallback: show general notifications for any unrecognized role
+        return ['general', 'system'].includes(notification.category);
     }
   });
 

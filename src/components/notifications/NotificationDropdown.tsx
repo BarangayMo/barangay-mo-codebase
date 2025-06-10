@@ -1,7 +1,6 @@
-
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { Bell, Search, CheckCircle, Clock, AlertTriangle, Info, X } from 'lucide-react';
+import { Bell, Search, CheckCircle, Clock, AlertTriangle, Info, X, MessageSquare, FileText, Users, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -20,15 +19,24 @@ interface NotificationDropdownProps {
 const getCategoryIcon = (category: string) => {
   switch (category) {
     case 'system':
+    case 'general':
       return <Info className="h-4 w-4 text-blue-500" />;
     case 'registration':
+      return <UserCheck className="h-4 w-4 text-green-500" />;
+    case 'message':
+    case 'feedback':
+      return <MessageSquare className="h-4 w-4 text-purple-500" />;
+    case 'finance':
+    case 'approval':
+      return <FileText className="h-4 w-4 text-orange-500" />;
+    case 'meeting':
+      return <Users className="h-4 w-4 text-blue-500" />;
+    case 'project':
+    case 'milestone':
       return <CheckCircle className="h-4 w-4 text-green-500" />;
     case 'task':
     case 'deadline':
       return <AlertTriangle className="h-4 w-4 text-orange-500" />;
-    case 'milestone':
-    case 'project':
-      return <CheckCircle className="h-4 w-4 text-green-500" />;
     default:
       return <Bell className="h-4 w-4 text-gray-500" />;
   }
@@ -116,17 +124,26 @@ export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => 
     isMarkingAllAsRead
   } = useNotifications();
 
-  // Filter notifications based on user role
+  // Updated role-based filtering to match the main notifications page
   const roleBasedNotifications = notifications.filter(notification => {
+    // General notifications are visible to everyone
+    if (notification.category === 'general' || notification.category === 'system') {
+      return true;
+    }
+
     switch (userRole) {
       case 'superadmin':
-        return ['registration', 'message', 'approval', 'system'].includes(notification.category);
-      case 'official':
-        return ['task', 'deadline', 'milestone', 'message'].includes(notification.category);
-      case 'resident':
-        return ['approval', 'message', 'system'].includes(notification.category);
-      default:
+        // Superadmins can see all notifications
         return true;
+      case 'official':
+        // Officials can see work-related notifications
+        return ['task', 'deadline', 'milestone', 'message', 'finance', 'meeting', 'project', 'feedback'].includes(notification.category);
+      case 'resident':
+        // Residents can see personal and approval notifications
+        return ['approval', 'message', 'feedback', 'registration'].includes(notification.category);
+      default:
+        // Fallback: show general notifications for any unrecognized role
+        return ['general', 'system'].includes(notification.category);
     }
   });
 
