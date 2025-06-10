@@ -9,7 +9,9 @@ import {
   Settings,
   User,
   LogOut,
-  ChevronDown
+  ChevronDown,
+  MapPin,
+  Bell
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -19,6 +21,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
+import { HeaderLogo } from "./header/HeaderLogo";
+import { DesktopNavItems } from "./header/DesktopNavItems";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -26,71 +32,104 @@ interface HeaderProps {
 
 export const Header = ({ onMenuClick }: HeaderProps) => {
   const [searchQuery, setSearchQuery] = useState("");
+  const { isAuthenticated, userRole, logout } = useAuth();
+
+  const getDashboardRoute = () => {
+    switch (userRole) {
+      case "official":
+        return "/official-dashboard";
+      case "superadmin":
+        return "/admin/dashboard";
+      case "resident":
+        return "/resident-home";
+      default:
+        return "/";
+    }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+  };
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-4">
-      <div className="flex items-center justify-between">
-        {/* Left section */}
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onMenuClick}
-            className="lg:hidden"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-          
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-64"
-            />
-          </div>
-        </div>
-
-        {/* Right section */}
-        <div className="flex items-center gap-4">
-          {/* Notifications Dropdown */}
-          <NotificationDropdown />
-          
-          {/* Settings */}
-          <Button variant="ghost" size="sm">
-            <Settings className="h-5 w-5" />
-          </Button>
-
-          {/* Profile Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="/placeholder-avatar.jpg" />
-                  <AvatarFallback>
-                    <User className="h-4 w-4" />
-                  </AvatarFallback>
-                </Avatar>
-                <ChevronDown className="h-4 w-4" />
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          {/* Left section - Logo and Mobile Menu */}
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onMenuClick}
+              className="lg:hidden"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+            
+            <HeaderLogo />
+            
+            {/* Location Selector */}
+            <div className="hidden md:flex items-center gap-2 text-sm text-gray-600">
+              <MapPin className="h-4 w-4" />
+              <Button variant="ghost" size="sm" className="h-auto p-0 font-normal">
+                Select Barangay...
+                <ChevronDown className="ml-1 h-3 w-3" />
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <LogOut className="mr-2 h-4 w-4" />
-                Log out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </div>
+          </div>
+
+          {/* Center section - Navigation */}
+          <div className="hidden md:flex items-center">
+            <DesktopNavItems />
+          </div>
+
+          {/* Right section - Dashboard, Notifications, Profile */}
+          <div className="flex items-center gap-3">
+            {isAuthenticated && (
+              <>
+                <Button asChild className="bg-red-500 hover:bg-red-600 text-white">
+                  <Link to={getDashboardRoute()}>Dashboard</Link>
+                </Button>
+                
+                <div className="w-px h-6 bg-gray-300" />
+                
+                <NotificationDropdown />
+              </>
+            )}
+
+            {/* Profile Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center gap-2 p-1">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src="/placeholder-avatar.jpg" />
+                    <AvatarFallback className="bg-red-500 text-white">
+                      {userRole === "superadmin" ? "WO" : <User className="h-4 w-4" />}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                  <Link to="/resident-profile" className="flex items-center">
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/settings" className="flex items-center">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Log out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
     </header>
