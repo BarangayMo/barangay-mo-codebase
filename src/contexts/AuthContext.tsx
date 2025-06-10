@@ -47,19 +47,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const isInitialMount = useRef(true);
   const redirectInProgress = useRef(false);
 
-  const getDashboardRoute = (role: UserRole) => {
-    switch (role) {
-      case "official":
-        return "/official-dashboard";
-      case "superadmin":
-        return "/admin/dashboard";
-      case "resident":
-        return "/resident-home";
-      default:
-        return "/";
-    }
-  };
-
   useEffect(() => {
     console.log("Setting up auth state change listener");
     
@@ -97,7 +84,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             
             // Redirect after successful login
             if (isSignInEvent && !redirectInProgress.current) {
-              const redirectPath = getDashboardRoute(role);
+              const redirectPath = role === 'official' 
+                ? '/official-dashboard' 
+                : role === 'superadmin' 
+                  ? '/admin' 
+                  : '/resident-home';
                 
               if (currentPath === '/login' || currentPath === '/register') {
                 console.log("Redirecting to:", redirectPath, "after login");
@@ -152,7 +143,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           
           // Redirect if user is on login/register page with existing session
           if ((currentPath === '/login' || currentPath === '/register') && !redirectInProgress.current) {
-            const redirectPath = getDashboardRoute(role);
+            const redirectPath = role === 'official' 
+              ? '/official-dashboard' 
+              : role === 'superadmin' 
+                ? '/admin' 
+                : '/resident-home';
             
             console.log("Redirecting existing session from login/register to:", redirectPath);
             redirectInProgress.current = true;

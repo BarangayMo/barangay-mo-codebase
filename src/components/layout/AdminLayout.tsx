@@ -1,9 +1,10 @@
+
 import { ReactNode, useEffect, useState } from "react";
 import { EnhancedSidebar } from "./EnhancedSidebar";
 import { cn } from "@/lib/utils";
 import { Helmet } from "react-helmet";
 import { Button } from "@/components/ui/button";
-import { Menu, ChevronLeft, ChevronRight, User, LogOut, Settings as SettingsIcon, MessageSquare, Search, Plus, Command, ChevronDown } from "lucide-react";
+import { Menu, ChevronLeft, ChevronRight, User, LogOut, Settings as SettingsIcon, Bell, MessageSquare, Search, Plus, Command, ChevronDown } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,7 +14,6 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CommandPalette } from "./CommandPalette";
-import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -251,7 +251,10 @@ export const AdminLayout = ({
                     </DropdownMenuContent>
                   </DropdownMenu>
                   
-                  <NotificationDropdown />
+                  <Button variant="ghost" size="icon" className="relative">
+                    <Bell className="h-5 w-5" />
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-medium text-white">3</span>
+                  </Button>
                   
                   <Button variant="ghost" size="icon" className="relative">
                     <MessageSquare className="h-5 w-5" />

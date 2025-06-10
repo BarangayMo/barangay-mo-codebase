@@ -360,51 +360,6 @@ export type Database = {
         }
         Relationships: []
       }
-      notifications: {
-        Row: {
-          category: string
-          created_at: string
-          id: string
-          message: string
-          metadata: Json | null
-          priority: string
-          read_at: string | null
-          recipient_id: string
-          sender_id: string | null
-          status: string
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          category?: string
-          created_at?: string
-          id?: string
-          message: string
-          metadata?: Json | null
-          priority?: string
-          read_at?: string | null
-          recipient_id: string
-          sender_id?: string | null
-          status?: string
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          category?: string
-          created_at?: string
-          id?: string
-          message?: string
-          metadata?: Json | null
-          priority?: string
-          read_at?: string | null
-          recipient_id?: string
-          sender_id?: string | null
-          status?: string
-          title?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       product_categories: {
         Row: {
           created_at: string
