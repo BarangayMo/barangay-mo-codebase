@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AdminLayout } from "@/components/layout/AdminLayout";
@@ -13,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { Save, ArrowLeft, Calendar, User, Building2, MapPin, DollarSign, Clock, Tag, Briefcase, Target, Users, Sparkles, Globe, Search, Eye } from "lucide-react";
+import { Save, ArrowLeft, Calendar, User, Building2, MapPin, DollarSign, Clock, Tag, Briefcase, Target, Users, Sparkles, Globe, Search, Eye, ChevronDown } from "lucide-react";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { MediaUpload } from "@/components/ui/media-upload";
 import { DraggableArrayInput } from "@/components/ui/draggable-array-input";
@@ -21,6 +20,7 @@ import { CharacterLimitedInput } from "@/components/ui/character-limited-input";
 import { JobMap } from "@/components/ui/job-map";
 import { AssigneeDialog } from "@/components/ui/assignee-dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 export default function JobEditPage() {
   const { id } = useParams();
@@ -29,7 +29,9 @@ export default function JobEditPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [autoSaveStatus, setAutoSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [assignedUser, setAssignedUser] = useState<any>(null);
+  const [seoOpen, setSeoOpen] = useState(false);
   const [job, setJob] = useState({
     title: "",
     description: "",
@@ -113,14 +115,15 @@ export default function JobEditPage() {
     fetchJob();
   }, [id, toast]);
 
-  // Auto-save functionality
+  // Auto-save as draft functionality
   useEffect(() => {
     const autoSaveInterval = setInterval(async () => {
       if (autoSaveStatus === 'unsaved') {
         setAutoSaveStatus('saving');
         try {
-          await handleSave(true); // silent save
+          await handleSaveDraft();
           setAutoSaveStatus('saved');
+          setLastSavedAt(new Date());
         } catch (error) {
           setAutoSaveStatus('unsaved');
         }
@@ -130,8 +133,40 @@ export default function JobEditPage() {
     return () => clearInterval(autoSaveInterval);
   }, [autoSaveStatus]);
 
-  const handleSave = async (silent = false) => {
-    if (!silent) setSaving(true);
+  const handleSaveDraft = async () => {
+    try {
+      const { error } = await supabase
+        .from('jobs')
+        .update({
+          title: job.title,
+          description: job.description,
+          company: job.company,
+          location: job.location,
+          category: job.category,
+          salary: job.salary,
+          experience: job.experience,
+          work_approach: job.work_approach,
+          responsibilities: job.responsibilities,
+          qualifications: job.qualifications,
+          skills: job.skills,
+          logo_url: job.logo_url,
+          slug: job.slug,
+          seo_title: job.seo_title,
+          seo_description: job.seo_description,
+          assigned_to: job.assigned_to,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+        
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving draft:', error);
+      throw error;
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
     try {
       const { error } = await supabase
         .from('jobs')
@@ -159,26 +194,21 @@ export default function JobEditPage() {
         
       if (error) throw error;
       
-      if (!silent) {
-        toast({
-          title: "Job updated successfully",
-          description: "The job posting has been saved",
-        });
-        
-        navigate('/admin/jobs/all');
-      }
+      toast({
+        title: "Job updated successfully",
+        description: "The job posting has been saved and published",
+      });
+      
+      navigate('/admin/jobs/all');
     } catch (error) {
       console.error('Error updating job:', error);
-      if (!silent) {
-        toast({
-          title: "Failed to update job",
-          description: "Please try again",
-          variant: "destructive"
-        });
-      }
-      throw error;
+      toast({
+        title: "Failed to update job",
+        description: "Please try again",
+        variant: "destructive"
+      });
     } finally {
-      if (!silent) setSaving(false);
+      setSaving(false);
     }
   };
 
@@ -244,7 +274,7 @@ export default function JobEditPage() {
             { label: "Edit Job" }
           ]}
           actionButton={{
-            label: saving ? "Saving..." : "Save Changes",
+            label: saving ? "Publishing..." : "Save & Publish",
             onClick: () => handleSave(),
             icon: <Save className="h-4 w-4" />,
             variant: "default",
@@ -261,19 +291,27 @@ export default function JobEditPage() {
         />
 
         {/* Auto-save status */}
-        <div className="mb-4 flex justify-end">
+        <div className="mb-4 flex justify-between items-center">
           <span className="text-xs text-muted-foreground">
-            {autoSaveStatus === 'saved' && "All changes saved"}
-            {autoSaveStatus === 'saving' && "Saving..."}
+            {autoSaveStatus === 'saved' && lastSavedAt && `Draft saved at ${lastSavedAt.toLocaleTimeString()}`}
+            {autoSaveStatus === 'saving' && "Saving draft..."}
             {autoSaveStatus === 'unsaved' && "Unsaved changes"}
           </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSaveDraft}
+            disabled={autoSaveStatus === 'saving'}
+          >
+            Save Draft
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Basic Information */}
-            <Card className="shadow-sm border-l-4 border-l-blue-500">
+            <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-blue-700">
                   <Building2 className="h-5 w-5" />
@@ -326,7 +364,7 @@ export default function JobEditPage() {
             </Card>
 
             {/* Job Details */}
-            <Card className="shadow-sm border-l-4 border-l-green-500">
+            <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-green-700">
                   <Tag className="h-5 w-5" />
@@ -398,58 +436,8 @@ export default function JobEditPage() {
               </CardContent>
             </Card>
 
-            {/* SEO Settings */}
-            <Card className="shadow-sm border-l-4 border-l-purple-500">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-purple-700">
-                  <Search className="h-5 w-5" />
-                  SEO Settings
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="slug" className="text-sm font-medium">URL Slug</Label>
-                  <Input
-                    id="slug"
-                    value={job.slug}
-                    onChange={(e) => handleInputChange('slug', e.target.value)}
-                    placeholder="job-title-slug"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    URL: /jobs/{job.slug || 'job-title-slug'}
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="seo_title" className="text-sm font-medium">SEO Title</Label>
-                  <CharacterLimitedInput
-                    id="seo_title"
-                    value={job.seo_title}
-                    onChange={(e) => handleInputChange('seo_title', e.target.value)}
-                    placeholder="SEO optimized title"
-                    maxLength={60}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="seo_description" className="text-sm font-medium">SEO Description</Label>
-                  <Textarea
-                    id="seo_description"
-                    value={job.seo_description}
-                    onChange={(e) => handleInputChange('seo_description', e.target.value)}
-                    placeholder="Brief description for search engines"
-                    rows={3}
-                    maxLength={160}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {job.seo_description.length}/160 characters
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Responsibilities */}
-            <Card className="shadow-sm border-l-4 border-l-orange-500">
+            <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-orange-700">
                   <Target className="h-5 w-5" />
@@ -467,7 +455,7 @@ export default function JobEditPage() {
             </Card>
 
             {/* Qualifications */}
-            <Card className="shadow-sm border-l-4 border-l-indigo-500">
+            <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-indigo-700">
                   <Briefcase className="h-5 w-5" />
@@ -485,7 +473,7 @@ export default function JobEditPage() {
             </Card>
 
             {/* Skills */}
-            <Card className="shadow-sm border-l-4 border-l-pink-500">
+            <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-pink-700">
                   <Sparkles className="h-5 w-5" />
@@ -501,12 +489,71 @@ export default function JobEditPage() {
                 />
               </CardContent>
             </Card>
+
+            {/* SEO Settings - Collapsible */}
+            <Card className="shadow-sm">
+              <Collapsible open={seoOpen} onOpenChange={setSeoOpen}>
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                    <CardTitle className="flex items-center justify-between text-purple-700">
+                      <div className="flex items-center gap-2">
+                        <Search className="h-5 w-5" />
+                        SEO Settings
+                      </div>
+                      <ChevronDown className={`h-4 w-4 transition-transform ${seoOpen ? 'rotate-180' : ''}`} />
+                    </CardTitle>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="space-y-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="slug" className="text-sm font-medium">URL Slug</Label>
+                      <Input
+                        id="slug"
+                        value={job.slug}
+                        onChange={(e) => handleInputChange('slug', e.target.value)}
+                        placeholder="job-title-slug"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        URL: /jobs/{job.slug || 'job-title-slug'}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="seo_title" className="text-sm font-medium">SEO Title</Label>
+                      <CharacterLimitedInput
+                        id="seo_title"
+                        value={job.seo_title}
+                        onChange={(e) => handleInputChange('seo_title', e.target.value)}
+                        placeholder="SEO optimized title"
+                        maxLength={60}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="seo_description" className="text-sm font-medium">SEO Description</Label>
+                      <Textarea
+                        id="seo_description"
+                        value={job.seo_description}
+                        onChange={(e) => handleInputChange('seo_description', e.target.value)}
+                        placeholder="Brief description for search engines"
+                        rows={3}
+                        maxLength={160}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {job.seo_description.length}/160 characters
+                      </p>
+                    </div>
+                  </CardContent>
+                </CollapsibleContent>
+              </Collapsible>
+            </Card>
           </div>
 
           {/* Right Column - Settings & Meta */}
           <div className="space-y-6">
             {/* Publish Status */}
-            <Card className="shadow-sm border-l-4 border-l-emerald-500">
+            <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-emerald-700">
                   <Calendar className="h-5 w-5" />
@@ -552,7 +599,7 @@ export default function JobEditPage() {
             </Card>
 
             {/* Job Thumbnail */}
-            <Card className="shadow-sm border-l-4 border-l-cyan-500">
+            <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-cyan-700">
                   <Building2 className="h-5 w-5" />
@@ -570,7 +617,7 @@ export default function JobEditPage() {
             </Card>
 
             {/* Assigned To */}
-            <Card className="shadow-sm border-l-4 border-l-violet-500">
+            <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-violet-700">
                   <Users className="h-5 w-5" />
@@ -604,7 +651,7 @@ export default function JobEditPage() {
 
             {/* Location Map */}
             {job.location && (
-              <Card className="shadow-sm border-l-4 border-l-red-500">
+              <Card className="shadow-sm">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-red-700">
                     <MapPin className="h-5 w-5" />
@@ -618,7 +665,7 @@ export default function JobEditPage() {
             )}
 
             {/* Job Summary */}
-            <Card className="shadow-sm border-l-4 border-l-gray-500">
+            <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-gray-700">
                   <Eye className="h-5 w-5" />

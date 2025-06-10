@@ -29,8 +29,13 @@ export const JobMap = ({ location, className }: JobMapProps) => {
           body: { keyName: 'MAPBOX_PUBLIC_TOKEN' }
         });
 
-        if (secretError || !data?.apiKey) {
+        if (secretError) {
+          console.error('Error fetching Mapbox API key:', secretError);
           throw new Error('Failed to retrieve Mapbox API key');
+        }
+
+        if (!data?.apiKey) {
+          throw new Error('Mapbox API key not found');
         }
 
         // Set Mapbox access token
@@ -42,7 +47,7 @@ export const JobMap = ({ location, className }: JobMapProps) => {
         );
         
         if (!geocodeResponse.ok) {
-          throw new Error('Failed to geocode location');
+          throw new Error(`Geocoding failed: ${geocodeResponse.status}`);
         }
 
         const geocodeData = await geocodeResponse.json();
@@ -71,14 +76,14 @@ export const JobMap = ({ location, className }: JobMapProps) => {
         );
 
         // Add marker
-        const marker = new mapboxgl.Marker({
+        new mapboxgl.Marker({
           color: '#ef4444'
         })
           .setLngLat([lng, lat])
           .addTo(map.current);
 
         // Add popup with location info
-        const popup = new mapboxgl.Popup({
+        new mapboxgl.Popup({
           offset: 25,
           closeButton: false,
           closeOnClick: false
@@ -95,6 +100,12 @@ export const JobMap = ({ location, className }: JobMapProps) => {
           .addTo(map.current);
 
         map.current.on('load', () => {
+          setLoading(false);
+        });
+
+        map.current.on('error', (e) => {
+          console.error('Map error:', e);
+          setError('Map failed to load');
           setLoading(false);
         });
 
