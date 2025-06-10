@@ -160,7 +160,7 @@ export default function JobEditPage() {
     }
   };
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string | string[] | boolean) => {
     setJob(prev => ({ ...prev, [field]: value }));
   };
 
