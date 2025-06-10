@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, User, Mail, Lock, MapPin, Phone, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, User, Mail, Lock, MapPin, Phone, Eye, EyeOff, Users, Shield } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
@@ -88,6 +88,42 @@ export default function Register() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-3">
+            <Label className="text-gray-700 font-medium">I am registering as a</Label>
+            <RadioGroup
+              defaultValue="resident"
+              name="role"
+              className="flex gap-3"
+              value={formData.role}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, role: value }))}
+            >
+              <div className="flex-1">
+                <div className="relative">
+                  <RadioGroupItem value="resident" id="resident-mobile" className="peer sr-only" />
+                  <Label 
+                    htmlFor="resident-mobile" 
+                    className="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 hover:border-gray-300 hover:bg-gray-50 font-medium group"
+                  >
+                    <Users className="w-6 h-6 mb-2 text-gray-400 group-peer-checked:text-blue-500" />
+                    <span className="text-sm">Resident</span>
+                  </Label>
+                </div>
+              </div>
+              <div className="flex-1">
+                <div className="relative">
+                  <RadioGroupItem value="official" id="official-mobile" className="peer sr-only" />
+                  <Label 
+                    htmlFor="official-mobile" 
+                    className="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-checked:text-emerald-700 hover:border-gray-300 hover:bg-gray-50 font-medium group"
+                  >
+                    <Shield className="w-6 h-6 mb-2 text-gray-400 group-peer-checked:text-emerald-500" />
+                    <span className="text-sm">Official</span>
+                  </Label>
+                </div>
+              </div>
+            </RadioGroup>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="fullname" className="text-gray-700">Full Name</Label>
             <div className="relative">
@@ -234,12 +270,10 @@ export default function Register() {
                   <RadioGroupItem value="resident" id="resident" className="peer sr-only" />
                   <Label 
                     htmlFor="resident" 
-                    className="flex items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 hover:border-gray-300 hover:bg-gray-50 font-medium"
+                    className="flex items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 hover:border-gray-300 hover:bg-gray-50 font-medium group"
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="w-4 h-4 border-2 border-current rounded-full flex items-center justify-center">
-                        <div className="w-2 h-2 bg-current rounded-full opacity-0 peer-checked:opacity-100 transition-opacity"></div>
-                      </div>
+                      <Users className="w-5 h-5 text-gray-400 group-peer-checked:text-blue-500" />
                       <span>Resident</span>
                     </div>
                   </Label>
@@ -250,12 +284,10 @@ export default function Register() {
                   <RadioGroupItem value="official" id="official" className="peer sr-only" />
                   <Label 
                     htmlFor="official" 
-                    className="flex items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-checked:text-emerald-700 hover:border-gray-300 hover:bg-gray-50 font-medium"
+                    className="flex items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-checked:text-emerald-700 hover:border-gray-300 hover:bg-gray-50 font-medium group"
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="w-4 h-4 border-2 border-current rounded-full flex items-center justify-center">
-                        <div className="w-2 h-2 bg-current rounded-full opacity-0 peer-checked:opacity-100 transition-opacity"></div>
-                      </div>
+                      <Shield className="w-5 h-5 text-gray-400 group-peer-checked:text-emerald-500" />
                       <span>Official</span>
                     </div>
                   </Label>
