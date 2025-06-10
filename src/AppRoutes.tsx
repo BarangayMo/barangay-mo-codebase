@@ -9,6 +9,7 @@ import Register from "@/pages/Register";
 import Verify from "@/pages/Verify";
 import AdminDashboard from "@/pages/AdminDashboard";
 import ResidentHome from "@/pages/ResidentHome";
+import OfficialsDashboard from "@/pages/OfficialsDashboard";
 import SettingsPage from "@/pages/admin/SettingsPage";
 import MediaLibraryPage from "@/pages/admin/MediaLibraryPage";
 import MessagesPage from "@/pages/admin/MessagesPage";
@@ -22,6 +23,7 @@ const AppRoutes = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/verify" element={<Verify />} />
       <Route path="/resident-home" element={<ResidentHome />} />
+      <Route path="/official-dashboard" element={<OfficialsDashboard />} />
       
       {/* Admin routes */}
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
