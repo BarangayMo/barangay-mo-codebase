@@ -2,6 +2,7 @@
 import {
   Routes,
   Route,
+  Navigate,
 } from "react-router-dom";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
@@ -49,6 +50,7 @@ const AppRoutes = () => {
       <Route path="/official-dashboard" element={<OfficialsDashboard />} />
       
       {/* Admin routes */}
+      <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
       <Route path="/admin/settings" element={<SettingsPage />} />
       <Route path="/admin/media-library" element={<MediaLibraryPage />} />

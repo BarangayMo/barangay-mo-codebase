@@ -30,7 +30,7 @@ export default function MPIN() {
         navigate("/official-dashboard");
         break;
       case "superadmin":
-        navigate("/admin");
+        navigate("/admin/dashboard");
         break;
       case "resident":
       default:
