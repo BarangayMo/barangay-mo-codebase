@@ -12,12 +12,12 @@ export interface Notification {
   status: string;
   type?: string;
   action_url?: string;
-  is_archived: boolean;
   created_at: string;
   read_at?: string;
   sender_id?: string;
   recipient_id: string;
   metadata?: any;
+  updated_at: string;
 }
 
 export const useNotifications = () => {
@@ -33,7 +33,6 @@ export const useNotifications = () => {
         .from('notifications')
         .select('*')
         .eq('recipient_id', user.id)
-        .eq('is_archived', false)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -67,7 +66,7 @@ export const useNotifications = () => {
     mutationFn: async (notificationId: string) => {
       const { error } = await supabase
         .from('notifications')
-        .update({ is_archived: true })
+        .update({ status: 'archived' })
         .eq('id', notificationId);
 
       if (error) throw error;

@@ -164,17 +164,4 @@ export const Header = () => {
       </div>
     </header>
   );
-
-  function getDashboardRoute() {
-    switch(userRole) {
-      case "official":
-        return "/official-dashboard";
-      case "superadmin":
-        return "/admin";
-      case "resident":
-        return "/resident-home";
-      default:
-        return "/";
-    }
-  }
-}
+};
