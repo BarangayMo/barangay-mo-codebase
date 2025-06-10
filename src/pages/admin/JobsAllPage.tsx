@@ -13,6 +13,7 @@ import { MapPin, Building, Search, Star, Edit, Briefcase, Calendar, DollarSign, 
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { JobMap } from "@/components/ui/job-map";
+
 interface Job {
   id: string;
   title: string;
@@ -32,15 +33,14 @@ interface Job {
   job_code: string;
   logo_url?: string;
 }
+
 export default function JobsAllPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const navigate = useNavigate();
 
   // Fetch jobs from Supabase
@@ -71,19 +71,33 @@ export default function JobsAllPage() {
     };
     fetchJobs();
   }, [toast]);
+  
   const getStatusColor = (isOpen: boolean) => {
-    return isOpen ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800";
+    return isOpen ? "bg-green-100 text-green-800 border-green-200" : "bg-gray-100 text-gray-800 border-gray-200";
   };
+
   const getCategoryColor = (category: string) => {
     const colors = {
-      'Technology': 'bg-blue-100 text-blue-800',
-      'Healthcare': 'bg-red-100 text-red-800',
-      'Education': 'bg-purple-100 text-purple-800',
-      'Finance': 'bg-green-100 text-green-800',
-      'Marketing': 'bg-orange-100 text-orange-800'
+      'Technology': 'bg-blue-100 text-blue-800 border-blue-200',
+      'Healthcare': 'bg-red-100 text-red-800 border-red-200',
+      'Education': 'bg-purple-100 text-purple-800 border-purple-200',
+      'Finance': 'bg-green-100 text-green-800 border-green-200',
+      'Marketing': 'bg-orange-100 text-orange-800 border-orange-200',
+      'Customer Service': 'bg-pink-100 text-pink-800 border-pink-200',
+      'Creative': 'bg-indigo-100 text-indigo-800 border-indigo-200'
     };
-    return colors[category] || 'bg-gray-100 text-gray-800';
+    return colors[category] || 'bg-gray-100 text-gray-800 border-gray-200';
   };
+
+  const getWorkApproachColor = (workApproach: string) => {
+    const colors = {
+      'Remote': 'bg-blue-100 text-blue-800 border-blue-200',
+      'On-site': 'bg-orange-100 text-orange-800 border-orange-200',
+      'Hybrid': 'bg-purple-100 text-purple-800 border-purple-200'
+    };
+    return colors[workApproach] || 'bg-gray-100 text-gray-800 border-gray-200';
+  };
+
   const handleJobSelect = (job: Job) => {
     setSelectedJob(job);
   };
@@ -195,7 +209,7 @@ export default function JobsAllPage() {
                         {getTabJobs().map(job => <TableRow key={job.id} className={`cursor-pointer hover:bg-gray-50 ${selectedJob?.id === job.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''}`} onClick={() => handleJobSelect(job)}>
                             <TableCell className="flex items-center gap-3">
                               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                                {job.logo_url ? <img src={job.logo_url} alt="Company logo" className="w-full h-full object-cover rounded-lg" /> : <Briefcase className="h-5 w-5 text-white" />}
+                                {job.logo_url ? <img src={job.logo_url} alt="Company logo" className="w-full h-full object-cover rounded-lg" /> : <Building className="h-5 w-5 text-white" />}
                               </div>
                               <div>
                                 <div className="font-medium text-sm">{job.title}</div>
@@ -204,15 +218,22 @@ export default function JobsAllPage() {
                               </div>
                             </TableCell>
                             <TableCell>
-                              <Badge className={`text-xs ${getCategoryColor(job.category)}`}>
+                              <Badge className={`text-xs border ${getCategoryColor(job.category)}`}>
                                 {job.category}
                               </Badge>
                             </TableCell>
                             <TableCell className="text-sm">{job.location}</TableCell>
                             <TableCell>
-                              <Badge className={`text-xs ${getStatusColor(job.is_open)}`}>
-                                {job.is_open ? 'Open' : 'Closed'}
-                              </Badge>
+                              <div className="flex flex-col gap-1">
+                                <Badge className={`text-xs border ${getStatusColor(job.is_open)}`}>
+                                  {job.is_open ? 'Open' : 'Closed'}
+                                </Badge>
+                                {job.work_approach && (
+                                  <Badge className={`text-xs border ${getWorkApproachColor(job.work_approach)}`}>
+                                    {job.work_approach}
+                                  </Badge>
+                                )}
+                              </div>
                             </TableCell>
                             <TableCell className="text-sm text-gray-500">
                               {new Date(job.created_at).toLocaleDateString()}
@@ -233,7 +254,7 @@ export default function JobsAllPage() {
                 <div className="flex items-start justify-between mb-6">
                   <div className="flex items-start gap-4 flex-1">
                     <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-md">
-                      {selectedJob.logo_url ? <img src={selectedJob.logo_url} alt="Company logo" className="w-full h-full object-cover rounded-lg" /> : <Briefcase className="h-8 w-8 text-white" />}
+                      {selectedJob.logo_url ? <img src={selectedJob.logo_url} alt="Company logo" className="w-full h-full object-cover rounded-lg" /> : <Building className="h-8 w-8 text-white" />}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
@@ -255,16 +276,19 @@ export default function JobsAllPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge variant={selectedJob.is_open ? "default" : "secondary"}>
+                        <Badge className={`border ${getStatusColor(selectedJob.is_open)}`}>
                           {selectedJob.is_open ? "Open" : "Closed"}
                         </Badge>
-                        {selectedJob.work_approach && <Badge variant="outline">{selectedJob.work_approach}</Badge>}
+                        {selectedJob.work_approach && <Badge className={`border ${getWorkApproachColor(selectedJob.work_approach)}`}>{selectedJob.work_approach}</Badge>}
                       </div>
                     </div>
                   </div>
                   
-                  {/* Edit Button - Better positioned */}
-                  <Button onClick={() => handleEditJob(selectedJob.id)} className="flex items-center gap-2 ml-4" variant="outline">
+                  {/* Edit Button - Blue styling */}
+                  <Button 
+                    onClick={() => handleEditJob(selectedJob.id)} 
+                    className="flex items-center gap-2 ml-4 bg-blue-600 hover:bg-blue-700 text-white"
+                  >
                     <Edit className="h-4 w-4" />
                     Edit
                   </Button>
@@ -347,14 +371,11 @@ export default function JobsAllPage() {
                     </div>}
                 </div>
               </div> : <div className="p-6 text-center text-gray-500">
-                <Briefcase className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <Building className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                 <p>Select a job to view details</p>
               </div>}
           </div>
         </div>
-
-        {/* Jobs Selection Grid - Simplified */}
-        
       </div>
     </AdminLayout>;
 }
