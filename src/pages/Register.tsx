@@ -220,22 +220,46 @@ export default function Register() {
         <p className="text-gray-500 mb-6">Join your barangay's digital community</p>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label className="text-gray-700">I am registering as a</Label>
+          <div className="space-y-3">
+            <Label className="text-gray-700 font-medium">I am registering as a</Label>
             <RadioGroup
               defaultValue="resident"
               name="role"
-              className="flex gap-4"
+              className="flex gap-3"
               value={formData.role}
               onValueChange={(value) => setFormData(prev => ({ ...prev, role: value }))}
             >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="resident" id="resident" />
-                <Label htmlFor="resident" className="cursor-pointer">Resident</Label>
+              <div className="flex-1">
+                <div className="relative">
+                  <RadioGroupItem value="resident" id="resident" className="peer sr-only" />
+                  <Label 
+                    htmlFor="resident" 
+                    className="flex items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 hover:border-gray-300 hover:bg-gray-50 font-medium"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-4 h-4 border-2 border-current rounded-full flex items-center justify-center">
+                        <div className="w-2 h-2 bg-current rounded-full opacity-0 peer-checked:opacity-100 transition-opacity"></div>
+                      </div>
+                      <span>Resident</span>
+                    </div>
+                  </Label>
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="official" id="official" />
-                <Label htmlFor="official" className="cursor-pointer">Official</Label>
+              <div className="flex-1">
+                <div className="relative">
+                  <RadioGroupItem value="official" id="official" className="peer sr-only" />
+                  <Label 
+                    htmlFor="official" 
+                    className="flex items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-checked:text-emerald-700 hover:border-gray-300 hover:bg-gray-50 font-medium"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-4 h-4 border-2 border-current rounded-full flex items-center justify-center">
+                        <div className="w-2 h-2 bg-current rounded-full opacity-0 peer-checked:opacity-100 transition-opacity"></div>
+                      </div>
+                      <span>Official</span>
+                    </div>
+                  </Label>
+                </div>
               </div>
             </RadioGroup>
           </div>
