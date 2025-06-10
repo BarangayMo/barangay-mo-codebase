@@ -1,9 +1,10 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, User, Mail, Lock, MapPin, Phone, Eye, EyeOff, Users, Shield } from "lucide-react";
+import { ArrowLeft, Mail, Lock, MapPin, Eye, EyeOff, Users, Shield } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
@@ -13,9 +14,6 @@ export default function Register() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    firstName: "",
-    lastName: "",
-    phoneNumber: "",
     barangay: "",
     role: "resident"
   });
@@ -35,9 +33,6 @@ export default function Register() {
         formData.email,
         formData.password,
         {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          phoneNumber: formData.phoneNumber,
           barangay: formData.barangay,
           role: formData.role
         }
@@ -50,7 +45,7 @@ export default function Register() {
           description: error.message
         });
       } else {
-        navigate("/phone", { state: { phoneNumber: formData.phoneNumber } });
+        navigate("/phone");
       }
     } catch (err) {
       toast({
@@ -102,9 +97,9 @@ export default function Register() {
                   <RadioGroupItem value="resident" id="resident-mobile" className="peer sr-only" />
                   <Label 
                     htmlFor="resident-mobile" 
-                    className="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-resident peer-checked:bg-resident/10 peer-checked:text-resident hover:border-gray-300 hover:bg-gray-50 font-medium group"
+                    className="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 hover:border-gray-300 hover:bg-gray-50 font-medium group"
                   >
-                    <Users className="w-6 h-6 mb-2 text-gray-400 peer-checked:text-resident transition-colors duration-200" />
+                    <Users className="w-6 h-6 mb-2 text-gray-400 transition-colors duration-200 group-has-[:checked]:text-blue-500" />
                     <span className="text-sm">Resident</span>
                   </Label>
                 </div>
@@ -114,30 +109,14 @@ export default function Register() {
                   <RadioGroupItem value="official" id="official-mobile" className="peer sr-only" />
                   <Label 
                     htmlFor="official-mobile" 
-                    className="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-official peer-checked:bg-official/10 peer-checked:text-official hover:border-gray-300 hover:bg-gray-50 font-medium group"
+                    className="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-red-500 peer-checked:bg-red-50 peer-checked:text-red-700 hover:border-gray-300 hover:bg-gray-50 font-medium group"
                   >
-                    <Shield className="w-6 h-6 mb-2 text-gray-400 peer-checked:text-official transition-colors duration-200" />
+                    <Shield className="w-6 h-6 mb-2 text-gray-400 transition-colors duration-200 group-has-[:checked]:text-red-500" />
                     <span className="text-sm">Official</span>
                   </Label>
                 </div>
               </div>
             </RadioGroup>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="fullname" className="text-gray-700">Full Name</Label>
-            <div className="relative">
-              <Input
-                id="fullname"
-                type="text"
-                placeholder="Juan Dela Cruz"
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleInputChange}
-                className="pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
-              />
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-            </div>
           </div>
           
           <div className="space-y-2">
@@ -153,22 +132,6 @@ export default function Register() {
                 className="pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
               />
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="phone" className="text-gray-700">Phone Number</Label>
-            <div className="relative">
-              <Input
-                id="phone"
-                type="tel"
-                name="phoneNumber"
-                value={formData.phoneNumber}
-                onChange={handleInputChange}
-                placeholder="+63 999 123 4567"
-                className="pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
-              />
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             </div>
           </div>
           
@@ -270,10 +233,10 @@ export default function Register() {
                   <RadioGroupItem value="resident" id="resident" className="peer sr-only" />
                   <Label 
                     htmlFor="resident" 
-                    className="flex items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-resident peer-checked:bg-resident/10 peer-checked:text-resident hover:border-gray-300 hover:bg-gray-50 font-medium group"
+                    className="flex items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 hover:border-gray-300 hover:bg-gray-50 font-medium group"
                   >
                     <div className="flex items-center space-x-3">
-                      <Users className="w-5 h-5 text-gray-400 peer-checked:text-resident transition-colors duration-200" />
+                      <Users className="w-5 h-5 text-gray-400 transition-colors duration-200 group-has-[:checked]:text-blue-500" />
                       <span>Resident</span>
                     </div>
                   </Label>
@@ -284,32 +247,16 @@ export default function Register() {
                   <RadioGroupItem value="official" id="official" className="peer sr-only" />
                   <Label 
                     htmlFor="official" 
-                    className="flex items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-official peer-checked:bg-official/10 peer-checked:text-official hover:border-gray-300 hover:bg-gray-50 font-medium group"
+                    className="flex items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-red-500 peer-checked:bg-red-50 peer-checked:text-red-700 hover:border-gray-300 hover:bg-gray-50 font-medium group"
                   >
                     <div className="flex items-center space-x-3">
-                      <Shield className="w-5 h-5 text-gray-400 peer-checked:text-official transition-colors duration-200" />
+                      <Shield className="w-5 h-5 text-gray-400 transition-colors duration-200 group-has-[:checked]:text-red-500" />
                       <span>Official</span>
                     </div>
                   </Label>
                 </div>
               </div>
             </RadioGroup>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="fullname-desktop" className="text-gray-700">Full Name</Label>
-            <div className="relative">
-              <Input
-                id="fullname-desktop"
-                type="text"
-                placeholder="Juan Dela Cruz"
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleInputChange}
-                className="pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
-              />
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-            </div>
           </div>
           
           <div className="space-y-2">
@@ -325,22 +272,6 @@ export default function Register() {
                 className="pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
               />
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="phone-desktop" className="text-gray-700">Phone Number</Label>
-            <div className="relative">
-              <Input
-                id="phone-desktop"
-                type="tel"
-                name="phoneNumber"
-                value={formData.phoneNumber}
-                onChange={handleInputChange}
-                placeholder="+63 999 123 4567"
-                className="pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
-              />
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             </div>
           </div>
           
