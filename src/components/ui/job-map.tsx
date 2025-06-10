@@ -10,7 +10,7 @@ interface JobMapProps {
   className?: string;
 }
 
-// Replace this with your actual Mapbox public token
+// Replace this with your actual Mapbox public token from https://mapbox.com
 const MAPBOX_PUBLIC_TOKEN = 'pk.eyJ1Ijoic21hcnRiYXJhbmdheS1tYXBzIiwiYSI6ImNtNGpqN2xzNDA4ZnAybXIzN3FsbXA1MmsifQ.example_token_here';
 
 export const JobMap = ({ location, className }: JobMapProps) => {
@@ -20,6 +20,34 @@ export const JobMap = ({ location, className }: JobMapProps) => {
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 3;
+
+  const validateToken = () => {
+    if (!MAPBOX_PUBLIC_TOKEN || MAPBOX_PUBLIC_TOKEN.includes('example_token_here')) {
+      throw new Error('Invalid Mapbox token. Please replace with your actual public token from https://mapbox.com');
+    }
+  };
+
+  const waitForContainer = (): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const checkContainer = () => {
+        if (!mapContainer.current) {
+          reject(new Error('Map container element not found'));
+          return;
+        }
+
+        const rect = mapContainer.current.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          console.log('🗺️ JobMap: Container ready with dimensions:', rect.width, 'x', rect.height);
+          resolve();
+        } else {
+          console.log('🗺️ JobMap: Container not ready, retrying...');
+          setTimeout(checkContainer, 100);
+        }
+      };
+
+      checkContainer();
+    });
+  };
 
   const initializeMap = async (attempt = 1) => {
     console.log(`🗺️ JobMap: Starting map initialization (attempt ${attempt})`);
@@ -32,23 +60,27 @@ export const JobMap = ({ location, className }: JobMapProps) => {
       return;
     }
 
-    if (map.current) {
-      console.log('🗺️ JobMap: Map already exists, cleaning up first');
-      map.current.remove();
-      map.current = null;
-    }
-
     try {
       setLoading(true);
       setError(null);
 
-      // Wait for container to be ready
-      if (!mapContainer.current) {
-        throw new Error('Map container not available');
+      // Validate token first
+      validateToken();
+      console.log('✅ JobMap: Token validation passed');
+
+      // Wait for container to be ready with proper dimensions
+      await waitForContainer();
+
+      // Clean up existing map
+      if (map.current) {
+        console.log('🗺️ JobMap: Cleaning up existing map');
+        map.current.remove();
+        map.current = null;
       }
 
       // Set Mapbox access token
       mapboxgl.accessToken = MAPBOX_PUBLIC_TOKEN;
+      console.log('🗺️ JobMap: Mapbox token set');
 
       // Geocode the location
       console.log('🌍 JobMap: Starting geocoding for:', location);
@@ -59,8 +91,19 @@ export const JobMap = ({ location, className }: JobMapProps) => {
 
       if (!geocodeResponse.ok) {
         const errorText = await geocodeResponse.text();
-        console.error('❌ JobMap: Geocoding failed:', geocodeResponse.status, errorText);
-        throw new Error(`Geocoding failed: ${geocodeResponse.status} - ${errorText}`);
+        console.error('❌ JobMap: Geocoding failed:', {
+          status: geocodeResponse.status,
+          statusText: geocodeResponse.statusText,
+          body: errorText
+        });
+        
+        if (geocodeResponse.status === 401) {
+          throw new Error('Invalid Mapbox token. Please check your token at https://mapbox.com');
+        } else if (geocodeResponse.status === 403) {
+          throw new Error('Mapbox token does not have permission for geocoding');
+        } else {
+          throw new Error(`Geocoding failed: ${geocodeResponse.status} - ${errorText}`);
+        }
       }
 
       const geocodeData = await geocodeResponse.json();
@@ -77,11 +120,26 @@ export const JobMap = ({ location, className }: JobMapProps) => {
       // Initialize map
       console.log('🗺️ JobMap: Creating Mapbox map instance...');
       map.current = new mapboxgl.Map({
-        container: mapContainer.current,
+        container: mapContainer.current!,
         style: 'mapbox://styles/mapbox/streets-v12',
         center: [lng, lat],
         zoom: 14,
         attributionControl: false
+      });
+
+      console.log('🗺️ JobMap: Map instance created, waiting for load event...');
+
+      // Set up map event handlers
+      map.current.on('load', () => {
+        console.log('✅ JobMap: Map loaded successfully');
+        setLoading(false);
+        setRetryCount(0);
+      });
+
+      map.current.on('error', (e) => {
+        console.error('❌ JobMap: Map error event:', e);
+        const errorMessage = e.error?.message || 'Unknown map error';
+        throw new Error(`Map failed to load: ${errorMessage}`);
       });
 
       // Add navigation controls
@@ -93,14 +151,16 @@ export const JobMap = ({ location, className }: JobMapProps) => {
       );
 
       // Add marker
-      new mapboxgl.Marker({
+      const marker = new mapboxgl.Marker({
         color: '#ef4444'
       })
         .setLngLat([lng, lat])
         .addTo(map.current);
 
+      console.log('📍 JobMap: Marker added');
+
       // Add popup
-      new mapboxgl.Popup({
+      const popup = new mapboxgl.Popup({
         offset: 25,
         closeButton: false,
         closeOnClick: false
@@ -116,18 +176,8 @@ export const JobMap = ({ location, className }: JobMapProps) => {
         `)
         .addTo(map.current);
 
-      map.current.on('load', () => {
-        console.log('✅ JobMap: Map loaded successfully');
-        setLoading(false);
-        setRetryCount(0);
-      });
-
-      map.current.on('error', (e) => {
-        console.error('❌ JobMap: Map error:', e);
-        throw new Error(`Map failed to load: ${e.error?.message || 'Unknown error'}`);
-      });
-
-      console.log('🗺️ JobMap: Map initialization completed');
+      console.log('💬 JobMap: Popup added');
+      console.log('🗺️ JobMap: Map initialization completed successfully');
 
     } catch (err) {
       console.error('❌ JobMap: Map initialization error:', err);
@@ -135,12 +185,13 @@ export const JobMap = ({ location, className }: JobMapProps) => {
       
       // Retry logic
       if (attempt < maxRetries && retryCount < maxRetries) {
-        console.log(`🔄 JobMap: Retrying in 3 seconds (attempt ${attempt + 1}/${maxRetries})`);
+        console.log(`🔄 JobMap: Retrying in 2 seconds (attempt ${attempt + 1}/${maxRetries})`);
         setRetryCount(attempt);
         setTimeout(() => {
           initializeMap(attempt + 1);
-        }, 3000);
+        }, 2000);
       } else {
+        console.error('❌ JobMap: Max retries reached, giving up');
         setError(errorMessage);
         setLoading(false);
       }
@@ -149,16 +200,17 @@ export const JobMap = ({ location, className }: JobMapProps) => {
 
   useEffect(() => {
     if (location && !map.current) {
+      // Small delay to ensure DOM is ready
       const timer = setTimeout(() => {
         initializeMap();
-      }, 100);
+      }, 50);
       
       return () => clearTimeout(timer);
     }
 
     return () => {
       if (map.current) {
-        console.log('🗺️ JobMap: Cleaning up map instance');
+        console.log('🗺️ JobMap: Cleaning up map instance in useEffect');
         map.current.remove();
         map.current = null;
       }
@@ -166,6 +218,7 @@ export const JobMap = ({ location, className }: JobMapProps) => {
   }, [location]);
 
   const handleRetry = () => {
+    console.log('🔄 JobMap: Manual retry triggered');
     setRetryCount(0);
     setError(null);
     if (map.current) {
