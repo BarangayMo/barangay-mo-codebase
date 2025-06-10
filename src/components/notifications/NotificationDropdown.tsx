@@ -1,13 +1,14 @@
 
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { Bell, Search, Filter, CheckCircle, Clock, AlertTriangle, Info, X } from 'lucide-react';
+import { Bell, Search, CheckCircle, Clock, AlertTriangle, Info, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import type { Notification } from '@/hooks/useNotifications';
@@ -20,6 +21,8 @@ const getCategoryIcon = (category: string) => {
   switch (category) {
     case 'system':
       return <Info className="h-4 w-4 text-blue-500" />;
+    case 'registration':
+      return <CheckCircle className="h-4 w-4 text-green-500" />;
     case 'task':
     case 'deadline':
       return <AlertTriangle className="h-4 w-4 text-orange-500" />;
@@ -103,6 +106,7 @@ const NotificationItem = ({ notification, onMarkAsRead }: { notification: Notifi
 
 export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const { userRole } = useAuth();
   const {
     notifications,
     isLoading,
@@ -112,7 +116,21 @@ export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => 
     isMarkingAllAsRead
   } = useNotifications();
 
-  const filteredNotifications = notifications.filter(notification =>
+  // Filter notifications based on user role
+  const roleBasedNotifications = notifications.filter(notification => {
+    switch (userRole) {
+      case 'superadmin':
+        return ['registration', 'message', 'approval', 'system'].includes(notification.category);
+      case 'official':
+        return ['task', 'deadline', 'milestone', 'message'].includes(notification.category);
+      case 'resident':
+        return ['approval', 'message', 'system'].includes(notification.category);
+      default:
+        return true;
+    }
+  });
+
+  const filteredNotifications = roleBasedNotifications.filter(notification =>
     notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     notification.message.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -120,9 +138,8 @@ export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => 
   const unreadNotifications = filteredNotifications.filter(n => n.status === 'unread');
   const urgentNotifications = filteredNotifications.filter(n => n.priority === 'urgent');
   const normalNotifications = filteredNotifications.filter(n => n.priority === 'normal');
-  const resolvedNotifications = filteredNotifications.filter(n => n.status === 'read');
 
-  // Group notifications by date
+  // Group notifications by date for "All" tab
   const today = new Date();
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
@@ -135,12 +152,6 @@ export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => 
   const yesterdayNotifications = filteredNotifications.filter(n => {
     const notifDate = new Date(n.created_at);
     return notifDate.toDateString() === yesterday.toDateString();
-  });
-
-  const olderNotifications = filteredNotifications.filter(n => {
-    const notifDate = new Date(n.created_at);
-    return notifDate.toDateString() !== today.toDateString() && 
-           notifDate.toDateString() !== yesterday.toDateString();
   });
 
   return (
@@ -178,9 +189,6 @@ export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => 
               Mark all as read
             </Button>
           )}
-          <Button asChild variant="ghost" size="sm" className="text-xs text-gray-600 hover:text-gray-700 h-7 px-2">
-            <Link to="/notifications">View All</Link>
-          </Button>
         </div>
       </div>
 
@@ -196,117 +204,93 @@ export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => 
           <TabsTrigger value="normal" className="flex-1 text-xs h-8">
             Normal ({normalNotifications.length})
           </TabsTrigger>
-          <TabsTrigger value="resolved" className="flex-1 text-xs h-8">
-            Resolved ({resolvedNotifications.length})
-          </TabsTrigger>
         </TabsList>
 
-        <ScrollArea className="h-96">
-          <TabsContent value="all" className="m-0">
-            {/* Today */}
-            {todayNotifications.length > 0 && (
-              <div>
-                <div className="px-4 py-2 bg-gray-50 border-b">
-                  <span className="text-xs font-medium text-gray-700">Today</span>
+        <div className="max-h-80">
+          <ScrollArea className="h-80">
+            <TabsContent value="all" className="m-0">
+              {/* Today */}
+              {todayNotifications.length > 0 && (
+                <div>
+                  <div className="px-4 py-2 bg-gray-50 border-b">
+                    <span className="text-xs font-medium text-gray-700">Today</span>
+                  </div>
+                  {todayNotifications.slice(0, 3).map((notification) => (
+                    <NotificationItem
+                      key={notification.id}
+                      notification={notification}
+                      onMarkAsRead={markAsRead}
+                    />
+                  ))}
                 </div>
-                {todayNotifications.map((notification) => (
-                  <NotificationItem
-                    key={notification.id}
-                    notification={notification}
-                    onMarkAsRead={markAsRead}
-                  />
-                ))}
-              </div>
-            )}
+              )}
 
-            {/* Yesterday */}
-            {yesterdayNotifications.length > 0 && (
-              <div>
-                <div className="px-4 py-2 bg-gray-50 border-b">
-                  <span className="text-xs font-medium text-gray-700">Yesterday</span>
+              {/* Yesterday */}
+              {yesterdayNotifications.length > 0 && (
+                <div>
+                  <div className="px-4 py-2 bg-gray-50 border-b">
+                    <span className="text-xs font-medium text-gray-700">Yesterday</span>
+                  </div>
+                  {yesterdayNotifications.slice(0, 3).map((notification) => (
+                    <NotificationItem
+                      key={notification.id}
+                      notification={notification}
+                      onMarkAsRead={markAsRead}
+                    />
+                  ))}
                 </div>
-                {yesterdayNotifications.map((notification) => (
-                  <NotificationItem
-                    key={notification.id}
-                    notification={notification}
-                    onMarkAsRead={markAsRead}
-                  />
-                ))}
-              </div>
-            )}
+              )}
 
-            {/* Older */}
-            {olderNotifications.length > 0 && (
-              <div>
-                <div className="px-4 py-2 bg-gray-50 border-b">
-                  <span className="text-xs font-medium text-gray-700">Earlier</span>
+              {filteredNotifications.length === 0 && (
+                <div className="p-8 text-center">
+                  <Bell className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">No notifications found</p>
                 </div>
-                {olderNotifications.map((notification) => (
-                  <NotificationItem
-                    key={notification.id}
-                    notification={notification}
-                    onMarkAsRead={markAsRead}
-                  />
-                ))}
-              </div>
-            )}
+              )}
+            </TabsContent>
 
-            {filteredNotifications.length === 0 && (
-              <div className="p-8 text-center">
-                <Bell className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">No notifications found</p>
-              </div>
-            )}
-          </TabsContent>
+            <TabsContent value="urgent" className="m-0">
+              {urgentNotifications.slice(0, 5).map((notification) => (
+                <NotificationItem
+                  key={notification.id}
+                  notification={notification}
+                  onMarkAsRead={markAsRead}
+                />
+              ))}
+              {urgentNotifications.length === 0 && (
+                <div className="p-8 text-center">
+                  <AlertTriangle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">No urgent notifications</p>
+                </div>
+              )}
+            </TabsContent>
 
-          <TabsContent value="urgent" className="m-0">
-            {urgentNotifications.map((notification) => (
-              <NotificationItem
-                key={notification.id}
-                notification={notification}
-                onMarkAsRead={markAsRead}
-              />
-            ))}
-            {urgentNotifications.length === 0 && (
-              <div className="p-8 text-center">
-                <AlertTriangle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">No urgent notifications</p>
-              </div>
-            )}
-          </TabsContent>
+            <TabsContent value="normal" className="m-0">
+              {normalNotifications.slice(0, 5).map((notification) => (
+                <NotificationItem
+                  key={notification.id}
+                  notification={notification}
+                  onMarkAsRead={markAsRead}
+                />
+              ))}
+              {normalNotifications.length === 0 && (
+                <div className="p-8 text-center">
+                  <Info className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">No normal notifications</p>
+                </div>
+              )}
+            </TabsContent>
+          </ScrollArea>
+        </div>
 
-          <TabsContent value="normal" className="m-0">
-            {normalNotifications.map((notification) => (
-              <NotificationItem
-                key={notification.id}
-                notification={notification}
-                onMarkAsRead={markAsRead}
-              />
-            ))}
-            {normalNotifications.length === 0 && (
-              <div className="p-8 text-center">
-                <Info className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">No normal notifications</p>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="resolved" className="m-0">
-            {resolvedNotifications.map((notification) => (
-              <NotificationItem
-                key={notification.id}
-                notification={notification}
-                onMarkAsRead={markAsRead}
-              />
-            ))}
-            {resolvedNotifications.length === 0 && (
-              <div className="p-8 text-center">
-                <CheckCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">No resolved notifications</p>
-              </div>
-            )}
-          </TabsContent>
-        </ScrollArea>
+        {/* View All Button - Full Width at Bottom */}
+        <div className="p-3 border-t bg-gray-50">
+          <Button asChild className="w-full" variant="default" size="sm">
+            <Link to="/notifications" onClick={onClose}>
+              View All Notifications
+            </Link>
+          </Button>
+        </div>
       </Tabs>
     </div>
   );
