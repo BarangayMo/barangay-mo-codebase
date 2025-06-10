@@ -4,7 +4,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useAuth } from "@/contexts/AuthContext";
-import { CheckCircle, Archive, Loader2, Search, Filter, Bell, AlertTriangle, Info, Clock, Calendar, User, Eye, MoreHorizontal, UserCheck, FileText, MessageSquare, Users } from "lucide-react";
+import { CheckCircle, Archive, Loader2, Search, Filter, Bell, AlertTriangle, Info, Clock, Calendar, User, Eye, MoreHorizontal, UserCheck, FileText, MessageSquare, Users, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -105,90 +105,203 @@ const getActionButtons = (notification: Notification) => {
   return buttons;
 };
 
-const NotificationCard = ({ 
+const NotificationListItem = ({ 
   notification, 
   onMarkAsRead, 
-  onArchive 
+  onArchive,
+  isSelected,
+  onSelect
 }: { 
   notification: Notification; 
   onMarkAsRead: (id: string) => void; 
   onArchive: (id: string) => void; 
+  isSelected: boolean;
+  onSelect: (notification: Notification) => void;
 }) => {
   const isUnread = notification.status === 'unread';
-  const actionButtons = getActionButtons(notification);
   
   return (
-    <Card className={cn(
-      "p-4 hover:shadow-md transition-shadow",
-      isUnread && "bg-blue-50/50 border-blue-200"
-    )}>
-      <div className="flex items-start gap-4">
+    <div 
+      className={cn(
+        "p-4 border-b cursor-pointer transition-colors hover:bg-gray-50",
+        isUnread && "bg-blue-50/50",
+        isSelected && "bg-blue-100 border-l-4 border-l-blue-500"
+      )}
+      onClick={() => onSelect(notification)}
+    >
+      <div className="flex items-start gap-3">
         <div className="flex-shrink-0 mt-1">
           {getCategoryIcon(notification.category)}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2 mb-2">
-            <div className="flex-1">
-              <h4 className={cn(
-                "text-sm font-semibold mb-1",
-                isUnread ? "text-gray-900" : "text-gray-700"
-              )}>
-                {notification.title}
-              </h4>
-              <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                {notification.message}
-              </p>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-xs text-gray-500 flex items-center gap-1">
-                  <Calendar className="h-3 w-3" />
-                  {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
-                </span>
-                <Badge variant="outline" className={cn("text-xs", getPriorityColor(notification.priority))}>
-                  {notification.priority}
-                </Badge>
-                <Badge variant="outline" className="text-xs">
-                  {notification.category}
-                </Badge>
-                {isUnread && (
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                )}
-              </div>
-              
-              {/* Action Buttons */}
-              {actionButtons.length > 0 && (
-                <div className="flex items-center gap-2 mb-2">
-                  {actionButtons}
-                </div>
-              )}
-            </div>
+          <div className="flex items-start justify-between gap-2 mb-1">
+            <h4 className={cn(
+              "text-sm font-semibold",
+              isUnread ? "text-gray-900" : "text-gray-700"
+            )}>
+              {notification.title}
+            </h4>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={(e) => e.stopPropagation()}>
                   <MoreHorizontal className="h-3 w-3" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 {isUnread && (
-                  <DropdownMenuItem onClick={() => onMarkAsRead(notification.id)}>
+                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onMarkAsRead(notification.id); }}>
                     <CheckCircle className="mr-2 h-4 w-4" />
                     Mark as read
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem onClick={() => onArchive(notification.id)}>
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onArchive(notification.id); }}>
                   <Archive className="mr-2 h-4 w-4" />
                   Archive
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
+          <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+            {notification.message}
+          </p>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500 flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+            </span>
+            <Badge variant="outline" className={cn("text-xs", getPriorityColor(notification.priority))}>
+              {notification.priority}
+            </Badge>
+            <Badge variant="outline" className="text-xs">
+              {notification.category}
+            </Badge>
+            {isUnread && (
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            )}
+          </div>
         </div>
       </div>
-    </Card>
+    </div>
+  );
+};
+
+const NotificationDetails = ({ 
+  notification, 
+  onMarkAsRead, 
+  onArchive,
+  onClose 
+}: { 
+  notification: Notification; 
+  onMarkAsRead: (id: string) => void; 
+  onArchive: (id: string) => void;
+  onClose: () => void;
+}) => {
+  const isUnread = notification.status === 'unread';
+  const actionButtons = getActionButtons(notification);
+  
+  return (
+    <div className="h-full flex flex-col">
+      <div className="p-4 border-b flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-gray-900">Notification Details</h3>
+        <Button variant="ghost" size="sm" onClick={onClose}>
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+      
+      <div className="flex-1 p-4 overflow-y-auto">
+        <div className="space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 p-2 bg-gray-100 rounded-lg">
+              {getCategoryIcon(notification.category)}
+            </div>
+            <div className="flex-1">
+              <h4 className="text-xl font-semibold text-gray-900 mb-2">
+                {notification.title}
+              </h4>
+              <div className="flex items-center gap-2 mb-3">
+                <Badge variant="outline" className={cn("text-sm", getPriorityColor(notification.priority))}>
+                  {notification.priority}
+                </Badge>
+                <Badge variant="outline" className="text-sm">
+                  {notification.category}
+                </Badge>
+                {isUnread && (
+                  <Badge className="bg-blue-500 text-white text-sm">
+                    Unread
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div>
+            <h5 className="text-sm font-medium text-gray-700 mb-2">Message</h5>
+            <p className="text-gray-600 leading-relaxed">
+              {notification.message}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="font-medium text-gray-700">Created:</span>
+              <p className="text-gray-600">
+                {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+              </p>
+            </div>
+            {notification.read_at && (
+              <div>
+                <span className="font-medium text-gray-700">Read:</span>
+                <p className="text-gray-600">
+                  {formatDistanceToNow(new Date(notification.read_at), { addSuffix: true })}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {notification.metadata && Object.keys(notification.metadata).length > 0 && (
+            <div>
+              <h5 className="text-sm font-medium text-gray-700 mb-2">Additional Details</h5>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <pre className="text-xs text-gray-600 whitespace-pre-wrap">
+                  {JSON.stringify(notification.metadata, null, 2)}
+                </pre>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="p-4 border-t bg-gray-50 space-y-3">
+        {/* Action Buttons */}
+        {actionButtons.length > 0 && (
+          <div className="flex items-center gap-2 flex-wrap">
+            {actionButtons}
+          </div>
+        )}
+        
+        {/* Standard Actions */}
+        <div className="flex items-center gap-2">
+          {isUnread && (
+            <Button onClick={() => onMarkAsRead(notification.id)} className="flex-1">
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Mark as Read
+            </Button>
+          )}
+          <Button variant="outline" onClick={() => onArchive(notification.id)} className="flex-1">
+            <Archive className="h-4 w-4 mr-2" />
+            Archive
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };
 
 export default function Notifications() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const { userRole } = useAuth();
   const {
     notifications,
@@ -221,7 +334,13 @@ export default function Notifications() {
 
   const unreadNotifications = filteredNotifications.filter(n => n.status === 'unread');
   const urgentNotifications = filteredNotifications.filter(n => n.priority === 'urgent');
-  const normalNotifications = filteredNotifications.filter(n => n.priority === 'normal');
+
+  const handleNotificationSelect = (notification: Notification) => {
+    setSelectedNotification(notification);
+    if (notification.status === 'unread') {
+      markAsRead(notification.id);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -292,148 +411,86 @@ export default function Notifications() {
           </Card>
         </div>
 
-        <Card>
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <CardTitle>Recent Notifications</CardTitle>
-              <div className="flex items-center gap-3">
-                {unreadCount > 0 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => markAllAsRead()}
-                    disabled={isMarkingAllAsRead}
-                  >
-                    {isMarkingAllAsRead ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : (
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                    )}
-                    Mark all read
-                  </Button>
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 h-[calc(100vh-20rem)]">
+          {/* Notifications List */}
+          <div className="lg:col-span-2">
+            <Card className="h-full">
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <CardTitle>All Notifications</CardTitle>
+                  {unreadCount > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => markAllAsRead()}
+                      disabled={isMarkingAllAsRead}
+                    >
+                      {isMarkingAllAsRead ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                      )}
+                      Mark all read
+                    </Button>
+                  )}
+                </div>
+                
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Search notifications..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+              </CardHeader>
+
+              <ScrollArea className="h-[calc(100%-140px)]">
+                {filteredNotifications.length > 0 ? (
+                  filteredNotifications.map((notification) => (
+                    <NotificationListItem
+                      key={notification.id}
+                      notification={notification}
+                      onMarkAsRead={markAsRead}
+                      onArchive={archiveNotification}
+                      isSelected={selectedNotification?.id === notification.id}
+                      onSelect={handleNotificationSelect}
+                    />
+                  ))
+                ) : (
+                  <div className="text-center py-12">
+                    <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No notifications</h3>
+                    <p className="text-gray-500">You're all caught up! Check back later for new updates.</p>
+                  </div>
                 )}
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Search notifications..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9"
+              </ScrollArea>
+            </Card>
+          </div>
+
+          {/* Notification Details */}
+          <div className="lg:col-span-3">
+            <Card className="h-full">
+              {selectedNotification ? (
+                <NotificationDetails
+                  notification={selectedNotification}
+                  onMarkAsRead={markAsRead}
+                  onArchive={archiveNotification}
+                  onClose={() => setSelectedNotification(null)}
                 />
-              </div>
-            </div>
-          </CardHeader>
-
-          <CardContent>
-            <Tabs defaultValue="all" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="all">
-                  All ({filteredNotifications.length})
-                </TabsTrigger>
-                <TabsTrigger value="unread">
-                  Unread ({unreadNotifications.length})
-                </TabsTrigger>
-                <TabsTrigger value="urgent">
-                  Urgent ({urgentNotifications.length})
-                </TabsTrigger>
-                <TabsTrigger value="normal">
-                  Normal ({normalNotifications.length})
-                </TabsTrigger>
-              </TabsList>
-
-              <div className="mt-6">
-                <TabsContent value="all" className="space-y-4">
-                  {filteredNotifications.length > 0 ? (
-                    filteredNotifications.slice(0, 10).map((notification) => (
-                      <NotificationCard
-                        key={notification.id}
-                        notification={notification}
-                        onMarkAsRead={markAsRead}
-                        onArchive={archiveNotification}
-                      />
-                    ))
-                  ) : (
-                    <div className="text-center py-12">
-                      <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No notifications</h3>
-                      <p className="text-gray-500">You're all caught up! Check back later for new updates.</p>
-                    </div>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="unread" className="space-y-4">
-                  {unreadNotifications.length > 0 ? (
-                    unreadNotifications.map((notification) => (
-                      <NotificationCard
-                        key={notification.id}
-                        notification={notification}
-                        onMarkAsRead={markAsRead}
-                        onArchive={archiveNotification}
-                      />
-                    ))
-                  ) : (
-                    <div className="text-center py-12">
-                      <CheckCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No unread notifications</h3>
-                      <p className="text-gray-500">All your notifications are up to date.</p>
-                    </div>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="urgent" className="space-y-4">
-                  {urgentNotifications.length > 0 ? (
-                    urgentNotifications.map((notification) => (
-                      <NotificationCard
-                        key={notification.id}
-                        notification={notification}
-                        onMarkAsRead={markAsRead}
-                        onArchive={archiveNotification}
-                      />
-                    ))
-                  ) : (
-                    <div className="text-center py-12">
-                      <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No urgent notifications</h3>
-                      <p className="text-gray-500">No urgent items require your attention.</p>
-                    </div>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="normal" className="space-y-4">
-                  {normalNotifications.length > 0 ? (
-                    normalNotifications.map((notification) => (
-                      <NotificationCard
-                        key={notification.id}
-                        notification={notification}
-                        onMarkAsRead={markAsRead}
-                        onArchive={archiveNotification}
-                      />
-                    ))
-                  ) : (
-                    <div className="text-center py-12">
-                      <Info className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No normal notifications</h3>
-                      <p className="text-gray-500">No normal priority notifications found.</p>
-                    </div>
-                  )}
-                </TabsContent>
-              </div>
-            </Tabs>
-
-            {filteredNotifications.length > 10 && (
-              <div className="mt-6 pt-4 border-t">
-                <Button className="w-full" variant="outline" size="lg">
-                  <Users className="h-4 w-4 mr-2" />
-                  View All {filteredNotifications.length} Notifications
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <div className="text-center">
+                    <Bell className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-500 mb-2">Select a notification</h3>
+                    <p className="text-gray-400">Choose a notification from the list to view its details</p>
+                  </div>
+                </div>
+              )}
+            </Card>
+          </div>
+        </div>
       </div>
     </AdminLayout>
   );
