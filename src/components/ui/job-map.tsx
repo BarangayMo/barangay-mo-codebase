@@ -4,16 +4,14 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { MapPin, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 
 interface JobMapProps {
   location: string;
   className?: string;
 }
 
-// Set your Mapbox public token here directly
-const MAPBOX_PUBLIC_TOKEN = 'pk.eyJ1IjoieW91cnVzZXJuYW1lIiwiYSI6InlvdXJhY2Nlc3N0b2tlbiJ9.example';
+// Replace this with your actual Mapbox public token
+const MAPBOX_PUBLIC_TOKEN = 'pk.eyJ1Ijoic21hcnRiYXJhbmdheS1tYXBzIiwiYSI6ImNtNGpqN2xzNDA4ZnAybXIzN3FsbXA1MmsifQ.example_token_here';
 
 export const JobMap = ({ location, className }: JobMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -21,8 +19,6 @@ export const JobMap = ({ location, className }: JobMapProps) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const [apiKey, setApiKey] = useState(MAPBOX_PUBLIC_TOKEN);
-  const [showApiKeyInput, setShowApiKeyInput] = useState(!MAPBOX_PUBLIC_TOKEN || MAPBOX_PUBLIC_TOKEN.includes('example') || MAPBOX_PUBLIC_TOKEN === 'pk.eyJ1IjoieW91cnVzZXJuYW1lIiwiYSI6InlvdXJhY2Nlc3N0b2tlbiJ9.example');
   const maxRetries = 3;
 
   const initializeMap = async (attempt = 1) => {
@@ -33,14 +29,6 @@ export const JobMap = ({ location, className }: JobMapProps) => {
       console.log('❌ JobMap: No location provided');
       setError('No location provided');
       setLoading(false);
-      return;
-    }
-
-    if (!apiKey || apiKey.includes('example') || !apiKey.startsWith('pk.')) {
-      console.log('❌ JobMap: No valid API key provided');
-      setError('Please enter your Mapbox public token');
-      setLoading(false);
-      setShowApiKeyInput(true);
       return;
     }
 
@@ -59,14 +47,12 @@ export const JobMap = ({ location, className }: JobMapProps) => {
         throw new Error('Map container not available');
       }
 
-      console.log('✅ JobMap: Valid API key provided, length:', apiKey.length);
-
       // Set Mapbox access token
-      mapboxgl.accessToken = apiKey;
+      mapboxgl.accessToken = MAPBOX_PUBLIC_TOKEN;
 
       // Geocode the location
       console.log('🌍 JobMap: Starting geocoding for:', location);
-      const geocodeUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(location)}.json?access_token=${apiKey}&limit=1`;
+      const geocodeUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(location)}.json?access_token=${MAPBOX_PUBLIC_TOKEN}&limit=1`;
       
       const geocodeResponse = await fetch(geocodeUrl);
       console.log('🌍 JobMap: Geocode response status:', geocodeResponse.status);
@@ -134,7 +120,6 @@ export const JobMap = ({ location, className }: JobMapProps) => {
         console.log('✅ JobMap: Map loaded successfully');
         setLoading(false);
         setRetryCount(0);
-        setShowApiKeyInput(false);
       });
 
       map.current.on('error', (e) => {
@@ -163,7 +148,7 @@ export const JobMap = ({ location, className }: JobMapProps) => {
   };
 
   useEffect(() => {
-    if (location && !map.current && apiKey && !apiKey.includes('example') && apiKey.startsWith('pk.')) {
+    if (location && !map.current) {
       const timer = setTimeout(() => {
         initializeMap();
       }, 100);
@@ -178,7 +163,7 @@ export const JobMap = ({ location, className }: JobMapProps) => {
         map.current = null;
       }
     };
-  }, [location, apiKey]);
+  }, [location]);
 
   const handleRetry = () => {
     setRetryCount(0);
@@ -189,58 +174,6 @@ export const JobMap = ({ location, className }: JobMapProps) => {
     }
     initializeMap();
   };
-
-  const handleApiKeySubmit = () => {
-    if (apiKey && apiKey.trim() && !apiKey.includes('example') && apiKey.startsWith('pk.')) {
-      setShowApiKeyInput(false);
-      initializeMap();
-    }
-  };
-
-  if (showApiKeyInput) {
-    return (
-      <div className={`${className} flex items-center justify-center h-48 bg-muted rounded-lg`}>
-        <div className="flex flex-col items-center gap-4 text-center p-4 max-w-sm">
-          <MapPin className="h-8 w-8 text-muted-foreground" />
-          <div className="space-y-2">
-            <h3 className="font-medium">Mapbox Token Required</h3>
-            <p className="text-sm text-muted-foreground">
-              Enter your Mapbox public token to display the map
-            </p>
-          </div>
-          <div className="w-full space-y-2">
-            <Label htmlFor="mapbox-token" className="text-sm">Mapbox Public Token</Label>
-            <Input
-              id="mapbox-token"
-              type="text"
-              placeholder="pk.xxxxxxxx..."
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              className="font-mono text-xs"
-            />
-            <Button 
-              onClick={handleApiKeySubmit}
-              className="w-full"
-              disabled={!apiKey || apiKey.includes('example') || !apiKey.startsWith('pk.')}
-            >
-              Load Map
-            </Button>
-            <p className="text-xs text-muted-foreground">
-              Get your token from{' '}
-              <a 
-                href="https://account.mapbox.com/access-tokens/" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                account.mapbox.com
-              </a>
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if (loading) {
     return (
@@ -263,25 +196,17 @@ export const JobMap = ({ location, className }: JobMapProps) => {
           <div>
             <p className="text-sm font-medium text-muted-foreground">{location}</p>
             <p className="text-xs text-red-500 mt-1">{error}</p>
-            <div className="flex gap-2 mt-2">
-              {retryCount < maxRetries && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleRetry}
-                >
-                  <RefreshCw className="h-3 w-3 mr-1" />
-                  Retry
-                </Button>
-              )}
+            {retryCount < maxRetries && (
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => setShowApiKeyInput(true)}
+                onClick={handleRetry}
+                className="mt-2"
               >
-                Change Token
+                <RefreshCw className="h-3 w-3 mr-1" />
+                Retry
               </Button>
-            </div>
+            )}
           </div>
         </div>
       </div>
