@@ -1,17 +1,22 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, SkipForward } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { motion } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Verify() {
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60);
+  const [isCheckingRbi, setIsCheckingRbi] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   
   useEffect(() => {
     if (timeLeft > 0) {
@@ -19,6 +24,22 @@ export default function Verify() {
       return () => clearTimeout(timer);
     }
   }, [timeLeft]);
+
+  const checkRbiFormStatus = async () => {
+    if (!user?.id) return false;
+    
+    try {
+      const { data, error } = await supabase
+        .from('rbi_draft_forms')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+        
+      return !!data && !error;
+    } catch (error) {
+      return false;
+    }
+  };
 
   const handleResendCode = () => {
     setTimeLeft(60);
@@ -32,16 +53,30 @@ export default function Verify() {
     if (otp.length === 4) {
       setIsLoading(true);
       // Simulate API call
-      setTimeout(() => {
+      setTimeout(async () => {
         setIsLoading(false);
-        navigate("/rbi-registration");
+        const hasRbiForm = await checkRbiFormStatus();
+        navigate(hasRbiForm ? "/resident-home" : "/rbi-registration");
       }, 1000);
     }
   };
 
+  const handleSkip = async () => {
+    setIsCheckingRbi(true);
+    try {
+      const hasRbiForm = await checkRbiFormStatus();
+      navigate(hasRbiForm ? "/resident-home" : "/rbi-registration");
+    } catch (error) {
+      console.error("Error checking RBI form status:", error);
+      navigate("/rbi-registration");
+    } finally {
+      setIsCheckingRbi(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-white flex flex-col p-6">
-      <Link to="/phone" className="flex items-center gap-2 text-gray-600 mb-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-emerald-50 flex flex-col p-6">
+      <Link to="/phone" className="flex items-center gap-2 text-gray-600 mb-6 hover:text-gray-800 transition-colors">
         <ChevronLeft className="h-5 w-5" />
         Back
       </Link>
@@ -52,7 +87,7 @@ export default function Verify() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          <h1 className="text-2xl font-semibold text-center mb-2">Verify Account</h1>
+          <h1 className="text-3xl font-bold text-center mb-2 text-gray-900">Verify Account</h1>
         </motion.div>
         
         <motion.div 
@@ -61,15 +96,17 @@ export default function Verify() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <img 
-            src="/lovable-uploads/6960369f-3a6b-4d57-ab0f-f7db77f16152.png"
-            alt="Barangay Mo Logo"
-            className="w-32 h-32 object-contain"
-          />
+          <div className="bg-white rounded-full p-6 shadow-lg">
+            <img 
+              src="/lovable-uploads/6960369f-3a6b-4d57-ab0f-f7db77f16152.png"
+              alt="Barangay Mo Logo"
+              className="w-24 h-24 object-contain"
+            />
+          </div>
         </motion.div>
 
         <motion.h2 
-          className="text-xl font-medium text-center mb-2"
+          className="text-lg font-medium text-center mb-2 text-gray-700"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4, delay: 0.4 }}
@@ -78,14 +115,14 @@ export default function Verify() {
         </motion.h2>
         
         <div className="flex items-center gap-2 mb-8">
-          <p className="text-gray-600">+639171234567</p>
-          <Link to="/phone" className="text-sm text-emerald-600">
+          <p className="text-gray-600 font-medium">+639171234567</p>
+          <Link to="/phone" className="text-sm text-emerald-600 hover:text-emerald-700 transition-colors">
             Wrong Number?
           </Link>
         </div>
 
         <motion.div 
-          className="w-full space-y-6"
+          className="w-full space-y-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.6 }}
@@ -97,37 +134,50 @@ export default function Verify() {
               onChange={setOtp}
               pattern="[0-9]*"
             >
-              <InputOTPGroup className="gap-2 md:gap-4">
+              <InputOTPGroup className="gap-3">
                 {Array.from({ length: 4 }, (_, index) => (
                   <InputOTPSlot
                     key={index}
                     index={index}
-                    className="w-16 h-16 text-2xl border-2 border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-emerald-500"
+                    className="w-14 h-14 text-xl font-semibold border-2 border-gray-300 rounded-xl bg-white shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all duration-200 hover:border-gray-400"
                   />
                 ))}
               </InputOTPGroup>
             </InputOTP>
           </div>
 
-          <Button 
-            onClick={handleVerify}
-            disabled={otp.length !== 4 || isLoading}
-            className="w-full h-12 bg-emerald-600 hover:bg-emerald-700"
-          >
-            {isLoading ? "Verifying..." : "Verify"}
-          </Button>
+          <div className="space-y-3">
+            <Button 
+              onClick={handleVerify}
+              disabled={otp.length !== 4 || isLoading}
+              className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? "Verifying..." : "Verify"}
+            </Button>
+
+            <Button 
+              type="button"
+              variant="ghost"
+              onClick={handleSkip}
+              disabled={isCheckingRbi}
+              className="w-full h-12 text-gray-600 hover:text-gray-800 hover:bg-white/50 flex items-center gap-2 justify-center font-medium rounded-xl transition-all duration-200"
+            >
+              <SkipForward className="w-5 h-5" />
+              {isCheckingRbi ? "Checking..." : "Skip Verification"}
+            </Button>
+          </div>
         </motion.div>
 
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-500 mb-1">
+        <div className="mt-8 text-center">
+          <p className="text-sm text-gray-500 mb-2">
             Didn't Receive the Code?
           </p>
           <button 
-            className={`text-sm font-medium ${timeLeft === 0 ? 'text-emerald-600' : 'text-gray-400'}`}
+            className={`text-sm font-medium transition-colors ${timeLeft === 0 ? 'text-emerald-600 hover:text-emerald-700' : 'text-gray-400 cursor-not-allowed'}`}
             onClick={timeLeft === 0 ? handleResendCode : undefined}
             disabled={timeLeft > 0}
           >
-            {timeLeft > 0 ? `Resend in ${timeLeft}s` : "Resend"}
+            {timeLeft > 0 ? `Resend in ${timeLeft}s` : "Resend Code"}
           </button>
         </div>
       </div>
