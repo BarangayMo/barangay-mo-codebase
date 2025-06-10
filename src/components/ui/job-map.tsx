@@ -18,7 +18,7 @@ export const JobMap = ({ location, className }: JobMapProps) => {
 
   useEffect(() => {
     const initializeMap = async () => {
-      if (!mapContainer.current || !location) return;
+      if (!mapContainer.current || !location || map.current) return;
 
       try {
         setLoading(true);
@@ -94,7 +94,9 @@ export const JobMap = ({ location, className }: JobMapProps) => {
           `)
           .addTo(map.current);
 
-        setLoading(false);
+        map.current.on('load', () => {
+          setLoading(false);
+        });
 
       } catch (err) {
         console.error('Map initialization error:', err);
