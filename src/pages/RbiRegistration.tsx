@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ArrowRight, Check, Loader2, Save } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import PersonalDetailsForm from "@/components/rbi/PersonalDetailsForm";
 import AddressDetailsForm from "@/components/rbi/AddressDetailsForm";
@@ -35,7 +36,7 @@ export default function RbiRegistration() {
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<RbiFormData>({
     personalDetails: {},
@@ -48,6 +49,39 @@ export default function RbiRegistration() {
     beneficiary: {}
   });
   const [errors, setErrors] = useState<Record<string, any>>({});
+  
+  // Auto-save function
+  const autoSave = async (dataToSave: RbiFormData, stepToSave: number) => {
+    if (!user?.id) return;
+    
+    setIsAutoSaving(true);
+    try {
+      const { error } = await supabase
+        .from('rbi_draft_forms')
+        .upsert({
+          user_id: user.id,
+          form_data: dataToSave as unknown as Json,
+          last_completed_step: stepToSave
+        });
+        
+      if (error) throw error;
+    } catch (error) {
+      console.error("Auto-save failed:", error);
+    } finally {
+      setIsAutoSaving(false);
+    }
+  };
+
+  // Auto-save when form data changes (debounced)
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (user?.id && Object.keys(formData.personalDetails || {}).length > 0) {
+        autoSave(formData, currentStep);
+      }
+    }, 2000); // Auto-save after 2 seconds of inactivity
+
+    return () => clearTimeout(timeoutId);
+  }, [formData, currentStep, user?.id]);
   
   // Load saved form data if available
   useEffect(() => {
@@ -185,6 +219,9 @@ export default function RbiRegistration() {
         return;
       }
       
+      // Auto-save current progress
+      autoSave(formData, currentStep + 1);
+      
       setIsLoading(true);
       setTimeout(() => {
         setCurrentStep(currentStep + 1);
@@ -196,52 +233,15 @@ export default function RbiRegistration() {
   
   const handlePrevious = () => {
     if (currentStep > 1) {
+      // Auto-save current progress
+      autoSave(formData, currentStep - 1);
+      
       setIsLoading(true);
       setTimeout(() => {
         setCurrentStep(currentStep - 1);
         window.scrollTo(0, 0);
         setIsLoading(false);
       }, 500);
-    }
-  };
-  
-  const handleSaveForLater = async () => {
-    if (!user?.id) {
-      toast({
-        title: "Authentication Required",
-        description: "Please login to save your progress.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setIsSaving(true);
-    try {
-      const { error } = await supabase
-        .from('rbi_draft_forms')
-        .upsert({
-          user_id: user.id,
-          form_data: formData as unknown as Json,
-          last_completed_step: currentStep
-        });
-        
-      if (error) throw error;
-      
-      toast({
-        title: "Progress Saved",
-        description: "You can continue filling the form later.",
-      });
-      
-      navigate("/resident-home");
-    } catch (error) {
-      console.error("Error saving form:", error);
-      toast({
-        title: "Save Failed",
-        description: "There was an error saving your progress. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSaving(false);
     }
   };
   
@@ -272,9 +272,17 @@ export default function RbiRegistration() {
               <h1 className="text-xl md:text-2xl lg:text-3xl font-bold font-outfit bg-gradient-to-r from-blue-700 to-blue-500 bg-clip-text text-transparent leading-tight">
                 Record of Barangay Inhabitant
               </h1>
-              <span className="text-xs md:text-sm font-medium px-2 md:px-3 py-1 bg-blue-50 text-blue-700 rounded-full whitespace-nowrap">
-                Step {currentStep} of {steps.length}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs md:text-sm font-medium px-2 md:px-3 py-1 bg-blue-50 text-blue-700 rounded-full whitespace-nowrap">
+                  Step {currentStep} of {steps.length}
+                </span>
+                {isAutoSaving && (
+                  <div className="flex items-center gap-1 text-xs text-gray-500">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <span className="hidden sm:inline">Saving...</span>
+                  </div>
+                )}
+              </div>
             </div>
             
             <Progress value={progress} className="h-2 bg-blue-100" indicatorClassName="bg-blue-600" />
@@ -297,79 +305,56 @@ export default function RbiRegistration() {
         </div>
         
         {/* Mobile-optimized navigation buttons */}
-        <div className="space-y-4">
-          {/* Primary navigation buttons */}
-          <div className="flex gap-3">
-            {currentStep > 1 ? (
+        <div className="flex gap-3">
+          {currentStep > 1 ? (
+            <Button 
+              variant="outline" 
+              onClick={handlePrevious}
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 border-blue-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 h-12"
+            >
+              <ArrowLeft className="w-4 h-4" /> 
+              <span className="hidden sm:inline">Previous</span>
+              <span className="sm:hidden">Back</span>
+            </Button>
+          ) : (
+            <Link to="/resident-home" className="flex-1 sm:flex-none">
               <Button 
-                variant="outline" 
-                onClick={handlePrevious}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 border-blue-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 h-12"
+                variant="outline"
+                className="w-full flex items-center justify-center gap-2 border-blue-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 h-12"
               >
                 <ArrowLeft className="w-4 h-4" /> 
-                <span className="hidden sm:inline">Previous</span>
-                <span className="sm:hidden">Back</span>
+                <span className="hidden sm:inline">Back to Home</span>
+                <span className="sm:hidden">Home</span>
               </Button>
-            ) : (
-              <Link to="/resident-home" className="flex-1 sm:flex-none">
-                <Button 
-                  variant="outline"
-                  className="w-full flex items-center justify-center gap-2 border-blue-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 h-12"
-                >
-                  <ArrowLeft className="w-4 h-4" /> 
-                  <span className="hidden sm:inline">Back to Home</span>
-                  <span className="sm:hidden">Home</span>
-                </Button>
-              </Link>
-            )}
-            
-            {currentStep < steps.length ? (
-              <Button 
-                onClick={handleNext} 
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 h-12"
-              >
-                <span>Next</span> <ArrowRight className="w-4 h-4" />
-              </Button>
-            ) : (
-              <Button 
-                onClick={handleSubmit} 
-                disabled={isSubmitting}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 h-12"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span className="hidden sm:inline">Submitting...</span>
-                    <span className="sm:hidden">Saving...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Submit</span> <Check className="w-4 h-4" />
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
+            </Link>
+          )}
           
-          {/* Save for later button - full width on mobile */}
-          <Button 
-            variant="outline" 
-            onClick={handleSaveForLater}
-            disabled={isSaving}
-            className="w-full flex items-center justify-center gap-2 border-blue-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 h-12"
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Saving...</span>
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4" /> 
-                <span>Save for Later</span>
-              </>
-            )}
-          </Button>
+          {currentStep < steps.length ? (
+            <Button 
+              onClick={handleNext} 
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 h-12"
+            >
+              <span>Next</span> <ArrowRight className="w-4 h-4" />
+            </Button>
+          ) : (
+            <Button 
+              onClick={handleSubmit} 
+              disabled={isSubmitting}
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 h-12"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="hidden sm:inline">Submitting...</span>
+                  <span className="sm:hidden">Saving...</span>
+                </>
+              ) : (
+                <>
+                  <span>Submit</span> <Check className="w-4 h-4" />
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </div>
     </Layout>
