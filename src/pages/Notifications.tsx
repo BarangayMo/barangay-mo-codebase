@@ -1,10 +1,9 @@
-
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useAuth } from "@/contexts/AuthContext";
-import { CheckCircle, Archive, Loader2, Search, Filter, Bell, AlertTriangle, Info, Clock, Calendar, User, Eye, MoreHorizontal, UserCheck, FileText, MessageSquare, Users, X } from "lucide-react";
+import { CheckCircle, Archive, Loader2, Search, Filter, Bell, AlertTriangle, Info, Clock, Calendar, User, Eye, MoreHorizontal, UserCheck, FileText, MessageSquare, Users, X, ArchiveRestore } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -127,14 +126,18 @@ const NotificationListItem = ({
   notification, 
   onMarkAsRead, 
   onArchive,
+  onUnarchive,
   isSelected,
-  onSelect
+  onSelect,
+  isArchived = false
 }: { 
   notification: Notification; 
   onMarkAsRead: (id: string) => void; 
   onArchive: (id: string) => void; 
+  onUnarchive: (id: string) => void;
   isSelected: boolean;
   onSelect: (notification: Notification) => void;
+  isArchived?: boolean;
 }) => {
   const isUnread = notification.status === 'unread';
   
@@ -172,10 +175,17 @@ const NotificationListItem = ({
                     Mark as read
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onArchive(notification.id); }}>
-                  <Archive className="mr-2 h-4 w-4" />
-                  Archive
-                </DropdownMenuItem>
+                {isArchived ? (
+                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onUnarchive(notification.id); }}>
+                    <ArchiveRestore className="mr-2 h-4 w-4" />
+                    Unarchive
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onArchive(notification.id); }}>
+                    <Archive className="mr-2 h-4 w-4" />
+                    Archive
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -207,12 +217,16 @@ const NotificationDetails = ({
   notification, 
   onMarkAsRead, 
   onArchive,
-  onClose 
+  onUnarchive,
+  onClose,
+  isArchived = false
 }: { 
   notification: Notification; 
   onMarkAsRead: (id: string) => void; 
   onArchive: (id: string) => void;
+  onUnarchive: (id: string) => void;
   onClose: () => void;
+  isArchived?: boolean;
 }) => {
   const isUnread = notification.status === 'unread';
   const actionButtons = getActionButtons(notification);
@@ -307,10 +321,17 @@ const NotificationDetails = ({
               Mark as Read
             </Button>
           )}
-          <Button variant="outline" onClick={() => onArchive(notification.id)} className="flex-1 border-blue-200 text-blue-600 hover:bg-blue-50">
-            <Archive className="h-4 w-4 mr-2" />
-            Archive
-          </Button>
+          {isArchived ? (
+            <Button variant="outline" onClick={() => onUnarchive(notification.id)} className="flex-1 border-blue-200 text-blue-600 hover:bg-blue-50">
+              <ArchiveRestore className="h-4 w-4 mr-2" />
+              Unarchive
+            </Button>
+          ) : (
+            <Button variant="outline" onClick={() => onArchive(notification.id)} className="flex-1 border-blue-200 text-blue-600 hover:bg-blue-50">
+              <Archive className="h-4 w-4 mr-2" />
+              Archive
+            </Button>
+          )}
         </div>
       </div>
     </div>
@@ -320,7 +341,7 @@ const NotificationDetails = ({
 export default function Notifications() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
-  const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active');
+  const [activeTab, setActiveTab] = useState<'active' | 'archived' | 'unread' | 'archived' | 'unread'>('active');
   const { userRole } = useAuth();
   const {
     notifications,
@@ -329,6 +350,7 @@ export default function Notifications() {
     unreadCount,
     markAsRead,
     archiveNotification,
+    unarchiveNotification,
     markAllAsRead,
     isMarkingAllAsRead
   } = useNotifications();
@@ -358,7 +380,9 @@ export default function Notifications() {
     });
   };
 
-  const currentNotifications = activeTab === 'active' ? notifications : archivedNotifications;
+  const currentNotifications = activeTab === 'active' ? notifications : 
+                              activeTab === 'archived' ? archivedNotifications :
+                              notifications.filter(n => n.status === 'unread');
   const roleBasedNotifications = filterNotificationsByRole(currentNotifications);
 
   const filteredNotifications = roleBasedNotifications.filter(notification =>
@@ -366,7 +390,7 @@ export default function Notifications() {
     notification.message.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const unreadNotifications = filteredNotifications.filter(n => n.status === 'unread');
+  const unreadNotifications = notifications.filter(n => n.status === 'unread');
   const urgentNotifications = filteredNotifications.filter(n => n.priority === 'urgent');
 
   const handleNotificationSelect = (notification: Notification) => {
@@ -461,6 +485,14 @@ export default function Notifications() {
                       Active
                     </Button>
                     <Button
+                      variant={activeTab === 'unread' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setActiveTab('unread')}
+                      className={activeTab === 'unread' ? 'bg-blue-600 hover:bg-blue-700' : 'border-blue-200 text-blue-600 hover:bg-blue-50'}
+                    >
+                      Unread ({unreadNotifications.length})
+                    </Button>
+                    <Button
                       variant={activeTab === 'archived' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setActiveTab('archived')}
@@ -497,6 +529,12 @@ export default function Notifications() {
                     className="pl-9 border-blue-200 focus:border-blue-500"
                   />
                 </div>
+
+                {activeTab === 'archived' && (
+                  <div className="text-xs text-gray-500 bg-yellow-50 p-2 rounded border border-yellow-200">
+                    Archived notifications will be automatically deleted after 30 days.
+                  </div>
+                )}
               </CardHeader>
 
               <ScrollArea className="flex-1">
@@ -507,8 +545,10 @@ export default function Notifications() {
                       notification={notification}
                       onMarkAsRead={markAsRead}
                       onArchive={archiveNotification}
+                      onUnarchive={unarchiveNotification}
                       isSelected={selectedNotification?.id === notification.id}
                       onSelect={handleNotificationSelect}
+                      isArchived={activeTab === 'archived'}
                     />
                   ))
                 ) : (
@@ -518,6 +558,12 @@ export default function Notifications() {
                         <Archive className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                         <h3 className="text-lg font-medium text-gray-900 mb-2">No archived notifications</h3>
                         <p className="text-gray-500">Archived notifications will appear here.</p>
+                      </>
+                    ) : activeTab === 'unread' ? (
+                      <>
+                        <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">No unread notifications</h3>
+                        <p className="text-gray-500">All caught up! You have no unread notifications.</p>
                       </>
                     ) : (
                       <>
@@ -540,7 +586,9 @@ export default function Notifications() {
                   notification={selectedNotification}
                   onMarkAsRead={markAsRead}
                   onArchive={archiveNotification}
+                  onUnarchive={unarchiveNotification}
                   onClose={() => setSelectedNotification(null)}
+                  isArchived={activeTab === 'archived'}
                 />
               ) : (
                 <div className="h-full flex items-center justify-center">

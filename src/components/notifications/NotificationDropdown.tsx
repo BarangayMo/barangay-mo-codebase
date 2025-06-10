@@ -215,11 +215,11 @@ export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => 
           <TabsTrigger value="all" className="flex-1 text-xs h-8 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700">
             All ({filteredNotifications.length})
           </TabsTrigger>
+          <TabsTrigger value="unread" className="flex-1 text-xs h-8 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700">
+            Unread ({unreadNotifications.length})
+          </TabsTrigger>
           <TabsTrigger value="urgent" className="flex-1 text-xs h-8 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700">
             Urgent ({urgentNotifications.length})
-          </TabsTrigger>
-          <TabsTrigger value="normal" className="flex-1 text-xs h-8 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700">
-            Normal ({normalNotifications.length})
           </TabsTrigger>
         </TabsList>
 
@@ -266,6 +266,22 @@ export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => 
               )}
             </TabsContent>
 
+            <TabsContent value="unread" className="m-0">
+              {unreadNotifications.slice(0, 5).map((notification) => (
+                <NotificationItem
+                  key={notification.id}
+                  notification={notification}
+                  onMarkAsRead={markAsRead}
+                />
+              ))}
+              {unreadNotifications.length === 0 && (
+                <div className="p-8 text-center">
+                  <CheckCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">No unread notifications</p>
+                </div>
+              )}
+            </TabsContent>
+
             <TabsContent value="urgent" className="m-0">
               {urgentNotifications.slice(0, 5).map((notification) => (
                 <NotificationItem
@@ -278,22 +294,6 @@ export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => 
                 <div className="p-8 text-center">
                   <AlertTriangle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                   <p className="text-sm text-gray-500">No urgent notifications</p>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="normal" className="m-0">
-              {normalNotifications.slice(0, 5).map((notification) => (
-                <NotificationItem
-                  key={notification.id}
-                  notification={notification}
-                  onMarkAsRead={markAsRead}
-                />
-              ))}
-              {normalNotifications.length === 0 && (
-                <div className="p-8 text-center">
-                  <Info className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm text-gray-500">No normal notifications</p>
                 </div>
               )}
             </TabsContent>

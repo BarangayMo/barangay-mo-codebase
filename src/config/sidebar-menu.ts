@@ -71,14 +71,14 @@ export const sidebarMenuItems = [
     groupLabel: "Communication",
     items: [
       {
-        title: "Notifications",
-        icon: Bell,
-        path: "/notifications",
-      },
-      {
         title: "Messaging",
         icon: MessageSquare,
         path: "/admin/messages",
+      },
+      {
+        title: "Notifications",
+        icon: Bell,
+        path: "/notifications",
       }
     ]
   },

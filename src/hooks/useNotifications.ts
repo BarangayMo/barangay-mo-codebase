@@ -103,6 +103,24 @@ export const useNotifications = () => {
     },
   });
 
+  const unarchiveNotificationMutation = useMutation({
+    mutationFn: async (notificationId: string) => {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ 
+          status: 'read',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', notificationId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['archivedNotifications'] });
+    },
+  });
+
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
       if (!user?.id) return;
@@ -133,9 +151,11 @@ export const useNotifications = () => {
     unreadCount,
     markAsRead: markAsReadMutation.mutate,
     archiveNotification: archiveNotificationMutation.mutate,
+    unarchiveNotification: unarchiveNotificationMutation.mutate,
     markAllAsRead: markAllAsReadMutation.mutate,
     isMarkingAsRead: markAsReadMutation.isPending,
     isArchiving: archiveNotificationMutation.isPending,
+    isUnarchiving: unarchiveNotificationMutation.isPending,
     isMarkingAllAsRead: markAllAsReadMutation.isPending,
   };
 };
