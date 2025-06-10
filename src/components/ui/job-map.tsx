@@ -33,19 +33,23 @@ export const JobMap = ({ location, className }: JobMapProps) => {
         return;
       }
 
-      // Wait longer for container to be ready and check multiple times
-      let attempts = 0;
-      const maxAttempts = 10;
+      // Wait for the next frame to ensure DOM is ready
+      await new Promise(resolve => requestAnimationFrame(resolve));
       
-      while (!mapContainer.current && attempts < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        attempts++;
-        console.log(`🗺️ JobMap: Waiting for container, attempt ${attempts}/${maxAttempts}`);
-      }
+      // Additional wait to ensure container is fully mounted
+      await new Promise(resolve => setTimeout(resolve, 50));
 
       if (!mapContainer.current) {
-        console.log('❌ JobMap: Map container not available after waiting');
-        setError('Map container not available');
+        console.log('❌ JobMap: Map container ref is null');
+        setError('Map container not ready');
+        setLoading(false);
+        return;
+      }
+
+      // Check if container is actually in the DOM
+      if (!document.contains(mapContainer.current)) {
+        console.log('❌ JobMap: Map container not in DOM');
+        setError('Map container not in DOM');
         setLoading(false);
         return;
       }
@@ -105,9 +109,9 @@ export const JobMap = ({ location, className }: JobMapProps) => {
         const [lng, lat] = geocodeData.features[0].center;
         console.log('📍 JobMap: Coordinates found:', { lng, lat });
 
-        // Final check that container is still available
-        if (!mapContainer.current) {
-          console.error('❌ JobMap: Map container disappeared during initialization');
+        // Final check that container is still available and in DOM
+        if (!mapContainer.current || !document.contains(mapContainer.current)) {
+          console.error('❌ JobMap: Map container no longer available');
           throw new Error('Map container no longer available');
         }
 
