@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Mail, Lock, MapPin, Eye, EyeOff, Users, Shield } from "lucide-react";
+import { ArrowLeft, Mail, Lock, Eye, EyeOff, Users, Shield } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
@@ -14,7 +14,6 @@ export default function Register() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    barangay: "",
     role: "resident"
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -33,7 +32,6 @@ export default function Register() {
         formData.email,
         formData.password,
         {
-          barangay: formData.barangay,
           role: formData.role
         }
       );
@@ -82,39 +80,47 @@ export default function Register() {
           <p className="text-gray-600">Join your barangay's digital community</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-3">
-            <Label className="text-gray-700 font-medium">I am registering as a</Label>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-4">
+            <Label className="text-gray-900 font-semibold text-lg">Select your role</Label>
             <RadioGroup
-              defaultValue="resident"
-              name="role"
-              className="flex gap-3"
               value={formData.role}
               onValueChange={(value) => setFormData(prev => ({ ...prev, role: value }))}
+              className="grid grid-cols-1 gap-3"
             >
-              <div className="flex-1">
-                <div className="relative">
-                  <RadioGroupItem value="resident" id="resident-mobile" className="peer sr-only" />
-                  <Label 
-                    htmlFor="resident-mobile" 
-                    className="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 hover:border-gray-300 hover:bg-gray-50 font-medium group"
-                  >
-                    <Users className="w-6 h-6 mb-2 text-gray-400 transition-colors duration-200 group-has-[:checked]:text-blue-500" />
-                    <span className="text-sm">Resident</span>
-                  </Label>
-                </div>
+              <div>
+                <RadioGroupItem value="resident" id="resident-mobile" className="peer sr-only" />
+                <Label 
+                  htmlFor="resident-mobile" 
+                  className="flex items-center justify-center p-6 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:border-gray-300 hover:bg-gray-50 font-medium"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="p-3 bg-blue-100 rounded-full">
+                      <Users className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-semibold text-gray-900">Resident</div>
+                      <div className="text-sm text-gray-500">Access community services and information</div>
+                    </div>
+                  </div>
+                </Label>
               </div>
-              <div className="flex-1">
-                <div className="relative">
-                  <RadioGroupItem value="official" id="official-mobile" className="peer sr-only" />
-                  <Label 
-                    htmlFor="official-mobile" 
-                    className="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-red-500 peer-checked:bg-red-50 peer-checked:text-red-700 hover:border-gray-300 hover:bg-gray-50 font-medium group"
-                  >
-                    <Shield className="w-6 h-6 mb-2 text-gray-400 transition-colors duration-200 group-has-[:checked]:text-red-500" />
-                    <span className="text-sm">Official</span>
-                  </Label>
-                </div>
+              <div>
+                <RadioGroupItem value="official" id="official-mobile" className="peer sr-only" />
+                <Label 
+                  htmlFor="official-mobile" 
+                  className="flex items-center justify-center p-6 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-red-500 peer-checked:bg-red-50 hover:border-gray-300 hover:bg-gray-50 font-medium"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="p-3 bg-red-100 rounded-full">
+                      <Shield className="w-6 h-6 text-red-600" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-semibold text-gray-900">Official</div>
+                      <div className="text-sm text-gray-500">Manage community and serve residents</div>
+                    </div>
+                  </div>
+                </Label>
               </div>
             </RadioGroup>
           </div>
@@ -130,24 +136,9 @@ export default function Register() {
                 value={formData.email}
                 onChange={handleInputChange}
                 className="pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
+                required
               />
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="barangay" className="text-gray-700">Barangay</Label>
-            <div className="relative">
-              <Input
-                id="barangay"
-                type="text"
-                name="barangay"
-                value={formData.barangay}
-                onChange={handleInputChange}
-                placeholder="Select your barangay"
-                className="pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
-              />
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             </div>
           </div>
           
@@ -162,6 +153,7 @@ export default function Register() {
                 value={formData.password}
                 onChange={handleInputChange}
                 className="pl-10 pr-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
+                required
               />
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
               <button
@@ -180,7 +172,7 @@ export default function Register() {
           </div>
           
           <div className="flex items-center space-x-2 pt-2">
-            <input type="checkbox" id="terms" className="rounded border-gray-300" />
+            <input type="checkbox" id="terms" className="rounded border-gray-300" required />
             <label htmlFor="terms" className="text-sm text-gray-600 font-inter">
               I agree to the <Link to="/terms" className="text-blue-600 font-medium">Terms of Service</Link> and <Link to="/privacy" className="text-blue-600 font-medium">Privacy Policy</Link>
             </label>
@@ -189,6 +181,7 @@ export default function Register() {
           <Button
             type="submit"
             className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg py-3 transition font-medium text-base"
+            disabled={isLoading}
           >
             {isLoading ? "Registering..." : "Register Account"}
           </Button>
@@ -218,43 +211,47 @@ export default function Register() {
         </h1>
         <p className="text-gray-500 mb-6">Join your barangay's digital community</p>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-3">
-            <Label className="text-gray-700 font-medium">I am registering as a</Label>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-4">
+            <Label className="text-gray-900 font-semibold text-lg">Select your role</Label>
             <RadioGroup
-              defaultValue="resident"
-              name="role"
-              className="flex gap-3"
               value={formData.role}
               onValueChange={(value) => setFormData(prev => ({ ...prev, role: value }))}
+              className="grid grid-cols-1 gap-3"
             >
-              <div className="flex-1">
-                <div className="relative">
-                  <RadioGroupItem value="resident" id="resident" className="peer sr-only" />
-                  <Label 
-                    htmlFor="resident" 
-                    className="flex items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 hover:border-gray-300 hover:bg-gray-50 font-medium group"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <Users className="w-5 h-5 text-gray-400 transition-colors duration-200 group-has-[:checked]:text-blue-500" />
-                      <span>Resident</span>
+              <div>
+                <RadioGroupItem value="resident" id="resident" className="peer sr-only" />
+                <Label 
+                  htmlFor="resident" 
+                  className="flex items-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:border-gray-300 hover:bg-gray-50 font-medium"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-blue-100 rounded-full">
+                      <Users className="w-5 h-5 text-blue-600" />
                     </div>
-                  </Label>
-                </div>
+                    <div>
+                      <div className="font-semibold text-gray-900">Resident</div>
+                      <div className="text-sm text-gray-500">Access community services</div>
+                    </div>
+                  </div>
+                </Label>
               </div>
-              <div className="flex-1">
-                <div className="relative">
-                  <RadioGroupItem value="official" id="official" className="peer sr-only" />
-                  <Label 
-                    htmlFor="official" 
-                    className="flex items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-red-500 peer-checked:bg-red-50 peer-checked:text-red-700 hover:border-gray-300 hover:bg-gray-50 font-medium group"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <Shield className="w-5 h-5 text-gray-400 transition-colors duration-200 group-has-[:checked]:text-red-500" />
-                      <span>Official</span>
+              <div>
+                <RadioGroupItem value="official" id="official" className="peer sr-only" />
+                <Label 
+                  htmlFor="official" 
+                  className="flex items-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-red-500 peer-checked:bg-red-50 hover:border-gray-300 hover:bg-gray-50 font-medium"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-red-100 rounded-full">
+                      <Shield className="w-5 h-5 text-red-600" />
                     </div>
-                  </Label>
-                </div>
+                    <div>
+                      <div className="font-semibold text-gray-900">Official</div>
+                      <div className="text-sm text-gray-500">Manage community</div>
+                    </div>
+                  </div>
+                </Label>
               </div>
             </RadioGroup>
           </div>
@@ -270,24 +267,9 @@ export default function Register() {
                 value={formData.email}
                 onChange={handleInputChange}
                 className="pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
+                required
               />
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="barangay-desktop" className="text-gray-700">Barangay</Label>
-            <div className="relative">
-              <Input
-                id="barangay-desktop"
-                type="text"
-                name="barangay"
-                value={formData.barangay}
-                onChange={handleInputChange}
-                placeholder="Select your barangay"
-                className="pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
-              />
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             </div>
           </div>
           
@@ -302,6 +284,7 @@ export default function Register() {
                 value={formData.password}
                 onChange={handleInputChange}
                 className="pl-10 pr-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
+                required
               />
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
               <button
@@ -320,7 +303,7 @@ export default function Register() {
           </div>
           
           <div className="flex items-center space-x-2 pt-2">
-            <input type="checkbox" id="terms-desktop" className="rounded border-gray-300" />
+            <input type="checkbox" id="terms-desktop" className="rounded border-gray-300" required />
             <label htmlFor="terms-desktop" className="text-sm text-gray-600 font-inter">
               I agree to the <Link to="/terms" className="text-blue-600 font-medium">Terms of Service</Link> and <Link to="/privacy" className="text-blue-600 font-medium">Privacy Policy</Link>
             </label>
@@ -329,6 +312,7 @@ export default function Register() {
           <Button
             type="submit"
             className="w-full bg-blue-600 hover:bg-blue-700 font-inter text-white rounded-lg py-3 transition font-medium text-base"
+            disabled={isLoading}
           >
             {isLoading ? "Registering..." : "Register Account"}
           </Button>
