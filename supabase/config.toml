@@ -23,8 +23,8 @@ persistent_logging = false
 
 # Configure the Auth setting for the Edge Function get-api-key
 [functions.get-api-key]
-# Ensure JWT verification is enabled for this function
-verify_jwt = true
+# Make this function public since we're retrieving public API keys
+verify_jwt = false
 
 # Configure the Dashboard
 [inbucket]
