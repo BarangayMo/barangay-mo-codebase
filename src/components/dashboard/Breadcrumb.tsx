@@ -8,7 +8,7 @@ interface BreadcrumbProps {
     label: string;
     href?: string;
   }[];
-  className?: string;  // Added className prop
+  className?: string;
 }
 
 export function DashboardBreadcrumb({ items, className }: BreadcrumbProps) {
@@ -25,19 +25,20 @@ export function DashboardBreadcrumb({ items, className }: BreadcrumbProps) {
         </BreadcrumbItem>
         
         {items.map((item, index) => (
-          <BreadcrumbItem key={index}>
+          <React.Fragment key={index}>
             <BreadcrumbSeparator>
               <ChevronRight className="h-4 w-4" />
             </BreadcrumbSeparator>
-            
-            {index === items.length - 1 ? (
-              <BreadcrumbPage className="font-medium">{item.label}</BreadcrumbPage>
-            ) : (
-              <BreadcrumbLink asChild>
-                <Link to={item.href || "#"} className="hover:text-primary transition-colors">{item.label}</Link>
-              </BreadcrumbLink>
-            )}
-          </BreadcrumbItem>
+            <BreadcrumbItem>
+              {index === items.length - 1 ? (
+                <BreadcrumbPage className="font-medium">{item.label}</BreadcrumbPage>
+              ) : (
+                <BreadcrumbLink asChild>
+                  <Link to={item.href || "#"} className="hover:text-primary transition-colors">{item.label}</Link>
+                </BreadcrumbLink>
+              )}
+            </BreadcrumbItem>
+          </React.Fragment>
         ))}
       </BreadcrumbList>
     </Breadcrumb>

@@ -20,6 +20,29 @@ export const JobMap = ({ location, className }: JobMapProps) => {
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const maxRetries = 3;
 
+  const waitForContainer = (): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const checkContainer = () => {
+        if (mapContainer.current && document.contains(mapContainer.current)) {
+          // Additional check for container dimensions
+          const rect = mapContainer.current.getBoundingClientRect();
+          if (rect.width > 0 && rect.height > 0) {
+            resolve();
+            return;
+          }
+        }
+        
+        // Retry after a short delay
+        setTimeout(checkContainer, 100);
+      };
+      
+      checkContainer();
+      
+      // Timeout after 5 seconds
+      setTimeout(() => reject(new Error('Container timeout')), 5000);
+    });
+  };
+
   const initializeMap = async (attempt = 1) => {
     console.log(`🗺️ JobMap: Starting map initialization (attempt ${attempt})`);
     console.log('🗺️ JobMap: Location:', location);
@@ -42,29 +65,13 @@ export const JobMap = ({ location, className }: JobMapProps) => {
       setError(null);
       setDebugInfo(null);
 
-      // Wait for DOM to be ready
-      await new Promise(resolve => {
-        if (document.readyState === 'complete') {
-          resolve(void 0);
-        } else {
-          window.addEventListener('load', () => resolve(void 0), { once: true });
-        }
-      });
+      // Wait for container to be ready
+      console.log('🗺️ JobMap: Waiting for container...');
+      await waitForContainer();
+      console.log('✅ JobMap: Container ready');
 
-      // Additional wait for container
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      if (!mapContainer.current) {
-        throw new Error('Map container not ready');
-      }
-
-      if (!document.contains(mapContainer.current)) {
-        throw new Error('Map container not in DOM');
-      }
-
-      console.log('✅ JobMap: Container ready, fetching API key...');
-      console.log('🔍 JobMap: Function is now public, should work without authentication');
-
+      console.log('🔍 JobMap: Fetching API key...');
+      
       // Get Mapbox API key with enhanced timeout and debugging
       const apiKeyPromise = supabase.functions.invoke('get-api-key', {
         body: { keyName: 'MAPBOX_PUBLIC_TOKEN' }
@@ -228,7 +235,12 @@ export const JobMap = ({ location, className }: JobMapProps) => {
 
   useEffect(() => {
     if (location && !map.current) {
-      initializeMap();
+      // Use a small delay to ensure the component is fully mounted
+      const timer = setTimeout(() => {
+        initializeMap();
+      }, 100);
+      
+      return () => clearTimeout(timer);
     }
 
     return () => {
