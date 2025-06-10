@@ -9,6 +9,7 @@ const corsHeaders = {
 serve(async (req) => {
   console.log("🔍 Edge function called - Method:", req.method);
   console.log("🔍 Request URL:", req.url);
+  console.log("🔍 Request headers:", Object.fromEntries(req.headers.entries()));
   
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -36,14 +37,21 @@ serve(async (req) => {
 
     console.log("🔑 Looking for API key:", keyName);
     
+    // List all available environment variables (without showing values)
+    const envKeys = Object.keys(Deno.env.toObject());
+    console.log("🔍 Available environment keys:", envKeys);
+    
     // Get the API key from Supabase secrets
     const apiKey = Deno.env.get(keyName);
     
     if (!apiKey) {
       console.error(`❌ API key ${keyName} not found in environment`);
-      console.log("🔍 Available environment variables:", Object.keys(Deno.env.toObject()).filter(key => !key.includes('SECRET')));
+      console.log("🔍 Available environment variables:", envKeys.filter(key => !key.includes('SECRET') && !key.includes('PASSWORD')));
       return new Response(
-        JSON.stringify({ error: `API key ${keyName} not found` }),
+        JSON.stringify({ 
+          error: `API key ${keyName} not found`,
+          availableKeys: envKeys.filter(key => key.includes('API') || key.includes('TOKEN') || key.includes('KEY'))
+        }),
         {
           status: 404,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -54,6 +62,21 @@ serve(async (req) => {
     console.log("✅ API key found successfully");
     console.log("🔑 API key length:", apiKey.length);
     console.log("🔑 API key preview:", apiKey.substring(0, 8) + "...");
+
+    // Validate the API key format for Mapbox
+    if (keyName === 'MAPBOX_PUBLIC_TOKEN' && !apiKey.startsWith('pk.')) {
+      console.error("❌ Invalid Mapbox API key format - should start with 'pk.'");
+      return new Response(
+        JSON.stringify({ 
+          error: "Invalid Mapbox API key format - should start with 'pk.'",
+          keyPreview: apiKey.substring(0, 8) + "..."
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
 
     return new Response(
       JSON.stringify({ apiKey }),
