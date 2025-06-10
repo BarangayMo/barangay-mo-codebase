@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -92,7 +91,7 @@ export default function Register() {
                 <RadioGroupItem value="resident" id="resident-mobile" className="peer sr-only" />
                 <Label 
                   htmlFor="resident-mobile" 
-                  className={`flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
+                  className={`flex flex-col items-center justify-center h-32 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
                     formData.role === "resident" 
                       ? "border-blue-500 bg-blue-50" 
                       : "border-gray-200"
@@ -115,7 +114,7 @@ export default function Register() {
                 <RadioGroupItem value="official" id="official-mobile" className="peer sr-only" />
                 <Label 
                   htmlFor="official-mobile" 
-                  className={`flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
+                  className={`flex flex-col items-center justify-center h-32 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
                     formData.role === "official" 
                       ? "border-red-500 bg-red-50" 
                       : "border-gray-200"
@@ -235,7 +234,7 @@ export default function Register() {
                 <RadioGroupItem value="resident" id="resident" className="peer sr-only" />
                 <Label 
                   htmlFor="resident" 
-                  className={`flex flex-col items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
+                  className={`flex flex-col items-center h-28 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
                     formData.role === "resident" 
                       ? "border-blue-500 bg-blue-50" 
                       : "border-gray-200"
@@ -258,7 +257,7 @@ export default function Register() {
                 <RadioGroupItem value="official" id="official" className="peer sr-only" />
                 <Label 
                   htmlFor="official" 
-                  className={`flex flex-col items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
+                  className={`flex flex-col items-center h-28 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
                     formData.role === "official" 
                       ? "border-red-500 bg-red-50" 
                       : "border-gray-200"
