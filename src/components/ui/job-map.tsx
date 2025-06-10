@@ -33,15 +33,24 @@ export const JobMap = ({ location, className }: JobMapProps) => {
         return;
       }
 
-      // Wait for container to be ready
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Wait longer for container to be ready and check multiple times
+      let attempts = 0;
+      const maxAttempts = 10;
+      
+      while (!mapContainer.current && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+        console.log(`🗺️ JobMap: Waiting for container, attempt ${attempts}/${maxAttempts}`);
+      }
 
       if (!mapContainer.current) {
-        console.log('❌ JobMap: Map container not available');
+        console.log('❌ JobMap: Map container not available after waiting');
         setError('Map container not available');
         setLoading(false);
         return;
       }
+
+      console.log('✅ JobMap: Container ready, proceeding with initialization');
 
       try {
         setLoading(true);
@@ -96,7 +105,7 @@ export const JobMap = ({ location, className }: JobMapProps) => {
         const [lng, lat] = geocodeData.features[0].center;
         console.log('📍 JobMap: Coordinates found:', { lng, lat });
 
-        // Double-check container is still available
+        // Final check that container is still available
         if (!mapContainer.current) {
           console.error('❌ JobMap: Map container disappeared during initialization');
           throw new Error('Map container no longer available');
@@ -167,8 +176,8 @@ export const JobMap = ({ location, className }: JobMapProps) => {
       }
     };
 
-    // Only initialize if we have a location
-    if (location) {
+    // Only initialize if we have a location and no existing map
+    if (location && !map.current) {
       initializeMap();
     }
 
