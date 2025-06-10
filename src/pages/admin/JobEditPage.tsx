@@ -7,14 +7,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { Save, ArrowLeft, Upload, Calendar, User, Building2, MapPin, DollarSign, Clock, Tag } from "lucide-react";
+import { Save, ArrowLeft, Calendar, User, Building2, MapPin, DollarSign, Clock, Tag } from "lucide-react";
+import { EnhancedRichTextEditor } from "@/components/ui/enhanced-rich-text-editor";
+import { MediaUpload } from "@/components/ui/media-upload";
+import { ArrayInput } from "@/components/ui/array-input";
+import { CharacterLimitedInput } from "@/components/ui/character-limited-input";
+import { JobMap } from "@/components/ui/job-map";
 
 export default function JobEditPage() {
   const { id } = useParams();
@@ -22,6 +26,7 @@ export default function JobEditPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
   const [job, setJob] = useState({
     title: "",
     description: "",
@@ -36,7 +41,9 @@ export default function JobEditPage() {
     skills: [],
     is_open: true,
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
+    job_code: "",
+    logo_url: ""
   });
 
   useEffect(() => {
@@ -53,7 +60,12 @@ export default function JobEditPage() {
         if (error) throw error;
         
         if (data) {
-          setJob(data);
+          setJob({
+            ...data,
+            responsibilities: data.responsibilities || [],
+            qualifications: data.qualifications || [],
+            skills: data.skills || []
+          });
         }
       } catch (error) {
         console.error('Error fetching job:', error);
@@ -70,8 +82,25 @@ export default function JobEditPage() {
     fetchJob();
   }, [id, toast]);
 
-  const handleSave = async () => {
-    setSaving(true);
+  // Auto-save functionality
+  useEffect(() => {
+    const autoSaveInterval = setInterval(async () => {
+      if (autoSaveStatus === 'unsaved') {
+        setAutoSaveStatus('saving');
+        try {
+          await handleSave(true); // silent save
+          setAutoSaveStatus('saved');
+        } catch (error) {
+          setAutoSaveStatus('unsaved');
+        }
+      }
+    }, 30000); // Auto-save every 30 seconds
+
+    return () => clearInterval(autoSaveInterval);
+  }, [autoSaveStatus]);
+
+  const handleSave = async (silent = false) => {
+    if (!silent) setSaving(true);
     try {
       const { error } = await supabase
         .from('jobs')
@@ -88,53 +117,39 @@ export default function JobEditPage() {
           qualifications: job.qualifications,
           skills: job.skills,
           is_open: job.is_open,
+          logo_url: job.logo_url,
           updated_at: new Date().toISOString()
         })
         .eq('id', id);
         
       if (error) throw error;
       
-      toast({
-        title: "Job updated successfully",
-        description: "The job posting has been saved",
-      });
-      
-      navigate('/admin/jobs/all');
+      if (!silent) {
+        toast({
+          title: "Job updated successfully",
+          description: "The job posting has been saved",
+        });
+        
+        navigate('/admin/jobs/all');
+      }
     } catch (error) {
       console.error('Error updating job:', error);
-      toast({
-        title: "Failed to update job",
-        description: "Please try again",
-        variant: "destructive"
-      });
+      if (!silent) {
+        toast({
+          title: "Failed to update job",
+          description: "Please try again",
+          variant: "destructive"
+        });
+      }
+      throw error;
     } finally {
-      setSaving(false);
+      if (!silent) setSaving(false);
     }
   };
 
-  const handleInputChange = (field, value) => {
+  const handleInputChange = (field: string, value: any) => {
     setJob(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleArrayChange = (field, index, value) => {
-    setJob(prev => ({
-      ...prev,
-      [field]: prev[field].map((item, i) => i === index ? value : item)
-    }));
-  };
-
-  const addArrayItem = (field) => {
-    setJob(prev => ({
-      ...prev,
-      [field]: [...(prev[field] || []), ""]
-    }));
-  };
-
-  const removeArrayItem = (field, index) => {
-    setJob(prev => ({
-      ...prev,
-      [field]: prev[field].filter((_, i) => i !== index)
-    }));
+    setAutoSaveStatus('unsaved');
   };
 
   if (loading) {
@@ -164,7 +179,7 @@ export default function JobEditPage() {
       <div className="p-6 max-w-7xl mx-auto">
         <DashboardPageHeader
           title="Edit Job"
-          description={`Editing: ${job.title}`}
+          description={`${job.job_code} • ${job.title}`}
           breadcrumbItems={[
             { label: "Jobs", href: "/admin/jobs" },
             { label: "All Jobs", href: "/admin/jobs/all" },
@@ -174,23 +189,33 @@ export default function JobEditPage() {
             label: "Back to List",
             onClick: () => navigate('/admin/jobs/all'),
             icon: <ArrowLeft className="h-4 w-4" />,
-            variant: "outline"
+            variant: "ghost"
           }}
           secondaryActions={[
             {
               label: saving ? "Saving..." : "Save Changes",
-              onClick: handleSave,
+              onClick: () => handleSave(),
               icon: <Save className="h-4 w-4" />,
-              variant: "default"
+              variant: "default",
+              disabled: saving
             }
           ]}
         />
 
+        {/* Auto-save status */}
+        <div className="mb-4 flex justify-end">
+          <span className="text-xs text-muted-foreground">
+            {autoSaveStatus === 'saved' && "All changes saved"}
+            {autoSaveStatus === 'saving' && "Saving..."}
+            {autoSaveStatus === 'unsaved' && "Unsaved changes"}
+          </span>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-8">
             {/* Basic Information */}
-            <Card>
+            <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Building2 className="h-5 w-5" />
@@ -200,28 +225,27 @@ export default function JobEditPage() {
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="title" className="text-sm font-medium">Job Title</Label>
-                  <Input
+                  <CharacterLimitedInput
                     id="title"
                     value={job.title}
                     onChange={(e) => handleInputChange('title', e.target.value)}
                     placeholder="Enter job title"
+                    maxLength={100}
                     className="text-lg font-medium"
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="description" className="text-sm font-medium">Job Description</Label>
-                  <Textarea
-                    id="description"
+                  <EnhancedRichTextEditor
                     value={job.description}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
+                    onChange={(value) => handleInputChange('description', value)}
                     placeholder="Describe the job role, requirements, and expectations..."
-                    rows={8}
-                    className="resize-none"
+                    maxLength={5000}
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="company" className="text-sm font-medium">Company</Label>
                     <Input
@@ -245,7 +269,7 @@ export default function JobEditPage() {
             </Card>
 
             {/* Job Details */}
-            <Card>
+            <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Tag className="h-5 w-5" />
@@ -253,28 +277,41 @@ export default function JobEditPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="category" className="text-sm font-medium">Category</Label>
-                    <Input
-                      id="category"
-                      value={job.category}
-                      onChange={(e) => handleInputChange('category', e.target.value)}
-                      placeholder="Job category"
-                    />
+                    <Select value={job.category} onValueChange={(value) => handleInputChange('category', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="technology">Technology</SelectItem>
+                        <SelectItem value="healthcare">Healthcare</SelectItem>
+                        <SelectItem value="finance">Finance</SelectItem>
+                        <SelectItem value="education">Education</SelectItem>
+                        <SelectItem value="retail">Retail</SelectItem>
+                        <SelectItem value="hospitality">Hospitality</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="experience" className="text-sm font-medium">Required Experience</Label>
-                    <Input
-                      id="experience"
-                      value={job.experience}
-                      onChange={(e) => handleInputChange('experience', e.target.value)}
-                      placeholder="e.g., 2-3 years"
-                    />
+                    <Select value={job.experience} onValueChange={(value) => handleInputChange('experience', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select experience level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0-1 years">0-1 years</SelectItem>
+                        <SelectItem value="1-3 years">1-3 years</SelectItem>
+                        <SelectItem value="3-5 years">3-5 years</SelectItem>
+                        <SelectItem value="5+ years">5+ years</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="salary" className="text-sm font-medium">Salary Range</Label>
                     <Input
@@ -305,66 +342,47 @@ export default function JobEditPage() {
             </Card>
 
             {/* Responsibilities */}
-            <Card>
+            <Card className="shadow-sm">
               <CardHeader>
-                <CardTitle>Responsibilities</CardTitle>
+                <CardTitle>Key Responsibilities</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {job.responsibilities?.map((responsibility, index) => (
-                  <div key={index} className="flex gap-2">
-                    <Input
-                      value={responsibility}
-                      onChange={(e) => handleArrayChange('responsibilities', index, e.target.value)}
-                      placeholder="Enter responsibility"
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => removeArrayItem('responsibilities', index)}
-                    >
-                      Remove
-                    </Button>
-                  </div>
-                ))}
-                <Button
-                  variant="outline"
-                  onClick={() => addArrayItem('responsibilities')}
-                  className="w-full"
-                >
-                  Add Responsibility
-                </Button>
+              <CardContent>
+                <ArrayInput
+                  values={job.responsibilities}
+                  onChange={(values) => handleInputChange('responsibilities', values)}
+                  placeholder="Enter a key responsibility"
+                  addButtonText="Add Responsibility"
+                />
               </CardContent>
             </Card>
 
             {/* Qualifications */}
-            <Card>
+            <Card className="shadow-sm">
               <CardHeader>
-                <CardTitle>Qualifications</CardTitle>
+                <CardTitle>Required Qualifications</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {job.qualifications?.map((qualification, index) => (
-                  <div key={index} className="flex gap-2">
-                    <Input
-                      value={qualification}
-                      onChange={(e) => handleArrayChange('qualifications', index, e.target.value)}
-                      placeholder="Enter qualification"
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => removeArrayItem('qualifications', index)}
-                    >
-                      Remove
-                    </Button>
-                  </div>
-                ))}
-                <Button
-                  variant="outline"
-                  onClick={() => addArrayItem('qualifications')}
-                  className="w-full"
-                >
-                  Add Qualification
-                </Button>
+              <CardContent>
+                <ArrayInput
+                  values={job.qualifications}
+                  onChange={(values) => handleInputChange('qualifications', values)}
+                  placeholder="Enter a required qualification"
+                  addButtonText="Add Qualification"
+                />
+              </CardContent>
+            </Card>
+
+            {/* Skills */}
+            <Card className="shadow-sm">
+              <CardHeader>
+                <CardTitle>Required Skills</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ArrayInput
+                  values={job.skills}
+                  onChange={(values) => handleInputChange('skills', values)}
+                  placeholder="Enter a required skill"
+                  addButtonText="Add Skill"
+                />
               </CardContent>
             </Card>
           </div>
@@ -372,11 +390,11 @@ export default function JobEditPage() {
           {/* Right Column - Settings & Meta */}
           <div className="space-y-6">
             {/* Publish Status */}
-            <Card>
+            <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Calendar className="h-5 w-5" />
-                  Publish
+                  Status & Publication
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -396,45 +414,44 @@ export default function JobEditPage() {
                 <Separator />
 
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Visibility</span>
+                  <span className="text-sm text-muted-foreground">Job Code</span>
+                  <Badge variant="secondary">{job.job_code}</Badge>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Visibility</span>
                   <Badge variant="secondary">Public</Badge>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Created</span>
+                  <span className="text-sm text-muted-foreground">Created</span>
                   <span className="text-sm">{new Date(job.created_at).toLocaleDateString()}</span>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Updated</span>
+                  <span className="text-sm text-muted-foreground">Updated</span>
                   <span className="text-sm">{new Date(job.updated_at).toLocaleDateString()}</span>
                 </div>
               </CardContent>
             </Card>
 
             {/* Job Thumbnail */}
-            <Card>
+            <Card className="shadow-sm">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Upload className="h-5 w-5" />
-                  Job Thumbnail
-                </CardTitle>
+                <CardTitle>Company Logo</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
-                  <div className="text-center">
-                    <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-500">Upload thumbnail</p>
-                  </div>
-                </div>
-                <Button variant="outline" className="w-full">
-                  Choose Image
-                </Button>
+              <CardContent>
+                <MediaUpload
+                  value={job.logo_url}
+                  onChange={(url) => handleInputChange('logo_url', url)}
+                  onRemove={() => handleInputChange('logo_url', '')}
+                  accept="image/*"
+                />
               </CardContent>
             </Card>
 
             {/* Assigned To */}
-            <Card>
+            <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="h-5 w-5" />
@@ -449,7 +466,7 @@ export default function JobEditPage() {
                   </Avatar>
                   <div>
                     <p className="text-sm font-medium">Admin User</p>
-                    <p className="text-xs text-gray-500">admin@company.com</p>
+                    <p className="text-xs text-muted-foreground">admin@company.com</p>
                   </div>
                 </div>
                 <Button variant="outline" className="w-full">
@@ -458,30 +475,45 @@ export default function JobEditPage() {
               </CardContent>
             </Card>
 
-            {/* Company Details */}
-            <Card>
+            {/* Location Map */}
+            {job.location && (
+              <Card className="shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MapPin className="h-5 w-5" />
+                    Location
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <JobMap location={job.location} />
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Job Summary */}
+            <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Building2 className="h-5 w-5" />
-                  Company Details
+                  Summary
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 text-sm">
-                    <Building2 className="h-4 w-4 text-gray-400" />
-                    <span>{job.company}</span>
+                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                    <span>{job.company || "Not specified"}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <MapPin className="h-4 w-4 text-gray-400" />
-                    <span>{job.location}</span>
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span>{job.location || "Not specified"}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <DollarSign className="h-4 w-4 text-gray-400" />
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
                     <span>{job.salary || "Not specified"}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <Clock className="h-4 w-4 text-gray-400" />
+                    <Clock className="h-4 w-4 text-muted-foreground" />
                     <span>{job.work_approach || "Not specified"}</span>
                   </div>
                 </div>
