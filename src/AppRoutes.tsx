@@ -8,6 +8,7 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Verify from "@/pages/Verify";
 import AdminDashboard from "@/pages/AdminDashboard";
+import ResidentHome from "@/pages/ResidentHome";
 import SettingsPage from "@/pages/admin/SettingsPage";
 import MediaLibraryPage from "@/pages/admin/MediaLibraryPage";
 import MessagesPage from "@/pages/admin/MessagesPage";
@@ -20,6 +21,7 @@ const AppRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/verify" element={<Verify />} />
+      <Route path="/resident-home" element={<ResidentHome />} />
       
       {/* Admin routes */}
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
