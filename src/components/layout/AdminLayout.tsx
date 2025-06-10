@@ -13,6 +13,8 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CommandPalette } from "./CommandPalette";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 import { useNotifications } from "@/hooks/useNotifications";
 
 interface AdminLayoutProps {
@@ -28,6 +30,7 @@ export const AdminLayout = ({
 }: AdminLayoutProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCommandOpen, setIsCommandOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     const saved = localStorage.getItem("sidebar-collapsed");
     return saved ? JSON.parse(saved) : false;
@@ -252,16 +255,26 @@ export const AdminLayout = ({
                     </DropdownMenuContent>
                   </DropdownMenu>
                   
-                  <Button variant="ghost" size="icon" className="relative" asChild>
-                    <Link to="/notifications">
-                      <Bell className="h-5 w-5" />
-                      {unreadCount > 0 && (
-                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-medium text-white">
-                          {unreadCount > 99 ? '99+' : unreadCount}
-                        </span>
-                      )}
-                    </Link>
-                  </Button>
+                  <Popover open={isNotificationOpen} onOpenChange={setIsNotificationOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="icon" className="relative">
+                        <Bell className="h-5 w-5" />
+                        {unreadCount > 0 && (
+                          <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-medium text-white">
+                            {unreadCount > 99 ? '99+' : unreadCount}
+                          </span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent 
+                      className="w-80 p-0 mr-4" 
+                      align="end"
+                      side="bottom"
+                      sideOffset={8}
+                    >
+                      <NotificationDropdown onClose={() => setIsNotificationOpen(false)} />
+                    </PopoverContent>
+                  </Popover>
                   
                   <Button variant="ghost" size="icon" className="relative">
                     <MessageSquare className="h-5 w-5" />

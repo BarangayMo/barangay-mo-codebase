@@ -13,6 +13,8 @@ import { useCartSummary } from "@/hooks/useCartSummary";
 import { useNotifications } from "@/hooks/useNotifications";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { CartDrawerContent } from "@/components/cart/CartDrawerContent";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 import { useState } from "react";
 
 export const Header = () => {
@@ -22,6 +24,7 @@ export const Header = () => {
   const { cartItemCount } = useCartSummary();
   const { unreadCount } = useNotifications();
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
   const getDashboardRoute = () => {
     switch (userRole) {
@@ -98,21 +101,51 @@ export const Header = () => {
                     </Sheet>
                   )
                 )}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="relative w-8 h-8 md:w-9 md:h-9"
-                  asChild
-                >
-                  <Link to="/notifications">
-                    <Bell className="h-4 w-4 md:h-5 md:w-5" />
-                    {unreadCount > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 text-white text-[10px] md:text-xs rounded-full w-3.5 h-3.5 md:w-4 md:h-4 flex items-center justify-center bg-official">
-                        {unreadCount > 99 ? '99+' : unreadCount}
-                      </span>
-                    )}
-                  </Link>
-                </Button>
+                
+                {/* Notification Bell with Dropdown */}
+                {isMobile ? (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="relative w-8 h-8 md:w-9 md:h-9"
+                    asChild
+                  >
+                    <Link to="/notifications">
+                      <Bell className="h-4 w-4 md:h-5 md:w-5" />
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-0.5 -right-0.5 text-white text-[10px] md:text-xs rounded-full w-3.5 h-3.5 md:w-4 md:h-4 flex items-center justify-center bg-official">
+                          {unreadCount > 99 ? '99+' : unreadCount}
+                        </span>
+                      )}
+                    </Link>
+                  </Button>
+                ) : (
+                  <Popover open={isNotificationOpen} onOpenChange={setIsNotificationOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="relative w-8 h-8 md:w-9 md:h-9"
+                      >
+                        <Bell className="h-4 w-4 md:h-5 md:w-5" />
+                        {unreadCount > 0 && (
+                          <span className="absolute -top-0.5 -right-0.5 text-white text-[10px] md:text-xs rounded-full w-3.5 h-3.5 md:w-4 md:h-4 flex items-center justify-center bg-official">
+                            {unreadCount > 99 ? '99+' : unreadCount}
+                          </span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent 
+                      className="w-80 p-0 mr-4" 
+                      align="end"
+                      side="bottom"
+                      sideOffset={8}
+                    >
+                      <NotificationDropdown onClose={() => setIsNotificationOpen(false)} />
+                    </PopoverContent>
+                  </Popover>
+                )}
+                
                 {!isMobile && <ProfileMenu />}
               </div>
               {isMobile && (
