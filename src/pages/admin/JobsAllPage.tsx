@@ -190,7 +190,7 @@ export default function JobsAllPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 space-y-6">
       <DashboardPageHeader
         title="Job List"
         description="RTR-082"
@@ -205,9 +205,9 @@ export default function JobsAllPage() {
         }}
       />
 
-      <div className="flex gap-6 h-[calc(100vh-200px)]">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100vh-250px)]">
         {/* Left Panel - Talent List */}
-        <div className="w-1/2 bg-white rounded-lg border overflow-hidden">
+        <div className="bg-white rounded-lg border overflow-hidden">
           <div className="p-6">
             <h3 className="text-xl font-bold mb-4">Talent List</h3>
 
@@ -262,63 +262,65 @@ export default function JobsAllPage() {
                 </div>
 
                 {/* Table */}
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Expected Salary</TableHead>
-                      <TableHead>Experience</TableHead>
-                      <TableHead>Rating</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredApplications.map((talent) => (
-                      <TableRow 
-                        key={talent.id} 
-                        className="cursor-pointer hover:bg-gray-50"
-                        onClick={() => {
-                          if (jobs.length > 0) {
-                            handleJobSelect(jobs[0]); // For demo, select first job
-                          }
-                        }}
-                      >
-                        <TableCell className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={`https://ui-avatars.com/api/?name=${talent.name}&background=random`} />
-                            <AvatarFallback>{talent.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="font-medium text-sm flex items-center gap-2">
-                              {talent.name}
-                              {talent.badge && (
-                                <Badge className={`text-xs ${getBadgeColor(talent.badge)}`}>
-                                  {talent.badge}
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {talent.gender} • {talent.age} Years Old
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-sm">{talent.expectedSalary}</TableCell>
-                        <TableCell className="text-sm">{talent.experience}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                            <span className="text-sm">{talent.rating}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={`text-xs ${getStatusColor(talent.status)}`}>
-                            {talent.status}
-                          </Badge>
-                        </TableCell>
+                <div className="overflow-auto max-h-96">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Expected Salary</TableHead>
+                        <TableHead>Experience</TableHead>
+                        <TableHead>Rating</TableHead>
+                        <TableHead>Status</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredApplications.map((talent) => (
+                        <TableRow 
+                          key={talent.id} 
+                          className="cursor-pointer hover:bg-gray-50"
+                          onClick={() => {
+                            if (jobs.length > 0) {
+                              handleJobSelect(jobs[0]); // For demo, select first job
+                            }
+                          }}
+                        >
+                          <TableCell className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={`https://ui-avatars.com/api/?name=${talent.name}&background=random`} />
+                              <AvatarFallback>{talent.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="font-medium text-sm flex items-center gap-2">
+                                {talent.name}
+                                {talent.badge && (
+                                  <Badge className={`text-xs ${getBadgeColor(talent.badge)}`}>
+                                    {talent.badge}
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {talent.gender} • {talent.age} Years Old
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-sm">{talent.expectedSalary}</TableCell>
+                          <TableCell className="text-sm">{talent.experience}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                              <span className="text-sm">{talent.rating}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={`text-xs ${getStatusColor(talent.status)}`}>
+                              {talent.status}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
 
                 {/* Pagination */}
                 <div className="flex items-center justify-between mt-4">
@@ -371,9 +373,9 @@ export default function JobsAllPage() {
         </div>
 
         {/* Right Panel - Job Details */}
-        <div className="w-1/2 bg-white rounded-lg border overflow-hidden">
+        <div className="bg-white rounded-lg border overflow-hidden">
           {selectedJob ? (
-            <div className="p-6">
+            <div className="p-6 overflow-auto max-h-full">
               {/* Job Header */}
               <div className="flex items-start gap-4 mb-6">
                 <div className="w-16 h-16 bg-green-600 rounded-lg flex items-center justify-center">
