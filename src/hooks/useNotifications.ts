@@ -33,10 +33,33 @@ export const useNotifications = () => {
         .from('notifications')
         .select('*')
         .eq('recipient_id', user.id)
+        .neq('status', 'archived')
         .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching notifications:', error);
+        throw error;
+      }
+
+      return data as Notification[];
+    },
+    enabled: !!user?.id,
+  });
+
+  const { data: archivedNotifications = [] } = useQuery({
+    queryKey: ['archivedNotifications', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('recipient_id', user.id)
+        .eq('status', 'archived')
+        .order('updated_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching archived notifications:', error);
         throw error;
       }
 
@@ -66,13 +89,17 @@ export const useNotifications = () => {
     mutationFn: async (notificationId: string) => {
       const { error } = await supabase
         .from('notifications')
-        .update({ status: 'archived' })
+        .update({ 
+          status: 'archived',
+          updated_at: new Date().toISOString()
+        })
         .eq('id', notificationId);
 
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['archivedNotifications'] });
     },
   });
 
@@ -100,6 +127,7 @@ export const useNotifications = () => {
 
   return {
     notifications,
+    archivedNotifications,
     isLoading,
     error,
     unreadCount,

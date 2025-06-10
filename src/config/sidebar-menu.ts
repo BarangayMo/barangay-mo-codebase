@@ -1,5 +1,5 @@
 
-import { Home, ShoppingBag, Package, User, Users, FileText, Settings, BarChart, Store, MessageSquare, Image, Library, Briefcase } from "lucide-react";
+import { Home, ShoppingBag, Package, User, Users, FileText, Settings, BarChart, Store, MessageSquare, Image, Library, Briefcase, Bell } from "lucide-react";
 
 export const sidebarMenuItems = [
   {
@@ -70,6 +70,11 @@ export const sidebarMenuItems = [
   {
     groupLabel: "Communication",
     items: [
+      {
+        title: "Notifications",
+        icon: Bell,
+        path: "/notifications",
+      },
       {
         title: "Messaging",
         icon: MessageSquare,

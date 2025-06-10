@@ -100,7 +100,7 @@ const NotificationItem = ({ notification, onMarkAsRead }: { notification: Notifi
                   e.stopPropagation();
                   onMarkAsRead(notification.id);
                 }}
-                className="text-blue-600 hover:text-blue-700 h-6 w-6 p-0"
+                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-6 w-6 p-0"
               >
                 <CheckCircle className="h-3 w-3" />
               </Button>
@@ -189,7 +189,7 @@ export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => 
             placeholder="Search notifications..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 h-8 text-sm"
+            className="pl-9 h-8 text-sm border-blue-200 focus:border-blue-500"
           />
         </div>
 
@@ -201,7 +201,7 @@ export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => 
               size="sm"
               onClick={() => markAllAsRead()}
               disabled={isMarkingAllAsRead}
-              className="text-xs text-blue-600 hover:text-blue-700 h-7 px-2"
+              className="text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-7 px-2"
             >
               Mark all as read
             </Button>
@@ -212,13 +212,13 @@ export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => 
       {/* Filter Tabs */}
       <Tabs defaultValue="all" className="w-full">
         <TabsList className="w-full h-10 p-1 bg-gray-50 rounded-none border-b">
-          <TabsTrigger value="all" className="flex-1 text-xs h-8">
+          <TabsTrigger value="all" className="flex-1 text-xs h-8 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700">
             All ({filteredNotifications.length})
           </TabsTrigger>
-          <TabsTrigger value="urgent" className="flex-1 text-xs h-8">
+          <TabsTrigger value="urgent" className="flex-1 text-xs h-8 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700">
             Urgent ({urgentNotifications.length})
           </TabsTrigger>
-          <TabsTrigger value="normal" className="flex-1 text-xs h-8">
+          <TabsTrigger value="normal" className="flex-1 text-xs h-8 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700">
             Normal ({normalNotifications.length})
           </TabsTrigger>
         </TabsList>
@@ -302,7 +302,7 @@ export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => 
 
         {/* View All Button - Full Width at Bottom */}
         <div className="p-3 border-t bg-gray-50">
-          <Button asChild className="w-full" variant="default" size="sm">
+          <Button asChild className="w-full bg-blue-600 hover:bg-blue-700" variant="default" size="sm">
             <Link to="/notifications" onClick={onClose}>
               View All Notifications
             </Link>

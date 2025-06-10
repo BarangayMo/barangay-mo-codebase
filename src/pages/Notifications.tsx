@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { AdminLayout } from "@/components/layout/AdminLayout";
@@ -218,15 +219,15 @@ const NotificationDetails = ({
   
   return (
     <div className="h-full flex flex-col">
-      <div className="p-4 border-b flex items-center justify-between">
+      <div className="p-4 border-b flex items-center justify-between sticky top-0 bg-white z-10">
         <h3 className="text-lg font-semibold text-gray-900">Notification Details</h3>
         <Button variant="ghost" size="sm" onClick={onClose}>
           <X className="h-4 w-4" />
         </Button>
       </div>
       
-      <div className="flex-1 p-4 overflow-y-auto">
-        <div className="space-y-4">
+      <ScrollArea className="flex-1">
+        <div className="p-4 space-y-4">
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0 p-2 bg-gray-100 rounded-lg">
               {getCategoryIcon(notification.category)}
@@ -288,9 +289,9 @@ const NotificationDetails = ({
             </div>
           )}
         </div>
-      </div>
+      </ScrollArea>
 
-      <div className="p-4 border-t bg-gray-50 space-y-3">
+      <div className="p-4 border-t bg-white sticky bottom-0 space-y-3 z-10">
         {/* Action Buttons */}
         {actionButtons.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap">
@@ -301,12 +302,12 @@ const NotificationDetails = ({
         {/* Standard Actions */}
         <div className="flex items-center gap-2">
           {isUnread && (
-            <Button onClick={() => onMarkAsRead(notification.id)} className="flex-1">
+            <Button onClick={() => onMarkAsRead(notification.id)} className="flex-1 bg-blue-600 hover:bg-blue-700">
               <CheckCircle className="h-4 w-4 mr-2" />
               Mark as Read
             </Button>
           )}
-          <Button variant="outline" onClick={() => onArchive(notification.id)} className="flex-1">
+          <Button variant="outline" onClick={() => onArchive(notification.id)} className="flex-1 border-blue-200 text-blue-600 hover:bg-blue-50">
             <Archive className="h-4 w-4 mr-2" />
             Archive
           </Button>
@@ -319,9 +320,11 @@ const NotificationDetails = ({
 export default function Notifications() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
+  const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active');
   const { userRole } = useAuth();
   const {
     notifications,
+    archivedNotifications,
     isLoading,
     unreadCount,
     markAsRead,
@@ -331,27 +334,32 @@ export default function Notifications() {
   } = useNotifications();
 
   // Updated role-based filtering to include actual database categories
-  const roleBasedNotifications = notifications.filter(notification => {
-    // General notifications are visible to everyone
-    if (notification.category === 'general' || notification.category === 'system') {
-      return true;
-    }
-
-    switch (userRole) {
-      case 'superadmin':
-        // Superadmins can see all notifications
+  const filterNotificationsByRole = (notificationList: Notification[]) => {
+    return notificationList.filter(notification => {
+      // General and system notifications are visible to everyone
+      if (notification.category === 'general' || notification.category === 'system') {
         return true;
-      case 'official':
-        // Officials can see work-related notifications
-        return ['task', 'deadline', 'milestone', 'message', 'finance', 'meeting', 'project', 'feedback'].includes(notification.category);
-      case 'resident':
-        // Residents can see personal and approval notifications
-        return ['approval', 'message', 'feedback', 'registration'].includes(notification.category);
-      default:
-        // Fallback: show general notifications for any unrecognized role
-        return ['general', 'system'].includes(notification.category);
-    }
-  });
+      }
+
+      switch (userRole) {
+        case 'superadmin':
+          // Superadmins can see all notifications
+          return true;
+        case 'official':
+          // Officials can see work-related notifications
+          return ['task', 'deadline', 'milestone', 'message', 'finance', 'meeting', 'project', 'feedback'].includes(notification.category);
+        case 'resident':
+          // Residents can see personal and approval notifications
+          return ['approval', 'message', 'feedback', 'registration'].includes(notification.category);
+        default:
+          // Fallback: show general notifications for any unrecognized role
+          return ['general', 'system'].includes(notification.category);
+      }
+    });
+  };
+
+  const currentNotifications = activeTab === 'active' ? notifications : archivedNotifications;
+  const roleBasedNotifications = filterNotificationsByRole(currentNotifications);
 
   const filteredNotifications = roleBasedNotifications.filter(notification =>
     notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -440,16 +448,35 @@ export default function Notifications() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 h-[calc(100vh-20rem)]">
           {/* Notifications List */}
           <div className="lg:col-span-2">
-            <Card className="h-full">
-              <CardHeader className="pb-4">
+            <Card className="h-full flex flex-col">
+              <CardHeader className="pb-4 sticky top-0 bg-white z-10 border-b">
                 <div className="flex items-center justify-between">
-                  <CardTitle>All Notifications</CardTitle>
-                  {unreadCount > 0 && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant={activeTab === 'active' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setActiveTab('active')}
+                      className={activeTab === 'active' ? 'bg-blue-600 hover:bg-blue-700' : 'border-blue-200 text-blue-600 hover:bg-blue-50'}
+                    >
+                      Active
+                    </Button>
+                    <Button
+                      variant={activeTab === 'archived' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setActiveTab('archived')}
+                      className={activeTab === 'archived' ? 'bg-blue-600 hover:bg-blue-700' : 'border-blue-200 text-blue-600 hover:bg-blue-50'}
+                    >
+                      <Archive className="h-4 w-4 mr-1" />
+                      Archived
+                    </Button>
+                  </div>
+                  {unreadCount > 0 && activeTab === 'active' && (
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => markAllAsRead()}
                       disabled={isMarkingAllAsRead}
+                      className="border-blue-200 text-blue-600 hover:bg-blue-50"
                     >
                       {isMarkingAllAsRead ? (
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -467,12 +494,12 @@ export default function Notifications() {
                     placeholder="Search notifications..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9"
+                    className="pl-9 border-blue-200 focus:border-blue-500"
                   />
                 </div>
               </CardHeader>
 
-              <ScrollArea className="h-[calc(100%-140px)]">
+              <ScrollArea className="flex-1">
                 {filteredNotifications.length > 0 ? (
                   filteredNotifications.map((notification) => (
                     <NotificationListItem
@@ -486,9 +513,19 @@ export default function Notifications() {
                   ))
                 ) : (
                   <div className="text-center py-12">
-                    <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No notifications</h3>
-                    <p className="text-gray-500">You're all caught up! Check back later for new updates.</p>
+                    {activeTab === 'archived' ? (
+                      <>
+                        <Archive className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">No archived notifications</h3>
+                        <p className="text-gray-500">Archived notifications will appear here.</p>
+                      </>
+                    ) : (
+                      <>
+                        <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">No notifications</h3>
+                        <p className="text-gray-500">You're all caught up! Check back later for new updates.</p>
+                      </>
+                    )}
                   </div>
                 )}
               </ScrollArea>
