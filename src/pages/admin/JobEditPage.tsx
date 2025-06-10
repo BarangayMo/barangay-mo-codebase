@@ -164,6 +164,10 @@ export default function JobEditPage() {
     setJob(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleDescriptionChange = (value: string) => {
+    setJob(prev => ({ ...prev, description: value }));
+  };
+
   if (loading) {
     return (
       <AdminLayout title="Edit Job">
@@ -255,7 +259,7 @@ export default function JobEditPage() {
                   <Label className="text-sm font-medium">Job Description</Label>
                   <RichTextEditor
                     value={job.description}
-                    onChange={(value) => handleInputChange('description', value)}
+                    onChange={handleDescriptionChange}
                     placeholder="Describe the role, responsibilities, and what makes this opportunity exciting..."
                     className="min-h-[300px]"
                   />
