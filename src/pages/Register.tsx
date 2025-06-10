@@ -102,9 +102,9 @@ export default function Register() {
                   <RadioGroupItem value="resident" id="resident-mobile" className="peer sr-only" />
                   <Label 
                     htmlFor="resident-mobile" 
-                    className="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 hover:border-gray-300 hover:bg-gray-50 font-medium group"
+                    className="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-resident peer-checked:bg-resident/10 peer-checked:text-resident hover:border-gray-300 hover:bg-gray-50 font-medium group"
                   >
-                    <Users className="w-6 h-6 mb-2 text-gray-400 group-peer-checked:text-blue-500" />
+                    <Users className="w-6 h-6 mb-2 text-gray-400 peer-checked:text-resident transition-colors duration-200" />
                     <span className="text-sm">Resident</span>
                   </Label>
                 </div>
@@ -114,9 +114,9 @@ export default function Register() {
                   <RadioGroupItem value="official" id="official-mobile" className="peer sr-only" />
                   <Label 
                     htmlFor="official-mobile" 
-                    className="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-checked:text-emerald-700 hover:border-gray-300 hover:bg-gray-50 font-medium group"
+                    className="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-official peer-checked:bg-official/10 peer-checked:text-official hover:border-gray-300 hover:bg-gray-50 font-medium group"
                   >
-                    <Shield className="w-6 h-6 mb-2 text-gray-400 group-peer-checked:text-emerald-500" />
+                    <Shield className="w-6 h-6 mb-2 text-gray-400 peer-checked:text-official transition-colors duration-200" />
                     <span className="text-sm">Official</span>
                   </Label>
                 </div>
@@ -270,10 +270,10 @@ export default function Register() {
                   <RadioGroupItem value="resident" id="resident" className="peer sr-only" />
                   <Label 
                     htmlFor="resident" 
-                    className="flex items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 hover:border-gray-300 hover:bg-gray-50 font-medium group"
+                    className="flex items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-resident peer-checked:bg-resident/10 peer-checked:text-resident hover:border-gray-300 hover:bg-gray-50 font-medium group"
                   >
                     <div className="flex items-center space-x-3">
-                      <Users className="w-5 h-5 text-gray-400 group-peer-checked:text-blue-500" />
+                      <Users className="w-5 h-5 text-gray-400 peer-checked:text-resident transition-colors duration-200" />
                       <span>Resident</span>
                     </div>
                   </Label>
@@ -284,10 +284,10 @@ export default function Register() {
                   <RadioGroupItem value="official" id="official" className="peer sr-only" />
                   <Label 
                     htmlFor="official" 
-                    className="flex items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-checked:text-emerald-700 hover:border-gray-300 hover:bg-gray-50 font-medium group"
+                    className="flex items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-official peer-checked:bg-official/10 peer-checked:text-official hover:border-gray-300 hover:bg-gray-50 font-medium group"
                   >
                     <div className="flex items-center space-x-3">
-                      <Shield className="w-5 h-5 text-gray-400 group-peer-checked:text-emerald-500" />
+                      <Shield className="w-5 h-5 text-gray-400 peer-checked:text-official transition-colors duration-200" />
                       <span>Official</span>
                     </div>
                   </Label>
