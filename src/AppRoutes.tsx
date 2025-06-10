@@ -1,3 +1,4 @@
+
 import { Route, Routes } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import Index from "@/pages/Index";
@@ -62,12 +63,14 @@ import EditProfile from "./pages/EditProfile";
 
 import UserManagementPage from "@/pages/users/UserManagementPage";
 
-// Import admin jobs page
+// Import admin jobs pages
 import JobsAllPage from "@/pages/admin/JobsAllPage";
+import JobEditPage from "@/pages/admin/JobEditPage";
 
 export function AppRoutes() {
   return (
     <Routes>
+      {/* Public routes without Layout */}
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
@@ -84,65 +87,67 @@ export function AppRoutes() {
       <Route path="/request-access" element={<RequestAccess />} />
       <Route path="/partnerships" element={<Partnerships />} />
       
-      <Route path="/resident-home" element={<ResidentHome />} />
-      <Route path="/rbi-registration" element={<RbiRegistration />} />
-      <Route path="/resident-profile" element={<ResidentProfile />} />
+      {/* Routes with Layout */}
+      <Route path="/resident-home" element={<Layout><ResidentHome /></Layout>} />
+      <Route path="/rbi-registration" element={<Layout><RbiRegistration /></Layout>} />
+      <Route path="/resident-profile" element={<Layout><ResidentProfile /></Layout>} />
       
-      <Route path="/official-dashboard" element={<OfficialsDashboard />} />
+      <Route path="/official-dashboard" element={<Layout><OfficialsDashboard /></Layout>} />
       
-      <Route path="/admin" element={<AdminDashboard />} />
+      <Route path="/admin" element={<Layout><AdminDashboard /></Layout>} />
       
-      <Route path="/admin/smarketplace" element={<SmarketplaceIndex />} />
-      <Route path="/admin/smarketplace/overview" element={<SmarketplaceOverview />} />
-      <Route path="/admin/smarketplace/products/all" element={<ProductsAllPage />} />
-      <Route path="/admin/smarketplace/products/edit/:id" element={<ProductEditPage />} />
-      <Route path="/admin/smarketplace/products/categories" element={<CategoriesPage />} />
-      <Route path="/admin/smarketplace/products/inventory" element={<ProductsAllPage />} />
-      <Route path="/admin/smarketplace/orders/all" element={<OrdersAllPage />} />
-      <Route path="/admin/smarketplace/orders/processing" element={<OrdersAllPage />} />
-      <Route path="/admin/smarketplace/orders/completed" element={<OrdersAllPage />} />
-      <Route path="/admin/smarketplace/vendors/all" element={<VendorsAllPage />} />
-      <Route path="/admin/smarketplace/customers/all" element={<CustomersAllPage />} />
-      <Route path="/admin/smarketplace/customers/vip" element={<CustomersAllPage />} />
+      <Route path="/admin/smarketplace" element={<Layout><SmarketplaceIndex /></Layout>} />
+      <Route path="/admin/smarketplace/overview" element={<Layout><SmarketplaceOverview /></Layout>} />
+      <Route path="/admin/smarketplace/products/all" element={<Layout><ProductsAllPage /></Layout>} />
+      <Route path="/admin/smarketplace/products/edit/:id" element={<Layout><ProductEditPage /></Layout>} />
+      <Route path="/admin/smarketplace/products/categories" element={<Layout><CategoriesPage /></Layout>} />
+      <Route path="/admin/smarketplace/products/inventory" element={<Layout><ProductsAllPage /></Layout>} />
+      <Route path="/admin/smarketplace/orders/all" element={<Layout><OrdersAllPage /></Layout>} />
+      <Route path="/admin/smarketplace/orders/processing" element={<Layout><OrdersAllPage /></Layout>} />
+      <Route path="/admin/smarketplace/orders/completed" element={<Layout><OrdersAllPage /></Layout>} />
+      <Route path="/admin/smarketplace/vendors/all" element={<Layout><VendorsAllPage /></Layout>} />
+      <Route path="/admin/smarketplace/customers/all" element={<Layout><CustomersAllPage /></Layout>} />
+      <Route path="/admin/smarketplace/customers/vip" element={<Layout><CustomersAllPage /></Layout>} />
       
-      <Route path="/admin/messages" element={<MessagesPage />} />
-      <Route path="/admin/messages/:id" element={<MessagesPage />} />
+      <Route path="/admin/messages" element={<Layout><MessagesPage /></Layout>} />
+      <Route path="/admin/messages/:id" element={<Layout><MessagesPage /></Layout>} />
       
-      <Route path="/admin/reports/financial" element={<FinancialReportsPage />} />
-      <Route path="/admin/reports/activity" element={<ActivityLogsPage />} />
+      <Route path="/admin/reports/financial" element={<Layout><FinancialReportsPage /></Layout>} />
+      <Route path="/admin/reports/activity" element={<Layout><ActivityLogsPage /></Layout>} />
       
-      <Route path="/admin/users" element={<UserManagementPage />} />
-      <Route path="/admin/users/all" element={<UserManagementPage />} />
-      <Route path="/admin/users/roles" element={<UserManagementPage />} />
-      <Route path="/admin/users/settings" element={<UserManagementPage />} />
-      <Route path="/admin/users/:id" element={<UserProfilePage />} />
+      <Route path="/admin/users" element={<Layout><UserManagementPage /></Layout>} />
+      <Route path="/admin/users/all" element={<Layout><UserManagementPage /></Layout>} />
+      <Route path="/admin/users/roles" element={<Layout><UserManagementPage /></Layout>} />
+      <Route path="/admin/users/settings" element={<Layout><UserManagementPage /></Layout>} />
+      <Route path="/admin/users/:id" element={<Layout><UserProfilePage /></Layout>} />
       
-      <Route path="/admin/settings" element={<SettingsPage />} />
+      <Route path="/admin/settings" element={<Layout><SettingsPage /></Layout>} />
       
-      <Route path="/notifications" element={<Notifications />} />
-      <Route path="/settings" element={<Settings />} />
-      <Route path="/menu" element={<Menu />} />
-      <Route path="/messages" element={<Messages />} />
-      <Route path="/messages/:id" element={<Messages />} />
+      <Route path="/notifications" element={<Layout><Notifications /></Layout>} />
+      <Route path="/settings" element={<Layout><Settings /></Layout>} />
+      <Route path="/menu" element={<Layout><Menu /></Layout>} />
+      <Route path="/messages" element={<Layout><Messages /></Layout>} />
+      <Route path="/messages/:id" element={<Layout><Messages /></Layout>} />
       
-      <Route path="/services" element={<Services />} />
-      <Route path="/jobs" element={<Jobs />} />
-      <Route path="/jobs/:id" element={<JobDetail />} />
+      <Route path="/services" element={<Layout><Services /></Layout>} />
+      <Route path="/jobs" element={<Layout><Jobs /></Layout>} />
+      <Route path="/jobs/:id" element={<Layout><JobDetail /></Layout>} />
       
-      <Route path="/marketplace" element={<Marketplace />} />
-      <Route path="/marketplace/product/:id" element={<ProductDetail />} />
-      <Route path="/marketplace/cart" element={<Cart />} />
-      <Route path="/marketplace/checkout" element={<Checkout />} />
-      <Route path="/marketplace/order-confirmation" element={<OrderConfirmation />} />
-      <Route path="/marketplace/my-orders" element={<MyOrders />} />
+      <Route path="/marketplace" element={<Layout><Marketplace /></Layout>} />
+      <Route path="/marketplace/product/:id" element={<Layout><ProductDetail /></Layout>} />
+      <Route path="/marketplace/cart" element={<Layout><Cart /></Layout>} />
+      <Route path="/marketplace/checkout" element={<Layout><Checkout /></Layout>} />
+      <Route path="/marketplace/order-confirmation" element={<Layout><OrderConfirmation /></Layout>} />
+      <Route path="/marketplace/my-orders" element={<Layout><MyOrders /></Layout>} />
       
-      <Route path="/admin/media-library" element={<MediaLibraryPage />} />
+      <Route path="/admin/media-library" element={<Layout><MediaLibraryPage /></Layout>} />
       
-      <Route path="/edit-profile" element={<EditProfile />} />
+      <Route path="/edit-profile" element={<Layout><EditProfile /></Layout>} />
       
-      <Route path="/admin/jobs" element={<AdminDashboard />} />
-      <Route path="/admin/jobs/all" element={<JobsAllPage />} />
-      <Route path="/admin/jobs/applications" element={<AdminDashboard />} />
+      <Route path="/admin/jobs" element={<Layout><AdminDashboard /></Layout>} />
+      <Route path="/admin/jobs/all" element={<Layout><JobsAllPage /></Layout>} />
+      <Route path="/admin/jobs/edit/:id" element={<Layout><JobEditPage /></Layout>} />
+      <Route path="/admin/jobs/applications" element={<Layout><AdminDashboard /></Layout>} />
       
       <Route path="*" element={<NotFound />} />
     </Routes>

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { DashboardPageHeader } from "@/components/dashboard/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,19 +10,49 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MapPin, Building, Calendar, Clock, Users, Search, MoreHorizontal, Star } from "lucide-react";
+import { MapPin, Building, Calendar, Clock, Users, Search, MoreHorizontal, Star, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+
+interface Job {
+  id: string;
+  title: string;
+  company: string;
+  location: string;
+  category: string;
+  description: string;
+  salary?: string;
+  experience: string;
+  work_approach?: string;
+  qualifications?: string[];
+  created_at: string;
+}
+
+interface JobApplication {
+  id: number;
+  name: string;
+  age: number;
+  gender: string;
+  expectedSalary: string;
+  experience: string;
+  rating: number;
+  status: string;
+  badge?: string;
+  job_id?: string;
+}
 
 export default function JobsAllPage() {
-  const [jobs, setJobs] = useState([]);
-  const [selectedJob, setSelectedJob] = useState(null);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [applications, setApplications] = useState<JobApplication[]>([]);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const { toast } = useToast();
+  const navigate = useNavigate();
 
-  // Mock talent data for demonstration
-  const mockTalents = [
+  // Mock applications data for demonstration
+  const mockApplications: JobApplication[] = [
     {
       id: 1,
       name: "Suriyan Pinwan",
@@ -88,6 +119,7 @@ export default function JobsAllPage() {
         if (error) throw error;
         
         setJobs(data || []);
+        setApplications(mockApplications);
         if (data && data.length > 0) {
           setSelectedJob(data[0]);
         }
@@ -106,7 +138,17 @@ export default function JobsAllPage() {
     fetchJobs();
   }, [toast]);
 
-  const getStatusColor = (status) => {
+  const handleJobSelect = (job: Job) => {
+    setSelectedJob(job);
+  };
+
+  const handleEditJob = () => {
+    if (selectedJob) {
+      navigate(`/admin/jobs/edit/${selectedJob.id}`);
+    }
+  };
+
+  const getStatusColor = (status: string) => {
     switch (status) {
       case "Applied": return "bg-blue-100 text-blue-800";
       case "Shortlisted": return "bg-yellow-100 text-yellow-800";
@@ -116,13 +158,17 @@ export default function JobsAllPage() {
     }
   };
 
-  const getBadgeColor = (badge) => {
+  const getBadgeColor = (badge?: string) => {
     switch (badge) {
       case "SUPER CANDIDATE": return "bg-orange-100 text-orange-800";
       case "TOP TALENT": return "bg-green-100 text-green-800";
       default: return "bg-blue-100 text-blue-800";
     }
   };
+
+  const filteredApplications = applications.filter(app => 
+    app.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   if (loading) {
     return (
@@ -154,13 +200,177 @@ export default function JobsAllPage() {
         ]}
         actionButton={{
           label: "Edit",
-          onClick: () => {},
-          icon: <MoreHorizontal className="h-4 w-4" />
+          onClick: handleEditJob,
+          icon: <Edit className="h-4 w-4" />
         }}
       />
 
       <div className="flex gap-6 h-[calc(100vh-200px)]">
-        {/* Left Panel - Job Details */}
+        {/* Left Panel - Talent List */}
+        <div className="w-1/2 bg-white rounded-lg border overflow-hidden">
+          <div className="p-6">
+            <h3 className="text-xl font-bold mb-4">Talent List</h3>
+
+            {/* Tabs */}
+            <Tabs defaultValue="all" className="mb-4">
+              <TabsList className="grid w-full grid-cols-6 mb-4">
+                <TabsTrigger value="all" className="text-xs">All <span className="ml-1 text-xs bg-gray-200 px-1 rounded">118</span></TabsTrigger>
+                <TabsTrigger value="applied" className="text-xs">Applied <span className="ml-1 text-xs bg-gray-200 px-1 rounded">78</span></TabsTrigger>
+                <TabsTrigger value="shortlisted" className="text-xs">Shortlisted <span className="ml-1 text-xs bg-gray-200 px-1 rounded">23</span></TabsTrigger>
+                <TabsTrigger value="interview" className="text-xs">Invited to Interview <span className="ml-1 text-xs bg-gray-200 px-1 rounded">7</span></TabsTrigger>
+                <TabsTrigger value="interviewed" className="text-xs">Interviewed <span className="ml-1 text-xs bg-gray-200 px-1 rounded">8</span></TabsTrigger>
+                <TabsTrigger value="hired" className="text-xs">Hired</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="all">
+                {/* Search and Filters */}
+                <div className="flex gap-4 mb-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input 
+                      placeholder="Search"
+                      className="pl-10"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <Select>
+                    <SelectTrigger className="w-32">
+                      <SelectValue placeholder="Experience" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="0-2">0-2 years</SelectItem>
+                      <SelectItem value="3-5">3-5 years</SelectItem>
+                      <SelectItem value="5+">5+ years</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select>
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="Expected Salary" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="0-300">THB 0-300</SelectItem>
+                      <SelectItem value="300-500">THB 300-500</SelectItem>
+                      <SelectItem value="500+">THB 500+</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline" size="sm">
+                    More Filters
+                  </Button>
+                </div>
+
+                {/* Table */}
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Expected Salary</TableHead>
+                      <TableHead>Experience</TableHead>
+                      <TableHead>Rating</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredApplications.map((talent) => (
+                      <TableRow 
+                        key={talent.id} 
+                        className="cursor-pointer hover:bg-gray-50"
+                        onClick={() => {
+                          if (jobs.length > 0) {
+                            handleJobSelect(jobs[0]); // For demo, select first job
+                          }
+                        }}
+                      >
+                        <TableCell className="flex items-center gap-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={`https://ui-avatars.com/api/?name=${talent.name}&background=random`} />
+                            <AvatarFallback>{talent.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <div className="font-medium text-sm flex items-center gap-2">
+                              {talent.name}
+                              {talent.badge && (
+                                <Badge className={`text-xs ${getBadgeColor(talent.badge)}`}>
+                                  {talent.badge}
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {talent.gender} • {talent.age} Years Old
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm">{talent.expectedSalary}</TableCell>
+                        <TableCell className="text-sm">{talent.experience}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                            <span className="text-sm">{talent.rating}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={`text-xs ${getStatusColor(talent.status)}`}>
+                            {talent.status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+
+                {/* Pagination */}
+                <div className="flex items-center justify-between mt-4">
+                  <div className="text-sm text-gray-500">
+                    Showing 21 to 30 of 544 results
+                  </div>
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious href="#" />
+                      </PaginationItem>
+                      <PaginationItem>
+                        <PaginationLink href="#" isActive>1</PaginationLink>
+                      </PaginationItem>
+                      <PaginationItem>
+                        <PaginationLink href="#">2</PaginationLink>
+                      </PaginationItem>
+                      <PaginationItem>
+                        <span className="px-3">...</span>
+                      </PaginationItem>
+                      <PaginationItem>
+                        <PaginationLink href="#">12</PaginationLink>
+                      </PaginationItem>
+                      <PaginationItem>
+                        <PaginationNext href="#" />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              </TabsContent>
+              
+              {/* Other tab contents would be similar */}
+              <TabsContent value="applied">
+                <div className="text-center py-8 text-gray-500">Applied candidates will be shown here</div>
+              </TabsContent>
+              <TabsContent value="shortlisted">
+                <div className="text-center py-8 text-gray-500">Shortlisted candidates will be shown here</div>
+              </TabsContent>
+              <TabsContent value="interview">
+                <div className="text-center py-8 text-gray-500">Interview invites will be shown here</div>
+              </TabsContent>
+              <TabsContent value="interviewed">
+                <div className="text-center py-8 text-gray-500">Interviewed candidates will be shown here</div>
+              </TabsContent>
+              <TabsContent value="hired">
+                <div className="text-center py-8 text-gray-500">Hired candidates will be shown here</div>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
+
+        {/* Right Panel - Job Details */}
         <div className="w-1/2 bg-white rounded-lg border overflow-hidden">
           {selectedJob ? (
             <div className="p-6">
@@ -191,7 +401,7 @@ export default function JobsAllPage() {
                 </div>
               </div>
 
-              {/* Map Area with simple map effect */}
+              {/* Map Area with free map effect */}
               <div className="mb-6 h-48 bg-gradient-to-br from-blue-100 via-blue-50 to-green-50 rounded-lg relative overflow-hidden border">
                 <div className="absolute inset-0 opacity-20">
                   <div className="absolute top-4 left-4 w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
@@ -232,7 +442,7 @@ export default function JobsAllPage() {
                 </div>
                 <div>
                   <h4 className="text-sm font-medium text-gray-500 mb-1">Created at</h4>
-                  <p className="text-sm">1 April 2021</p>
+                  <p className="text-sm">{new Date(selectedJob.created_at).toLocaleDateString()}</p>
                 </div>
                 <div>
                   <h4 className="text-sm font-medium text-gray-500 mb-1">Status</h4>
@@ -336,165 +546,9 @@ export default function JobsAllPage() {
             </div>
           ) : (
             <div className="p-6 text-center text-gray-500">
-              Select a job to view details
+              Select a talent to view job details
             </div>
           )}
-        </div>
-
-        {/* Right Panel - Talent List */}
-        <div className="w-1/2 bg-white rounded-lg border overflow-hidden">
-          <div className="p-6">
-            <h3 className="text-xl font-bold mb-4">Talent List</h3>
-
-            {/* Tabs */}
-            <Tabs defaultValue="all" className="mb-4">
-              <TabsList className="grid w-full grid-cols-6 mb-4">
-                <TabsTrigger value="all" className="text-xs">All <span className="ml-1 text-xs bg-gray-200 px-1 rounded">118</span></TabsTrigger>
-                <TabsTrigger value="applied" className="text-xs">Applied <span className="ml-1 text-xs bg-gray-200 px-1 rounded">78</span></TabsTrigger>
-                <TabsTrigger value="shortlisted" className="text-xs">Shortlisted <span className="ml-1 text-xs bg-gray-200 px-1 rounded">23</span></TabsTrigger>
-                <TabsTrigger value="interview" className="text-xs">Invited to Interview <span className="ml-1 text-xs bg-gray-200 px-1 rounded">7</span></TabsTrigger>
-                <TabsTrigger value="interviewed" className="text-xs">Interviewed <span className="ml-1 text-xs bg-gray-200 px-1 rounded">8</span></TabsTrigger>
-                <TabsTrigger value="hired" className="text-xs">Hired</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="all">
-                {/* Search and Filters */}
-                <div className="flex gap-4 mb-4">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input 
-                      placeholder="Search"
-                      className="pl-10"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                  <Select>
-                    <SelectTrigger className="w-32">
-                      <SelectValue placeholder="Experience" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All</SelectItem>
-                      <SelectItem value="0-2">0-2 years</SelectItem>
-                      <SelectItem value="3-5">3-5 years</SelectItem>
-                      <SelectItem value="5+">5+ years</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select>
-                    <SelectTrigger className="w-40">
-                      <SelectValue placeholder="Expected Salary" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All</SelectItem>
-                      <SelectItem value="0-300">THB 0-300</SelectItem>
-                      <SelectItem value="300-500">THB 300-500</SelectItem>
-                      <SelectItem value="500+">THB 500+</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button variant="outline" size="sm">
-                    More Filters
-                  </Button>
-                </div>
-
-                {/* Table */}
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Expected Salary</TableHead>
-                      <TableHead>Experience</TableHead>
-                      <TableHead>Rating</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {mockTalents.map((talent) => (
-                      <TableRow key={talent.id}>
-                        <TableCell className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={`https://ui-avatars.com/api/?name=${talent.name}&background=random`} />
-                            <AvatarFallback>{talent.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="font-medium text-sm flex items-center gap-2">
-                              {talent.name}
-                              {talent.badge && (
-                                <Badge className={`text-xs ${getBadgeColor(talent.badge)}`}>
-                                  {talent.badge}
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {talent.gender} • {talent.age} Years Old
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-sm">{talent.expectedSalary}</TableCell>
-                        <TableCell className="text-sm">{talent.experience}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                            <span className="text-sm">{talent.rating}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={`text-xs ${getStatusColor(talent.status)}`}>
-                            {talent.status}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-
-                {/* Pagination */}
-                <div className="flex items-center justify-between mt-4">
-                  <div className="text-sm text-gray-500">
-                    Showing 21 to 30 of 544 results
-                  </div>
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious href="#" />
-                      </PaginationItem>
-                      <PaginationItem>
-                        <PaginationLink href="#" isActive>1</PaginationLink>
-                      </PaginationItem>
-                      <PaginationItem>
-                        <PaginationLink href="#">2</PaginationLink>
-                      </PaginationItem>
-                      <PaginationItem>
-                        <span className="px-3">...</span>
-                      </PaginationItem>
-                      <PaginationItem>
-                        <PaginationLink href="#">12</PaginationLink>
-                      </PaginationItem>
-                      <PaginationItem>
-                        <PaginationNext href="#" />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
-                </div>
-              </TabsContent>
-              
-              {/* Other tab contents would be similar */}
-              <TabsContent value="applied">
-                <div className="text-center py-8 text-gray-500">Applied candidates will be shown here</div>
-              </TabsContent>
-              <TabsContent value="shortlisted">
-                <div className="text-center py-8 text-gray-500">Shortlisted candidates will be shown here</div>
-              </TabsContent>
-              <TabsContent value="interview">
-                <div className="text-center py-8 text-gray-500">Interview invites will be shown here</div>
-              </TabsContent>
-              <TabsContent value="interviewed">
-                <div className="text-center py-8 text-gray-500">Interviewed candidates will be shown here</div>
-              </TabsContent>
-              <TabsContent value="hired">
-                <div className="text-center py-8 text-gray-500">Hired candidates will be shown here</div>
-              </TabsContent>
-            </Tabs>
-          </div>
         </div>
       </div>
     </div>
