@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -80,35 +81,33 @@ export default function Register() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-4">
+          <div className="space-y-3">
             <Label className="text-gray-900 font-semibold text-lg">Select your role</Label>
             <RadioGroup
               value={formData.role}
               onValueChange={(value) => setFormData(prev => ({ ...prev, role: value }))}
-              className="grid grid-cols-1 gap-3"
+              className="grid grid-cols-2 gap-3"
             >
               <div>
                 <RadioGroupItem value="resident" id="resident-mobile" className="peer sr-only" />
                 <Label 
                   htmlFor="resident-mobile" 
-                  className={`flex items-center justify-center p-6 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 font-medium ${
+                  className={`flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
                     formData.role === "resident" 
                       ? "border-blue-500 bg-blue-50" 
                       : "border-gray-200"
                   }`}
                 >
-                  <div className="flex items-center space-x-4">
-                    <div className={`p-3 rounded-full ${
-                      formData.role === "resident" 
-                        ? "bg-blue-500 text-white" 
-                        : "bg-blue-100 text-blue-600"
-                    }`}>
-                      <Users className="w-6 h-6" />
-                    </div>
-                    <div className="text-left">
-                      <div className="font-semibold text-gray-900">Resident</div>
-                      <div className="text-sm text-gray-500">Access community services and information</div>
-                    </div>
+                  <div className={`p-3 rounded-full mb-2 ${
+                    formData.role === "resident" 
+                      ? "bg-blue-500 text-white" 
+                      : "bg-blue-100 text-blue-600"
+                  }`}>
+                    <Users className="w-6 h-6" />
+                  </div>
+                  <div className="text-center">
+                    <div className="font-semibold text-gray-900">Resident</div>
+                    <div className="text-xs text-gray-500">Access community services</div>
                   </div>
                 </Label>
               </div>
@@ -116,24 +115,22 @@ export default function Register() {
                 <RadioGroupItem value="official" id="official-mobile" className="peer sr-only" />
                 <Label 
                   htmlFor="official-mobile" 
-                  className={`flex items-center justify-center p-6 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 font-medium ${
+                  className={`flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
                     formData.role === "official" 
                       ? "border-red-500 bg-red-50" 
                       : "border-gray-200"
                   }`}
                 >
-                  <div className="flex items-center space-x-4">
-                    <div className={`p-3 rounded-full ${
-                      formData.role === "official" 
-                        ? "bg-red-500 text-white" 
-                        : "bg-red-100 text-red-600"
-                    }`}>
-                      <Shield className="w-6 h-6" />
-                    </div>
-                    <div className="text-left">
-                      <div className="font-semibold text-gray-900">Official</div>
-                      <div className="text-sm text-gray-500">For Barangay Captains</div>
-                    </div>
+                  <div className={`p-3 rounded-full mb-2 ${
+                    formData.role === "official" 
+                      ? "bg-red-500 text-white" 
+                      : "bg-red-100 text-red-600"
+                  }`}>
+                    <Shield className="w-6 h-6" />
+                  </div>
+                  <div className="text-center">
+                    <div className="font-semibold text-gray-900">Official</div>
+                    <div className="text-xs text-gray-500">For Barangay Captains</div>
                   </div>
                 </Label>
               </div>
@@ -174,7 +171,7 @@ export default function Register() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
               >
                 {showPassword ? (
                   <EyeOff className="w-5 h-5" />
@@ -217,7 +214,7 @@ export default function Register() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#e4ecfc] via-[#fff] to-[#fbedda] px-4 py-8">
       <div className="max-w-md w-full bg-white shadow-xl rounded-2xl p-6 md:p-8">
-        <Link to="/" className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 mb-6">
+        <Link to="/" className="inline-flex items-center text-sm text-gray-500 mb-6">
           <ArrowLeft className="w-4 h-4 mr-1" /> Back to home
         </Link>
         
@@ -227,35 +224,33 @@ export default function Register() {
         <p className="text-gray-500 mb-6">Join your barangay's digital community</p>
         
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-4">
+          <div className="space-y-3">
             <Label className="text-gray-900 font-semibold text-lg">Select your role</Label>
             <RadioGroup
               value={formData.role}
               onValueChange={(value) => setFormData(prev => ({ ...prev, role: value }))}
-              className="grid grid-cols-1 gap-3"
+              className="grid grid-cols-2 gap-3"
             >
               <div>
                 <RadioGroupItem value="resident" id="resident" className="peer sr-only" />
                 <Label 
                   htmlFor="resident" 
-                  className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 font-medium ${
+                  className={`flex flex-col items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
                     formData.role === "resident" 
                       ? "border-blue-500 bg-blue-50" 
                       : "border-gray-200"
                   }`}
                 >
-                  <div className="flex items-center space-x-3">
-                    <div className={`p-2 rounded-full ${
-                      formData.role === "resident" 
-                        ? "bg-blue-500 text-white" 
-                        : "bg-blue-100 text-blue-600"
-                    }`}>
-                      <Users className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-gray-900">Resident</div>
-                      <div className="text-sm text-gray-500">Access community services</div>
-                    </div>
+                  <div className={`p-2 rounded-full mb-2 ${
+                    formData.role === "resident" 
+                      ? "bg-blue-500 text-white" 
+                      : "bg-blue-100 text-blue-600"
+                  }`}>
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <div className="text-center">
+                    <div className="font-semibold text-gray-900">Resident</div>
+                    <div className="text-xs text-gray-500">Access community services</div>
                   </div>
                 </Label>
               </div>
@@ -263,24 +258,22 @@ export default function Register() {
                 <RadioGroupItem value="official" id="official" className="peer sr-only" />
                 <Label 
                   htmlFor="official" 
-                  className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 font-medium ${
+                  className={`flex flex-col items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
                     formData.role === "official" 
                       ? "border-red-500 bg-red-50" 
                       : "border-gray-200"
                   }`}
                 >
-                  <div className="flex items-center space-x-3">
-                    <div className={`p-2 rounded-full ${
-                      formData.role === "official" 
-                        ? "bg-red-500 text-white" 
-                        : "bg-red-100 text-red-600"
-                    }`}>
-                      <Shield className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-gray-900">Official</div>
-                      <div className="text-sm text-gray-500">For Barangay Captains</div>
-                    </div>
+                  <div className={`p-2 rounded-full mb-2 ${
+                    formData.role === "official" 
+                      ? "bg-red-500 text-white" 
+                      : "bg-red-100 text-red-600"
+                  }`}>
+                    <Shield className="w-5 h-5" />
+                  </div>
+                  <div className="text-center">
+                    <div className="font-semibold text-gray-900">Official</div>
+                    <div className="text-xs text-gray-500">For Barangay Captains</div>
                   </div>
                 </Label>
               </div>
@@ -321,7 +314,7 @@ export default function Register() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
               >
                 {showPassword ? (
                   <EyeOff className="w-5 h-5" />
