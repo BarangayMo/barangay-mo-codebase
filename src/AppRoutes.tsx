@@ -62,6 +62,9 @@ import EditProfile from "./pages/EditProfile";
 
 import UserManagementPage from "@/pages/users/UserManagementPage";
 
+// Import admin jobs page
+import JobsAllPage from "@/pages/admin/JobsAllPage";
+
 export function AppRoutes() {
   return (
     <Routes>
@@ -136,6 +139,10 @@ export function AppRoutes() {
       <Route path="/admin/media-library" element={<MediaLibraryPage />} />
       
       <Route path="/edit-profile" element={<EditProfile />} />
+      
+      <Route path="/admin/jobs" element={<AdminDashboard />} />
+      <Route path="/admin/jobs/all" element={<JobsAllPage />} />
+      <Route path="/admin/jobs/applications" element={<AdminDashboard />} />
       
       <Route path="*" element={<NotFound />} />
     </Routes>
