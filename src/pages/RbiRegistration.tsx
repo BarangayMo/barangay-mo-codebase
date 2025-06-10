@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Progress } from "@/components/ui/progress";
@@ -265,97 +264,112 @@ export default function RbiRegistration() {
   return (
     <Layout>
       {isLoading && <LoadingScreen />}
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <h1 className="text-2xl md:text-3xl font-bold font-outfit bg-gradient-to-r from-blue-700 to-blue-500 bg-clip-text text-transparent">
-              Record of Barangay Inhabitant
-            </h1>
-            <span className="text-sm font-medium px-3 py-1 bg-blue-50 text-blue-700 rounded-full">
-              Step {currentStep} of {steps.length}
-            </span>
-          </div>
-          
-          <Progress value={progress} className="h-2 bg-blue-100" indicatorClassName="bg-blue-600" />
-          
-          <div className="flex justify-between mt-3 text-sm">
-            <div>
-              <span className="font-medium text-blue-800">{currentStepData.name}</span>
-              <p className="text-gray-500 text-xs mt-1">{currentStepData.description}</p>
+      <div className="max-w-3xl mx-auto px-4 py-4 md:py-8">
+        {/* Mobile-optimized header */}
+        <div className="mb-6 md:mb-8">
+          <div className="flex flex-col gap-3 mb-4">
+            <div className="flex items-center justify-between">
+              <h1 className="text-xl md:text-2xl lg:text-3xl font-bold font-outfit bg-gradient-to-r from-blue-700 to-blue-500 bg-clip-text text-transparent leading-tight">
+                Record of Barangay Inhabitant
+              </h1>
+              <span className="text-xs md:text-sm font-medium px-2 md:px-3 py-1 bg-blue-50 text-blue-700 rounded-full whitespace-nowrap">
+                Step {currentStep} of {steps.length}
+              </span>
             </div>
-            <span className="font-medium text-blue-800">{Math.round(progress)}% Complete</span>
+            
+            <Progress value={progress} className="h-2 bg-blue-100" indicatorClassName="bg-blue-600" />
+            
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-2">
+              <div className="flex-1">
+                <span className="font-medium text-blue-800 text-sm md:text-base">{currentStepData.name}</span>
+                <p className="text-gray-500 text-xs md:text-sm mt-1">{currentStepData.description}</p>
+              </div>
+              <div className="flex items-center">
+                <span className="font-medium text-blue-800 text-sm md:text-base">{Math.round(progress)}% Complete</span>
+              </div>
+            </div>
           </div>
         </div>
         
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 md:p-8 mb-6">
+        {/* Form content */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6 lg:p-8 mb-6">
           {currentStepData.component}
         </div>
         
-        <div className="flex justify-between mt-8">
-          <div className="flex gap-2">
+        {/* Mobile-optimized navigation buttons */}
+        <div className="space-y-4">
+          {/* Primary navigation buttons */}
+          <div className="flex gap-3">
             {currentStep > 1 ? (
               <Button 
                 variant="outline" 
                 onClick={handlePrevious}
-                className="flex items-center gap-2 border-blue-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 border-blue-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 h-12"
               >
-                <ArrowLeft className="w-4 h-4" /> Previous
+                <ArrowLeft className="w-4 h-4" /> 
+                <span className="hidden sm:inline">Previous</span>
+                <span className="sm:hidden">Back</span>
               </Button>
             ) : (
-              <Link to="/resident-home">
+              <Link to="/resident-home" className="flex-1 sm:flex-none">
                 <Button 
                   variant="outline"
-                  className="flex items-center gap-2 border-blue-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300"
+                  className="w-full flex items-center justify-center gap-2 border-blue-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 h-12"
                 >
-                  <ArrowLeft className="w-4 h-4" /> Back to Home
+                  <ArrowLeft className="w-4 h-4" /> 
+                  <span className="hidden sm:inline">Back to Home</span>
+                  <span className="sm:hidden">Home</span>
                 </Button>
               </Link>
             )}
             
-            <Button 
-              variant="outline" 
-              onClick={handleSaveForLater}
-              disabled={isSaving}
-              className="flex items-center gap-2 border-blue-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300"
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" /> Save for Later
-                </>
-              )}
-            </Button>
+            {currentStep < steps.length ? (
+              <Button 
+                onClick={handleNext} 
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 h-12"
+              >
+                <span>Next</span> <ArrowRight className="w-4 h-4" />
+              </Button>
+            ) : (
+              <Button 
+                onClick={handleSubmit} 
+                disabled={isSubmitting}
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 h-12"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="hidden sm:inline">Submitting...</span>
+                    <span className="sm:hidden">Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Submit</span> <Check className="w-4 h-4" />
+                  </>
+                )}
+              </Button>
+            )}
           </div>
           
-          {currentStep < steps.length ? (
-            <Button 
-              onClick={handleNext} 
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
-            >
-              Next <ArrowRight className="w-4 h-4" />
-            </Button>
-          ) : (
-            <Button 
-              onClick={handleSubmit} 
-              disabled={isSubmitting}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                <>
-                  Submit <Check className="w-4 h-4 ml-2" />
-                </>
-              )}
-            </Button>
-          )}
+          {/* Save for later button - full width on mobile */}
+          <Button 
+            variant="outline" 
+            onClick={handleSaveForLater}
+            disabled={isSaving}
+            className="w-full flex items-center justify-center gap-2 border-blue-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 h-12"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Saving...</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" /> 
+                <span>Save for Later</span>
+              </>
+            )}
+          </Button>
         </div>
       </div>
     </Layout>
