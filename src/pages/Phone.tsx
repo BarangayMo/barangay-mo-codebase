@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,15 +25,7 @@ export default function Phone() {
   };
 
   const handleSkip = () => {
-    switch(userRole) {
-      case "official":
-        navigate("/official-dashboard");
-        break;
-      case "resident":
-      default:
-        navigate("/resident-home");
-        break;
-    }
+    navigate("/rbi-registration");
   };
 
   return (
