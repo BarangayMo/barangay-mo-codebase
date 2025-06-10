@@ -1,4 +1,3 @@
-
 import { ReactNode, useEffect, useState } from "react";
 import { EnhancedSidebar } from "./EnhancedSidebar";
 import { cn } from "@/lib/utils";
@@ -14,6 +13,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CommandPalette } from "./CommandPalette";
+import { useNotifications } from "@/hooks/useNotifications";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -36,6 +36,7 @@ export const AdminLayout = ({
     logout,
     user
   } = useAuth();
+  const { unreadCount } = useNotifications();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -251,9 +252,15 @@ export const AdminLayout = ({
                     </DropdownMenuContent>
                   </DropdownMenu>
                   
-                  <Button variant="ghost" size="icon" className="relative">
-                    <Bell className="h-5 w-5" />
-                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-medium text-white">3</span>
+                  <Button variant="ghost" size="icon" className="relative" asChild>
+                    <Link to="/notifications">
+                      <Bell className="h-5 w-5" />
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-medium text-white">
+                          {unreadCount > 99 ? '99+' : unreadCount}
+                        </span>
+                      )}
+                    </Link>
                   </Button>
                   
                   <Button variant="ghost" size="icon" className="relative">

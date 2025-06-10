@@ -1,3 +1,4 @@
+
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Bell, User, ShoppingBag } from "lucide-react";
@@ -9,6 +10,7 @@ import { DesktopNavItems } from "./header/DesktopNavItems";
 import { ProfileMenu } from "./ProfileMenu";
 import { LanguageSelector } from "./LanguageSelector";
 import { useCartSummary } from "@/hooks/useCartSummary";
+import { useNotifications } from "@/hooks/useNotifications";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { CartDrawerContent } from "@/components/cart/CartDrawerContent";
 import { useState } from "react";
@@ -18,6 +20,7 @@ export const Header = () => {
   const isMobile = useIsMobile();
   const location = useLocation();
   const { cartItemCount } = useCartSummary();
+  const { unreadCount } = useNotifications();
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
 
   const getDashboardRoute = () => {
@@ -103,9 +106,11 @@ export const Header = () => {
                 >
                   <Link to="/notifications">
                     <Bell className="h-4 w-4 md:h-5 md:w-5" />
-                    <span className="absolute -top-0.5 -right-0.5 text-white text-[10px] md:text-xs rounded-full w-3.5 h-3.5 md:w-4 md:h-4 flex items-center justify-center bg-official">
-                      3 {/* This is a placeholder count */}
-                    </span>
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 text-white text-[10px] md:text-xs rounded-full w-3.5 h-3.5 md:w-4 md:h-4 flex items-center justify-center bg-official">
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </span>
+                    )}
                   </Link>
                 </Button>
                 {!isMobile && <ProfileMenu />}
@@ -159,4 +164,17 @@ export const Header = () => {
       </div>
     </header>
   );
+
+  function getDashboardRoute() {
+    switch(userRole) {
+      case "official":
+        return "/official-dashboard";
+      case "superadmin":
+        return "/admin";
+      case "resident":
+        return "/resident-home";
+      default:
+        return "/";
+    }
+  }
 }
