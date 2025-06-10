@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AdminLayout } from "@/components/layout/AdminLayout";
@@ -14,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { Save, ArrowLeft, Calendar, User, Building2, MapPin, DollarSign, Clock, Tag } from "lucide-react";
-import { EnhancedRichTextEditor } from "@/components/ui/enhanced-rich-text-editor";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { MediaUpload } from "@/components/ui/media-upload";
 import { ArrayInput } from "@/components/ui/array-input";
 import { CharacterLimitedInput } from "@/components/ui/character-limited-input";
@@ -237,11 +236,10 @@ export default function JobEditPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="description" className="text-sm font-medium">Job Description</Label>
-                  <EnhancedRichTextEditor
+                  <RichTextEditor
                     value={job.description}
                     onChange={(value) => handleInputChange('description', value)}
                     placeholder="Describe the job role, requirements, and expectations..."
-                    maxLength={5000}
                   />
                 </div>
 
