@@ -1,14 +1,56 @@
+
 import React, { useCallback, useMemo } from 'react';
-import { createEditor, Descendant, Editor, Element, Text } from 'slate';
-import { Slate, Editable, withReact, RenderElementProps, RenderLeafProps } from 'slate-react';
-import { withHistory } from 'slate-history';
+import { createEditor, Descendant, Editor, Element, Text, BaseEditor } from 'slate';
+import { Slate, Editable, withReact, RenderElementProps, RenderLeafProps, ReactEditor } from 'slate-react';
+import { withHistory, HistoryEditor } from 'slate-history';
 import { Button } from './button';
 import { Bold, Italic, List, ListOrdered, Quote } from 'lucide-react';
 
-const HOTKEYS: { [key: string]: string } = {
-  'mod+b': 'bold',
-  'mod+i': 'italic',
+// Define custom types for slate
+type CustomEditor = BaseEditor & ReactEditor & HistoryEditor;
+
+type ParagraphElement = {
+  type: 'paragraph';
+  children: Descendant[];
 };
+
+type BulletedListElement = {
+  type: 'bulleted-list';
+  children: Descendant[];
+};
+
+type NumberedListElement = {
+  type: 'numbered-list';
+  children: Descendant[];
+};
+
+type ListItemElement = {
+  type: 'list-item';
+  children: Descendant[];
+};
+
+type QuoteElement = {
+  type: 'quote';
+  children: Descendant[];
+};
+
+type CustomElement = ParagraphElement | BulletedListElement | NumberedListElement | ListItemElement | QuoteElement;
+
+type FormattedText = {
+  text: string;
+  bold?: boolean;
+  italic?: boolean;
+};
+
+type CustomText = FormattedText;
+
+declare module 'slate' {
+  interface CustomTypes {
+    Editor: CustomEditor;
+    Element: CustomElement;
+    Text: CustomText;
+  }
+}
 
 const LIST_TYPES = ['numbered-list', 'bulleted-list'];
 
@@ -69,59 +111,57 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     onChange(JSON.stringify(newValue));
   };
 
-  const toggleBlock = (editor: Editor, format: string) => {
+  const toggleBlock = (editor: CustomEditor, format: string) => {
     const isActive = isBlockActive(editor, format);
-    const isList = LIST_TYPES.includes(
-      format
-    );
+    const isList = LIST_TYPES.includes(format);
 
     Editor.unwrapNodes(editor, {
       match: n =>
         !Editor.isEditor(n) &&
         Element.isElement(n) &&
-        LIST_TYPES.includes(n.type as string),
+        LIST_TYPES.includes((n as CustomElement).type),
       split: true,
-    })
+    });
 
-    let newProperties: Partial<Element> = {
-      type: isActive ? 'paragraph' : isList ? 'list-item' : format,
-    }
-    Editor.setNodes(editor, newProperties)
+    const newProperties: Partial<CustomElement> = {
+      type: (isActive ? 'paragraph' : isList ? 'list-item' : format) as any,
+    };
+    Editor.setNodes(editor, newProperties);
 
     if (!isActive && isList) {
-      const block: Element = { type: format, children: [] }
-      Editor.wrapNodes(editor, block)
+      const block: CustomElement = { type: format as any, children: [] };
+      Editor.wrapNodes(editor, block);
     }
-  }
+  };
 
-  const toggleMark = (editor: Editor, format: string) => {
-    const isActive = isMarkActive(editor, format)
+  const toggleMark = (editor: CustomEditor, format: string) => {
+    const isActive = isMarkActive(editor, format);
 
     if (isActive) {
-      Editor.removeMark(editor, format)
+      Editor.removeMark(editor, format);
     } else {
-      Editor.addMark(editor, format, true)
+      Editor.addMark(editor, format, true);
     }
-  }
+  };
 
-  const isBlockActive = (editor: Editor, format: string) => {
-    const { selection } = editor
-    if (!selection) return false
+  const isBlockActive = (editor: CustomEditor, format: string) => {
+    const { selection } = editor;
+    if (!selection) return false;
 
     const [node] = Editor.nodes(editor, {
       match: n =>
         !Editor.isEditor(n) &&
         Element.isElement(n) &&
-        (n.type as string) === format,
-    })
+        (n as CustomElement).type === format,
+    });
 
-    return !!node
-  }
+    return !!node;
+  };
 
-  const isMarkActive = (editor: Editor, format: string) => {
-    const marks = Editor.marks(editor)
-    return marks ? !!marks[format] : false
-  }
+  const isMarkActive = (editor: CustomEditor, format: string) => {
+    const marks = Editor.marks(editor);
+    return marks ? !!(marks as any)[format] : false;
+  };
 
   return (
     <div className={`border rounded-lg ${className}`}>
@@ -131,7 +171,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           variant="ghost"
           size="sm"
           onClick={() => {
-            toggleMark(editor, 'bold')
+            toggleMark(editor, 'bold');
           }}
         >
           <Bold className="h-4 w-4" />
@@ -141,7 +181,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           variant="ghost"
           size="sm"
           onClick={() => {
-            toggleMark(editor, 'italic')
+            toggleMark(editor, 'italic');
           }}
         >
           <Italic className="h-4 w-4" />
@@ -151,7 +191,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           variant="ghost"
           size="sm"
           onClick={() => {
-            toggleBlock(editor, 'bulleted-list')
+            toggleBlock(editor, 'bulleted-list');
           }}
         >
           <List className="h-4 w-4" />
@@ -161,7 +201,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           variant="ghost"
           size="sm"
           onClick={() => {
-            toggleBlock(editor, 'numbered-list')
+            toggleBlock(editor, 'numbered-list');
           }}
         >
           <ListOrdered className="h-4 w-4" />
@@ -171,7 +211,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           variant="ghost"
           size="sm"
           onClick={() => {
-            toggleBlock(editor, 'quote')
+            toggleBlock(editor, 'quote');
           }}
         >
           <Quote className="h-4 w-4" />

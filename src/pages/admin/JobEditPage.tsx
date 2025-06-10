@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AdminLayout } from "@/components/layout/AdminLayout";
@@ -36,9 +35,9 @@ export default function JobEditPage() {
     salary: "",
     experience: "",
     work_approach: "",
-    responsibilities: [],
-    qualifications: [],
-    skills: [],
+    responsibilities: [] as string[],
+    qualifications: [] as string[],
+    skills: [] as string[],
     is_open: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -484,7 +483,7 @@ export default function JobEditPage() {
               <CardContent>
                 <MediaUpload
                   value={job.logo_url}
-                  onChange={(url) => handleInputChange('logo_url', url)}
+                  onChange={(url) => handleInputChange('logo_url', url || "")}
                   accept="image/*"
                   maxSize={5 * 1024 * 1024}
                 />
