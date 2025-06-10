@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -92,11 +91,19 @@ export default function Register() {
                 <RadioGroupItem value="resident" id="resident-mobile" className="peer sr-only" />
                 <Label 
                   htmlFor="resident-mobile" 
-                  className="flex items-center justify-center p-6 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:border-gray-300 hover:bg-gray-50 font-medium"
+                  className={`flex items-center justify-center p-6 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 font-medium ${
+                    formData.role === "resident" 
+                      ? "border-blue-500 bg-blue-50" 
+                      : "border-gray-200"
+                  }`}
                 >
                   <div className="flex items-center space-x-4">
-                    <div className="p-3 bg-blue-100 rounded-full">
-                      <Users className="w-6 h-6 text-blue-600" />
+                    <div className={`p-3 rounded-full ${
+                      formData.role === "resident" 
+                        ? "bg-blue-500 text-white" 
+                        : "bg-blue-100 text-blue-600"
+                    }`}>
+                      <Users className="w-6 h-6" />
                     </div>
                     <div className="text-left">
                       <div className="font-semibold text-gray-900">Resident</div>
@@ -109,15 +116,23 @@ export default function Register() {
                 <RadioGroupItem value="official" id="official-mobile" className="peer sr-only" />
                 <Label 
                   htmlFor="official-mobile" 
-                  className="flex items-center justify-center p-6 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-red-500 peer-checked:bg-red-50 hover:border-gray-300 hover:bg-gray-50 font-medium"
+                  className={`flex items-center justify-center p-6 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 font-medium ${
+                    formData.role === "official" 
+                      ? "border-red-500 bg-red-50" 
+                      : "border-gray-200"
+                  }`}
                 >
                   <div className="flex items-center space-x-4">
-                    <div className="p-3 bg-red-100 rounded-full">
-                      <Shield className="w-6 h-6 text-red-600" />
+                    <div className={`p-3 rounded-full ${
+                      formData.role === "official" 
+                        ? "bg-red-500 text-white" 
+                        : "bg-red-100 text-red-600"
+                    }`}>
+                      <Shield className="w-6 h-6" />
                     </div>
                     <div className="text-left">
                       <div className="font-semibold text-gray-900">Official</div>
-                      <div className="text-sm text-gray-500">Manage community and serve residents</div>
+                      <div className="text-sm text-gray-500">For Barangay Captains</div>
                     </div>
                   </div>
                 </Label>
@@ -223,11 +238,19 @@ export default function Register() {
                 <RadioGroupItem value="resident" id="resident" className="peer sr-only" />
                 <Label 
                   htmlFor="resident" 
-                  className="flex items-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:border-gray-300 hover:bg-gray-50 font-medium"
+                  className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 font-medium ${
+                    formData.role === "resident" 
+                      ? "border-blue-500 bg-blue-50" 
+                      : "border-gray-200"
+                  }`}
                 >
                   <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-blue-100 rounded-full">
-                      <Users className="w-5 h-5 text-blue-600" />
+                    <div className={`p-2 rounded-full ${
+                      formData.role === "resident" 
+                        ? "bg-blue-500 text-white" 
+                        : "bg-blue-100 text-blue-600"
+                    }`}>
+                      <Users className="w-5 h-5" />
                     </div>
                     <div>
                       <div className="font-semibold text-gray-900">Resident</div>
@@ -240,15 +263,23 @@ export default function Register() {
                 <RadioGroupItem value="official" id="official" className="peer sr-only" />
                 <Label 
                   htmlFor="official" 
-                  className="flex items-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-red-500 peer-checked:bg-red-50 hover:border-gray-300 hover:bg-gray-50 font-medium"
+                  className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 font-medium ${
+                    formData.role === "official" 
+                      ? "border-red-500 bg-red-50" 
+                      : "border-gray-200"
+                  }`}
                 >
                   <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-red-100 rounded-full">
-                      <Shield className="w-5 h-5 text-red-600" />
+                    <div className={`p-2 rounded-full ${
+                      formData.role === "official" 
+                        ? "bg-red-500 text-white" 
+                        : "bg-red-100 text-red-600"
+                    }`}>
+                      <Shield className="w-5 h-5" />
                     </div>
                     <div>
                       <div className="font-semibold text-gray-900">Official</div>
-                      <div className="text-sm text-gray-500">Manage community</div>
+                      <div className="text-sm text-gray-500">For Barangay Captains</div>
                     </div>
                   </div>
                 </Label>
