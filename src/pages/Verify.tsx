@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
@@ -96,19 +95,18 @@ export default function Verify() {
               maxLength={4}
               value={otp}
               onChange={setOtp}
-              render={({ slots }) => (
-                <InputOTPGroup className="gap-2 md:gap-4">
-                  {slots.map((slot, index) => (
-                    <InputOTPSlot
-                      key={index}
-                      index={index}
-                      {...slot}
-                      className="w-16 h-16 text-2xl border-2 border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-emerald-500"
-                    />
-                  ))}
-                </InputOTPGroup>
-              )}
-            />
+              pattern="[0-9]*"
+            >
+              <InputOTPGroup className="gap-2 md:gap-4">
+                {Array.from({ length: 4 }, (_, index) => (
+                  <InputOTPSlot
+                    key={index}
+                    index={index}
+                    className="w-16 h-16 text-2xl border-2 border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-emerald-500"
+                  />
+                ))}
+              </InputOTPGroup>
+            </InputOTP>
           </div>
 
           <Button 

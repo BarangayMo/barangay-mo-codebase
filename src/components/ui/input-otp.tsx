@@ -35,21 +35,11 @@ const InputOTPSlot = React.forwardRef<
 >(({ index, className, ...props }, ref) => {
   const inputOTPContext = React.useContext(OTPInputContext)
   
-  // Add safety check to prevent accessing properties of undefined
-  if (!inputOTPContext || !inputOTPContext.slots || !inputOTPContext.slots[index]) {
-    return (
-      <div
-        ref={ref}
-        className={cn(
-          "relative flex h-10 w-10 items-center justify-center border-y border-r border-input text-sm transition-all first:rounded-l-md first:border-l last:rounded-r-md",
-          className
-        )}
-        {...props}
-      />
-    );
+  const { char, hasFakeCaret, isActive } = inputOTPContext?.slots?.[index] ?? {
+    char: null,
+    hasFakeCaret: false,
+    isActive: false
   }
-  
-  const { char, hasFakeCaret, isActive } = inputOTPContext.slots[index]
 
   return (
     <div
