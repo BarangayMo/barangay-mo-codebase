@@ -19,7 +19,7 @@ serve(async (req) => {
   try {
     console.log("📥 Parsing request body...");
     const requestBody = await req.json();
-    console.log("📥 Request body:", requestBody);
+    console.log("📥 Request body received:", requestBody);
     
     const { keyName } = requestBody;
 
@@ -39,13 +39,9 @@ serve(async (req) => {
     // Get the API key from Supabase secrets
     const apiKey = Deno.env.get(keyName);
     
-    console.log("🔑 API key found:", !!apiKey);
-    console.log("🔑 API key length:", apiKey ? apiKey.length : 0);
-    console.log("🔑 API key starts with:", apiKey ? apiKey.substring(0, 10) + "..." : "N/A");
-
     if (!apiKey) {
       console.error(`❌ API key ${keyName} not found in environment`);
-      console.log("🔍 Available environment variables:", Object.keys(Deno.env.toObject()));
+      console.log("🔍 Available environment variables:", Object.keys(Deno.env.toObject()).filter(key => !key.includes('SECRET')));
       return new Response(
         JSON.stringify({ error: `API key ${keyName} not found` }),
         {
@@ -55,7 +51,10 @@ serve(async (req) => {
       );
     }
 
-    console.log("✅ Successfully returning API key");
+    console.log("✅ API key found successfully");
+    console.log("🔑 API key length:", apiKey.length);
+    console.log("🔑 API key preview:", apiKey.substring(0, 8) + "...");
+
     return new Response(
       JSON.stringify({ apiKey }),
       {
@@ -64,9 +63,14 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error("❌ Error in edge function:", error);
+    console.error("❌ Error message:", error.message);
     console.error("❌ Error stack:", error.stack);
     return new Response(
-      JSON.stringify({ error: "Internal server error", details: error.message }),
+      JSON.stringify({ 
+        error: "Internal server error", 
+        details: error.message,
+        timestamp: new Date().toISOString()
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

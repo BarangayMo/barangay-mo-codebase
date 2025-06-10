@@ -21,21 +21,37 @@ export const JobMap = ({ location, className }: JobMapProps) => {
     const initializeMap = async () => {
       console.log('🗺️ JobMap: Starting map initialization');
       console.log('🗺️ JobMap: Location:', location);
-      console.log('🗺️ JobMap: Map container exists:', !!mapContainer.current);
+      console.log('🗺️ JobMap: Map container current:', mapContainer.current);
       console.log('🗺️ JobMap: Existing map instance:', !!map.current);
 
-      if (!mapContainer.current || !location || map.current) {
-        console.log('🗺️ JobMap: Early return - conditions not met');
+      // Wait a bit for the DOM to be ready
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      if (!mapContainer.current) {
+        console.log('❌ JobMap: Map container not available after timeout');
+        setError('Map container not available');
+        setLoading(false);
+        return;
+      }
+
+      if (!location) {
+        console.log('❌ JobMap: No location provided');
+        setError('No location provided');
+        setLoading(false);
+        return;
+      }
+
+      if (map.current) {
+        console.log('🗺️ JobMap: Map already exists, skipping initialization');
         return;
       }
 
       try {
         setLoading(true);
         setError(null);
-        setDebugInfo('Initializing...');
+        setDebugInfo('Fetching API key...');
 
         console.log('🔑 JobMap: Calling edge function for API key...');
-        setDebugInfo('Fetching API key...');
 
         // Get Mapbox API key from Supabase secrets
         const { data, error: secretError } = await supabase.functions.invoke('get-api-key', {
@@ -54,8 +70,8 @@ export const JobMap = ({ location, className }: JobMapProps) => {
           throw new Error('Mapbox API key not found in response');
         }
 
-        console.log('✅ JobMap: API key received, length:', data.apiKey.length);
-        setDebugInfo('API key received, geocoding...');
+        console.log('✅ JobMap: API key received successfully');
+        setDebugInfo('Geocoding location...');
 
         // Set Mapbox access token
         mapboxgl.accessToken = data.apiKey;
@@ -64,21 +80,18 @@ export const JobMap = ({ location, className }: JobMapProps) => {
         // Geocode the location to get coordinates
         console.log('🌍 JobMap: Starting geocoding for:', location);
         const geocodeUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(location)}.json?access_token=${data.apiKey}&limit=1`;
-        console.log('🌍 JobMap: Geocode URL (without token):', geocodeUrl.replace(data.apiKey, '[REDACTED]'));
         
         const geocodeResponse = await fetch(geocodeUrl);
-        
         console.log('🌍 JobMap: Geocode response status:', geocodeResponse.status);
-        console.log('🌍 JobMap: Geocode response ok:', geocodeResponse.ok);
 
         if (!geocodeResponse.ok) {
           const errorText = await geocodeResponse.text();
           console.error('❌ JobMap: Geocoding failed:', geocodeResponse.status, errorText);
-          throw new Error(`Geocoding failed: ${geocodeResponse.status} - ${errorText}`);
+          throw new Error(`Geocoding failed: ${geocodeResponse.status}`);
         }
 
         const geocodeData = await geocodeResponse.json();
-        console.log('🌍 JobMap: Geocode data:', geocodeData);
+        console.log('🌍 JobMap: Geocode data received:', geocodeData);
         
         if (!geocodeData.features || geocodeData.features.length === 0) {
           console.error('❌ JobMap: No geocoding results for location:', location);
@@ -87,7 +100,13 @@ export const JobMap = ({ location, className }: JobMapProps) => {
 
         const [lng, lat] = geocodeData.features[0].center;
         console.log('📍 JobMap: Coordinates found:', { lng, lat });
-        setDebugInfo('Coordinates found, initializing map...');
+        setDebugInfo('Initializing map...');
+
+        // Double-check container is still available
+        if (!mapContainer.current) {
+          console.error('❌ JobMap: Map container disappeared during initialization');
+          throw new Error('Map container no longer available');
+        }
 
         // Initialize map
         console.log('🗺️ JobMap: Creating Mapbox map instance...');
@@ -99,7 +118,7 @@ export const JobMap = ({ location, className }: JobMapProps) => {
           attributionControl: false
         });
 
-        console.log('🗺️ JobMap: Map instance created');
+        console.log('🗺️ JobMap: Map instance created successfully');
 
         // Add navigation controls
         map.current.addControl(
@@ -108,7 +127,6 @@ export const JobMap = ({ location, className }: JobMapProps) => {
           }),
           'top-right'
         );
-        console.log('🗺️ JobMap: Navigation controls added');
 
         // Add marker
         const marker = new mapboxgl.Marker({
@@ -116,9 +134,8 @@ export const JobMap = ({ location, className }: JobMapProps) => {
         })
           .setLngLat([lng, lat])
           .addTo(map.current);
-        console.log('📍 JobMap: Marker added');
 
-        // Add popup with location info
+        // Add popup
         const popup = new mapboxgl.Popup({
           offset: 25,
           closeButton: false,
@@ -134,7 +151,6 @@ export const JobMap = ({ location, className }: JobMapProps) => {
             </div>
           `)
           .addTo(map.current);
-        console.log('💬 JobMap: Popup added');
 
         map.current.on('load', () => {
           console.log('✅ JobMap: Map loaded successfully');
@@ -160,7 +176,10 @@ export const JobMap = ({ location, className }: JobMapProps) => {
       }
     };
 
-    initializeMap();
+    // Only initialize if we have a location
+    if (location) {
+      initializeMap();
+    }
 
     // Cleanup
     return () => {
@@ -195,9 +214,6 @@ export const JobMap = ({ location, className }: JobMapProps) => {
             <p className="text-sm font-medium text-muted-foreground">{location}</p>
             <p className="text-xs text-muted-foreground mt-1">Map unavailable</p>
             <p className="text-xs text-red-500 mt-1">{error}</p>
-            {debugInfo && (
-              <p className="text-xs text-gray-500 mt-1">{debugInfo}</p>
-            )}
           </div>
         </div>
       </div>
