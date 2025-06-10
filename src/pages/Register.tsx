@@ -42,7 +42,10 @@ export default function Register() {
           description: error.message
         });
       } else {
-        navigate("/phone");
+        // Redirect to email verification page instead of phone
+        navigate("/email-verification", { 
+          state: { email: formData.email } 
+        });
       }
     } catch (err) {
       toast({
