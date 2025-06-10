@@ -1,6 +1,6 @@
 
 import React, { useCallback, useMemo } from 'react';
-import { createEditor, Descendant, Editor, Element, Text, BaseEditor } from 'slate';
+import { createEditor, Descendant, Editor, Element, Text, BaseEditor, Transforms } from 'slate';
 import { Slate, Editable, withReact, RenderElementProps, RenderLeafProps, ReactEditor } from 'slate-react';
 import { withHistory, HistoryEditor } from 'slate-history';
 import { Button } from './button';
@@ -115,7 +115,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     const isActive = isBlockActive(editor, format);
     const isList = LIST_TYPES.includes(format);
 
-    Editor.unwrapNodes(editor, {
+    Transforms.unwrapNodes(editor, {
       match: n =>
         !Editor.isEditor(n) &&
         Element.isElement(n) &&
@@ -126,11 +126,11 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     const newProperties: Partial<CustomElement> = {
       type: (isActive ? 'paragraph' : isList ? 'list-item' : format) as any,
     };
-    Editor.setNodes(editor, newProperties);
+    Transforms.setNodes(editor, newProperties);
 
     if (!isActive && isList) {
       const block: CustomElement = { type: format as any, children: [] };
-      Editor.wrapNodes(editor, block);
+      Transforms.wrapNodes(editor, block);
     }
   };
 
