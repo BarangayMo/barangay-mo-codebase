@@ -12,9 +12,8 @@ interface JobMapProps {
   className?: string;
 }
 
-// You can set your Mapbox public token here directly
-// Get it from: https://account.mapbox.com/access-tokens/
-const MAPBOX_PUBLIC_TOKEN = 'YOUR_MAPBOX_PUBLIC_TOKEN_HERE';
+// Set your Mapbox public token here directly
+const MAPBOX_PUBLIC_TOKEN = 'pk.eyJ1IjoieW91cnVzZXJuYW1lIiwiYSI6InlvdXJhY2Nlc3N0b2tlbiJ9.example';
 
 export const JobMap = ({ location, className }: JobMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -23,27 +22,8 @@ export const JobMap = ({ location, className }: JobMapProps) => {
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [apiKey, setApiKey] = useState(MAPBOX_PUBLIC_TOKEN);
-  const [showApiKeyInput, setShowApiKeyInput] = useState(!MAPBOX_PUBLIC_TOKEN || MAPBOX_PUBLIC_TOKEN === 'YOUR_MAPBOX_PUBLIC_TOKEN_HERE');
+  const [showApiKeyInput, setShowApiKeyInput] = useState(!MAPBOX_PUBLIC_TOKEN || MAPBOX_PUBLIC_TOKEN.includes('example') || MAPBOX_PUBLIC_TOKEN === 'pk.eyJ1IjoieW91cnVzZXJuYW1lIiwiYSI6InlvdXJhY2Nlc3N0b2tlbiJ9.example');
   const maxRetries = 3;
-
-  const waitForContainer = (): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      const checkContainer = () => {
-        if (mapContainer.current && document.contains(mapContainer.current)) {
-          const rect = mapContainer.current.getBoundingClientRect();
-          if (rect.width > 0 && rect.height > 0) {
-            resolve();
-            return;
-          }
-        }
-        
-        setTimeout(checkContainer, 100);
-      };
-      
-      checkContainer();
-      setTimeout(() => reject(new Error('Container timeout')), 5000);
-    });
-  };
 
   const initializeMap = async (attempt = 1) => {
     console.log(`🗺️ JobMap: Starting map initialization (attempt ${attempt})`);
@@ -56,7 +36,7 @@ export const JobMap = ({ location, className }: JobMapProps) => {
       return;
     }
 
-    if (!apiKey || apiKey === 'YOUR_MAPBOX_PUBLIC_TOKEN_HERE') {
+    if (!apiKey || apiKey.includes('example') || !apiKey.startsWith('pk.')) {
       console.log('❌ JobMap: No valid API key provided');
       setError('Please enter your Mapbox public token');
       setLoading(false);
@@ -75,14 +55,8 @@ export const JobMap = ({ location, className }: JobMapProps) => {
       setError(null);
 
       // Wait for container to be ready
-      console.log('🗺️ JobMap: Waiting for container...');
-      await waitForContainer();
-      console.log('✅ JobMap: Container ready');
-
-      // Validate API key format
-      if (!apiKey.startsWith('pk.')) {
-        console.error('❌ JobMap: Invalid API key format:', apiKey.substring(0, 10));
-        throw new Error('Invalid Mapbox API key format - should start with pk.');
+      if (!mapContainer.current) {
+        throw new Error('Map container not available');
       }
 
       console.log('✅ JobMap: Valid API key provided, length:', apiKey.length);
@@ -94,13 +68,7 @@ export const JobMap = ({ location, className }: JobMapProps) => {
       console.log('🌍 JobMap: Starting geocoding for:', location);
       const geocodeUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(location)}.json?access_token=${apiKey}&limit=1`;
       
-      const geocodeTimeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Geocoding request timeout after 10 seconds')), 10000)
-      );
-
-      const geocodePromise = fetch(geocodeUrl);
-      const geocodeResponse = await Promise.race([geocodePromise, geocodeTimeoutPromise]) as Response;
-
+      const geocodeResponse = await fetch(geocodeUrl);
       console.log('🌍 JobMap: Geocode response status:', geocodeResponse.status);
 
       if (!geocodeResponse.ok) {
@@ -119,11 +87,6 @@ export const JobMap = ({ location, className }: JobMapProps) => {
 
       const [lng, lat] = geocodeData.features[0].center;
       console.log('📍 JobMap: Coordinates found:', { lng, lat });
-
-      // Final container check
-      if (!mapContainer.current || !document.contains(mapContainer.current)) {
-        throw new Error('Map container no longer available');
-      }
 
       // Initialize map
       console.log('🗺️ JobMap: Creating Mapbox map instance...');
@@ -200,7 +163,7 @@ export const JobMap = ({ location, className }: JobMapProps) => {
   };
 
   useEffect(() => {
-    if (location && !map.current && apiKey && apiKey !== 'YOUR_MAPBOX_PUBLIC_TOKEN_HERE') {
+    if (location && !map.current && apiKey && !apiKey.includes('example') && apiKey.startsWith('pk.')) {
       const timer = setTimeout(() => {
         initializeMap();
       }, 100);
@@ -228,7 +191,7 @@ export const JobMap = ({ location, className }: JobMapProps) => {
   };
 
   const handleApiKeySubmit = () => {
-    if (apiKey && apiKey.trim() && apiKey !== 'YOUR_MAPBOX_PUBLIC_TOKEN_HERE') {
+    if (apiKey && apiKey.trim() && !apiKey.includes('example') && apiKey.startsWith('pk.')) {
       setShowApiKeyInput(false);
       initializeMap();
     }
@@ -258,7 +221,7 @@ export const JobMap = ({ location, className }: JobMapProps) => {
             <Button 
               onClick={handleApiKeySubmit}
               className="w-full"
-              disabled={!apiKey || apiKey === 'YOUR_MAPBOX_PUBLIC_TOKEN_HERE'}
+              disabled={!apiKey || apiKey.includes('example') || !apiKey.startsWith('pk.')}
             >
               Load Map
             </Button>
