@@ -322,6 +322,7 @@ export type Database = {
       }
       jobs: {
         Row: {
+          assigned_to: string | null
           availability: string | null
           category: string
           company: string
@@ -338,12 +339,16 @@ export type Database = {
           qualifications: string[] | null
           responsibilities: string[]
           salary: string | null
+          seo_description: string | null
+          seo_title: string | null
           skills: string[] | null
+          slug: string | null
           title: string
           updated_at: string | null
           work_approach: string | null
         }
         Insert: {
+          assigned_to?: string | null
           availability?: string | null
           category: string
           company: string
@@ -360,12 +365,16 @@ export type Database = {
           qualifications?: string[] | null
           responsibilities: string[]
           salary?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
           skills?: string[] | null
+          slug?: string | null
           title: string
           updated_at?: string | null
           work_approach?: string | null
         }
         Update: {
+          assigned_to?: string | null
           availability?: string | null
           category?: string
           company?: string
@@ -382,7 +391,10 @@ export type Database = {
           qualifications?: string[] | null
           responsibilities?: string[]
           salary?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
           skills?: string[] | null
+          slug?: string | null
           title?: string
           updated_at?: string | null
           work_approach?: string | null

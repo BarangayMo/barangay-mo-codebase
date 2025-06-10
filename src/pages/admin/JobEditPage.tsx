@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AdminLayout } from "@/components/layout/AdminLayout";
@@ -77,14 +78,25 @@ export default function JobEditPage() {
             assigned_to: data.assigned_to || ''
           });
           
-          // Set default assigned user (placeholder)
-          setAssignedUser({
-            id: 'admin',
-            first_name: 'Admin',
-            last_name: 'User',
-            email: 'admin@company.com',
-            avatar_url: 'https://ui-avatars.com/api/?name=Admin&background=random'
-          });
+          // Fetch assigned user if there's an assigned_to value
+          if (data.assigned_to) {
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', data.assigned_to)
+              .single();
+            
+            if (profileData) {
+              setAssignedUser({
+                id: profileData.id,
+                first_name: profileData.first_name,
+                last_name: profileData.last_name,
+                email: 'user@example.com', // You might want to get this from auth.users
+                avatar_url: profileData.avatar_url || `https://ui-avatars.com/api/?name=${profileData.first_name} ${profileData.last_name}&background=random`,
+                role: profileData.role
+              });
+            }
+          }
         }
       } catch (error) {
         console.error('Error fetching job:', error);
