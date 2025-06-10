@@ -255,71 +255,6 @@ export type Database = {
         }
         Relationships: []
       }
-      job_applications: {
-        Row: {
-          age: number | null
-          applicant_email: string
-          applicant_name: string
-          applicant_phone: string | null
-          application_date: string | null
-          created_at: string | null
-          expected_salary: string | null
-          experience_years: number | null
-          gender: string | null
-          id: string
-          job_id: string | null
-          notes: string | null
-          rating: number | null
-          resume_url: string | null
-          status: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          age?: number | null
-          applicant_email: string
-          applicant_name: string
-          applicant_phone?: string | null
-          application_date?: string | null
-          created_at?: string | null
-          expected_salary?: string | null
-          experience_years?: number | null
-          gender?: string | null
-          id?: string
-          job_id?: string | null
-          notes?: string | null
-          rating?: number | null
-          resume_url?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          age?: number | null
-          applicant_email?: string
-          applicant_name?: string
-          applicant_phone?: string | null
-          application_date?: string | null
-          created_at?: string | null
-          expected_salary?: string | null
-          experience_years?: number | null
-          gender?: string | null
-          id?: string
-          job_id?: string | null
-          notes?: string | null
-          rating?: number | null
-          resume_url?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "job_applications_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
-            referencedRelation: "jobs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       jobs: {
         Row: {
           availability: string | null
@@ -331,7 +266,6 @@ export type Database = {
           experience: string
           id: string
           is_open: boolean | null
-          job_code: string | null
           license: string | null
           location: string
           logo_url: string | null
@@ -353,7 +287,6 @@ export type Database = {
           experience: string
           id?: string
           is_open?: boolean | null
-          job_code?: string | null
           license?: string | null
           location: string
           logo_url?: string | null
@@ -375,7 +308,6 @@ export type Database = {
           experience?: string
           id?: string
           is_open?: boolean | null
-          job_code?: string | null
           license?: string | null
           location?: string
           logo_url?: string | null
@@ -1021,10 +953,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      generate_job_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
       get_user_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]

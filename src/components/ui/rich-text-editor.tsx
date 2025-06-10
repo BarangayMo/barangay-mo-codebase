@@ -1,58 +1,23 @@
 
-import React, { useCallback, useMemo } from 'react';
-import { createEditor, Descendant, Editor, Element, Text, BaseEditor, Transforms } from 'slate';
-import { Slate, Editable, withReact, RenderElementProps, RenderLeafProps, ReactEditor } from 'slate-react';
-import { withHistory, HistoryEditor } from 'slate-history';
+import React, { useState } from 'react';
 import { Button } from './button';
-import { Bold, Italic, List, ListOrdered, Quote } from 'lucide-react';
-
-// Define custom types for slate
-type CustomEditor = BaseEditor & ReactEditor & HistoryEditor;
-
-type ParagraphElement = {
-  type: 'paragraph';
-  children: Descendant[];
-};
-
-type BulletedListElement = {
-  type: 'bulleted-list';
-  children: Descendant[];
-};
-
-type NumberedListElement = {
-  type: 'numbered-list';
-  children: Descendant[];
-};
-
-type ListItemElement = {
-  type: 'list-item';
-  children: Descendant[];
-};
-
-type QuoteElement = {
-  type: 'quote';
-  children: Descendant[];
-};
-
-type CustomElement = ParagraphElement | BulletedListElement | NumberedListElement | ListItemElement | QuoteElement;
-
-type FormattedText = {
-  text: string;
-  bold?: boolean;
-  italic?: boolean;
-};
-
-type CustomText = FormattedText;
-
-declare module 'slate' {
-  interface CustomTypes {
-    Editor: CustomEditor;
-    Element: CustomElement;
-    Text: CustomText;
-  }
-}
-
-const LIST_TYPES = ['numbered-list', 'bulleted-list'];
+import { 
+  Bold, 
+  Italic, 
+  Underline, 
+  Link, 
+  List, 
+  AlignLeft,
+  Image,
+  Video,
+  Youtube,
+  Code
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './dialog';
+import { Input } from './input';
+import { Label } from './label';
+import { Textarea } from './textarea';
 
 interface RichTextEditorProps {
   value: string;
@@ -61,174 +26,224 @@ interface RichTextEditorProps {
   className?: string;
 }
 
-const RichTextEditor: React.FC<RichTextEditorProps> = ({
-  value,
-  onChange,
-  placeholder = "Enter description...",
-  className = ""
-}) => {
-  const editor = useMemo(() => withHistory(withReact(createEditor())), []);
+export const RichTextEditor = ({ value, onChange, placeholder, className }: RichTextEditorProps) => {
+  const [isCodeMode, setIsCodeMode] = useState(false);
+  const [showImageDialog, setShowImageDialog] = useState(false);
+  const [showVideoDialog, setShowVideoDialog] = useState(false);
+  const [showYoutubeDialog, setShowYoutubeDialog] = useState(false);
+  const [imageUrl, setImageUrl] = useState('');
+  const [videoUrl, setVideoUrl] = useState('');
+  const [youtubeUrl, setYoutubeUrl] = useState('');
 
-  const initialValue: Descendant[] = useMemo(() => {
-    if (!value) {
-      return [{ type: 'paragraph', children: [{ text: '' }] }];
-    }
-    try {
-      return JSON.parse(value);
-    } catch {
-      return [{ type: 'paragraph', children: [{ text: value }] }];
-    }
-  }, [value]);
-
-  const renderElement = useCallback((props: RenderElementProps) => {
-    const { attributes, children, element } = props;
-    switch (element.type) {
-      case 'bulleted-list':
-        return <ul {...attributes} className="list-disc ml-6">{children}</ul>;
-      case 'numbered-list':
-        return <ol {...attributes} className="list-decimal ml-6">{children}</ol>;
-      case 'list-item':
-        return <li {...attributes}>{children}</li>;
-      case 'quote':
-        return <blockquote {...attributes} className="border-l-4 border-gray-300 pl-4 italic">{children}</blockquote>;
-      default:
-        return <p {...attributes}>{children}</p>;
-    }
-  }, []);
-
-  const renderLeaf = useCallback((props: RenderLeafProps) => {
-    let { attributes, children, leaf } = props;
-    if (leaf.bold) {
-      children = <strong>{children}</strong>;
-    }
-    if (leaf.italic) {
-      children = <em>{children}</em>;
-    }
-    return <span {...attributes}>{children}</span>;
-  }, []);
-
-  const handleChange = (newValue: Descendant[]) => {
-    onChange(JSON.stringify(newValue));
-  };
-
-  const toggleBlock = (editor: CustomEditor, format: string) => {
-    const isActive = isBlockActive(editor, format);
-    const isList = LIST_TYPES.includes(format);
-
-    Transforms.unwrapNodes(editor, {
-      match: n =>
-        !Editor.isEditor(n) &&
-        Element.isElement(n) &&
-        LIST_TYPES.includes((n as CustomElement).type),
-      split: true,
-    });
-
-    const newProperties: Partial<CustomElement> = {
-      type: (isActive ? 'paragraph' : isList ? 'list-item' : format) as any,
-    };
-    Transforms.setNodes(editor, newProperties);
-
-    if (!isActive && isList) {
-      const block: CustomElement = { type: format as any, children: [] };
-      Transforms.wrapNodes(editor, block);
+  const insertImage = () => {
+    if (imageUrl) {
+      const imgTag = `<img src="${imageUrl}" alt="Product image" style="max-width: 100%; height: auto;" />`;
+      onChange(value + imgTag);
+      setImageUrl('');
+      setShowImageDialog(false);
     }
   };
 
-  const toggleMark = (editor: CustomEditor, format: string) => {
-    const isActive = isMarkActive(editor, format);
-
-    if (isActive) {
-      Editor.removeMark(editor, format);
-    } else {
-      Editor.addMark(editor, format, true);
+  const insertVideo = () => {
+    if (videoUrl) {
+      const videoTag = `<video controls style="max-width: 100%; height: auto;"><source src="${videoUrl}" type="video/mp4">Your browser does not support the video tag.</video>`;
+      onChange(value + videoTag);
+      setVideoUrl('');
+      setShowVideoDialog(false);
     }
   };
 
-  const isBlockActive = (editor: CustomEditor, format: string) => {
-    const { selection } = editor;
-    if (!selection) return false;
-
-    const [node] = Editor.nodes(editor, {
-      match: n =>
-        !Editor.isEditor(n) &&
-        Element.isElement(n) &&
-        (n as CustomElement).type === format,
-    });
-
-    return !!node;
+  const insertYoutube = () => {
+    if (youtubeUrl) {
+      const videoId = youtubeUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)?.[1];
+      if (videoId) {
+        const embedTag = `<iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen style="max-width: 100%;"></iframe>`;
+        onChange(value + embedTag);
+      }
+      setYoutubeUrl('');
+      setShowYoutubeDialog(false);
+    }
   };
 
-  const isMarkActive = (editor: CustomEditor, format: string) => {
-    const marks = Editor.marks(editor);
-    return marks ? !!(marks as any)[format] : false;
+  const formatText = (tag: string) => {
+    const selection = window.getSelection();
+    if (selection && selection.toString()) {
+      const selectedText = selection.toString();
+      const formattedText = `<${tag}>${selectedText}</${tag}>`;
+      onChange(value.replace(selectedText, formattedText));
+    }
   };
 
   return (
-    <div className={`border rounded-lg ${className}`}>
-      <div className="border-b p-2 flex gap-2">
+    <div className={cn("border rounded-md", className)}>
+      <div className="flex items-center justify-between space-x-2 px-3 py-2 border-b bg-gray-50">
+        <div className="flex items-center space-x-1">
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="h-8 w-8 p-0"
+            onClick={() => formatText('strong')}
+            type="button"
+          >
+            <Bold className="h-4 w-4" />
+          </Button>
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="h-8 w-8 p-0"
+            onClick={() => formatText('em')}
+            type="button"
+          >
+            <Italic className="h-4 w-4" />
+          </Button>
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="h-8 w-8 p-0"
+            onClick={() => formatText('u')}
+            type="button"
+          >
+            <Underline className="h-4 w-4" />
+          </Button>
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="h-8 w-8 p-0"
+            onClick={() => formatText('a')}
+            type="button"
+          >
+            <Link className="h-4 w-4" />
+          </Button>
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="h-8 w-8 p-0"
+            onClick={() => formatText('ul')}
+            type="button"
+          >
+            <List className="h-4 w-4" />
+          </Button>
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="h-8 w-8 p-0"
+            onClick={() => formatText('p')}
+            type="button"
+          >
+            <AlignLeft className="h-4 w-4" />
+          </Button>
+
+          <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
+            <DialogTrigger asChild>
+              <Button size="sm" variant="ghost" className="h-8 w-8 p-0" type="button">
+                <Image className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Insert Image</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="imageUrl">Image URL</Label>
+                  <Input
+                    id="imageUrl"
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    placeholder="https://example.com/image.jpg"
+                  />
+                </div>
+                <Button onClick={insertImage}>Insert Image</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={showVideoDialog} onOpenChange={setShowVideoDialog}>
+            <DialogTrigger asChild>
+              <Button size="sm" variant="ghost" className="h-8 w-8 p-0" type="button">
+                <Video className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Insert Video</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="videoUrl">Video URL</Label>
+                  <Input
+                    id="videoUrl"
+                    value={videoUrl}
+                    onChange={(e) => setVideoUrl(e.target.value)}
+                    placeholder="https://example.com/video.mp4"
+                  />
+                </div>
+                <Button onClick={insertVideo}>Insert Video</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={showYoutubeDialog} onOpenChange={setShowYoutubeDialog}>
+            <DialogTrigger asChild>
+              <Button size="sm" variant="ghost" className="h-8 w-8 p-0" type="button">
+                <Youtube className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Insert YouTube Video</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="youtubeUrl">YouTube URL</Label>
+                  <Input
+                    id="youtubeUrl"
+                    value={youtubeUrl}
+                    onChange={(e) => setYoutubeUrl(e.target.value)}
+                    placeholder="https://www.youtube.com/watch?v=..."
+                  />
+                </div>
+                <Button onClick={insertYoutube}>Insert YouTube Video</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+
         <Button
-          type="button"
-          variant="ghost"
           size="sm"
-          onClick={() => {
-            toggleMark(editor, 'bold');
-          }}
-        >
-          <Bold className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
           variant="ghost"
-          size="sm"
-          onClick={() => {
-            toggleMark(editor, 'italic');
-          }}
-        >
-          <Italic className="h-4 w-4" />
-        </Button>
-        <Button
+          onClick={() => setIsCodeMode(!isCodeMode)}
+          className="h-8 px-2"
           type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            toggleBlock(editor, 'bulleted-list');
-          }}
         >
-          <List className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            toggleBlock(editor, 'numbered-list');
-          }}
-        >
-          <ListOrdered className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            toggleBlock(editor, 'quote');
-          }}
-        >
-          <Quote className="h-4 w-4" />
+          <Code className="h-4 w-4 mr-1" />
+          {isCodeMode ? 'Visual' : 'Code'}
         </Button>
       </div>
-      <div className="p-4">
-        <Slate editor={editor} initialValue={initialValue} onChange={handleChange}>
-          <Editable
-            renderElement={renderElement}
-            renderLeaf={renderLeaf}
-            placeholder={placeholder}
-            className="min-h-[200px] outline-none"
+
+      {isCodeMode ? (
+        <Textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="border-0 resize-none min-h-[120px] focus-visible:ring-0 font-mono text-sm"
+          placeholder={placeholder}
+        />
+      ) : (
+        <div className="min-h-[120px] p-3">
+          <div
+            contentEditable
+            className="min-h-[96px] outline-none"
+            dangerouslySetInnerHTML={{ __html: value }}
+            onInput={(e) => onChange(e.currentTarget.innerHTML)}
+            style={{ whiteSpace: 'pre-wrap' }}
           />
-        </Slate>
-      </div>
+          {!value && (
+            <div className="text-muted-foreground pointer-events-none">
+              {placeholder}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
-
-export { RichTextEditor };
