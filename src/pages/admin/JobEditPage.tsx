@@ -34,7 +34,9 @@ export default function JobEditPage() {
     responsibilities: [],
     qualifications: [],
     skills: [],
-    is_open: true
+    is_open: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   });
 
   useEffect(() => {
