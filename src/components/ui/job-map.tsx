@@ -15,50 +15,82 @@ export const JobMap = ({ location, className }: JobMapProps) => {
   const map = useRef<mapboxgl.Map | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string>('');
 
   useEffect(() => {
     const initializeMap = async () => {
-      if (!mapContainer.current || !location || map.current) return;
+      console.log('🗺️ JobMap: Starting map initialization');
+      console.log('🗺️ JobMap: Location:', location);
+      console.log('🗺️ JobMap: Map container exists:', !!mapContainer.current);
+      console.log('🗺️ JobMap: Existing map instance:', !!map.current);
+
+      if (!mapContainer.current || !location || map.current) {
+        console.log('🗺️ JobMap: Early return - conditions not met');
+        return;
+      }
 
       try {
         setLoading(true);
         setError(null);
+        setDebugInfo('Initializing...');
+
+        console.log('🔑 JobMap: Calling edge function for API key...');
+        setDebugInfo('Fetching API key...');
 
         // Get Mapbox API key from Supabase secrets
         const { data, error: secretError } = await supabase.functions.invoke('get-api-key', {
           body: { keyName: 'MAPBOX_PUBLIC_TOKEN' }
         });
 
+        console.log('🔑 JobMap: Edge function response:', { data, error: secretError });
+
         if (secretError) {
-          console.error('Error fetching Mapbox API key:', secretError);
-          throw new Error('Failed to retrieve Mapbox API key');
+          console.error('❌ JobMap: Error fetching Mapbox API key:', secretError);
+          throw new Error(`Failed to retrieve Mapbox API key: ${secretError.message}`);
         }
 
         if (!data?.apiKey) {
-          throw new Error('Mapbox API key not found');
+          console.error('❌ JobMap: No API key in response:', data);
+          throw new Error('Mapbox API key not found in response');
         }
+
+        console.log('✅ JobMap: API key received, length:', data.apiKey.length);
+        setDebugInfo('API key received, geocoding...');
 
         // Set Mapbox access token
         mapboxgl.accessToken = data.apiKey;
+        console.log('🔑 JobMap: Mapbox access token set');
 
         // Geocode the location to get coordinates
-        const geocodeResponse = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(location)}.json?access_token=${data.apiKey}&limit=1`
-        );
+        console.log('🌍 JobMap: Starting geocoding for:', location);
+        const geocodeUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(location)}.json?access_token=${data.apiKey}&limit=1`;
+        console.log('🌍 JobMap: Geocode URL (without token):', geocodeUrl.replace(data.apiKey, '[REDACTED]'));
         
+        const geocodeResponse = await fetch(geocodeUrl);
+        
+        console.log('🌍 JobMap: Geocode response status:', geocodeResponse.status);
+        console.log('🌍 JobMap: Geocode response ok:', geocodeResponse.ok);
+
         if (!geocodeResponse.ok) {
-          throw new Error(`Geocoding failed: ${geocodeResponse.status}`);
+          const errorText = await geocodeResponse.text();
+          console.error('❌ JobMap: Geocoding failed:', geocodeResponse.status, errorText);
+          throw new Error(`Geocoding failed: ${geocodeResponse.status} - ${errorText}`);
         }
 
         const geocodeData = await geocodeResponse.json();
+        console.log('🌍 JobMap: Geocode data:', geocodeData);
         
         if (!geocodeData.features || geocodeData.features.length === 0) {
-          throw new Error('Location not found');
+          console.error('❌ JobMap: No geocoding results for location:', location);
+          throw new Error(`Location "${location}" not found`);
         }
 
         const [lng, lat] = geocodeData.features[0].center;
+        console.log('📍 JobMap: Coordinates found:', { lng, lat });
+        setDebugInfo('Coordinates found, initializing map...');
 
         // Initialize map
+        console.log('🗺️ JobMap: Creating Mapbox map instance...');
         map.current = new mapboxgl.Map({
           container: mapContainer.current,
           style: 'mapbox://styles/mapbox/streets-v12',
@@ -67,6 +99,8 @@ export const JobMap = ({ location, className }: JobMapProps) => {
           attributionControl: false
         });
 
+        console.log('🗺️ JobMap: Map instance created');
+
         // Add navigation controls
         map.current.addControl(
           new mapboxgl.NavigationControl({
@@ -74,16 +108,18 @@ export const JobMap = ({ location, className }: JobMapProps) => {
           }),
           'top-right'
         );
+        console.log('🗺️ JobMap: Navigation controls added');
 
         // Add marker
-        new mapboxgl.Marker({
+        const marker = new mapboxgl.Marker({
           color: '#ef4444'
         })
           .setLngLat([lng, lat])
           .addTo(map.current);
+        console.log('📍 JobMap: Marker added');
 
         // Add popup with location info
-        new mapboxgl.Popup({
+        const popup = new mapboxgl.Popup({
           offset: 25,
           closeButton: false,
           closeOnClick: false
@@ -98,20 +134,28 @@ export const JobMap = ({ location, className }: JobMapProps) => {
             </div>
           `)
           .addTo(map.current);
+        console.log('💬 JobMap: Popup added');
 
         map.current.on('load', () => {
+          console.log('✅ JobMap: Map loaded successfully');
           setLoading(false);
+          setDebugInfo('Map loaded successfully');
         });
 
         map.current.on('error', (e) => {
-          console.error('Map error:', e);
+          console.error('❌ JobMap: Map error:', e);
           setError('Map failed to load');
           setLoading(false);
+          setDebugInfo(`Map error: ${e.error?.message || 'Unknown error'}`);
         });
 
+        console.log('🗺️ JobMap: Map initialization completed');
+
       } catch (err) {
-        console.error('Map initialization error:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load map');
+        console.error('❌ JobMap: Map initialization error:', err);
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load map';
+        setError(errorMessage);
+        setDebugInfo(`Error: ${errorMessage}`);
         setLoading(false);
       }
     };
@@ -121,6 +165,7 @@ export const JobMap = ({ location, className }: JobMapProps) => {
     // Cleanup
     return () => {
       if (map.current) {
+        console.log('🗺️ JobMap: Cleaning up map instance');
         map.current.remove();
         map.current = null;
       }
@@ -133,6 +178,9 @@ export const JobMap = ({ location, className }: JobMapProps) => {
         <div className="flex flex-col items-center gap-2">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           <span className="text-sm text-muted-foreground">Loading map...</span>
+          {debugInfo && (
+            <span className="text-xs text-muted-foreground">{debugInfo}</span>
+          )}
         </div>
       </div>
     );
@@ -146,6 +194,10 @@ export const JobMap = ({ location, className }: JobMapProps) => {
           <div>
             <p className="text-sm font-medium text-muted-foreground">{location}</p>
             <p className="text-xs text-muted-foreground mt-1">Map unavailable</p>
+            <p className="text-xs text-red-500 mt-1">{error}</p>
+            {debugInfo && (
+              <p className="text-xs text-gray-500 mt-1">{debugInfo}</p>
+            )}
           </div>
         </div>
       </div>
