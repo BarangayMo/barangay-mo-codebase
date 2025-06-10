@@ -1,3 +1,4 @@
+
 import { Route, Routes } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import Index from "@/pages/Index";
@@ -30,6 +31,7 @@ import Pricing from "@/pages/Pricing";
 import RequestAccess from "@/pages/RequestAccess";
 import Partnerships from "@/pages/Partnerships";
 import MediaLibraryPage from "@/pages/admin/MediaLibraryPage";
+import AdminJobsPage from "@/pages/admin/JobsPage";
 
 // Import marketplace components
 import SmarketplaceIndex from "@/pages/smarketplace/SmarketplaceIndex";
@@ -113,6 +115,10 @@ export function AppRoutes() {
       <Route path="/admin/users/roles" element={<UserManagementPage />} />
       <Route path="/admin/users/settings" element={<UserManagementPage />} />
       <Route path="/admin/users/:id" element={<UserProfilePage />} />
+      
+      <Route path="/admin/jobs" element={<AdminJobsPage />} />
+      <Route path="/admin/jobs/all" element={<AdminJobsPage />} />
+      <Route path="/admin/jobs/applications" element={<AdminJobsPage />} />
       
       <Route path="/admin/settings" element={<SettingsPage />} />
       
