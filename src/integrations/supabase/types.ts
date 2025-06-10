@@ -262,6 +262,7 @@ export type Database = {
           applicant_name: string
           applicant_phone: string | null
           application_date: string | null
+          cover_letter: string | null
           created_at: string | null
           expected_salary: string | null
           experience_years: number | null
@@ -271,6 +272,8 @@ export type Database = {
           notes: string | null
           rating: number | null
           resume_url: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           status: string | null
           updated_at: string | null
         }
@@ -280,6 +283,7 @@ export type Database = {
           applicant_name: string
           applicant_phone?: string | null
           application_date?: string | null
+          cover_letter?: string | null
           created_at?: string | null
           expected_salary?: string | null
           experience_years?: number | null
@@ -289,6 +293,8 @@ export type Database = {
           notes?: string | null
           rating?: number | null
           resume_url?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string | null
           updated_at?: string | null
         }
@@ -298,6 +304,7 @@ export type Database = {
           applicant_name?: string
           applicant_phone?: string | null
           application_date?: string | null
+          cover_letter?: string | null
           created_at?: string | null
           expected_salary?: string | null
           experience_years?: number | null
@@ -307,6 +314,8 @@ export type Database = {
           notes?: string | null
           rating?: number | null
           resume_url?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string | null
           updated_at?: string | null
         }
@@ -316,6 +325,13 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_applications_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
