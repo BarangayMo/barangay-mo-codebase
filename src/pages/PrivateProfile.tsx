@@ -14,11 +14,11 @@ export default function PrivateProfile() {
   // Mock extended user data - in real app, fetch from auth context
   const userData = {
     id: user?.id || "1",
-    name: user?.user_metadata?.full_name || "Juan Dela Cruz",
+    name: user?.name || user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : "Juan Dela Cruz",
     email: user?.email || "juan.delacruz@example.com",
     phone: "+63 912 345 6789",
     avatar: "/lovable-uploads/6960369f-3a6b-4d57-ab0f-f7db77f16152.png",
-    role: user?.user_metadata?.role || "Resident",
+    role: "Resident", // Default role since it's not in UserData interface
     barangay: "Barangay San Jose",
     municipality: "Quezon City",
     joinedDate: "January 2024",
