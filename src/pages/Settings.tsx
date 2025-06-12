@@ -7,10 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useEnhancedToast } from "@/components/ui/enhanced-toast";
+import { CheckCircle } from "lucide-react";
 
 const Settings = () => {
   const { userRole } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { showToast, ToastContainer } = useEnhancedToast();
   const [notifications, setNotifications] = useState({
     email: true,
     push: true,
@@ -29,8 +32,45 @@ const Settings = () => {
     }
   };
 
+  const handleSaveNotifications = () => {
+    showToast({
+      title: "Notification preferences saved",
+      description: "Your notification settings have been updated successfully.",
+      variant: "success",
+      icon: <CheckCircle className="h-5 w-5" />
+    });
+  };
+
+  const handleSaveAccount = () => {
+    showToast({
+      title: "Account information updated",
+      description: "Your account details have been saved successfully.",
+      variant: "success",
+      icon: <CheckCircle className="h-5 w-5" />
+    });
+  };
+
+  const handleChangePassword = () => {
+    showToast({
+      title: "Password changed",
+      description: "Your password has been updated successfully.",
+      variant: "success",
+      icon: <CheckCircle className="h-5 w-5" />
+    });
+  };
+
+  const handleSavePrivacy = () => {
+    showToast({
+      title: "Privacy settings saved",
+      description: "Your privacy preferences have been updated.",
+      variant: "success",
+      icon: <CheckCircle className="h-5 w-5" />
+    });
+  };
+
   return (
     <Layout>
+      <ToastContainer />
       <div className="container mx-auto p-4 md:p-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div>
@@ -210,7 +250,9 @@ const Settings = () => {
                   </div>
                 </div>
                 
-                <Button className={getAccentColor()}>Save Notification Preferences</Button>
+                <Button className={getAccentColor()} onClick={handleSaveNotifications}>
+                  Save Notification Preferences
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
@@ -269,7 +311,9 @@ const Settings = () => {
                   )}
                 </div>
                 
-                <Button className={getAccentColor()}>Update Account Information</Button>
+                <Button className={getAccentColor()} onClick={handleSaveAccount}>
+                  Update Account Information
+                </Button>
               </CardContent>
             </Card>
             
@@ -310,7 +354,9 @@ const Settings = () => {
                   </div>
                 </div>
                 
-                <Button className={getAccentColor()}>Change Password</Button>
+                <Button className={getAccentColor()} onClick={handleChangePassword}>
+                  Change Password
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
@@ -364,7 +410,9 @@ const Settings = () => {
                   </div>
                 </div>
                 
-                <Button className={getAccentColor()}>Save Privacy Settings</Button>
+                <Button className={getAccentColor()} onClick={handleSavePrivacy}>
+                  Save Privacy Settings
+                </Button>
                 
                 <div className="pt-4 border-t">
                   <h3 className="font-medium mb-2">Data Management</h3>

@@ -1,7 +1,8 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useEnhancedToast } from "@/components/ui/enhanced-toast";
+import { CheckCircle, AlertTriangle } from "lucide-react";
 
 export interface SystemSetting {
   id: string;
@@ -29,7 +30,7 @@ export const useSystemSettings = () => {
 
 export const useUpdateSystemSetting = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  const { showToast } = useEnhancedToast();
 
   return useMutation({
     mutationFn: async ({ settingKey, value }: { settingKey: string; value: any }) => {
@@ -45,16 +46,19 @@ export const useUpdateSystemSetting = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['system-settings'] });
-      toast({
+      showToast({
         title: "Setting updated",
         description: "System setting has been updated successfully.",
+        variant: "success",
+        icon: <CheckCircle className="h-5 w-5" />
       });
     },
     onError: (error) => {
-      toast({
+      showToast({
         title: "Error",
         description: "Failed to update setting. Please try again.",
         variant: "destructive",
+        icon: <AlertTriangle className="h-5 w-5" />
       });
       console.error('Setting update error:', error);
     },

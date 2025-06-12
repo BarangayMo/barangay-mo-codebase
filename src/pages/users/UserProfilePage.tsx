@@ -1,15 +1,15 @@
-
 import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { DashboardPageHeader } from "@/components/dashboard/PageHeader";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useEnhancedToast } from "@/components/ui/enhanced-toast";
 import { UserPersonalInfo } from "@/components/users/profile/UserPersonalInfo";
 import { UserActivityTabs } from "@/components/users/profile/UserActivityTabs";
 import { UserAdminControls } from "@/components/users/profile/UserAdminControls";
 import { UserProfile } from "@/components/users/profile/types";
+import { CheckCircle, AlertTriangle } from "lucide-react";
 
 // Mock data for user activity
 const marketListings = [
@@ -30,7 +30,7 @@ export default function UserProfilePage() {
   const { id } = useParams();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  const { showToast, ToastContainer } = useEnhancedToast();
 
   useEffect(() => {
     loadUserProfile();
@@ -85,10 +85,11 @@ export default function UserProfilePage() {
       });
     } catch (error) {
       console.error("Error loading profile:", error);
-      toast({
+      showToast({
         title: "Error loading profile",
         description: "Could not load user profile data",
-        variant: "destructive"
+        variant: "destructive",
+        icon: <AlertTriangle className="h-5 w-5" />
       });
     } finally {
       setLoading(false);
@@ -114,15 +115,18 @@ export default function UserProfilePage() {
         }
       });
 
-      toast({
+      showToast({
         title: "Settings updated",
-        description: "User settings have been updated successfully"
+        description: "User settings have been updated successfully",
+        variant: "success",
+        icon: <CheckCircle className="h-5 w-5" />
       });
     } catch (error) {
-      toast({
+      showToast({
         title: "Error updating settings",
         description: "Could not update user settings",
-        variant: "destructive"
+        variant: "destructive",
+        icon: <AlertTriangle className="h-5 w-5" />
       });
     }
   };
@@ -154,6 +158,7 @@ export default function UserProfilePage() {
 
   return (
     <AdminLayout title={`User Profile - ${profile.first_name} ${profile.last_name}`}>
+      <ToastContainer />
       <DashboardPageHeader
         title="User Profile"
         description="View and manage user information"

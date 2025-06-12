@@ -1,7 +1,8 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useEnhancedToast } from "@/components/ui/enhanced-toast";
+import { CheckCircle, AlertTriangle } from "lucide-react";
 
 export interface RoleSetting {
   id: string;
@@ -29,7 +30,7 @@ export const useRoleSettings = () => {
 
 export const useUpdateRolePermissions = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  const { showToast } = useEnhancedToast();
 
   return useMutation({
     mutationFn: async ({ role, permissions }: { role: string; permissions: string[] }) => {
@@ -45,16 +46,19 @@ export const useUpdateRolePermissions = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['role-settings'] });
-      toast({
+      showToast({
         title: "Permissions updated",
         description: "Role permissions have been updated successfully.",
+        variant: "success",
+        icon: <CheckCircle className="h-5 w-5" />
       });
     },
     onError: (error) => {
-      toast({
+      showToast({
         title: "Error",
         description: "Failed to update permissions. Please try again.",
         variant: "destructive",
+        icon: <AlertTriangle className="h-5 w-5" />
       });
       console.error('Permissions update error:', error);
     },
