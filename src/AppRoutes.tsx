@@ -67,6 +67,8 @@ import UserManagementPage from "@/pages/users/UserManagementPage";
 import JobsAllPage from "@/pages/admin/JobsAllPage";
 import JobEditPage from "@/pages/admin/JobEditPage";
 import JobApplicationsPage from "@/pages/admin/JobApplicationsPage";
+import PrivateProfile from "@/pages/PrivateProfile";
+import PublicProfile from "@/pages/PublicProfile";
 
 export function AppRoutes() {
   return (
@@ -91,6 +93,11 @@ export function AppRoutes() {
       <Route path="/resident-home" element={<ResidentHome />} />
       <Route path="/rbi-registration" element={<RbiRegistration />} />
       <Route path="/resident-profile" element={<ResidentProfile />} />
+      
+      {/* Profile routes */}
+      <Route path="/profile" element={<PrivateProfile />} />
+      <Route path="/profile/:id" element={<PublicProfile />} />
+      <Route path="/edit-profile" element={<EditProfile />} />
       
       <Route path="/official-dashboard" element={<OfficialsDashboard />} />
       
@@ -141,8 +148,6 @@ export function AppRoutes() {
       <Route path="/marketplace/my-orders" element={<MyOrders />} />
       
       <Route path="/admin/media-library" element={<MediaLibraryPage />} />
-      
-      <Route path="/edit-profile" element={<EditProfile />} />
       
       <Route path="/admin/jobs" element={<AdminDashboard />} />
       <Route path="/admin/jobs/all" element={<JobsAllPage />} />
