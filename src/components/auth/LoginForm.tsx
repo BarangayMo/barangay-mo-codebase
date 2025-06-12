@@ -33,6 +33,7 @@ export const LoginForm = () => {
         });
         setLoginError(error.message);
       }
+      // Removed success toast - user will be redirected automatically
     } catch (err) {
       toast({
         variant: "destructive",
@@ -50,11 +51,6 @@ export const LoginForm = () => {
     setLoginError(null);
     
     try {
-      toast({
-        title: "Demo login",
-        description: `Signing in as ${role}...`,
-      });
-      
       const { error } = await demoLogin(role);
       
       if (error) {
@@ -65,12 +61,8 @@ export const LoginForm = () => {
           description: error.message
         });
         setLoginError(error.message);
-      } else {
-        toast({
-          title: "Success!",
-          description: `Logged in as ${role}`,
-        });
       }
+      // Removed success toast - user will be redirected automatically
     } catch (err: any) {
       console.error("Unexpected demo login error:", err);
       toast({
@@ -85,11 +77,6 @@ export const LoginForm = () => {
   };
 
   const handleBiometricLogin = () => {
-    toast({
-      title: "Biometric login",
-      description: "Using biometrics to log you in...",
-    });
-    
     setTimeout(() => {
       handleDemoLogin("resident");
     }, 1000);

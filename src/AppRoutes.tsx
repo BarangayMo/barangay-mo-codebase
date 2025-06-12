@@ -68,6 +68,10 @@ import JobsAllPage from "@/pages/admin/JobsAllPage";
 import JobEditPage from "@/pages/admin/JobEditPage";
 import JobApplicationsPage from "@/pages/admin/JobApplicationsPage";
 
+// Import the new profile pages
+import PublicProfile from "@/pages/PublicProfile";
+import PrivateProfile from "@/pages/PrivateProfile";
+
 export function AppRoutes() {
   return (
     <Routes>
@@ -148,6 +152,10 @@ export function AppRoutes() {
       <Route path="/admin/jobs/all" element={<JobsAllPage />} />
       <Route path="/admin/jobs/edit/:id" element={<JobEditPage />} />
       <Route path="/admin/jobs/applications" element={<JobApplicationsPage />} />
+      
+      <Route path="/profile/public/:userId" element={<PublicProfile />} />
+      <Route path="/profile/private" element={<PrivateProfile />} />
+      <Route path="/profile" element={<PrivateProfile />} />
       
       <Route path="*" element={<NotFound />} />
     </Routes>
