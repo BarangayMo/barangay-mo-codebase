@@ -35,6 +35,7 @@ export const useUpdateSystemSetting = () => {
 
   return useMutation({
     mutationFn: async ({ settingKey, value }: { settingKey: string; value: any }) => {
+      console.log('Updating system setting:', { settingKey, value });
       const { data, error } = await supabase
         .from('user_system_settings')
         .update({ setting_value: value })
@@ -46,6 +47,7 @@ export const useUpdateSystemSetting = () => {
       return data;
     },
     onSuccess: () => {
+      console.log('System setting update successful, showing toast');
       queryClient.invalidateQueries({ queryKey: ['system-settings'] });
       showToast({
         title: "Setting updated",
@@ -55,6 +57,7 @@ export const useUpdateSystemSetting = () => {
       });
     },
     onError: (error) => {
+      console.log('System setting update failed, showing error toast');
       showToast({
         title: "Error",
         description: "Failed to update setting. Please try again.",

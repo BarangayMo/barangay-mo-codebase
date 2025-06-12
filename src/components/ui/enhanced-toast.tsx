@@ -29,10 +29,8 @@ export const EnhancedToast: React.FC<EnhancedToastProps> = ({
 }) => {
   const isDesktop = useMediaQuery('(min-width: 768px)');
   
-  // Don't render on mobile
-  if (!isDesktop) {
-    return null;
-  }
+  // Always render on desktop and mobile for now to debug
+  console.log('Enhanced toast rendering:', { title, isDesktop });
 
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -145,25 +143,33 @@ export const useEnhancedToast = () => {
   const [toasts, setToasts] = React.useState<Array<EnhancedToastProps & { id: string }>>([]);
 
   const showToast = React.useCallback((toast: Omit<EnhancedToastProps, 'onClose'>) => {
+    console.log('showToast called with:', toast);
     const id = Math.random().toString(36).substr(2, 9);
     const newToast = {
       ...toast,
       id,
       onClose: () => {
+        console.log('Closing toast:', id);
         setToasts(prev => prev.filter(t => t.id !== id));
       }
     };
     
-    setToasts(prev => [...prev, newToast]);
+    setToasts(prev => {
+      console.log('Adding toast to state:', [...prev, newToast]);
+      return [...prev, newToast];
+    });
   }, []);
 
-  const ToastContainer = React.useCallback(() => (
-    <>
-      {toasts.map(toast => (
-        <EnhancedToast key={toast.id} {...toast} />
-      ))}
-    </>
-  ), [toasts]);
+  const ToastContainer = React.useCallback(() => {
+    console.log('ToastContainer rendering, toasts:', toasts);
+    return (
+      <>
+        {toasts.map(toast => (
+          <EnhancedToast key={toast.id} {...toast} />
+        ))}
+      </>
+    );
+  }, [toasts]);
 
   return { showToast, ToastContainer };
 };
