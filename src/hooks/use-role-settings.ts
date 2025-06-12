@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEnhancedToast } from "@/components/ui/enhanced-toast";
 import { CheckCircle, AlertTriangle } from "lucide-react";
+import React from "react";
 
 export interface RoleSetting {
   id: string;
@@ -50,7 +51,7 @@ export const useUpdateRolePermissions = () => {
         title: "Permissions updated",
         description: "Role permissions have been updated successfully.",
         variant: "success",
-        icon: <CheckCircle className="h-5 w-5" />
+        icon: React.createElement(CheckCircle, { className: "h-5 w-5" })
       });
     },
     onError: (error) => {
@@ -58,7 +59,7 @@ export const useUpdateRolePermissions = () => {
         title: "Error",
         description: "Failed to update permissions. Please try again.",
         variant: "destructive",
-        icon: <AlertTriangle className="h-5 w-5" />
+        icon: React.createElement(AlertTriangle, { className: "h-5 w-5" })
       });
       console.error('Permissions update error:', error);
     },

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEnhancedToast } from "@/components/ui/enhanced-toast";
 import { CheckCircle, AlertTriangle } from "lucide-react";
+import React from "react";
 
 export interface SystemSetting {
   id: string;
@@ -50,7 +51,7 @@ export const useUpdateSystemSetting = () => {
         title: "Setting updated",
         description: "System setting has been updated successfully.",
         variant: "success",
-        icon: <CheckCircle className="h-5 w-5" />
+        icon: React.createElement(CheckCircle, { className: "h-5 w-5" })
       });
     },
     onError: (error) => {
@@ -58,7 +59,7 @@ export const useUpdateSystemSetting = () => {
         title: "Error",
         description: "Failed to update setting. Please try again.",
         variant: "destructive",
-        icon: <AlertTriangle className="h-5 w-5" />
+        icon: React.createElement(AlertTriangle, { className: "h-5 w-5" })
       });
       console.error('Setting update error:', error);
     },
