@@ -127,17 +127,24 @@ export const EnhancedToast: React.FC<EnhancedToastProps> = ({
         <div 
           className={cn("h-full transition-all ease-linear", config.progressColor)}
           style={{
-            animation: `shrink ${duration}ms linear forwards`,
+            animation: `shrinkProgress ${duration}ms linear forwards`,
+            animationKeyframes: {
+              from: { width: '100%' },
+              to: { width: '0%' }
+            }
           }}
         />
       </div>
 
-      <style jsx>{`
-        @keyframes shrink {
-          from { width: 100%; }
-          to { width: 0%; }
-        }
-      `}</style>
+      {/* Add keyframes via a style element */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @keyframes shrinkProgress {
+            from { width: 100%; }
+            to { width: 0%; }
+          }
+        `
+      }} />
     </div>
   );
 };
