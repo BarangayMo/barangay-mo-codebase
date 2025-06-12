@@ -1,4 +1,3 @@
-
 import React from "react";
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -127,11 +126,7 @@ export const EnhancedToast: React.FC<EnhancedToastProps> = ({
         <div 
           className={cn("h-full transition-all ease-linear", config.progressColor)}
           style={{
-            animation: `shrinkProgress ${duration}ms linear forwards`,
-            animationKeyframes: {
-              from: { width: '100%' },
-              to: { width: '0%' }
-            }
+            animation: `shrinkProgress ${duration}ms linear forwards`
           }}
         />
       </div>
