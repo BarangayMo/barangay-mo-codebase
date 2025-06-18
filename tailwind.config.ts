@@ -19,6 +19,9 @@ export default {
 			}
 		},
 		extend: {
+			screens: {
+				'xs': '475px',
+			},
 			fontFamily: {
 				outfit: ['Outfit', 'sans-serif'],
 				inter: ['Inter', 'sans-serif'],
