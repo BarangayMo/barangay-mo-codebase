@@ -45,7 +45,7 @@ const OfficialRequests = () => {
         .from('complaints_requests')
         .select(`
           *,
-          profiles:user_id (
+          user_profile:profiles!complaints_requests_user_id_fkey (
             first_name,
             last_name
           )
@@ -198,7 +198,7 @@ const OfficialRequests = () => {
                       
                       <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
                         <span>
-                          By {request.profiles?.first_name} {request.profiles?.last_name}
+                          By {request.user_profile?.first_name || 'Unknown'} {request.user_profile?.last_name || 'User'}
                         </span>
                         <span>•</span>
                         <span>{format(new Date(request.created_at), 'MMM dd, yyyy')}</span>
