@@ -21,7 +21,7 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<{ error: Error | null }>;
   register: (email: string, password: string, userData: any) => Promise<{ error: Error | null }>;
-  logout: () => void;
+  logout: () => Promise<void>;
   rbiCompleted: boolean;
   setRbiCompleted: (completed: boolean) => void;
   session: Session | null;
@@ -162,15 +162,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const logout = async () => {
-    const { error } = await supabase.auth.signOut();
-    
-    if (!error) {
-      setIsAuthenticated(false);
-      setUserRole(null);
-      setUser(null);
-      setSession(null);
-    } else {
-      console.error("Logout error:", error.message);
+    console.log("Logout attempt");
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error("Logout error:", error.message);
+      } else {
+        console.log("Logout successful");
+        // State will be cleared by the auth state change listener
+      }
+    } catch (error) {
+      console.error("Unexpected logout error:", error);
     }
   };
 
