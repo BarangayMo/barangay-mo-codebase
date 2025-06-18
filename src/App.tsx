@@ -8,7 +8,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster as ShadcnToaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { SupabaseWarning } from "./components/ui/supabase-warning";
-import { ScrollToTop } from "./components/ScrollToTop";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -26,14 +25,11 @@ function App() {
       <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
         <LanguageProvider>
           <AuthProvider>
-            {/* Router component removed from here */}
             <FaviconManager />
-            <ScrollToTop />
             <AppRoutes />
             <ShadcnToaster />
             <SonnerToaster />
             <SupabaseWarning />
-            {/* Router component removed from here */}
           </AuthProvider>
         </LanguageProvider>
       </ThemeProvider>
