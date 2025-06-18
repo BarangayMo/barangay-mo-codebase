@@ -16,6 +16,7 @@ import { CommandPalette } from "./CommandPalette";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useResidentProfile } from "@/hooks/use-resident-profile";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -39,8 +40,23 @@ export const AdminLayout = ({
     logout,
     user
   } = useAuth();
+  const { profile } = useResidentProfile();
   const { unreadCount } = useNotifications();
   const navigate = useNavigate();
+
+  // Get user initials and avatar
+  const firstName = profile?.first_name || user?.firstName || '';
+  const lastName = profile?.last_name || user?.lastName || '';
+  const initials = (firstName?.[0] || '') + (lastName?.[0] || '');
+  const fallbackInitials = initials || 'AD';
+  
+  // Get avatar URL from profile or generate default
+  const avatarUrl = profile?.avatar_url || 
+    (profile?.settings?.address && typeof profile.settings.address === 'object' 
+      ? (profile.settings.address as any)?.avatar_url 
+      : null);
+
+  const displayName = firstName && lastName ? `${firstName} ${lastName}` : user?.name || 'Admin User';
 
   useEffect(() => {
     localStorage.setItem("sidebar-collapsed", JSON.stringify(isSidebarCollapsed));
@@ -125,12 +141,12 @@ export const AdminLayout = ({
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className={cn("w-full h-auto p-2 flex items-center gap-3 hover:bg-gray-100", isSidebarCollapsed ? "justify-center" : "justify-start")}>
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src="" />
-                      <AvatarFallback>AD</AvatarFallback>
+                      <AvatarImage src={avatarUrl || ""} alt={displayName} />
+                      <AvatarFallback>{fallbackInitials}</AvatarFallback>
                     </Avatar>
                     {!isSidebarCollapsed && (
                       <div className="text-left">
-                        <div className="font-medium text-sm">Admin User</div>
+                        <div className="font-medium text-sm">{displayName}</div>
                         <div className="text-xs text-muted-foreground">Superadmin</div>
                       </div>
                     )}
@@ -171,7 +187,8 @@ export const AdminLayout = ({
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarFallback>AD</AvatarFallback>
+                  <AvatarImage src={avatarUrl || ""} alt={displayName} />
+                  <AvatarFallback>{fallbackInitials}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
@@ -285,7 +302,8 @@ export const AdminLayout = ({
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="rounded-full">
                         <Avatar className="h-8 w-8">
-                          <AvatarFallback>AD</AvatarFallback>
+                          <AvatarImage src={avatarUrl || ""} alt={displayName} />
+                          <AvatarFallback>{fallbackInitials}</AvatarFallback>
                         </Avatar>
                       </Button>
                     </DropdownMenuTrigger>
