@@ -1,4 +1,5 @@
 
+
 import { ReactNode, useEffect, useState } from "react";
 import { EnhancedSidebar } from "./EnhancedSidebar";
 import { cn } from "@/lib/utils";
@@ -18,6 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useResidentProfile } from "@/hooks/use-resident-profile";
+import { LoadingScreen } from "@/components/ui/loading";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -33,6 +35,7 @@ export const AdminLayout = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCommandOpen, setIsCommandOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     const saved = localStorage.getItem("sidebar-collapsed");
     return saved ? JSON.parse(saved) : false;
@@ -85,12 +88,15 @@ export const AdminLayout = ({
   }, []);
 
   const handleLogout = async () => {
+    setIsLoggingOut(true);
     await logout();
     navigate('/login');
+    setIsLoggingOut(false);
   };
 
   return (
     <SidebarProvider>
+      {isLoggingOut && <LoadingScreen />}
       <div className="flex min-h-screen bg-gray-50 w-full overflow-x-hidden">
         <CommandPalette open={isCommandOpen} onOpenChange={setIsCommandOpen} />
         
