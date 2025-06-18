@@ -186,6 +186,90 @@ export type Database = {
         }
         Relationships: []
       }
+      budget_allocations: {
+        Row: {
+          allocated_amount: number
+          category: string
+          created_at: string
+          created_by: string
+          id: string
+          quarter: number | null
+          spent_amount: number | null
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          allocated_amount: number
+          category: string
+          created_at?: string
+          created_by: string
+          id?: string
+          quarter?: number | null
+          spent_amount?: number | null
+          updated_at?: string
+          year?: number
+        }
+        Update: {
+          allocated_amount?: number
+          category?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          quarter?: number | null
+          spent_amount?: number | null
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      campaigns: {
+        Row: {
+          budget: number | null
+          campaign_type: string
+          created_at: string
+          created_by: string
+          description: string | null
+          end_date: string | null
+          id: string
+          platform: string | null
+          start_date: string | null
+          status: string
+          target_audience: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          budget?: number | null
+          campaign_type?: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          platform?: string | null
+          start_date?: string | null
+          status?: string
+          target_audience?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          budget?: number | null
+          campaign_type?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          platform?: string | null
+          start_date?: string | null
+          status?: string
+          target_audience?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cart_items: {
         Row: {
           added_at: string
@@ -251,6 +335,48 @@ export type Database = {
           id?: string
           is_default?: boolean | null
           name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      community_events: {
+        Row: {
+          attendees_count: number | null
+          created_at: string
+          created_by: string
+          description: string | null
+          event_date: string
+          id: string
+          location: string
+          max_capacity: number | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attendees_count?: number | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          event_date: string
+          id?: string
+          location: string
+          max_capacity?: number | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attendees_count?: number | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          event_date?: string
+          id?: string
+          location?: string
+          max_capacity?: number | null
+          status?: string
+          title?: string
           updated_at?: string
         }
         Relationships: []
@@ -496,6 +622,45 @@ export type Database = {
           recipient_id?: string
           sender_id?: string | null
           status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      official_documents: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          document_type: string
+          file_url: string | null
+          id: string
+          is_public: boolean | null
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          document_type: string
+          file_url?: string | null
+          id?: string
+          is_public?: boolean | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          document_type?: string
+          file_url?: string | null
+          id?: string
+          is_public?: boolean | null
+          tags?: string[] | null
           title?: string
           updated_at?: string
         }
