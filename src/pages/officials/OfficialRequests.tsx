@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -41,20 +40,37 @@ const OfficialRequests = () => {
 
       if (!officialProfile?.barangay) return [];
 
-      const { data: requests, error } = await supabase
+      // First get the requests
+      const { data: requestsData, error: requestsError } = await supabase
         .from('complaints_requests')
-        .select(`
-          *,
-          user_profile:profiles!complaints_requests_user_id_fkey (
-            first_name,
-            last_name
-          )
-        `)
+        .select('*')
         .eq('barangay_id', officialProfile.barangay)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return requests || [];
+      if (requestsError) throw requestsError;
+      if (!requestsData || requestsData.length === 0) return [];
+
+      // Get user IDs from requests
+      const userIds = requestsData.map(request => request.user_id);
+
+      // Then get the user profiles separately
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name')
+        .in('id', userIds);
+
+      if (profilesError) throw profilesError;
+
+      // Combine the data
+      const requestsWithProfiles = requestsData.map(request => {
+        const userProfile = profilesData?.find(profile => profile.id === request.user_id);
+        return {
+          ...request,
+          user_profile: userProfile
+        };
+      });
+
+      return requestsWithProfiles;
     },
     enabled: !!user?.id
   });
