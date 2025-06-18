@@ -1,110 +1,163 @@
+import { Route, Routes } from "react-router-dom";
+import { Layout } from "@/components/layout/Layout";
+import Index from "@/pages/Index";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import EmailVerification from "@/pages/EmailVerification";
+import Verify from "@/pages/Verify";
+import MPIN from "@/pages/MPIN";
+import Phone from "@/pages/Phone";
+import ResidentHome from "@/pages/ResidentHome";
+import OfficialsDashboard from "@/pages/OfficialsDashboard";
+import AdminDashboard from "@/pages/AdminDashboard";
+import Notifications from "@/pages/Notifications";
+import Settings from "@/pages/Settings";
+import Menu from "@/pages/Menu";
+import Messages from "@/pages/Messages";
+import ResidentProfile from "@/pages/ResidentProfile";
+import MobileWelcome from "@/pages/MobileWelcome";
+import RbiRegistration from "@/pages/RbiRegistration";
+import NotFound from "@/pages/NotFound";
+import Services from "@/pages/Services";
+import Marketplace from "@/pages/Marketplace";
+import Jobs from "@/pages/Jobs";
+import JobDetail from "@/pages/JobDetail";
+import Contact from "@/pages/Contact";
+import About from "@/pages/About";
+import Features from "@/pages/Features";
+import Careers from "@/pages/Careers";
+import Products from "@/pages/Products";
+import Pricing from "@/pages/Pricing";
+import RequestAccess from "@/pages/RequestAccess";
+import Partnerships from "@/pages/Partnerships";
+import MediaLibraryPage from "@/pages/admin/MediaLibraryPage";
 
-import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes, useLocation, Navigate } from 'react-router-dom';
-import Login from '@/pages/Login';
-import Register from '@/pages/Register';
-import Verify from '@/pages/Verify';
-import ResidentHome from '@/pages/ResidentHome';
-import Marketplace from '@/pages/Marketplace';
-import AdminDashboard from '@/pages/AdminDashboard';
-import PrivateRoute from '@/components/PrivateRoute';
-import { TooltipProvider } from "@/components/ui/tooltip"
-import { Toaster } from '@/components/ui/toaster';
-import PrivateProfile from '@/pages/PrivateProfile';
-import PublicProfile from '@/pages/PublicProfile';
-import EditProfile from '@/pages/EditProfile';
-import Settings from '@/pages/Settings';
-import OfficialsDashboard from '@/pages/OfficialsDashboard';
-import NotFound from '@/pages/NotFound';
-import BudgetPage from "@/pages/officials/BudgetPage";
-import DocumentsPage from "@/pages/officials/DocumentsPage";
-import ResidentsPage from "@/pages/officials/ResidentsPage";
-import ReportsPage from "@/pages/officials/ReportsPage";
-import CampaignsPage from "@/pages/officials/CampaignsPage";
-import EventsPage from "@/pages/officials/EventsPage";
-import NewCampaignPage from "@/pages/officials/NewCampaignPage";
-import NewEventPage from "@/pages/officials/NewEventPage";
-import { useAuth } from '@/contexts/AuthContext';
+// Import marketplace components
+import SmarketplaceIndex from "@/pages/smarketplace/SmarketplaceIndex";
+import SmarketplaceOverview from "@/pages/smarketplace/SmarketplaceOverview";
+import ProductsAllPage from "@/pages/smarketplace/products/ProductsAllPage";
+import ProductEditPage from "@/pages/smarketplace/products/ProductEditPage";
+import CategoriesPage from "@/pages/smarketplace/products/CategoriesPage";
+import OrdersAllPage from "@/pages/smarketplace/orders/OrdersAllPage";
+import VendorsAllPage from "@/pages/smarketplace/vendors/VendorsAllPage";
+import CustomersAllPage from "@/pages/smarketplace/customers/CustomersAllPage";
 
-const ScrollToTop = () => {
-  const { pathname } = useLocation();
+// Import report/user pages
+import MessagesPage from "@/pages/admin/MessagesPage";
+import FinancialReportsPage from "@/pages/reports/FinancialReportsPage";
+import ActivityLogsPage from "@/pages/reports/ActivityLogsPage";
+import ResidentsPage from "@/pages/users/ResidentsPage";
+import OfficialsPage from "@/pages/users/OfficialsPage";
+import UserProfilePage from "@/pages/users/UserProfilePage";
+import SettingsPage from "@/pages/admin/SettingsPage";
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+// Import marketplace customer-facing pages
+import ProductDetail from "@/pages/marketplace/ProductDetail";
+import Cart from "@/pages/marketplace/Cart";
+import Checkout from "@/pages/marketplace/Checkout";
+import OrderConfirmation from "@/pages/marketplace/OrderConfirmation";
+import MyOrders from "@/pages/marketplace/MyOrders";
 
-  return null;
-};
+// Import the EditProfile component
+import EditProfile from "./pages/EditProfile";
 
-const AuthenticatedRedirect = () => {
-  const { isAuthenticated, userRole, loading } = useAuth();
+import UserManagementPage from "@/pages/users/UserManagementPage";
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#ea384c]"></div>
-      </div>
-    );
-  }
+// Import admin jobs pages
+import JobsAllPage from "@/pages/admin/JobsAllPage";
+import JobEditPage from "@/pages/admin/JobEditPage";
+import JobApplicationsPage from "@/pages/admin/JobApplicationsPage";
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
+// Import the new profile pages
+import PublicProfile from "@/pages/PublicProfile";
+import PrivateProfile from "@/pages/PrivateProfile";
 
-  // Redirect based on user role
-  switch (userRole) {
-    case "official":
-      return <Navigate to="/official-dashboard" replace />;
-    case "superadmin":
-      return <Navigate to="/admin" replace />;
-    case "resident":
-    default:
-      return <Navigate to="/resident-home" replace />;
-  }
-};
-
-const AppRoutes = () => {
+export function AppRoutes() {
   return (
-    <Router>
-      <TooltipProvider>
-        <ScrollToTop />
-        
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/verify" element={<Verify />} />
-
-          <Route path="/" element={<AuthenticatedRedirect />} />
-          <Route path="/resident-home" element={<PrivateRoute><ResidentHome /></PrivateRoute>} />
-          
-          <Route path="/marketplace" element={<PrivateRoute><Marketplace /></PrivateRoute>} />
-
-          <Route path="/admin" element={<PrivateRoute requiredRole="superadmin"><AdminDashboard /></PrivateRoute>} />
-          <Route path="/admin/settings" element={<PrivateRoute requiredRole="superadmin"><Settings /></PrivateRoute>} />
-
-          <Route path="/official-dashboard" element={<PrivateRoute requiredRole="official"><OfficialsDashboard /></PrivateRoute>} />
-
-          <Route path="/resident-profile" element={<PrivateRoute><PrivateProfile /></PrivateRoute>} />
-          <Route path="/user/:userId" element={<PrivateRoute><PublicProfile /></PrivateRoute>} />
-          <Route path="/edit-profile" element={<PrivateRoute><EditProfile /></PrivateRoute>} />
-          <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
-          
-          {/* Officials Pages */}
-          <Route path="/officials/budget" element={<PrivateRoute requiredRole="official"><BudgetPage /></PrivateRoute>} />
-          <Route path="/officials/documents" element={<PrivateRoute requiredRole="official"><DocumentsPage /></PrivateRoute>} />
-          <Route path="/officials/residents" element={<PrivateRoute requiredRole="official"><ResidentsPage /></PrivateRoute>} />
-          <Route path="/officials/reports" element={<PrivateRoute requiredRole="official"><ReportsPage /></PrivateRoute>} />
-          <Route path="/officials/campaigns" element={<PrivateRoute requiredRole="official"><CampaignsPage /></PrivateRoute>} />
-          <Route path="/officials/campaigns/new" element={<PrivateRoute requiredRole="official"><NewCampaignPage /></PrivateRoute>} />
-          <Route path="/officials/events" element={<PrivateRoute requiredRole="official"><EventsPage /></PrivateRoute>} />
-          <Route path="/officials/events/new" element={<PrivateRoute requiredRole="official"><NewEventPage /></PrivateRoute>} />
-          
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <Toaster />
-      </TooltipProvider>
-    </Router>
+    <Routes>
+      <Route path="/" element={<Index />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/email-verification" element={<EmailVerification />} />
+      <Route path="/verify" element={<Verify />} />
+      <Route path="/mpin" element={<MPIN />} />
+      <Route path="/phone" element={<Phone />} />
+      <Route path="/welcome" element={<MobileWelcome />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/features" element={<Features />} />
+      <Route path="/careers" element={<Careers />} />
+      <Route path="/products" element={<Products />} />
+      <Route path="/pricing" element={<Pricing />} />
+      <Route path="/request-access" element={<RequestAccess />} />
+      <Route path="/partnerships" element={<Partnerships />} />
+      
+      <Route path="/resident-home" element={<ResidentHome />} />
+      <Route path="/rbi-registration" element={<RbiRegistration />} />
+      <Route path="/resident-profile" element={<ResidentProfile />} />
+      
+      <Route path="/official-dashboard" element={<OfficialsDashboard />} />
+      
+      <Route path="/admin" element={<AdminDashboard />} />
+      
+      <Route path="/admin/smarketplace" element={<SmarketplaceIndex />} />
+      <Route path="/admin/smarketplace/overview" element={<SmarketplaceOverview />} />
+      <Route path="/admin/smarketplace/products/all" element={<ProductsAllPage />} />
+      <Route path="/admin/smarketplace/products/edit/:id" element={<ProductEditPage />} />
+      <Route path="/admin/smarketplace/products/categories" element={<CategoriesPage />} />
+      <Route path="/admin/smarketplace/products/inventory" element={<ProductsAllPage />} />
+      <Route path="/admin/smarketplace/orders/all" element={<OrdersAllPage />} />
+      <Route path="/admin/smarketplace/orders/processing" element={<OrdersAllPage />} />
+      <Route path="/admin/smarketplace/orders/completed" element={<OrdersAllPage />} />
+      <Route path="/admin/smarketplace/vendors/all" element={<VendorsAllPage />} />
+      <Route path="/admin/smarketplace/customers/all" element={<CustomersAllPage />} />
+      <Route path="/admin/smarketplace/customers/vip" element={<CustomersAllPage />} />
+      
+      <Route path="/admin/messages" element={<MessagesPage />} />
+      <Route path="/admin/messages/:id" element={<MessagesPage />} />
+      
+      <Route path="/admin/reports/financial" element={<FinancialReportsPage />} />
+      <Route path="/admin/reports/activity" element={<ActivityLogsPage />} />
+      
+      <Route path="/admin/users" element={<UserManagementPage />} />
+      <Route path="/admin/users/all" element={<UserManagementPage />} />
+      <Route path="/admin/users/roles" element={<UserManagementPage />} />
+      <Route path="/admin/users/settings" element={<UserManagementPage />} />
+      <Route path="/admin/users/:id" element={<UserProfilePage />} />
+      
+      <Route path="/admin/settings" element={<SettingsPage />} />
+      
+      <Route path="/notifications" element={<Notifications />} />
+      <Route path="/settings" element={<Settings />} />
+      <Route path="/menu" element={<Menu />} />
+      <Route path="/messages" element={<Messages />} />
+      <Route path="/messages/:id" element={<Messages />} />
+      
+      <Route path="/services" element={<Services />} />
+      <Route path="/jobs" element={<Jobs />} />
+      <Route path="/jobs/:id" element={<JobDetail />} />
+      
+      <Route path="/marketplace" element={<Marketplace />} />
+      <Route path="/marketplace/product/:id" element={<ProductDetail />} />
+      <Route path="/marketplace/cart" element={<Cart />} />
+      <Route path="/marketplace/checkout" element={<Checkout />} />
+      <Route path="/marketplace/order-confirmation" element={<OrderConfirmation />} />
+      <Route path="/marketplace/my-orders" element={<MyOrders />} />
+      
+      <Route path="/admin/media-library" element={<MediaLibraryPage />} />
+      
+      <Route path="/edit-profile" element={<EditProfile />} />
+      
+      <Route path="/admin/jobs" element={<AdminDashboard />} />
+      <Route path="/admin/jobs/all" element={<JobsAllPage />} />
+      <Route path="/admin/jobs/edit/:id" element={<JobEditPage />} />
+      <Route path="/admin/jobs/applications" element={<JobApplicationsPage />} />
+      
+      <Route path="/profile/public/:userId" element={<PublicProfile />} />
+      <Route path="/profile/private" element={<PrivateProfile />} />
+      <Route path="/profile" element={<PrivateProfile />} />
+      
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
-};
-
-export default AppRoutes;
+}
