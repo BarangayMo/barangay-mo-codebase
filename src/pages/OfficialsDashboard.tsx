@@ -193,19 +193,27 @@ const OfficialsDashboard = () => {
   }, [searchableItems, searchQuery]);
 
   const ProfileCard = () => (
-    <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-      <Avatar className="h-12 w-12">
-        <AvatarImage src={officialProfile?.avatar_url || "/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png"} />
-        <AvatarFallback className="bg-blue-100 text-blue-600">
-          {officialProfile?.first_name?.[0]}{officialProfile?.last_name?.[0]}
-        </AvatarFallback>
-      </Avatar>
-      <div className="flex-1">
-        <p className="font-medium text-gray-900">
-          {officialProfile?.first_name} {officialProfile?.last_name}
-        </p>
-        <p className="text-sm text-gray-600">Barangay Official</p>
-        <p className="text-xs text-blue-600">{officialProfile?.barangay || 'Barangay'}</p>
+    <div className="relative overflow-hidden">
+      {/* Subtle red background shape */}
+      <div className="absolute inset-0 bg-gradient-to-br from-red-50 to-red-100 rounded-lg"></div>
+      <div className="absolute top-0 right-0 w-20 h-20 bg-red-200/30 rounded-full transform translate-x-8 -translate-y-8"></div>
+      <div className="absolute bottom-0 left-0 w-16 h-16 bg-red-100/40 rounded-full transform -translate-x-6 translate-y-6"></div>
+      
+      {/* Content */}
+      <div className="relative flex items-center gap-3 p-3 rounded-lg">
+        <Avatar className="h-12 w-12">
+          <AvatarImage src={officialProfile?.avatar_url || "/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png"} />
+          <AvatarFallback className="bg-red-100 text-red-600">
+            {officialProfile?.first_name?.[0]}{officialProfile?.last_name?.[0]}
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1">
+          <p className="font-medium text-gray-900">
+            {officialProfile?.first_name} {officialProfile?.last_name}
+          </p>
+          <p className="text-sm text-gray-600">Barangay Official</p>
+          <p className="text-xs text-red-600">{officialProfile?.barangay || 'Barangay'}</p>
+        </div>
       </div>
     </div>
   );
