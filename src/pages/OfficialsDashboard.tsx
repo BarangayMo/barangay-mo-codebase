@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/layout/Layout";
 import { DashboardStats } from "@/components/officials/DashboardStats";
 import { BudgetAllocationChart } from "@/components/officials/BudgetAllocationChart";
@@ -15,11 +14,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useMemo } from "react";
+import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 
 const OfficialsDashboard = () => {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
   // Get official profile
   const { data: officialProfile } = useQuery({
@@ -219,161 +219,182 @@ const OfficialsDashboard = () => {
       
       {/* Mobile View */}
       <div className="block lg:hidden">
-        <div className="max-w-7xl mx-auto py-4 px-4">
-          {/* Mobile Header with Menu */}
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-semibold text-gray-900">Dashboard</h1>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
+        <div className="max-w-7xl mx-auto">
+          {/* Mobile Header - Updated Design */}
+          <div className="bg-white border-b border-gray-100 px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Drawer open={isMobileDrawerOpen} onOpenChange={setIsMobileDrawerOpen}>
+                  <DrawerTrigger asChild>
+                    <Button variant="ghost" size="sm" className="p-2">
+                      <Menu className="h-5 w-5 text-gray-700" />
+                    </Button>
+                  </DrawerTrigger>
+                  <DrawerContent className="h-[60vh]">
+                    <div className="p-4 space-y-6 overflow-y-auto">
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500 mb-3">Administration</h3>
+                        <div className="space-y-2">
+                          {[
+                            { name: "Dashboard", icon: "🏠", active: true },
+                            { name: "Requests & Complaints", icon: "📝", href: "/official/requests" },
+                            { name: "Messages", icon: "💬", href: "/messages" },
+                            { name: "Reports", icon: "📊", href: "/official/reports" },
+                            { name: "Documents", icon: "📁", href: "/official/documents" },
+                            { name: "Settings", icon: "⚙️", href: "/settings" }
+                          ].map((item, index) => (
+                            <Link 
+                              key={index} 
+                              to={item.href || "/official-dashboard"} 
+                              className={`flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer ${
+                                item.active ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50 text-gray-700'
+                              }`}
+                              onClick={() => setIsMobileDrawerOpen(false)}
+                            >
+                              <span className="text-base">{item.icon}</span>
+                              <span className="text-sm font-medium">{item.name}</span>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="border-t pt-4">
+                        <h3 className="text-sm font-medium text-gray-500 mb-3">Quick Actions</h3>
+                        <div className="space-y-2">
+                          {[
+                            { name: "Resident Management", icon: "👥", href: "/official/residents" },
+                            { name: "Community Services", icon: "🏥", href: "/official/services" },
+                            { name: "RBI Forms", icon: "📋", href: "/official/rbi-forms" },
+                            { name: "Emergency Response", icon: "🚨", href: "/official/emergency-responder" }
+                          ].map((item, index) => (
+                            <Link 
+                              key={index} 
+                              to={item.href} 
+                              className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 cursor-pointer"
+                              onClick={() => setIsMobileDrawerOpen(false)}
+                            >
+                              <span className="text-base">{item.icon}</span>
+                              <span className="text-sm font-medium text-gray-700">{item.name}</span>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </DrawerContent>
+                </Drawer>
+                
+                <div className="text-center">
+                  <h1 className="text-lg font-bold text-blue-600">BARANGAY</h1>
+                  <div className="h-0.5 bg-blue-600 w-full"></div>
+                  <h2 className="text-lg font-bold text-red-600">MO</h2>
+                </div>
+              </div>
+              
+              <Button variant="ghost" size="sm" className="p-2">
+                <Bell className="h-5 w-5 text-gray-700" />
+              </Button>
+            </div>
           </div>
 
-          {/* Mobile Menu Overlay */}
-          {isMobileMenuOpen && (
-            <Card className="mb-4 bg-white shadow-lg border border-gray-100">
-              <CardContent className="p-4">
-                <div className="space-y-4">
-                  <h3 className="text-sm font-medium text-gray-500 mb-3">Administration</h3>
-                  <div className="space-y-2">
-                    {[
-                      { name: "Dashboard", icon: "🏠", active: true },
-                      { name: "Requests & Complaints", icon: "📝", href: "/official/requests" },
-                      { name: "Messages", icon: "💬", href: "/messages" },
-                      { name: "Reports", icon: "📊", href: "/official/reports" },
-                      { name: "Documents", icon: "📁", href: "/official/documents" },
-                      { name: "Settings", icon: "⚙️", href: "/settings" }
-                    ].map((item, index) => (
-                      <Link key={index} to={item.href || "/official-dashboard"} className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer ${
-                        item.active ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50 text-gray-700'
-                      }`}>
-                        <span className="text-sm">{item.icon}</span>
-                        <span className="text-sm">{item.name}</span>
+          <div className="py-4 px-4">
+            {/* Mobile Profile Card */}
+            <div className="mb-4">
+              <ProfileCard />
+            </div>
+
+            {/* Mobile Search */}
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search residents, services..."
+                className="pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {filteredSearchResults.length > 0 && (
+                <Card className="absolute top-full left-0 right-0 mt-1 z-50 max-h-60 overflow-y-auto">
+                  <CardContent className="p-2">
+                    {filteredSearchResults.map((result, index) => (
+                      <Link key={index} to={result.href} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <div>
+                          <p className="text-sm font-medium">{result.title}</p>
+                          <p className="text-xs text-gray-500">{result.description}</p>
+                        </div>
                       </Link>
                     ))}
-                  </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
 
-                  <div className="border-t pt-4">
-                    <h3 className="text-sm font-medium text-gray-500 mb-3">Quick Actions</h3>
-                    <div className="grid grid-cols-2 gap-2">
-                      {[
-                        { name: "Resident Management", icon: "👥", href: "/official/residents" },
-                        { name: "Community Services", icon: "🏥", href: "/official/services" },
-                        { name: "RBI Forms", icon: "📋", href: "/official/rbi-forms" },
-                        { name: "Emergency Response", icon: "🚨", href: "/official/emergency-responder" }
-                      ].map((item, index) => (
-                        <Link key={index} to={item.href} className="flex flex-col items-center gap-2 p-3 rounded-lg hover:bg-gray-50 cursor-pointer text-center">
-                          <span className="text-lg">{item.icon}</span>
-                          <span className="text-xs text-gray-700">{item.name}</span>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Mobile Profile Card */}
-          <div className="mb-4">
-            <ProfileCard />
-          </div>
-
-          {/* Mobile Search */}
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search residents, services..."
-              className="pl-10"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            {filteredSearchResults.length > 0 && (
-              <Card className="absolute top-full left-0 right-0 mt-1 z-50 max-h-60 overflow-y-auto">
-                <CardContent className="p-2">
-                  {filteredSearchResults.map((result, index) => (
-                    <Link key={index} to={result.href} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <div>
-                        <p className="text-sm font-medium">{result.title}</p>
-                        <p className="text-xs text-gray-500">{result.description}</p>
-                      </div>
-                    </Link>
-                  ))}
+            {/* Mobile Stats Grid */}
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              <Card className="bg-white shadow-sm border border-gray-100">
+                <CardContent className="p-4">
+                  <p className="text-2xl font-bold text-gray-900">{residentsCount || 0}</p>
+                  <p className="text-sm text-gray-600">Total Residents</p>
                 </CardContent>
               </Card>
-            )}
-          </div>
+              <Card className="bg-white shadow-sm border border-gray-100">
+                <CardContent className="p-4">
+                  <p className="text-2xl font-bold text-gray-900">{rbiCount || 0}</p>
+                  <p className="text-sm text-gray-600">RBI Submissions</p>
+                </CardContent>
+              </Card>
+              <Card className="bg-white shadow-sm border border-gray-100">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-3 h-3 bg-red-500 rounded-sm"></div>
+                    <p className="text-2xl font-bold text-gray-900">14</p>
+                  </div>
+                  <p className="text-sm text-gray-600">Puroks</p>
+                </CardContent>
+              </Card>
+              <Card className="bg-white shadow-sm border border-gray-100">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <p className="text-sm text-green-600">Active</p>
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900">{servicesCount || 0}</p>
+                  <p className="text-sm text-gray-600">Services</p>
+                </CardContent>
+              </Card>
+            </div>
 
-          {/* Mobile Stats Grid */}
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            <Card className="bg-white shadow-sm border border-gray-100">
+            {/* Mobile Quick Access Panel */}
+            <QuickAccessPanel />
+
+            {/* Mobile Community Section */}
+            <Card className="mt-6 bg-white shadow-sm border border-gray-100">
               <CardContent className="p-4">
-                <p className="text-2xl font-bold text-gray-900">{residentsCount || 0}</p>
-                <p className="text-sm text-gray-600">Total Residents</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-white shadow-sm border border-gray-100">
-              <CardContent className="p-4">
-                <p className="text-2xl font-bold text-gray-900">{rbiCount || 0}</p>
-                <p className="text-sm text-gray-600">RBI Submissions</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-white shadow-sm border border-gray-100">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-3 h-3 bg-red-500 rounded-sm"></div>
-                  <p className="text-2xl font-bold text-gray-900">14</p>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-semibold text-gray-900">Recent Residents</h3>
+                  <Link to="/official/residents" className="text-red-500 text-sm font-medium">View All</Link>
                 </div>
-                <p className="text-sm text-gray-600">Puroks</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-white shadow-sm border border-gray-100">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <p className="text-sm text-green-600">Active</p>
-                </div>
-                <p className="text-2xl font-bold text-gray-900">{servicesCount || 0}</p>
-                <p className="text-sm text-gray-600">Services</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Mobile Quick Access Panel */}
-          <QuickAccessPanel />
-
-          {/* Mobile Community Section */}
-          <Card className="mt-6 bg-white shadow-sm border border-gray-100">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-base font-semibold text-gray-900">Recent Residents</h3>
-                <Link to="/official/residents" className="text-red-500 text-sm font-medium">View All</Link>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                {recentResidents?.slice(0, 2).map((resident, index) => (
-                  <div key={index} className="flex flex-col items-center">
-                    <div className="w-16 h-16 rounded-lg overflow-hidden mb-2">
-                      <Avatar className="w-full h-full">
-                        <AvatarImage src={resident.avatar_url || "/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png"} />
-                        <AvatarFallback>{resident.first_name?.[0]}{resident.last_name?.[0]}</AvatarFallback>
-                      </Avatar>
+                <div className="grid grid-cols-2 gap-3">
+                  {recentResidents?.slice(0, 2).map((resident, index) => (
+                    <div key={index} className="flex flex-col items-center">
+                      <div className="w-16 h-16 rounded-lg overflow-hidden mb-2">
+                        <Avatar className="w-full h-full">
+                          <AvatarImage src={resident.avatar_url || "/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png"} />
+                          <AvatarFallback>{resident.first_name?.[0]}{resident.last_name?.[0]}</AvatarFallback>
+                        </Avatar>
+                      </div>
+                      <p className="text-xs text-center text-gray-700">
+                        {resident.first_name} {resident.last_name}
+                      </p>
                     </div>
-                    <p className="text-xs text-center text-gray-700">
-                      {resident.first_name} {resident.last_name}
-                    </p>
-                  </div>
-                )) || (
-                  <div className="col-span-2 text-center text-gray-500 py-4">
-                    <p className="text-sm">No residents found</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                  )) || (
+                    <div className="col-span-2 text-center text-gray-500 py-4">
+                      <p className="text-sm">No residents found</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
 
