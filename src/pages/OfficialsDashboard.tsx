@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/layout/Layout";
 import { DashboardStats } from "@/components/officials/DashboardStats";
 import { BudgetAllocationChart } from "@/components/officials/BudgetAllocationChart";
@@ -14,12 +15,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useMemo } from "react";
-import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const OfficialsDashboard = () => {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Get official profile
   const { data: officialProfile } = useQuery({
@@ -224,14 +225,14 @@ const OfficialsDashboard = () => {
           <div className="bg-white border-b border-gray-100 px-4 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Drawer open={isMobileDrawerOpen} onOpenChange={setIsMobileDrawerOpen}>
-                  <DrawerTrigger asChild>
+                <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                  <SheetTrigger asChild>
                     <Button variant="ghost" size="sm" className="p-2">
                       <Menu className="h-5 w-5 text-gray-700" />
                     </Button>
-                  </DrawerTrigger>
-                  <DrawerContent className="h-[60vh]">
-                    <div className="p-4 space-y-6 overflow-y-auto">
+                  </SheetTrigger>
+                  <SheetContent side="left" className="w-80 p-0">
+                    <div className="p-4 space-y-6 overflow-y-auto h-full">
                       <div>
                         <h3 className="text-sm font-medium text-gray-500 mb-3">Administration</h3>
                         <div className="space-y-2">
@@ -249,7 +250,7 @@ const OfficialsDashboard = () => {
                               className={`flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer ${
                                 item.active ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50 text-gray-700'
                               }`}
-                              onClick={() => setIsMobileDrawerOpen(false)}
+                              onClick={() => setIsMobileMenuOpen(false)}
                             >
                               <span className="text-base">{item.icon}</span>
                               <span className="text-sm font-medium">{item.name}</span>
@@ -271,7 +272,7 @@ const OfficialsDashboard = () => {
                               key={index} 
                               to={item.href} 
                               className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 cursor-pointer"
-                              onClick={() => setIsMobileDrawerOpen(false)}
+                              onClick={() => setIsMobileMenuOpen(false)}
                             >
                               <span className="text-base">{item.icon}</span>
                               <span className="text-sm font-medium text-gray-700">{item.name}</span>
@@ -280,8 +281,8 @@ const OfficialsDashboard = () => {
                         </div>
                       </div>
                     </div>
-                  </DrawerContent>
-                </Drawer>
+                  </SheetContent>
+                </Sheet>
                 
                 <div className="text-center">
                   <h1 className="text-lg font-bold text-blue-600">BARANGAY</h1>
@@ -607,7 +608,8 @@ const OfficialsDashboard = () => {
                         {recentResidents?.slice(0, 2).map((resident, index) => (
                           <Avatar key={index} className="w-6 h-6 border-2 border-white">
                             <AvatarImage src={resident.avatar_url} />
-                            <AvatarFallback className="text-xs">{resident.first_name?.[0]}</AvatarFallback>
+                            <Avatar
+                            className="text-xs">{resident.first_name?.[0]}</AvatarFallback>
                           </Avatar>
                         ))}
                       </div>
