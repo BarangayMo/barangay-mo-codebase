@@ -1,6 +1,7 @@
+
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, User, ShoppingBag, Menu } from "lucide-react";
+import { Bell, User, ShoppingBag, Menu, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { HeaderLogo } from "./header/HeaderLogo";
@@ -17,7 +18,7 @@ import { NotificationDropdown } from "@/components/notifications/NotificationDro
 import { useState } from "react";
 
 export const Header = () => {
-  const { isAuthenticated, userRole } = useAuth();
+  const { isAuthenticated, userRole, logout } = useAuth();
   const isMobile = useIsMobile();
   const location = useLocation();
   const { cartItemCount } = useCartSummary();
@@ -37,6 +38,11 @@ export const Header = () => {
       default:
         return "/";
     }
+  };
+
+  const handleLogout = () => {
+    logout();
+    setIsMobileMenuOpen(false);
   };
 
   const showCartIcon = location.pathname.startsWith('/marketplace') || location.pathname.startsWith('/resident-home');
@@ -107,6 +113,17 @@ export const Header = () => {
                       </Link>
                     ))}
                   </div>
+                </div>
+
+                {/* Logout Button */}
+                <div className="border-t pt-4">
+                  <button 
+                    onClick={handleLogout}
+                    className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-red-50 cursor-pointer text-red-600 w-full text-left"
+                  >
+                    <LogOut className="h-5 w-5" />
+                    <span className="text-sm font-medium">Sign Out</span>
+                  </button>
                 </div>
               </div>
             </SheetContent>
