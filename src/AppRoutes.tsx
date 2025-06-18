@@ -36,31 +36,6 @@ const ScrollToTop = () => {
   return null;
 };
 
-const FaviconManager = () => {
-  useEffect(() => {
-    // Function to update favicon
-    const updateFavicon = (newFaviconUrl: string) => {
-      // Remove the old favicon link
-      let link: HTMLLinkElement | null = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
-      if (link) {
-        document.head.removeChild(link);
-      }
-
-      // Create a new favicon link
-      link = document.createElement('link');
-      link.type = 'image/x-icon';
-      link.rel = 'shortcut icon';
-      link.href = newFaviconUrl;
-      document.head.appendChild(link);
-    };
-
-    // Call the function with the new favicon URL
-    updateFavicon('/favicon.ico');
-  }, []);
-
-  return null;
-};
-
 const AuthenticatedRedirect = () => {
   const { isAuthenticated, userRole, loading } = useAuth();
 
@@ -93,7 +68,6 @@ const AppRoutes = () => {
     <Router>
       <TooltipProvider>
         <ScrollToTop />
-        <FaviconManager />
         
         <Routes>
           <Route path="/login" element={<Login />} />
