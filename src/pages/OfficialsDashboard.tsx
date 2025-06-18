@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/layout/Layout";
 import { DashboardStats } from "@/components/officials/DashboardStats";
 import { BudgetAllocationChart } from "@/components/officials/BudgetAllocationChart";
@@ -608,8 +607,7 @@ const OfficialsDashboard = () => {
                         {recentResidents?.slice(0, 2).map((resident, index) => (
                           <Avatar key={index} className="w-6 h-6 border-2 border-white">
                             <AvatarImage src={resident.avatar_url} />
-                            <Avatar
-                            className="text-xs">{resident.first_name?.[0]}</AvatarFallback>
+                            <AvatarFallback className="text-xs">{resident.first_name?.[0]}</AvatarFallback>
                           </Avatar>
                         ))}
                       </div>
