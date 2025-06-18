@@ -9,7 +9,7 @@ interface PrivateRouteProps {
 }
 
 const PrivateRoute = ({ children, requiredRole }: PrivateRouteProps) => {
-  const { user, loading } = useAuth();
+  const { isAuthenticated, userRole, loading } = useAuth();
 
   if (loading) {
     return (
@@ -19,15 +19,22 @@ const PrivateRoute = ({ children, requiredRole }: PrivateRouteProps) => {
     );
   }
 
-  if (!user) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  // For now, we'll allow access to all authenticated users
-  // Role-based access can be implemented when the profile system is properly set up
-  if (requiredRole) {
-    // This will need to be updated when profile/role system is implemented
-    console.log(`Role-based access for ${requiredRole} not yet implemented`);
+  // Check role-based access if required
+  if (requiredRole && userRole !== requiredRole) {
+    // Redirect to appropriate dashboard based on user role
+    switch (userRole) {
+      case "official":
+        return <Navigate to="/official-dashboard" replace />;
+      case "superadmin":
+        return <Navigate to="/admin" replace />;
+      case "resident":
+      default:
+        return <Navigate to="/resident-home" replace />;
+    }
   }
 
   return <>{children}</>;
