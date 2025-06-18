@@ -1,29 +1,21 @@
+
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import Verify from '@/pages/Verify';
-import ForgotPassword from '@/pages/ForgotPassword';
-import ResetPassword from '@/pages/ResetPassword';
 import ResidentHome from '@/pages/ResidentHome';
 import Marketplace from '@/pages/Marketplace';
-import ProductDetails from '@/pages/ProductDetails';
-import Cart from '@/pages/Cart';
-import Checkout from '@/pages/Checkout';
-import Confirmation from '@/pages/Confirmation';
 import AdminDashboard from '@/pages/AdminDashboard';
 import PrivateRoute from '@/components/PrivateRoute';
 import { TooltipProvider } from "@/components/ui/tooltip"
-import { EnhancedToastProvider } from '@/components/ui/enhanced-toast';
+import { Toaster } from '@/components/ui/toaster';
 import PrivateProfile from '@/pages/PrivateProfile';
 import PublicProfile from '@/pages/PublicProfile';
 import EditProfile from '@/pages/EditProfile';
 import Settings from '@/pages/Settings';
-import NotificationsPage from '@/pages/NotificationsPage';
-import MediaLibraryPage from '@/pages/MediaLibraryPage';
 import OfficialsDashboard from '@/pages/OfficialsDashboard';
-import RoleSettingsPage from '@/pages/RoleSettingsPage';
 import NotFound from '@/pages/NotFound';
 import BudgetPage from "@/pages/officials/BudgetPage";
 import DocumentsPage from "@/pages/officials/DocumentsPage";
@@ -72,56 +64,46 @@ const FaviconManager = () => {
 const AppRoutes = () => {
   return (
     <Router>
-      <EnhancedToastProvider>
-        <AuthProvider>
-          <TooltipProvider>
-            <ScrollToTop />
-            <FaviconManager />
+      <AuthProvider>
+        <TooltipProvider>
+          <ScrollToTop />
+          <FaviconManager />
+          
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/verify" element={<Verify />} />
+
+            <Route path="/" element={<PrivateRoute><ResidentHome /></PrivateRoute>} />
+            <Route path="/resident-home" element={<PrivateRoute><ResidentHome /></PrivateRoute>} />
             
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/verify" element={<Verify />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/marketplace" element={<PrivateRoute><Marketplace /></PrivateRoute>} />
 
-              <Route path="/" element={<PrivateRoute><ResidentHome /></PrivateRoute>} />
-              <Route path="/resident-home" element={<PrivateRoute><ResidentHome /></PrivateRoute>} />
-              
-              <Route path="/marketplace" element={<PrivateRoute><Marketplace /></PrivateRoute>} />
-              <Route path="/marketplace/product/:productId" element={<PrivateRoute><ProductDetails /></PrivateRoute>} />
-              <Route path="/marketplace/cart" element={<PrivateRoute><Cart /></PrivateRoute>} />
-              <Route path="/marketplace/checkout" element={<PrivateRoute><Checkout /></PrivateRoute>} />
-              <Route path="/marketplace/confirmation" element={<PrivateRoute><Confirmation /></PrivateRoute>} />
+            <Route path="/admin" element={<PrivateRoute requiredRole="superadmin"><AdminDashboard /></PrivateRoute>} />
+            <Route path="/admin/settings" element={<PrivateRoute requiredRole="superadmin"><Settings /></PrivateRoute>} />
 
-              <Route path="/admin" element={<PrivateRoute requiredRole="superadmin"><AdminDashboard /></PrivateRoute>} />
-              <Route path="/admin/settings" element={<PrivateRoute requiredRole="superadmin"><Settings /></PrivateRoute>} />
-              <Route path="/admin/media-library" element={<PrivateRoute requiredRole="superadmin"><MediaLibraryPage /></PrivateRoute>} />
-              <Route path="/admin/role-settings" element={<PrivateRoute requiredRole="superadmin"><RoleSettingsPage /></PrivateRoute>} />
+            <Route path="/official-dashboard" element={<PrivateRoute requiredRole="official"><OfficialsDashboard /></PrivateRoute>} />
 
-              <Route path="/official-dashboard" element={<PrivateRoute requiredRole="official"><OfficialsDashboard /></PrivateRoute>} />
-
-              <Route path="/resident-profile" element={<PrivateRoute><PrivateProfile /></PrivateRoute>} />
-              <Route path="/user/:userId" element={<PrivateRoute><PublicProfile /></PrivateRoute>} />
-              <Route path="/edit-profile" element={<PrivateRoute><EditProfile /></PrivateRoute>} />
-              <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
-              <Route path="/notifications" element={<PrivateRoute><NotificationsPage /></PrivateRoute>} />
-              
-              {/* Officials Pages */}
-              <Route path="/officials/budget" element={<BudgetPage />} />
-              <Route path="/officials/documents" element={<DocumentsPage />} />
-              <Route path="/officials/residents" element={<ResidentsPage />} />
-              <Route path="/officials/reports" element={<ReportsPage />} />
-              <Route path="/officials/campaigns" element={<CampaignsPage />} />
-              <Route path="/officials/campaigns/new" element={<NewCampaignPage />} />
-              <Route path="/officials/events" element={<EventsPage />} />
-              <Route path="/officials/events/new" element={<NewEventPage />} />
-              
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </TooltipProvider>
-        </AuthProvider>
-      </EnhancedToastProvider>
+            <Route path="/resident-profile" element={<PrivateRoute><PrivateProfile /></PrivateRoute>} />
+            <Route path="/user/:userId" element={<PrivateRoute><PublicProfile /></PrivateRoute>} />
+            <Route path="/edit-profile" element={<PrivateRoute><EditProfile /></PrivateRoute>} />
+            <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
+            
+            {/* Officials Pages */}
+            <Route path="/officials/budget" element={<PrivateRoute requiredRole="official"><BudgetPage /></PrivateRoute>} />
+            <Route path="/officials/documents" element={<PrivateRoute requiredRole="official"><DocumentsPage /></PrivateRoute>} />
+            <Route path="/officials/residents" element={<PrivateRoute requiredRole="official"><ResidentsPage /></PrivateRoute>} />
+            <Route path="/officials/reports" element={<PrivateRoute requiredRole="official"><ReportsPage /></PrivateRoute>} />
+            <Route path="/officials/campaigns" element={<PrivateRoute requiredRole="official"><CampaignsPage /></PrivateRoute>} />
+            <Route path="/officials/campaigns/new" element={<PrivateRoute requiredRole="official"><NewCampaignPage /></PrivateRoute>} />
+            <Route path="/officials/events" element={<PrivateRoute requiredRole="official"><EventsPage /></PrivateRoute>} />
+            <Route path="/officials/events/new" element={<PrivateRoute requiredRole="official"><NewEventPage /></PrivateRoute>} />
+            
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <Toaster />
+        </TooltipProvider>
+      </AuthProvider>
     </Router>
   );
 };
