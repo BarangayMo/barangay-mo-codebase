@@ -4,12 +4,13 @@ import { DashboardStats } from "@/components/officials/DashboardStats";
 import { BudgetAllocationChart } from "@/components/officials/BudgetAllocationChart";
 import { QuickAccessPanel } from "@/components/officials/QuickAccessPanel";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Download, Plus, Search, Bell, Filter } from "lucide-react";
+import { CalendarDays, Download, Plus, Search, Bell, Filter, Users, FileText, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Helmet } from "react-helmet";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
 
 const OfficialsDashboard = () => {
   return (
@@ -25,14 +26,14 @@ const OfficialsDashboard = () => {
           <div className="grid grid-cols-2 gap-3 mb-6">
             <Card className="bg-white shadow-sm border border-gray-100">
               <CardContent className="p-4">
-                <p className="text-2xl font-bold text-gray-900">35000</p>
-                <p className="text-sm text-gray-600">PSA Population 2024</p>
+                <p className="text-2xl font-bold text-gray-900">1,247</p>
+                <p className="text-sm text-gray-600">Total Residents</p>
               </CardContent>
             </Card>
             <Card className="bg-white shadow-sm border border-gray-100">
               <CardContent className="p-4">
-                <p className="text-2xl font-bold text-gray-900">10</p>
-                <p className="text-sm text-gray-600">RBI as of 2024</p>
+                <p className="text-2xl font-bold text-gray-900">89</p>
+                <p className="text-sm text-gray-600">RBI Submissions</p>
               </CardContent>
             </Card>
             <Card className="bg-white shadow-sm border border-gray-100">
@@ -48,10 +49,10 @@ const OfficialsDashboard = () => {
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <p className="text-sm text-green-600">45 Years</p>
+                  <p className="text-sm text-green-600">Active</p>
                 </div>
-                <p className="text-2xl font-bold text-gray-900">1980</p>
-                <p className="text-sm text-gray-600">Founded Year</p>
+                <p className="text-2xl font-bold text-gray-900">23</p>
+                <p className="text-sm text-gray-600">Services</p>
               </CardContent>
             </Card>
           </div>
@@ -63,13 +64,13 @@ const OfficialsDashboard = () => {
           <Card className="mt-6 bg-white shadow-sm border border-gray-100">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-base font-semibold text-gray-900">Community</h3>
-                <span className="text-red-500 text-sm font-medium">View All</span>
+                <h3 className="text-base font-semibold text-gray-900">Recent Residents</h3>
+                <Link to="/official/residents" className="text-red-500 text-sm font-medium">View All</Link>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { name: "Lester Nadong", image: "/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png" },
-                  { name: "Bernadette Nad...", image: "/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png" }
+                  { name: "Maria Santos", image: "/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png" },
+                  { name: "Juan Dela Cruz", image: "/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png" }
                 ].map((person, index) => (
                   <div key={index} className="flex flex-col items-center">
                     <div className="w-16 h-16 rounded-lg overflow-hidden mb-2">
@@ -94,18 +95,18 @@ const OfficialsDashboard = () => {
           <div className="bg-white border-b border-gray-200 px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <h1 className="text-xl font-semibold text-gray-900">Analytics</h1>
+                <h1 className="text-xl font-semibold text-gray-900">Barangay Management</h1>
                 <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <span>Campaigns</span>
+                  <span>Dashboard</span>
                   <span>/</span>
-                  <span>Analytics</span>
+                  <span>Overview</span>
                 </div>
               </div>
               <div className="flex items-center gap-4">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                   <Input
-                    placeholder="Search"
+                    placeholder="Search residents, services..."
                     className="pl-10 w-64"
                   />
                 </div>
@@ -114,7 +115,7 @@ const OfficialsDashboard = () => {
                 </Button>
                 <Avatar className="h-8 w-8">
                   <AvatarImage src="/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png" />
-                  <AvatarFallback>BM</AvatarFallback>
+                  <AvatarFallback>BO</AvatarFallback>
                 </Avatar>
               </div>
             </div>
@@ -125,71 +126,71 @@ const OfficialsDashboard = () => {
             <div className="w-64 bg-white border-r border-gray-200 min-h-screen">
               <div className="p-6">
                 <div className="flex items-center gap-2 mb-8">
-                  <div className="w-8 h-8 bg-yellow-400 rounded-lg flex items-center justify-center">
-                    <span className="text-white font-bold">⚡</span>
+                  <div className="w-8 h-8 bg-red-400 rounded-lg flex items-center justify-center">
+                    <span className="text-white font-bold">🏛️</span>
                   </div>
-                  <span className="font-semibold text-gray-900">Dashboard</span>
+                  <span className="font-semibold text-gray-900">Barangay Portal</span>
                 </div>
 
-                {/* Favorites Section */}
+                {/* Quick Actions Section */}
                 <div className="mb-8">
-                  <h3 className="text-sm font-medium text-gray-500 mb-4">Favorites</h3>
+                  <h3 className="text-sm font-medium text-gray-500 mb-4">Quick Actions</h3>
                   <div className="space-y-2">
                     {[
-                      { name: "Technical Docs", icon: "📄" },
-                      { name: "Campaign Guidelines", icon: "📋" },
-                      { name: "Important Rules", icon: "⚠️" },
-                      { name: "Onboarding", icon: "👋" }
+                      { name: "Resident Management", icon: "👥", href: "/official/residents" },
+                      { name: "Community Services", icon: "🏥", href: "/official/services" },
+                      { name: "RBI Forms", icon: "📋", href: "/official/rbi-forms" },
+                      { name: "Emergency Response", icon: "🚨", href: "/official/emergency-responder" }
                     ].map((item, index) => (
-                      <div key={index} className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+                      <Link key={index} to={item.href} className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-50 cursor-pointer">
                         <span className="text-sm">{item.icon}</span>
                         <span className="text-sm text-gray-700">{item.name}</span>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 </div>
 
                 {/* Main Menu Section */}
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-4">Main Menu</h3>
+                  <h3 className="text-sm font-medium text-gray-500 mb-4">Administration</h3>
                   <div className="space-y-2">
                     {[
                       { name: "Dashboard", icon: "🏠", active: true },
-                      { name: "Campaigns", icon: "📊" },
-                      { name: "Chat", icon: "💬" },
-                      { name: "Support Center", icon: "🎧" },
-                      { name: "Leads", icon: "👥" },
-                      { name: "Archive", icon: "📁" }
+                      { name: "Requests & Complaints", icon: "📝", href: "/official/requests" },
+                      { name: "Messages", icon: "💬", href: "/messages" },
+                      { name: "Reports", icon: "📊", href: "/official/reports" },
+                      { name: "Documents", icon: "📁", href: "/official/documents" },
+                      { name: "Settings", icon: "⚙️", href: "/settings" }
                     ].map((item, index) => (
-                      <div key={index} className={`flex items-center gap-3 px-2 py-2 rounded-lg cursor-pointer ${
+                      <Link key={index} to={item.href || "/official-dashboard"} className={`flex items-center gap-3 px-2 py-2 rounded-lg cursor-pointer ${
                         item.active ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50 text-gray-700'
                       }`}>
                         <span className="text-sm">{item.icon}</span>
                         <span className="text-sm">{item.name}</span>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 </div>
 
                 {/* Bottom Section */}
                 <div className="mt-8 pt-8 border-t border-gray-200">
-                  <div className="bg-green-100 rounded-lg p-4 mb-4">
+                  <div className="bg-blue-100 rounded-lg p-4 mb-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                        <span className="text-white text-xs">⚡</span>
+                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs">📱</span>
                       </div>
-                      <span className="text-sm font-medium text-green-800">Get the extension</span>
+                      <span className="text-sm font-medium text-blue-800">Mobile App Available</span>
                     </div>
-                    <p className="text-xs text-green-700 mb-2">Install Now</p>
+                    <p className="text-xs text-blue-700 mb-2">Download for residents</p>
                   </div>
                   
                   <div className="flex items-center gap-2">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src="/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png" />
-                      <AvatarFallback>AD</AvatarFallback>
+                      <AvatarFallback>BO</AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Amanda Davids</p>
+                      <p className="text-sm font-medium text-gray-900">Barangay Official</p>
                       <p className="text-xs text-gray-500">Administrator</p>
                     </div>
                   </div>
@@ -199,142 +200,142 @@ const OfficialsDashboard = () => {
 
             {/* Desktop Main Content */}
             <div className="flex-1 p-6">
-              {/* Revenue Section */}
+              {/* Community Overview Section */}
               <div className="mb-8">
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h2 className="text-3xl font-bold text-gray-900">Your total revenue</h2>
-                    <p className="text-4xl font-bold text-purple-500 mt-2">$90,239.00</p>
+                    <h2 className="text-3xl font-bold text-gray-900">Community Overview</h2>
+                    <p className="text-lg text-blue-600 mt-2">Serving 1,247 residents across 14 puroks</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <Button variant="outline" className="flex items-center gap-2">
                       <CalendarDays className="h-4 w-4" />
-                      Select Dates
+                      This Month
                     </Button>
                     <Button variant="outline" className="flex items-center gap-2">
                       <Filter className="h-4 w-4" />
-                      Filters
+                      Filter
                     </Button>
                   </div>
                 </div>
 
-                {/* Revenue Stats */}
+                {/* Community Stats */}
                 <div className="grid grid-cols-3 gap-6 mb-8">
                   <Card className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <p className="text-sm text-gray-600">New subscriptions</p>
-                        <p className="text-2xl font-bold text-gray-900">22</p>
+                        <p className="text-sm text-gray-600">New Registrations</p>
+                        <p className="text-2xl font-bold text-gray-900">32</p>
                         <p className="text-sm text-green-600 flex items-center">
-                          ↗ 15% <span className="text-gray-500 ml-1">compared to last week</span>
+                          ↗ 12% <span className="text-gray-500 ml-1">from last month</span>
                         </p>
                       </div>
-                      <div className="w-16 h-8 bg-gradient-to-r from-purple-200 to-purple-300 rounded"></div>
+                      <div className="w-16 h-8 bg-gradient-to-r from-green-200 to-green-300 rounded"></div>
                     </div>
                   </Card>
                   
                   <Card className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <p className="text-sm text-gray-600">New orders</p>
-                        <p className="text-2xl font-bold text-gray-900">320</p>
+                        <p className="text-sm text-gray-600">Active Services</p>
+                        <p className="text-2xl font-bold text-gray-900">23</p>
+                        <p className="text-sm text-blue-600 flex items-center">
+                          ↗ 3 new <span className="text-gray-500 ml-1">this month</span>
+                        </p>
+                      </div>
+                      <div className="w-16 h-8 bg-gradient-to-r from-blue-200 to-blue-300 rounded"></div>
+                    </div>
+                  </Card>
+                  
+                  <Card className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <p className="text-sm text-gray-600">Pending Requests</p>
+                        <p className="text-2xl font-bold text-gray-900">8</p>
                         <p className="text-sm text-orange-600 flex items-center">
-                          ↗ 4% <span className="text-gray-500 ml-1">compared to last week</span>
+                          ↓ 5 resolved <span className="text-gray-500 ml-1">this week</span>
                         </p>
                       </div>
                       <div className="w-16 h-8 bg-gradient-to-r from-orange-200 to-orange-300 rounded"></div>
                     </div>
                   </Card>
-                  
-                  <Card className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <p className="text-sm text-gray-600">Avg. order revenue</p>
-                        <p className="text-2xl font-bold text-gray-900">$1,080</p>
-                        <p className="text-sm text-green-600 flex items-center">
-                          ↗ 8% <span className="text-gray-500 ml-1">compared to last week</span>
-                        </p>
-                      </div>
-                      <div className="w-16 h-8 bg-gradient-to-r from-purple-200 to-purple-300 rounded"></div>
-                    </div>
-                  </Card>
                 </div>
               </div>
 
-              {/* Recent Campaigns Section */}
+              {/* Recent Activities Section */}
               <div>
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-semibold text-gray-900">Recent campaigns</h3>
+                  <h3 className="text-xl font-semibold text-gray-900">Recent Activities</h3>
                   <Button variant="ghost" className="text-gray-600">View All</Button>
                 </div>
 
-                {/* Campaign Status Tabs */}
+                {/* Activity Status Tabs */}
                 <div className="flex items-center gap-6 mb-6">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Draft</span>
-                    <Badge variant="secondary">2</Badge>
+                    <span className="text-sm text-gray-600">New Requests</span>
+                    <Badge variant="secondary">8</Badge>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-600">In Progress</span>
-                    <Badge variant="secondary">2</Badge>
+                    <Badge variant="secondary">12</Badge>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Archived</span>
-                    <Badge variant="secondary">1</Badge>
+                    <span className="text-sm text-gray-600">Completed</span>
+                    <Badge variant="secondary">45</Badge>
                   </div>
                 </div>
 
-                {/* Campaign Cards */}
+                {/* Activity Cards */}
                 <div className="grid grid-cols-3 gap-6">
-                  {/* Facebook Campaign */}
+                  {/* Resident Services */}
                   <Card className="p-6">
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <span className="text-blue-600 font-bold">f</span>
+                      <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                        <Users className="h-4 w-4 text-green-600" />
                       </div>
                       <div className="flex -space-x-2">
                         <Avatar className="w-6 h-6 border-2 border-white">
-                          <AvatarFallback className="text-xs">A</AvatarFallback>
+                          <AvatarFallback className="text-xs">M</AvatarFallback>
                         </Avatar>
                         <Avatar className="w-6 h-6 border-2 border-white">
-                          <AvatarFallback className="text-xs">B</AvatarFallback>
+                          <AvatarFallback className="text-xs">J</AvatarFallback>
                         </Avatar>
                       </div>
                     </div>
-                    <h4 className="font-medium text-gray-900 mb-2">10 Simple steps to revolutionise workflows with our product</h4>
-                    <p className="text-sm text-gray-500 mb-4">Start: Not Started</p>
-                    <p className="text-xs text-gray-400">Last updated: Apr 10, 2023</p>
+                    <h4 className="font-medium text-gray-900 mb-2">New resident registrations and service requests this week</h4>
+                    <p className="text-sm text-gray-500 mb-4">Status: Processing</p>
+                    <p className="text-xs text-gray-400">Last updated: Today</p>
                   </Card>
 
-                  {/* Google Campaign */}
+                  {/* Community Programs */}
                   <Card className="p-6">
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
-                        <span className="text-red-600 font-bold">G</span>
+                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <FileText className="h-4 w-4 text-blue-600" />
                       </div>
                       <Avatar className="w-6 h-6">
-                        <AvatarFallback className="text-xs">U</AvatarFallback>
+                        <AvatarFallback className="text-xs">A</AvatarFallback>
                       </Avatar>
                     </div>
-                    <h4 className="font-medium text-gray-900 mb-2">Boost your performance: start using our amazing product</h4>
+                    <h4 className="font-medium text-gray-900 mb-2">Medical assistance program: distribute health cards to qualified residents</h4>
                     <div className="mb-2">
                       <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
-                        <span>Start: Jun 1, 2023</span>
-                        <span>Ends: Aug 1, 2023</span>
+                        <span>Started: June 15, 2024</span>
+                        <span>Target: July 15, 2024</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div className="bg-green-500 h-2 rounded-full" style={{width: '60%'}}></div>
+                        <div className="bg-blue-500 h-2 rounded-full" style={{width: '75%'}}></div>
                       </div>
                     </div>
-                    <p className="text-xs text-gray-400">Last updated: July 10, 2023</p>
+                    <p className="text-xs text-gray-400">Last updated: 2 days ago</p>
                   </Card>
 
-                  {/* Add Campaign Card */}
+                  {/* Add New Service Card */}
                   <Card className="p-6 border-dashed border-2 border-gray-300 flex items-center justify-center">
-                    <Button variant="ghost" className="flex items-center gap-2 text-gray-500">
+                    <Link to="/official/services" className="flex items-center gap-2 text-gray-500">
                       <Plus className="h-4 w-4" />
-                      Add campaign
-                    </Button>
+                      Add new service
+                    </Link>
                   </Card>
                 </div>
               </div>
@@ -345,11 +346,11 @@ const OfficialsDashboard = () => {
               <h3 className="font-semibold text-gray-900 mb-4">Recent Documents</h3>
               <div className="space-y-3">
                 {[
-                  { name: "Summer Campaign", time: "2 minutes ago", color: "bg-yellow-100" },
-                  { name: "Inspiration Notes", time: "3 hours ago", color: "bg-purple-100" },
-                  { name: "Campaign Moodboard", time: "5 hours ago", color: "bg-pink-100" },
-                  { name: "Circular Inspiration", time: "8 hours ago", color: "bg-green-100" },
-                  { name: "Luxury Campaign Steps", time: "8 hours ago", color: "bg-orange-100" }
+                  { name: "Barangay Resolution 2024-15", time: "2 hours ago", color: "bg-yellow-100" },
+                  { name: "Budget Allocation Report", time: "1 day ago", color: "bg-purple-100" },
+                  { name: "Community Survey Results", time: "2 days ago", color: "bg-pink-100" },
+                  { name: "Emergency Response Plan", time: "3 days ago", color: "bg-green-100" },
+                  { name: "Monthly Activity Report", time: "1 week ago", color: "bg-orange-100" }
                 ].map((doc, index) => (
                   <div key={index} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
                     <div className={`w-8 h-8 ${doc.color} rounded`}></div>
@@ -362,12 +363,12 @@ const OfficialsDashboard = () => {
               </div>
 
               <div className="mt-8">
-                <h3 className="font-semibold text-gray-900 mb-4">Team Mates</h3>
+                <h3 className="font-semibold text-gray-900 mb-4">Barangay Staff</h3>
                 <div className="space-y-3">
                   {[
-                    { name: "Ethan Anderson", role: "Product Manager", avatar: "EA" },
-                    { name: "Simone Daniels", role: "Marketing Manager", avatar: "SD" },
-                    { name: "Noah Martinez", role: "CRM Manager", avatar: "NM" }
+                    { name: "Captain Rodriguez", role: "Barangay Captain", avatar: "CR" },
+                    { name: "Secretary Santos", role: "Barangay Secretary", avatar: "SS" },
+                    { name: "Kagawad Reyes", role: "Councilor", avatar: "KR" }
                   ].map((member, index) => (
                     <div key={index} className="flex items-center gap-3">
                       <Avatar className="w-8 h-8">
@@ -379,6 +380,26 @@ const OfficialsDashboard = () => {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              <div className="mt-8">
+                <h3 className="font-semibold text-gray-900 mb-4">Urgent Alerts</h3>
+                <div className="space-y-3">
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-red-500" />
+                      <span className="text-sm font-medium text-red-800">Emergency Response</span>
+                    </div>
+                    <p className="text-xs text-red-600 mt-1">3 pending emergency requests</p>
+                  </div>
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-orange-500" />
+                      <span className="text-sm font-medium text-orange-800">RBI Forms</span>
+                    </div>
+                    <p className="text-xs text-orange-600 mt-1">15 forms need review</p>
+                  </div>
                 </div>
               </div>
             </div>
