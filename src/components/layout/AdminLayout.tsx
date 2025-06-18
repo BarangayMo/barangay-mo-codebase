@@ -1,3 +1,4 @@
+
 import { ReactNode, useEffect, useState } from "react";
 import { EnhancedSidebar } from "./EnhancedSidebar";
 import { cn } from "@/lib/utils";
@@ -50,8 +51,8 @@ export const AdminLayout = ({
   const initials = (firstName?.[0] || '') + (lastName?.[0] || '');
   const fallbackInitials = initials || 'AD';
   
-  // Get avatar URL from profile or generate default
-  const avatarUrl = profile?.avatar_url || 
+  // Get avatar URL from profile settings
+  const avatarUrl = profile?.settings?.avatar_url || 
     (profile?.settings?.address && typeof profile.settings.address === 'object' 
       ? (profile.settings.address as any)?.avatar_url 
       : null);
