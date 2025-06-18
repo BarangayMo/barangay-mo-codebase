@@ -186,6 +186,90 @@ export type Database = {
         }
         Relationships: []
       }
+      budget_allocations: {
+        Row: {
+          allocated_amount: number
+          category: string
+          created_at: string
+          created_by: string
+          id: string
+          quarter: number | null
+          spent_amount: number | null
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          allocated_amount: number
+          category: string
+          created_at?: string
+          created_by: string
+          id?: string
+          quarter?: number | null
+          spent_amount?: number | null
+          updated_at?: string
+          year?: number
+        }
+        Update: {
+          allocated_amount?: number
+          category?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          quarter?: number | null
+          spent_amount?: number | null
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      campaigns: {
+        Row: {
+          budget: number | null
+          campaign_type: string
+          created_at: string
+          created_by: string
+          description: string | null
+          end_date: string | null
+          id: string
+          platform: string | null
+          start_date: string | null
+          status: string
+          target_audience: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          budget?: number | null
+          campaign_type?: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          platform?: string | null
+          start_date?: string | null
+          status?: string
+          target_audience?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          budget?: number | null
+          campaign_type?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          platform?: string | null
+          start_date?: string | null
+          status?: string
+          target_audience?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cart_items: {
         Row: {
           added_at: string
@@ -252,6 +336,96 @@ export type Database = {
           is_default?: boolean | null
           name?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      community_events: {
+        Row: {
+          attendees_count: number | null
+          created_at: string
+          created_by: string
+          description: string | null
+          event_date: string
+          id: string
+          location: string
+          max_capacity: number | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attendees_count?: number | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          event_date: string
+          id?: string
+          location: string
+          max_capacity?: number | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attendees_count?: number | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          event_date?: string
+          id?: string
+          location?: string
+          max_capacity?: number | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      complaints_requests: {
+        Row: {
+          admin_notes: string | null
+          assigned_to: string | null
+          barangay_id: string
+          created_at: string
+          description: string | null
+          id: string
+          priority: string | null
+          resolved_at: string | null
+          status: string
+          title: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          assigned_to?: string | null
+          barangay_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          priority?: string | null
+          resolved_at?: string | null
+          status?: string
+          title: string
+          type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          assigned_to?: string | null
+          barangay_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          priority?: string | null
+          resolved_at?: string | null
+          status?: string
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -496,6 +670,45 @@ export type Database = {
           recipient_id?: string
           sender_id?: string | null
           status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      official_documents: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          document_type: string
+          file_url: string | null
+          id: string
+          is_public: boolean | null
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          document_type: string
+          file_url?: string | null
+          id?: string
+          is_public?: boolean | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          document_type?: string
+          file_url?: string | null
+          id?: string
+          is_public?: boolean | null
+          tags?: string[] | null
           title?: string
           updated_at?: string
         }
@@ -752,6 +965,39 @@ export type Database = {
         }
         Relationships: []
       }
+      rbi_forms: {
+        Row: {
+          barangay_id: string | null
+          form_data: Json
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string
+          user_id: string
+        }
+        Insert: {
+          barangay_id?: string | null
+          form_data: Json
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          user_id: string
+        }
+        Update: {
+          barangay_id?: string | null
+          form_data?: Json
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       saved_jobs: {
         Row: {
           created_at: string | null
@@ -780,6 +1026,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      services: {
+        Row: {
+          barangay_id: string
+          contact_info: Json | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_active: boolean
+          requirements: string[] | null
+          service_type: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          barangay_id: string
+          contact_info?: Json | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          requirements?: string[] | null
+          service_type?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          barangay_id?: string
+          contact_info?: Json | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          requirements?: string[] | null
+          service_type?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       support_tickets: {
         Row: {

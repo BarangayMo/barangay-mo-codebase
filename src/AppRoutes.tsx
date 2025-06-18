@@ -1,3 +1,4 @@
+
 import { Route, Routes } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import Index from "@/pages/Index";
@@ -72,6 +73,11 @@ import JobApplicationsPage from "@/pages/admin/JobApplicationsPage";
 import PublicProfile from "@/pages/PublicProfile";
 import PrivateProfile from "@/pages/PrivateProfile";
 
+// Import official pages
+import OfficialResidents from "@/pages/officials/OfficialResidents";
+import OfficialServices from "@/pages/officials/OfficialServices";
+import OfficialRequests from "@/pages/officials/OfficialRequests";
+
 export function AppRoutes() {
   return (
     <Routes>
@@ -97,6 +103,9 @@ export function AppRoutes() {
       <Route path="/resident-profile" element={<ResidentProfile />} />
       
       <Route path="/official-dashboard" element={<OfficialsDashboard />} />
+      <Route path="/official/residents" element={<OfficialResidents />} />
+      <Route path="/official/services" element={<OfficialServices />} />
+      <Route path="/official/requests" element={<OfficialRequests />} />
       
       <Route path="/admin" element={<AdminDashboard />} />
       

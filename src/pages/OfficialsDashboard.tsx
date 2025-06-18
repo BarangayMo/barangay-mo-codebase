@@ -2,6 +2,7 @@
 import { Layout } from "@/components/layout/Layout";
 import { DashboardStats } from "@/components/officials/DashboardStats";
 import { BudgetAllocationChart } from "@/components/officials/BudgetAllocationChart";
+import { QuickAccessPanel } from "@/components/officials/QuickAccessPanel";
 import { Button } from "@/components/ui/button";
 import { CalendarDays, Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -59,6 +60,11 @@ const OfficialsDashboard = () => {
           </div>
 
           <DashboardStats />
+
+          {/* Mobile Quick Access Panel */}
+          <div className="block lg:hidden">
+            <QuickAccessPanel />
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="shadow-sm">

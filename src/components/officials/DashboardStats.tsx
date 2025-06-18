@@ -1,6 +1,9 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowDownRight, ArrowUpRight } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface StatCardProps {
   title: string;
@@ -39,28 +42,73 @@ const StatCard = ({ title, value, subtitle, trend, trendValue }: StatCardProps) 
 );
 
 export const DashboardStats = () => {
+  const { user } = useAuth();
+
+  const { data: stats } = useQuery({
+    queryKey: ['official-stats', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      
+      // Get official's barangay
+      const { data: officialProfile } = await supabase
+        .from('profiles')
+        .select('barangay')
+        .eq('id', user.id)
+        .single();
+
+      if (!officialProfile?.barangay) return null;
+
+      // Get residents count
+      const { count: residentsCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('barangay', officialProfile.barangay)
+        .eq('role', 'resident');
+
+      // Get RBI submissions count
+      const { count: rbiCount } = await supabase
+        .from('rbi_forms')
+        .select('*', { count: 'exact', head: true })
+        .eq('barangay_id', officialProfile.barangay);
+
+      // Get pending requests count
+      const { count: pendingRequests } = await supabase
+        .from('complaints_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('barangay_id', officialProfile.barangay)
+        .eq('status', 'pending');
+
+      return {
+        residents: residentsCount || 0,
+        rbiSubmissions: rbiCount || 0,
+        pendingRequests: pendingRequests || 0
+      };
+    },
+    enabled: !!user?.id
+  });
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
       <StatCard
-        title="Total Budget"
-        value="₱5,240,000"
-        subtitle="vs last month"
+        title="Total Residents"
+        value={stats?.residents?.toString() || "0"}
+        subtitle="registered residents"
         trend="up"
-        trendValue="+14.2%"
+        trendValue="+2"
       />
       <StatCard
-        title="Remaining Budget"
-        value="₱3,180,500"
-        subtitle="of annual budget"
-        trend="down"
-        trendValue="60.7%"
+        title="RBI Submissions"
+        value={stats?.rbiSubmissions?.toString() || "0"}
+        subtitle="completed forms"
+        trend="up"
+        trendValue="+5"
       />
       <StatCard
         title="Pending Requests"
-        value="24"
+        value={stats?.pendingRequests?.toString() || "0"}
         subtitle="need action"
-        trend="up"
-        trendValue="+8"
+        trend="down"
+        trendValue="-3"
       />
     </div>
   );
