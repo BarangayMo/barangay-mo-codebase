@@ -1,7 +1,7 @@
 
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, User, ShoppingBag, Menu, LogOut } from "lucide-react";
+import { Bell, User, ShoppingBag, Menu, LogOut, Home, MessageSquare, BarChart3, FolderOpen, Settings, UsersIcon, Hospital, ClipboardList, Siren, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { HeaderLogo } from "./header/HeaderLogo";
@@ -71,12 +71,12 @@ export const Header = () => {
                   <h3 className="text-sm font-medium text-gray-500 mb-3">Administration</h3>
                   <div className="space-y-2">
                     {[
-                      { name: "Dashboard", icon: "🏠", href: "/official-dashboard", active: location.pathname === "/official-dashboard" },
-                      { name: "Requests & Complaints", icon: "📝", href: "/official/requests" },
-                      { name: "Messages", icon: "💬", href: "/messages" },
-                      { name: "Reports", icon: "📊", href: "/official/reports" },
-                      { name: "Documents", icon: "📁", href: "/official/documents" },
-                      { name: "Settings", icon: "⚙️", href: "/settings" }
+                      { name: "Dashboard", icon: Home, href: "/official-dashboard", active: location.pathname === "/official-dashboard" },
+                      { name: "Requests & Complaints", icon: FileText, href: "/official/requests" },
+                      { name: "Messages", icon: MessageSquare, href: "/messages" },
+                      { name: "Reports", icon: BarChart3, href: "/official/reports" },
+                      { name: "Documents", icon: FolderOpen, href: "/official/documents" },
+                      { name: "Settings", icon: Settings, href: "/settings" }
                     ].map((item, index) => (
                       <Link 
                         key={index} 
@@ -86,7 +86,7 @@ export const Header = () => {
                         }`}
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
-                        <span className="text-base">{item.icon}</span>
+                        <item.icon className={`h-5 w-5 ${item.active ? 'text-blue-600' : 'text-red-500'}`} />
                         <span className="text-sm font-medium">{item.name}</span>
                       </Link>
                     ))}
@@ -97,10 +97,10 @@ export const Header = () => {
                   <h3 className="text-sm font-medium text-gray-500 mb-3">Quick Actions</h3>
                   <div className="space-y-2">
                     {[
-                      { name: "Resident Management", icon: "👥", href: "/official/residents" },
-                      { name: "Community Services", icon: "🏥", href: "/official/services" },
-                      { name: "RBI Forms", icon: "📋", href: "/official/rbi-forms" },
-                      { name: "Emergency Response", icon: "🚨", href: "/official/emergency-responder" }
+                      { name: "Resident Management", icon: UsersIcon, href: "/official/residents" },
+                      { name: "Community Services", icon: Hospital, href: "/official/services" },
+                      { name: "RBI Forms", icon: ClipboardList, href: "/official/rbi-forms" },
+                      { name: "Emergency Response", icon: Siren, href: "/official/emergency-responder" }
                     ].map((item, index) => (
                       <Link 
                         key={index} 
@@ -108,7 +108,7 @@ export const Header = () => {
                         className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 cursor-pointer"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
-                        <span className="text-base">{item.icon}</span>
+                        <item.icon className="h-5 w-5 text-red-500" />
                         <span className="text-sm font-medium text-gray-700">{item.name}</span>
                       </Link>
                     ))}
