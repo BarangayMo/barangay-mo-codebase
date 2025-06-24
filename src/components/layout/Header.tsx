@@ -1,3 +1,4 @@
+
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Bell, User, ShoppingBag, Menu, LogOut, Home, MessageSquare, BarChart3, FolderOpen, Settings, UsersIcon, Hospital, ClipboardList, Siren, FileText } from "lucide-react";
@@ -15,9 +16,11 @@ import { CartDrawerContent } from "@/components/cart/CartDrawerContent";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Header = () => {
-  const { isAuthenticated, userRole, logout } = useAuth();
+  const { isAuthenticated, userRole, logout, user } = useAuth();
   const isMobile = useIsMobile();
   const location = useLocation();
   const { cartItemCount } = useCartSummary();
@@ -25,6 +28,23 @@ export const Header = () => {
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Get official profile for barangay information
+  const { data: officialProfile } = useQuery({
+    queryKey: ['official-profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id && userRole === "official"
+  });
 
   const getDashboardRoute = () => {
     switch (userRole) {
@@ -60,6 +80,25 @@ export const Header = () => {
             </SheetTrigger>
             <SheetContent side="left" className="w-80 p-0">
               <div className="p-4 space-y-6 overflow-y-auto h-full">
+                {/* Barangay Header Section */}
+                <div className="bg-red-50 p-4 rounded-lg border border-red-100">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">Bo</span>
+                    </div>
+                    <div>
+                      <h2 className="text-sm font-semibold text-red-700">BarangayMo Officials</h2>
+                      <p className="text-xs text-red-600">
+                        {officialProfile?.barangay || 'Barangay'} 
+                        <span className="text-red-500 ml-1">• City Province</span>
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-xs text-red-600">
+                    <p>Official: {officialProfile?.first_name} {officialProfile?.last_name}</p>
+                  </div>
+                </div>
+
                 {/* Location Selector in Sheet */}
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-3">Location</h3>
