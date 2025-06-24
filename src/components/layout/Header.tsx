@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Bell, User, ShoppingBag, Menu, LogOut, Home, MessageSquare, BarChart3, FolderOpen, Settings, UsersIcon, Hospital, ClipboardList, Siren, FileText } from "lucide-react";
@@ -82,11 +81,11 @@ export const Header = () => {
                         key={index} 
                         to={item.href} 
                         className={`flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer ${
-                          item.active ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50 text-gray-700'
+                          item.active ? 'bg-red-50 text-red-600' : 'hover:bg-gray-50 text-gray-700'
                         }`}
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
-                        <item.icon className={`h-5 w-5 ${item.active ? 'text-blue-600' : 'text-red-500'}`} />
+                        <item.icon className={`h-5 w-5 ${item.active ? 'text-red-600' : 'text-red-500'}`} />
                         <span className="text-sm font-medium">{item.name}</span>
                       </Link>
                     ))}
