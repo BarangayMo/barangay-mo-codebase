@@ -62,9 +62,9 @@ export const MobileNavbar = () => {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md bg-white/90 border-t border-white/20 shadow-lg rounded-t-xl pb-8">
-      <div className="flex items-center justify-around px-2.5 py-2">
+      <div className="flex items-center justify-between px-4 py-2 max-w-sm mx-auto">
         {navItems.map(({ icon: Icon, path, label, key }) => (
-          <Link key={key} to={path} className="flex flex-col items-center p-2 flex-1 min-w-0 px-[5px]">
+          <Link key={key} to={path} className="flex flex-col items-center p-2">
             <Icon className={cn(
               "h-6 w-6 transition-colors",
               pathname === path 
@@ -74,7 +74,7 @@ export const MobileNavbar = () => {
                 : "text-black"
             )} />
             <span className={cn(
-              "text-xs mt-1 text-center truncate w-full",
+              "text-xs mt-1 text-center",
               pathname === path 
                 ? userRole === "resident" 
                   ? "text-[#1a237e] font-medium" 
