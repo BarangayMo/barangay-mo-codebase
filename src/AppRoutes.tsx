@@ -1,4 +1,3 @@
-
 import { Route, Routes } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import Index from "@/pages/Index";
@@ -7,6 +6,7 @@ import Register from "@/pages/Register";
 import EmailVerification from "@/pages/EmailVerification";
 import Verify from "@/pages/Verify";
 import MPIN from "@/pages/MPIN";
+import ForgotMPIN from "@/pages/ForgotMPIN";
 import Phone from "@/pages/Phone";
 import ResidentHome from "@/pages/ResidentHome";
 import OfficialsDashboard from "@/pages/OfficialsDashboard";
@@ -87,6 +87,7 @@ export function AppRoutes() {
       <Route path="/email-verification" element={<EmailVerification />} />
       <Route path="/verify" element={<Verify />} />
       <Route path="/mpin" element={<MPIN />} />
+      <Route path="/forgot-mpin" element={<ForgotMPIN />} />
       <Route path="/phone" element={<Phone />} />
       <Route path="/welcome" element={<MobileWelcome />} />
       <Route path="/contact" element={<Contact />} />
