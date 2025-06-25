@@ -140,7 +140,7 @@ export default function MPIN() {
         </div>
 
         {/* PIN Section - Moved closer to number pad */}
-        <div className="flex flex-col items-center flex-shrink-0 w-full max-w-xs">
+        <div className="flex flex-col items-center flex-shrink-0 w-full max-w-sm">
           {/* Title */}
           <h2 className="text-base text-gray-600 mb-4 text-center">Enter your Barangay Mo PIN</h2>
 
@@ -157,13 +157,13 @@ export default function MPIN() {
           </div>
 
           {/* Number Pad */}
-          <div className="grid grid-cols-3 gap-6 mb-6">
+          <div className="grid grid-cols-3 gap-4 mb-6 w-full max-w-xs">
             {numbers.map((row, rowIndex) => (
               row.map((num, colIndex) => (
                 <button
                   key={`${rowIndex}-${colIndex}`}
                   className={`
-                    h-16 w-16 mx-auto flex items-center justify-center text-2xl font-bold
+                    h-16 w-full flex items-center justify-center text-2xl font-bold
                     ${!num ? 'invisible' : 'hover:bg-red-50 active:bg-red-100 rounded-full transition-all duration-150 active:scale-95'}
                   `}
                   onClick={() => {
