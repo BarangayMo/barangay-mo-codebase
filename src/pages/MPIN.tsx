@@ -71,7 +71,7 @@ export default function MPIN() {
   return (
     <div className="min-h-screen max-h-screen flex flex-col bg-white font-inter overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 pt-8 flex-shrink-0">
+      <div className="flex items-center justify-between p-4 pt-6 flex-shrink-0">
         <Link to="/welcome" className="text-gray-600 hover:text-gray-800 transition-colors">
           <ChevronLeft className="h-6 w-6" />
         </Link>
@@ -83,7 +83,7 @@ export default function MPIN() {
         {/* Top Section */}
         <div className="flex flex-col items-center flex-shrink-0">
           {/* Logo */}
-          <div className="mb-6">
+          <div className="mb-4">
             <img 
               src="/lovable-uploads/6960369f-3a6b-4d57-ab0f-f7db77f16152.png" 
               alt="Barangay Mo Logo" 
@@ -92,13 +92,13 @@ export default function MPIN() {
           </div>
 
           {/* Phone Number Display */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
             <h1 className="text-xl font-bold text-gray-900 mb-1">{phoneNumber}</h1>
             <p className="text-gray-500 text-sm">Walter</p>
           </div>
 
           {/* PIN Dots */}
-          <div className="flex items-center justify-center gap-4 mb-6">
+          <div className="flex items-center justify-center gap-4 mb-4">
             {[0, 1, 2, 3].map((index) => (
               <div
                 key={index}
@@ -110,18 +110,18 @@ export default function MPIN() {
           </div>
 
           {/* Title */}
-          <h2 className="text-base text-gray-600 mb-6 text-center">Enter your Barangay Mo PIN</h2>
+          <h2 className="text-base text-gray-600 mb-4 text-center">Enter your Barangay Mo PIN</h2>
         </div>
 
         {/* Number Pad */}
         <div className="w-full max-w-xs flex-shrink-0">
-          <div className="grid grid-cols-3 gap-6 mb-6">
+          <div className="grid grid-cols-3 gap-4 mb-4">
             {numbers.map((row, rowIndex) => (
               row.map((num, colIndex) => (
                 <button
                   key={`${rowIndex}-${colIndex}`}
                   className={`
-                    h-14 w-14 mx-auto flex items-center justify-center text-xl font-medium
+                    h-12 w-12 mx-auto flex items-center justify-center text-xl font-medium
                     ${!num ? 'invisible' : 'hover:bg-red-50 active:bg-red-100 rounded-full transition-all duration-150 active:scale-95'}
                   `}
                   onClick={() => {
@@ -141,7 +141,7 @@ export default function MPIN() {
           {/* Face ID Button */}
           <Button
             variant="outline"
-            className="w-full h-12 mb-3 bg-red-500 hover:bg-red-600 active:bg-red-700 text-white hover:text-white border-none rounded-xl font-medium transition-all duration-150 active:scale-95"
+            className="w-full h-11 mb-2 bg-red-500 hover:bg-red-600 active:bg-red-700 text-white hover:text-white border-none rounded-xl font-medium transition-all duration-150 active:scale-95"
             onClick={handleLogin}
           >
             <ScanFace className="mr-2 h-5 w-5" />
@@ -152,7 +152,7 @@ export default function MPIN() {
           <Button
             variant="ghost"
             onClick={handleSkip}
-            className="text-gray-400 hover:text-gray-600 mb-3 transition-colors duration-150"
+            className="text-gray-400 hover:text-gray-600 mb-2 transition-colors duration-150"
           >
             Skip for now
           </Button>
