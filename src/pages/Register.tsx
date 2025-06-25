@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Mail, Lock, Eye, EyeOff, Users, Shield } from "lucide-react";
+import { ArrowLeft, Mail, Lock, Eye, EyeOff, Users, Shield, ChevronLeft } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
@@ -42,7 +42,6 @@ export default function Register() {
           description: error.message
         });
       } else {
-        // Removed success toast - redirect to email verification instead
         navigate("/email-verification", { 
           state: { email: formData.email } 
         });
@@ -65,149 +64,156 @@ export default function Register() {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-white p-6">
-        <div className="mb-6">
-          <Link to="/" className="text-blue-600 flex items-center">
-            <ArrowLeft className="w-4 h-4 mr-1" /> Back
-          </Link>
-        </div>
-
-        <div className="text-center mb-8">
-          <img 
-            src="/lovable-uploads/6960369f-3a6b-4d57-ab0f-f7db77f16152.png" 
-            alt="Logo" 
-            className="h-16 w-auto mx-auto" 
-          />
-          <h1 className="text-2xl font-bold mt-4">Create Account</h1>
-          <p className="text-gray-600">Join your barangay's digital community</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-3">
-            <Label className="text-gray-900 font-semibold text-lg">Select your role</Label>
-            <RadioGroup
-              value={formData.role}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, role: value }))}
-              className="grid grid-cols-2 gap-3"
-            >
-              <div>
-                <RadioGroupItem value="resident" id="resident-mobile" className="peer sr-only" />
-                <Label 
-                  htmlFor="resident-mobile" 
-                  className={`flex flex-col items-center justify-center h-32 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
-                    formData.role === "resident" 
-                      ? "border-blue-500 bg-blue-50" 
-                      : "border-gray-200"
-                  }`}
-                >
-                  <div className={`p-3 rounded-full mb-2 ${
-                    formData.role === "resident" 
-                      ? "bg-blue-500 text-white" 
-                      : "bg-blue-100 text-blue-600"
-                  }`}>
-                    <Users className="w-6 h-6" />
-                  </div>
-                  <div className="text-center">
-                    <div className="font-semibold text-gray-900">Resident</div>
-                    <div className="text-xs text-gray-500">Access community services</div>
-                  </div>
-                </Label>
-              </div>
-              <div>
-                <RadioGroupItem value="official" id="official-mobile" className="peer sr-only" />
-                <Label 
-                  htmlFor="official-mobile" 
-                  className={`flex flex-col items-center justify-center h-32 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
-                    formData.role === "official" 
-                      ? "border-red-500 bg-red-50" 
-                      : "border-gray-200"
-                  }`}
-                >
-                  <div className={`p-3 rounded-full mb-2 ${
-                    formData.role === "official" 
-                      ? "bg-red-500 text-white" 
-                      : "bg-red-100 text-red-600"
-                  }`}>
-                    <Shield className="w-6 h-6" />
-                  </div>
-                  <div className="text-center">
-                    <div className="font-semibold text-gray-900">Official</div>
-                    <div className="text-xs text-gray-500">For Barangay Captains</div>
-                  </div>
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-gray-700">Email Address</Label>
-            <div className="relative">
-              <Input
-                id="email"
-                type="email"
-                placeholder="juan.delacruz@example.com"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                className="pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
-                required
-              />
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="password" className="text-gray-700">Password</Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="●●●●●●●●"
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                className="pl-10 pr-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
-                required
-              />
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-              >
-                {showPassword ? (
-                  <EyeOff className="w-5 h-5" />
-                ) : (
-                  <Eye className="w-5 h-5" />
-                )}
-              </button>
-            </div>
-            <p className="text-xs text-gray-500">Password must be at least 8 characters</p>
-          </div>
-          
-          <div className="flex items-center space-x-2 pt-2">
-            <input type="checkbox" id="terms" className="rounded border-gray-300" required />
-            <label htmlFor="terms" className="text-sm text-gray-600 font-inter">
-              I agree to the <Link to="/terms" className="text-blue-600 font-medium">Terms of Service</Link> and <Link to="/privacy" className="text-blue-600 font-medium">Privacy Policy</Link>
-            </label>
-          </div>
-          
-          <Button
-            type="submit"
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg py-3 transition font-medium text-base"
-            disabled={isLoading}
-          >
-            {isLoading ? "Registering..." : "Register Account"}
-          </Button>
-        </form>
-        
-        <div className="mt-6 text-center">
-          <p className="text-gray-500 text-sm font-inter">
-            Already have an account?{" "}
-            <Link to="/login" className="font-medium text-blue-600 hover:text-blue-800 transition">
-              Login
+      <div className="min-h-screen bg-white">
+        {/* Clean mobile header */}
+        <div className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md shadow-sm">
+          <div className="flex items-center justify-between px-4 py-3">
+            <Link to="/welcome" className="text-gray-600 hover:text-gray-800">
+              <ChevronLeft className="h-6 w-6" />
             </Link>
-          </p>
+            <h1 className="text-lg font-semibold text-gray-900">Register</h1>
+            <div className="w-6" /> {/* Spacer for centering */}
+          </div>
+        </div>
+
+        <div className="p-6">
+          <div className="text-center mb-8">
+            <img 
+              src="/lovable-uploads/6960369f-3a6b-4d57-ab0f-f7db77f16152.png" 
+              alt="Logo" 
+              className="h-16 w-auto mx-auto" 
+            />
+            <h2 className="text-2xl font-bold mt-4">Create Account</h2>
+            <p className="text-gray-600">Join your barangay's digital community</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-3">
+              <Label className="text-gray-900 font-semibold text-lg">Select your role</Label>
+              <RadioGroup
+                value={formData.role}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, role: value }))}
+                className="grid grid-cols-2 gap-3"
+              >
+                <div>
+                  <RadioGroupItem value="resident" id="resident-mobile" className="peer sr-only" />
+                  <Label 
+                    htmlFor="resident-mobile" 
+                    className={`flex flex-col items-center justify-center h-32 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
+                      formData.role === "resident" 
+                        ? "border-blue-500 bg-blue-50" 
+                        : "border-gray-200"
+                    }`}
+                  >
+                    <div className={`p-3 rounded-full mb-2 ${
+                      formData.role === "resident" 
+                        ? "bg-blue-500 text-white" 
+                        : "bg-blue-100 text-blue-600"
+                    }`}>
+                      <Users className="w-6 h-6" />
+                    </div>
+                    <div className="text-center">
+                      <div className="font-semibold text-gray-900">Resident</div>
+                      <div className="text-xs text-gray-500">Access community services</div>
+                    </div>
+                  </Label>
+                </div>
+                <div>
+                  <RadioGroupItem value="official" id="official-mobile" className="peer sr-only" />
+                  <Label 
+                    htmlFor="official-mobile" 
+                    className={`flex flex-col items-center justify-center h-32 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
+                      formData.role === "official" 
+                        ? "border-red-500 bg-red-50" 
+                        : "border-gray-200"
+                    }`}
+                  >
+                    <div className={`p-3 rounded-full mb-2 ${
+                      formData.role === "official" 
+                        ? "bg-red-500 text-white" 
+                        : "bg-red-100 text-red-600"
+                    }`}>
+                      <Shield className="w-6 h-6" />
+                    </div>
+                    <div className="text-center">
+                      <div className="font-semibold text-gray-900">Official</div>
+                      <div className="text-xs text-gray-500">For Barangay Captains</div>
+                    </div>
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-gray-700">Email Address</Label>
+              <div className="relative">
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="juan.delacruz@example.com"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className="pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
+                  required
+                />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-gray-700">Password</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="●●●●●●●●"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className="pl-10 pr-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
+                  required
+                />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+              <p className="text-xs text-gray-500">Password must be at least 8 characters</p>
+            </div>
+            
+            <div className="flex items-center space-x-2 pt-2">
+              <input type="checkbox" id="terms" className="rounded border-gray-300" required />
+              <label htmlFor="terms" className="text-sm text-gray-600 font-inter">
+                I agree to the <Link to="/terms" className="text-blue-600 font-medium">Terms of Service</Link> and <Link to="/privacy" className="text-blue-600 font-medium">Privacy Policy</Link>
+              </label>
+            </div>
+            
+            <Button
+              type="submit"
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg py-3 transition font-medium text-base"
+              disabled={isLoading}
+            >
+              {isLoading ? "Registering..." : "Register Account"}
+            </Button>
+          </form>
+          
+          <div className="mt-6 text-center">
+            <p className="text-gray-500 text-sm font-inter">
+              Already have an account?{" "}
+              <Link to="/mpin" className="font-medium text-blue-600 hover:text-blue-800 transition">
+                Login
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     );

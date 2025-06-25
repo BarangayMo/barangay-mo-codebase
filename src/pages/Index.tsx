@@ -5,10 +5,25 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Briefcase, MapPin, ShieldCheck, Users, ShoppingCart, Star } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Index() {
   const currentYear = new Date().getFullYear();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
+  
+  // Redirect mobile users to welcome page
+  useEffect(() => {
+    if (isMobile) {
+      navigate('/welcome');
+    }
+  }, [isMobile, navigate]);
+
+  // Show loading or nothing for mobile users while redirecting
+  if (isMobile) {
+    return null;
+  }
   
   return (
     <Layout hideFooter={isMobile}>
