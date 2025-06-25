@@ -140,26 +140,34 @@ export const Header = () => {
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-3">Navigation</h3>
                   <div className="space-y-2">
-                    {userRole === "official" ? [
-                      { name: "Dashboard", icon: Home, href: "/official-dashboard", active: location.pathname === "/official-dashboard" },
-                      { name: "Requests & Complaints", icon: FileText, href: "/official/requests" },
-                      { name: "Messages", icon: MessageSquare, href: "/messages" },
-                      { name: "Reports", icon: BarChart3, href: "/official/reports" },
-                      { name: "Documents", icon: FolderOpen, href: "/official/documents" },
-                      { name: "Settings", icon: Settings, href: "/settings" }
-                    ] : userRole === "superadmin" ? [
-                      { name: "Dashboard", icon: Home, href: "/admin", active: location.pathname === "/admin" },
-                      { name: "Users", icon: UsersIcon, href: "/admin/users" },
-                      { name: "Messages", icon: MessageSquare, href: "/messages" },
-                      { name: "Reports", icon: BarChart3, href: "/admin/reports" },
-                      { name: "Settings", icon: Settings, href: "/settings" }
-                    ] : [
-                      { name: "Home", icon: Home, href: "/resident-home", active: location.pathname === "/resident-home" },
-                      { name: "Messages", icon: MessageSquare, href: "/messages" },
-                      { name: "Services", icon: Hospital, href: "/services" },
-                      { name: "Marketplace", icon: ShoppingBag, href: "/marketplace" },
-                      { name: "Settings", icon: Settings, href: "/settings" }
-                    ].map((item, index) => (
+                    {(() => {
+                      if (userRole === "official") {
+                        return [
+                          { name: "Dashboard", icon: Home, href: "/official-dashboard", active: location.pathname === "/official-dashboard" },
+                          { name: "Requests & Complaints", icon: FileText, href: "/official/requests" },
+                          { name: "Messages", icon: MessageSquare, href: "/messages" },
+                          { name: "Reports", icon: BarChart3, href: "/official/reports" },
+                          { name: "Documents", icon: FolderOpen, href: "/official/documents" },
+                          { name: "Settings", icon: Settings, href: "/settings" }
+                        ];
+                      } else if (userRole === "superadmin") {
+                        return [
+                          { name: "Dashboard", icon: Home, href: "/admin", active: location.pathname === "/admin" },
+                          { name: "Users", icon: UsersIcon, href: "/admin/users" },
+                          { name: "Messages", icon: MessageSquare, href: "/messages" },
+                          { name: "Reports", icon: BarChart3, href: "/admin/reports" },
+                          { name: "Settings", icon: Settings, href: "/settings" }
+                        ];
+                      } else {
+                        return [
+                          { name: "Home", icon: Home, href: "/resident-home", active: location.pathname === "/resident-home" },
+                          { name: "Messages", icon: MessageSquare, href: "/messages" },
+                          { name: "Services", icon: Hospital, href: "/services" },
+                          { name: "Marketplace", icon: ShoppingBag, href: "/marketplace" },
+                          { name: "Settings", icon: Settings, href: "/settings" }
+                        ];
+                      }
+                    })().map((item, index) => (
                       <Link 
                         key={index} 
                         to={item.href} 
