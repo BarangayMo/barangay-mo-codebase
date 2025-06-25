@@ -1,21 +1,18 @@
 
 import { useState } from "react";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
-import { Fingerprint, SkipForward, ChevronLeft } from "lucide-react";
-import { NumPad } from "@/components/ui/numpad";
-import { Input } from "@/components/ui/input";
+import { ChevronLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function MPIN() {
   const [otp, setOtp] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("+63");
+  const [phoneNumber, setPhoneNumber] = useState("+63 952 483 0859");
   const navigate = useNavigate();
   const { userRole, isAuthenticated } = useAuth();
 
   const handleNumPadInput = (value: string) => {
-    if (otp.length < 6) {
+    if (otp.length < 4) {
       setOtp(prev => prev + value);
     }
   };
@@ -26,7 +23,7 @@ export default function MPIN() {
 
   const handleLogin = () => {
     // Simulate login process
-    if (otp.length === 6) {
+    if (otp.length === 4) {
       // This would normally validate the MPIN
       // For demo purposes, we'll redirect based on role or default
       if (isAuthenticated) {
@@ -64,114 +61,107 @@ export default function MPIN() {
     }
   };
 
+  const numbers = [
+    ['1', '2', '3'],
+    ['4', '5', '6'],
+    ['7', '8', '9'],
+    ['', '0', '⌫']
+  ];
+
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#2563eb] via-[#3b82f6] to-[#60a5fa] p-4 md:p-6 font-inter">
-      {/* Clean mobile header */}
-      <div className="flex items-center justify-between mb-6">
-        <Link to="/welcome" className="text-white/80 hover:text-white">
+    <div className="min-h-screen flex flex-col bg-white font-inter overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 pt-12">
+        <Link to="/welcome" className="text-gray-600">
           <ChevronLeft className="h-6 w-6" />
         </Link>
-        <h2 className="text-lg font-semibold text-white">Login</h2>
-        <div className="w-6" /> {/* Spacer for centering */}
+        <div className="flex-1" />
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center">
-        <div className="w-full max-w-md text-center mb-8">
+      {/* Content Container */}
+      <div className="flex-1 flex flex-col items-center justify-center px-6 pb-8">
+        {/* Logo */}
+        <div className="mb-8">
           <img 
             src="/lovable-uploads/6960369f-3a6b-4d57-ab0f-f7db77f16152.png" 
             alt="Logo" 
-            className="h-16 w-auto mx-auto mb-6"
+            className="h-12 w-auto mx-auto"
           />
-          <h3 className="text-2xl font-bold mb-3 text-white font-outfit tracking-tight">Smart Barangay</h3>
-          <p className="text-base text-white/90 mb-6 font-light">"Your community in your hands"</p>
-          
-          <div className="bg-white/10 backdrop-blur-md rounded-xl py-3 px-4 md:px-6 inline-flex items-center gap-3 mx-auto">
-            <img
-              src="/lovable-uploads/69289dcf-6417-4971-9806-b93b578586d6.png"
-              alt="Philippines Flag"
-              className="h-5 w-5 rounded-full object-cover"
+        </div>
+
+        {/* Phone Number Display */}
+        <div className="text-center mb-12">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">{phoneNumber}</h1>
+          <p className="text-gray-500">Walter</p>
+        </div>
+
+        {/* PIN Dots */}
+        <div className="flex items-center justify-center gap-4 mb-8">
+          {[0, 1, 2, 3].map((index) => (
+            <div
+              key={index}
+              className={`w-4 h-4 rounded-full ${
+                index < otp.length ? 'bg-purple-500' : 'bg-gray-200'
+              }`}
             />
-            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-            <Input
-              type="tel"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              className="bg-transparent border-none text-white/90 text-base font-medium w-36 p-0 focus:ring-0"
-              placeholder="+63 XXX XXX XXXX"
-            />
+          ))}
+        </div>
+
+        {/* Title */}
+        <h2 className="text-lg text-gray-600 mb-12 text-center">Enter your Chipper PIN</h2>
+
+        {/* Number Pad */}
+        <div className="w-full max-w-xs mb-8">
+          <div className="grid grid-cols-3 gap-8">
+            {numbers.map((row, rowIndex) => (
+              row.map((num, colIndex) => (
+                <button
+                  key={`${rowIndex}-${colIndex}`}
+                  className={`
+                    h-16 w-16 mx-auto flex items-center justify-center text-2xl font-medium
+                    ${!num ? 'invisible' : 'hover:bg-gray-50 rounded-full transition-colors'}
+                  `}
+                  onClick={() => {
+                    if (num === '⌫') {
+                      handleNumPadDelete();
+                    } else if (num) {
+                      handleNumPadInput(num);
+                    }
+                  }}
+                >
+                  {num}
+                </button>
+              ))
+            ))}
           </div>
         </div>
 
-        <div className="w-full max-w-md space-y-6">
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8">
-            <h3 className="text-white text-xl font-medium mb-6 text-center">Enter Your MPIN</h3>
-            <div className="flex justify-center mb-6">
-              <InputOTP
-                maxLength={6}
-                value={otp}
-                onChange={setOtp}
-                render={({ slots }) => (
-                  <InputOTPGroup className="gap-2 justify-center">
-                    {slots.map((slot, index) => (
-                      <InputOTPSlot
-                        key={index}
-                        index={index}
-                        {...slot}
-                        className="w-10 h-12 text-lg border-2 border-white/20 bg-white/10 backdrop-blur-sm text-white rounded-xl focus:border-white/40 transition-colors"
-                      />
-                    ))}
-                  </InputOTPGroup>
-                )}
-              />
-            </div>
-            
-            <div className="mt-6">
-              <NumPad 
-                onNumberClick={handleNumPadInput}
-                onDelete={handleNumPadDelete}
-                className="mx-auto max-w-[280px]"
-              />
-            </div>
+        {/* Face ID Button */}
+        <Button
+          variant="outline"
+          className="w-full max-w-xs h-14 mb-4 bg-red-500 hover:bg-red-600 text-white border-none rounded-xl font-medium"
+          onClick={handleLogin}
+        >
+          <span className="mr-2">👤</span>
+          Use Face ID
+        </Button>
 
-            <div className="flex flex-col gap-3 mt-6">
-              <Button
-                onClick={handleLogin}
-                disabled={otp.length !== 6}
-                className="bg-white/90 hover:bg-white text-blue-600 py-4 rounded-xl transition-all duration-200 hover:shadow-lg w-full font-medium"
-              >
-                Login
-              </Button>
-              <Button
-                variant="secondary"
-                className="bg-white/20 hover:bg-white/30 text-white flex items-center justify-center gap-2 py-4 rounded-xl transition-all duration-200 hover:shadow-lg w-full"
-              >
-                <Fingerprint className="h-5 w-5" />
-                <span className="font-medium">Use Biometrics</span>
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={handleSkip}
-                className="text-white/80 hover:text-white hover:bg-white/10 flex items-center justify-center gap-2 py-4 rounded-xl transition-all duration-200 w-full"
-              >
-                <SkipForward className="h-5 w-5" />
-                <span className="font-medium">Skip for now</span>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+        {/* Skip Button */}
+        <Button
+          variant="ghost"
+          onClick={handleSkip}
+          className="text-gray-400 hover:text-gray-600 mb-8"
+        >
+          Skip for now
+        </Button>
 
-      <div className="flex justify-between items-center mt-6 mb-4">
-        <Link to="/help" className="text-white/90 hover:text-white transition-colors text-sm font-medium">
-          Help Center
-        </Link>
-        <Link to="/forgot-mpin" className="text-white/90 hover:text-white transition-colors text-sm font-medium">
+        {/* Forgot PIN Link */}
+        <Link 
+          to="/forgot-mpin" 
+          className="text-red-500 hover:text-red-600 font-medium"
+        >
           Forgot MPIN?
         </Link>
-      </div>
-
-      <div className="text-white/60 text-xs text-center mb-2">
-        v1.0.0
       </div>
     </div>
   );
