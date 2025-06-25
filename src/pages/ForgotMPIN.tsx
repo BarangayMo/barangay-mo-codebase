@@ -7,17 +7,17 @@ import { ChevronLeft, Mail, Phone } from "lucide-react";
 
 export default function ForgotMPIN() {
   const [step, setStep] = useState<'method' | 'phone' | 'email' | 'success'>('method');
+  const [resetMethod, setResetMethod] = useState<'phone' | 'email'>('phone');
   const [phoneNumber, setPhoneNumber] = useState("");
   const [email, setEmail] = useState("");
-  const [verificationCode, setVerificationCode] = useState("");
 
   const handlePhoneReset = () => {
-    // Simulate sending SMS
+    setResetMethod('phone');
     setStep('success');
   };
 
   const handleEmailReset = () => {
-    // Simulate sending email
+    setResetMethod('email');
     setStep('success');
   };
 
@@ -142,7 +142,7 @@ export default function ForgotMPIN() {
               </div>
               <h1 className="text-2xl font-bold text-gray-900 mb-4">Check your messages</h1>
               <p className="text-gray-500">
-                We've sent instructions to reset your MPIN. Please check your {step === 'phone' ? 'SMS' : 'email'}.
+                We've sent instructions to reset your MPIN. Please check your {resetMethod === 'phone' ? 'SMS' : 'email'}.
               </p>
             </div>
 
