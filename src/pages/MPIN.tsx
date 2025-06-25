@@ -1,15 +1,34 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronLeft, ScanFace } from "lucide-react";
+import { ChevronLeft, ScanFace, Fingerprint } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function MPIN() {
   const [otp, setOtp] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("+63 952 483 0859");
+  const [biometricsAvailable, setBiometricsAvailable] = useState<'none' | 'face' | 'fingerprint'>('none');
   const navigate = useNavigate();
   const { userRole, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    // Check for biometrics availability
+    const checkBiometrics = () => {
+      // Check if device has Face ID (iOS Safari/WebKit)
+      if (window.navigator.userAgent.includes('iPhone') || window.navigator.userAgent.includes('iPad')) {
+        setBiometricsAvailable('face');
+      }
+      // Check for fingerprint/touch ID support
+      else if ('credentials' in navigator && 'webauthn' in window) {
+        setBiometricsAvailable('fingerprint');
+      }
+      // For development/testing, you can uncomment this to simulate biometrics
+      // setBiometricsAvailable('face');
+    };
+
+    checkBiometrics();
+  }, []);
 
   const handleNumPadInput = (value: string) => {
     if (otp.length < 4) {
@@ -68,6 +87,28 @@ export default function MPIN() {
     ['', '0', '⌫']
   ];
 
+  const getBiometricsButtonText = () => {
+    switch (biometricsAvailable) {
+      case 'face':
+        return 'Use Face ID';
+      case 'fingerprint':
+        return 'Use Biometrics';
+      default:
+        return '';
+    }
+  };
+
+  const getBiometricsIcon = () => {
+    switch (biometricsAvailable) {
+      case 'face':
+        return <ScanFace className="mr-2 h-5 w-5" />;
+      case 'fingerprint':
+        return <Fingerprint className="mr-2 h-5 w-5" />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="min-h-screen max-h-screen flex flex-col bg-white font-inter overflow-hidden">
       {/* Header */}
@@ -98,7 +139,7 @@ export default function MPIN() {
           </div>
 
           {/* PIN Dots */}
-          <div className="flex items-center justify-center gap-4 mb-4">
+          <div className="flex items-center justify-center gap-4 mb-2">
             {[0, 1, 2, 3].map((index) => (
               <div
                 key={index}
@@ -110,18 +151,18 @@ export default function MPIN() {
           </div>
 
           {/* Title */}
-          <h2 className="text-base text-gray-600 mb-4 text-center">Enter your Barangay Mo PIN</h2>
+          <h2 className="text-base text-gray-600 mb-6 text-center">Enter your Barangay Mo PIN</h2>
         </div>
 
         {/* Number Pad */}
         <div className="w-full max-w-xs flex-shrink-0">
-          <div className="grid grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-3 gap-6 mb-6">
             {numbers.map((row, rowIndex) => (
               row.map((num, colIndex) => (
                 <button
                   key={`${rowIndex}-${colIndex}`}
                   className={`
-                    h-12 w-12 mx-auto flex items-center justify-center text-xl font-medium
+                    h-16 w-16 mx-auto flex items-center justify-center text-2xl font-medium
                     ${!num ? 'invisible' : 'hover:bg-red-50 active:bg-red-100 rounded-full transition-all duration-150 active:scale-95'}
                   `}
                   onClick={() => {
@@ -138,15 +179,17 @@ export default function MPIN() {
             ))}
           </div>
 
-          {/* Face ID Button */}
-          <Button
-            variant="outline"
-            className="w-full h-11 mb-2 bg-red-500 hover:bg-red-600 active:bg-red-700 text-white hover:text-white border-none rounded-xl font-medium transition-all duration-150 active:scale-95"
-            onClick={handleLogin}
-          >
-            <ScanFace className="mr-2 h-5 w-5" />
-            Use Face ID
-          </Button>
+          {/* Biometrics Button - Only show if available */}
+          {biometricsAvailable !== 'none' && (
+            <Button
+              variant="outline"
+              className="w-full h-11 mb-2 bg-red-500 hover:bg-red-600 active:bg-red-700 text-white hover:text-white border-none rounded-xl font-medium transition-all duration-150 active:scale-95"
+              onClick={handleLogin}
+            >
+              {getBiometricsIcon()}
+              {getBiometricsButtonText()}
+            </Button>
+          )}
 
           {/* Skip Button */}
           <Button
