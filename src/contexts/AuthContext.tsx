@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode, useEffect, useRef } from "react";
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +12,9 @@ interface UserData {
   avatar?: string;
   firstName?: string;
   lastName?: string;
+  role?: UserRole;
+  barangay?: string;
+  createdAt?: string;
 }
 
 interface AuthContextType {
@@ -47,11 +49,35 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const isInitialMount = useRef(true);
   const redirectInProgress = useRef(false);
 
+  // Function to fetch user profile data
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('barangay, created_at')
+        .eq('id', userId)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching profile:', error);
+        return {};
+      }
+      
+      return {
+        barangay: profile?.barangay,
+        createdAt: profile?.created_at
+      };
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      return {};
+    }
+  };
+
   useEffect(() => {
     console.log("Setting up auth state change listener");
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         console.log("Auth state changed:", event, session?.user?.email);
         
         const isSignInEvent = event === 'SIGNED_IN';
@@ -61,12 +87,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setIsAuthenticated(!!session);
         
         if (session?.user) {
+          // Fetch additional profile data
+          const profileData = await fetchUserProfile(session.user.id);
+          
           const userData = {
             id: session.user.id,
             name: session.user.email || '',
             email: session.user.email,
             firstName: session.user.user_metadata?.first_name,
             lastName: session.user.user_metadata?.last_name,
+            barangay: profileData.barangay,
+            createdAt: profileData.createdAt
           };
           
           setUser(userData);
@@ -81,6 +112,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             }
             
             setUserRole(role);
+            setUser(prev => prev ? { ...prev, role } : null);
             
             // Redirect after successful login
             if (isSignInEvent && !redirectInProgress.current) {
@@ -115,19 +147,24 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     );
 
     // Check for existing session on mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       console.log("Initial session check:", session?.user?.email);
       
       setSession(session);
       setIsAuthenticated(!!session);
       
       if (session?.user) {
+        // Fetch additional profile data
+        const profileData = await fetchUserProfile(session.user.id);
+        
         const userData = {
           id: session.user.id,
           name: session.user.email || '',
           email: session.user.email,
           firstName: session.user.user_metadata?.first_name,
           lastName: session.user.user_metadata?.last_name,
+          barangay: profileData.barangay,
+          createdAt: profileData.createdAt
         };
         
         setUser(userData);
@@ -140,6 +177,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             role = 'superadmin';
           }
           setUserRole(role);
+          setUser(prev => prev ? { ...prev, role } : null);
           
           // Redirect if user is on login/register page with existing session
           if ((currentPath === '/login' || currentPath === '/register') && !redirectInProgress.current) {

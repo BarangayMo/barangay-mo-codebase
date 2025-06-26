@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Progress } from "@/components/ui/progress";
@@ -34,6 +33,7 @@ export default function RbiRegistration() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
@@ -264,7 +264,7 @@ export default function RbiRegistration() {
           user_id: user.id,
           form_data: formData as unknown as Json,
           status: 'submitted',
-          barangay_id: formData.address?.barangay || user.barangay
+          barangay_id: formData.address?.barangay || user.barangay || 'Unknown'
         })
         .select('rbi_number')
         .single();
