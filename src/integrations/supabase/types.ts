@@ -970,6 +970,7 @@ export type Database = {
           barangay_id: string | null
           form_data: Json
           id: string
+          rbi_number: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           status: string
@@ -980,6 +981,7 @@ export type Database = {
           barangay_id?: string | null
           form_data: Json
           id?: string
+          rbi_number?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
@@ -990,11 +992,39 @@ export type Database = {
           barangay_id?: string | null
           form_data?: Json
           id?: string
+          rbi_number?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
           submitted_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      rbi_sequences: {
+        Row: {
+          barangay_code: string
+          created_at: string | null
+          id: string
+          last_sequence: number
+          updated_at: string | null
+          year: number
+        }
+        Insert: {
+          barangay_code: string
+          created_at?: string | null
+          id?: string
+          last_sequence?: number
+          updated_at?: string | null
+          year: number
+        }
+        Update: {
+          barangay_code?: string
+          created_at?: string | null
+          id?: string
+          last_sequence?: number
+          updated_at?: string | null
+          year?: number
         }
         Relationships: []
       }
@@ -1339,6 +1369,10 @@ export type Database = {
     Functions: {
       generate_job_code: {
         Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_rbi_number: {
+        Args: { user_barangay_name: string }
         Returns: string
       }
       get_user_role: {

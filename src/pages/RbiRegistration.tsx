@@ -246,17 +246,58 @@ export default function RbiRegistration() {
   };
   
   const handleSubmit = async () => {
+    if (!user?.id) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to submit the form.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      const { data, error } = await supabase
+        .from('rbi_forms')
+        .insert({
+          user_id: user.id,
+          form_data: formData as unknown as Json,
+          status: 'submitted',
+          barangay_id: formData.address?.barangay || user.barangay
+        })
+        .select('rbi_number')
+        .single();
+        
+      if (error) throw error;
+      
+      // Clean up draft form after successful submission
+      await supabase
+        .from('rbi_draft_forms')
+        .delete()
+        .eq('user_id', user.id);
+      
       toast({
         title: "RBI Registration Complete",
-        description: "Your information has been successfully submitted.",
+        description: `Your RBI form has been successfully submitted with number: ${data.rbi_number}`,
       });
-      navigate("/resident-profile");
-    }, 2000);
+      
+      navigate("/resident-profile", { 
+        state: { 
+          rbiNumber: data.rbi_number,
+          showSuccess: true 
+        }
+      });
+    } catch (error) {
+      console.error("Error submitting RBI form:", error);
+      toast({
+        title: "Submission Failed",
+        description: "There was an error submitting your form. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   const currentStepData = steps.find(step => step.id === currentStep) || steps[0];
