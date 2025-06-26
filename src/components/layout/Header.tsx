@@ -1,7 +1,7 @@
 
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, User, ShoppingBag, Menu, LogOut, Home, MessageSquare, BarChart3, FolderOpen, Settings, UsersIcon, Hospital, ClipboardList, Siren, FileText } from "lucide-react";
+import { Bell, User, ShoppingBag, Menu, LogOut, Home, MessageSquare, BarChart3, FolderOpen, Settings, UsersIcon, Hospital, ClipboardList, Siren, FileText, Store, LifeBuoy, Info, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { HeaderLogo } from "./header/HeaderLogo";
@@ -66,8 +66,8 @@ export const Header = () => {
 
   const showCartIcon = location.pathname.startsWith('/marketplace') || location.pathname.startsWith('/resident-home');
 
-  // Clean mobile header for all authenticated mobile users
-  if (isMobile && isAuthenticated) {
+  // Consistent mobile header for all users
+  if (isMobile) {
     return (
       <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md shadow-sm">
         <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
@@ -80,56 +80,73 @@ export const Header = () => {
             </SheetTrigger>
             <SheetContent side="left" className="w-80 p-0">
               <div className="p-4 space-y-6 overflow-y-auto h-full">
-                {/* Role-specific header section */}
-                <div className={`${
-                  userRole === "official" ? "bg-red-50 border-red-100" : 
-                  userRole === "superadmin" ? "bg-purple-50 border-purple-100" : 
-                  "bg-blue-50 border-blue-100"
-                } p-4 rounded-lg border`}>
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className={`w-10 h-10 ${
-                      userRole === "official" ? "bg-red-500" : 
-                      userRole === "superadmin" ? "bg-purple-500" : 
-                      "bg-blue-500"
-                    } rounded-lg flex items-center justify-center`}>
-                      <span className="text-white font-bold text-sm">
-                        {userRole === "official" ? "Bo" : userRole === "superadmin" ? "Ad" : "Re"}
-                      </span>
+                {/* Header section - different for authenticated/unauthenticated */}
+                {isAuthenticated ? (
+                  <div className={`${
+                    userRole === "official" ? "bg-red-50 border-red-100" : 
+                    userRole === "superadmin" ? "bg-purple-50 border-purple-100" : 
+                    "bg-blue-50 border-blue-100"
+                  } p-4 rounded-lg border`}>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className={`w-10 h-10 ${
+                        userRole === "official" ? "bg-red-500" : 
+                        userRole === "superadmin" ? "bg-purple-500" : 
+                        "bg-blue-500"
+                      } rounded-lg flex items-center justify-center`}>
+                        <span className="text-white font-bold text-sm">
+                          {userRole === "official" ? "Bo" : userRole === "superadmin" ? "Ad" : "Re"}
+                        </span>
+                      </div>
+                      <div>
+                        <h2 className={`text-sm font-semibold ${
+                          userRole === "official" ? "text-red-700" : 
+                          userRole === "superadmin" ? "text-purple-700" : 
+                          "text-blue-700"
+                        }`}>
+                          BarangayMo {userRole === "official" ? "Officials" : userRole === "superadmin" ? "Admin" : "Resident"}
+                        </h2>
+                        <p className={`text-xs ${
+                          userRole === "official" ? "text-red-600" : 
+                          userRole === "superadmin" ? "text-purple-600" : 
+                          "text-blue-600"
+                        }`}>
+                          {userRole === "official" ? 
+                            `${officialProfile?.barangay || 'Barangay'} • City Province` :
+                            userRole === "superadmin" ? "System Administrator" :
+                            "Community Member"
+                          }
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h2 className={`text-sm font-semibold ${
-                        userRole === "official" ? "text-red-700" : 
-                        userRole === "superadmin" ? "text-purple-700" : 
-                        "text-blue-700"
-                      }`}>
-                        BarangayMo {userRole === "official" ? "Officials" : userRole === "superadmin" ? "Admin" : "Resident"}
-                      </h2>
-                      <p className={`text-xs ${
+                    {user && (
+                      <div className={`text-xs ${
                         userRole === "official" ? "text-red-600" : 
                         userRole === "superadmin" ? "text-purple-600" : 
                         "text-blue-600"
                       }`}>
-                        {userRole === "official" ? 
-                          `${officialProfile?.barangay || 'Barangay'} • City Province` :
-                          userRole === "superadmin" ? "System Administrator" :
-                          "Community Member"
-                        }
-                      </p>
+                        <p>{user.email}</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 border-gray-200 p-4 rounded-lg border">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 bg-gray-500 rounded-lg flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">BM</span>
+                      </div>
+                      <div>
+                        <h2 className="text-sm font-semibold text-gray-700">BarangayMo</h2>
+                        <p className="text-xs text-gray-600">Community Platform</p>
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      <p>Sign in to access personalized features</p>
                     </div>
                   </div>
-                  {user && (
-                    <div className={`text-xs ${
-                      userRole === "official" ? "text-red-600" : 
-                      userRole === "superadmin" ? "text-purple-600" : 
-                      "text-blue-600"
-                    }`}>
-                      <p>{user.email}</p>
-                    </div>
-                  )}
-                </div>
+                )}
 
                 {/* Location Selector for officials */}
-                {userRole === "official" && (
+                {isAuthenticated && userRole === "official" && (
                   <div>
                     <h3 className="text-sm font-medium text-gray-500 mb-3">Location</h3>
                     <LocationDropdown />
@@ -141,30 +158,41 @@ export const Header = () => {
                   <h3 className="text-sm font-medium text-gray-500 mb-3">Navigation</h3>
                   <div className="space-y-2">
                     {(() => {
-                      if (userRole === "official") {
-                        return [
-                          { name: "Dashboard", icon: Home, href: "/official-dashboard", active: location.pathname === "/official-dashboard" },
-                          { name: "Requests & Complaints", icon: FileText, href: "/official/requests" },
-                          { name: "Messages", icon: MessageSquare, href: "/messages" },
-                          { name: "Reports", icon: BarChart3, href: "/official/reports" },
-                          { name: "Documents", icon: FolderOpen, href: "/official/documents" },
-                          { name: "Settings", icon: Settings, href: "/settings" }
-                        ];
-                      } else if (userRole === "superadmin") {
-                        return [
-                          { name: "Dashboard", icon: Home, href: "/admin", active: location.pathname === "/admin" },
-                          { name: "Users", icon: UsersIcon, href: "/admin/users" },
-                          { name: "Messages", icon: MessageSquare, href: "/messages" },
-                          { name: "Reports", icon: BarChart3, href: "/admin/reports" },
-                          { name: "Settings", icon: Settings, href: "/settings" }
-                        ];
+                      if (isAuthenticated) {
+                        if (userRole === "official") {
+                          return [
+                            { name: "Dashboard", icon: Home, href: "/official-dashboard", active: location.pathname === "/official-dashboard" },
+                            { name: "Requests & Complaints", icon: FileText, href: "/official/requests" },
+                            { name: "Messages", icon: MessageSquare, href: "/messages" },
+                            { name: "Reports", icon: BarChart3, href: "/official/reports" },
+                            { name: "Documents", icon: FolderOpen, href: "/official/documents" },
+                            { name: "Settings", icon: Settings, href: "/settings" }
+                          ];
+                        } else if (userRole === "superadmin") {
+                          return [
+                            { name: "Dashboard", icon: Home, href: "/admin", active: location.pathname === "/admin" },
+                            { name: "Users", icon: UsersIcon, href: "/admin/users" },
+                            { name: "Messages", icon: MessageSquare, href: "/messages" },
+                            { name: "Reports", icon: BarChart3, href: "/admin/reports" },
+                            { name: "Settings", icon: Settings, href: "/settings" }
+                          ];
+                        } else {
+                          return [
+                            { name: "Home", icon: Home, href: "/resident-home", active: location.pathname === "/resident-home" },
+                            { name: "Messages", icon: MessageSquare, href: "/messages" },
+                            { name: "Services", icon: Hospital, href: "/services" },
+                            { name: "Marketplace", icon: ShoppingBag, href: "/marketplace" },
+                            { name: "Settings", icon: Settings, href: "/settings" }
+                          ];
+                        }
                       } else {
+                        // Non-authenticated navigation
                         return [
-                          { name: "Home", icon: Home, href: "/resident-home", active: location.pathname === "/resident-home" },
-                          { name: "Messages", icon: MessageSquare, href: "/messages" },
-                          { name: "Services", icon: Hospital, href: "/services" },
-                          { name: "Marketplace", icon: ShoppingBag, href: "/marketplace" },
-                          { name: "Settings", icon: Settings, href: "/settings" }
+                          { name: "Home", icon: Home, href: "/", active: location.pathname === "/" },
+                          { name: "Marketplace", icon: Store, href: "/marketplace" },
+                          { name: "Services", icon: LifeBuoy, href: "/services" },
+                          { name: "About", icon: Info, href: "/about" },
+                          { name: "Contact", icon: Phone, href: "/contact" }
                         ];
                       }
                     })().map((item, index) => (
@@ -172,22 +200,12 @@ export const Header = () => {
                         key={index} 
                         to={item.href} 
                         className={`flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer ${
-                          item.active ? 
-                            (userRole === "official" ? 'bg-red-50 text-red-600' : 
-                             userRole === "superadmin" ? 'bg-purple-50 text-purple-600' : 
-                             'bg-blue-50 text-blue-600') : 
-                            'hover:bg-gray-50 text-gray-700'
+                          item.active ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50 text-gray-700'
                         }`}
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
                         <item.icon className={`h-5 w-5 ${
-                          item.active ? 
-                            (userRole === "official" ? 'text-red-600' : 
-                             userRole === "superadmin" ? 'text-purple-600' : 
-                             'text-blue-600') : 
-                            (userRole === "official" ? 'text-red-500' : 
-                             userRole === "superadmin" ? 'text-purple-500' : 
-                             'text-blue-500')
+                          item.active ? 'text-blue-600' : 'text-blue-500'
                         }`} />
                         <span className="text-sm font-medium">{item.name}</span>
                       </Link>
@@ -196,7 +214,7 @@ export const Header = () => {
                 </div>
 
                 {/* Quick Actions for officials */}
-                {userRole === "official" && (
+                {isAuthenticated && userRole === "official" && (
                   <div className="border-t pt-4">
                     <h3 className="text-sm font-medium text-gray-500 mb-3">Quick Actions</h3>
                     <div className="space-y-2">
@@ -220,23 +238,44 @@ export const Header = () => {
                   </div>
                 )}
 
-                {/* Logout Button */}
+                {/* Authentication Section */}
                 <div className="border-t pt-4">
-                  <button 
-                    onClick={handleLogout}
-                    className={`flex items-center gap-3 px-3 py-3 rounded-lg hover:${
-                      userRole === "official" ? "bg-red-50" : 
-                      userRole === "superadmin" ? "bg-purple-50" : 
-                      "bg-blue-50"
-                    } cursor-pointer ${
-                      userRole === "official" ? "text-red-600" : 
-                      userRole === "superadmin" ? "text-purple-600" : 
-                      "text-blue-600"
-                    } w-full text-left`}
-                  >
-                    <LogOut className="h-5 w-5" />
-                    <span className="text-sm font-medium">Sign Out</span>
-                  </button>
+                  {isAuthenticated ? (
+                    <button 
+                      onClick={handleLogout}
+                      className={`flex items-center gap-3 px-3 py-3 rounded-lg hover:${
+                        userRole === "official" ? "bg-red-50" : 
+                        userRole === "superadmin" ? "bg-purple-50" : 
+                        "bg-blue-50"
+                      } cursor-pointer ${
+                        userRole === "official" ? "text-red-600" : 
+                        userRole === "superadmin" ? "text-purple-600" : 
+                        "text-blue-600"
+                      } w-full text-left`}
+                    >
+                      <LogOut className="h-5 w-5" />
+                      <span className="text-sm font-medium">Sign Out</span>
+                    </button>
+                  ) : (
+                    <div className="space-y-2">
+                      <Link 
+                        to="/login" 
+                        className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-blue-50 cursor-pointer text-blue-600 w-full"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <User className="h-5 w-5" />
+                        <span className="text-sm font-medium">Sign In</span>
+                      </Link>
+                      <Link 
+                        to="/register" 
+                        className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-green-50 cursor-pointer text-green-600 w-full"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <User className="h-5 w-5" />
+                        <span className="text-sm font-medium">Register</span>
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </div>
             </SheetContent>
@@ -247,26 +286,52 @@ export const Header = () => {
             <HeaderLogo />
           </div>
 
-          {/* Notification Bell */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative w-8 h-8"
-            asChild
-          >
-            <Link to="/notifications">
-              <Bell className="h-5 w-5" />
-              {unreadCount > 0 && (
-                <span className={`absolute -top-0.5 -right-0.5 text-white text-[10px] rounded-full w-3.5 h-3.5 flex items-center justify-center ${
-                  userRole === "official" ? "bg-red-500" : 
-                  userRole === "superadmin" ? "bg-purple-500" : 
-                  "bg-blue-500"
-                }`}>
-                  {unreadCount > 99 ? '99+' : unreadCount}
-                </span>
-              )}
-            </Link>
-          </Button>
+          {/* Right side icons */}
+          <div className="flex items-center gap-1">
+            {/* Cart Icon - show for marketplace or home */}
+            {showCartIcon && (
+              <Button asChild variant="ghost" size="icon" className="relative w-8 h-8">
+                <Link to="/marketplace/cart">
+                  <ShoppingBag className="h-5 w-5" />
+                  {cartItemCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 text-white text-[10px] rounded-full w-3.5 h-3.5 flex items-center justify-center bg-blue-500">
+                      {cartItemCount}
+                    </span>
+                  )}
+                </Link>
+              </Button>
+            )}
+
+            {/* Notification Bell - only for authenticated users */}
+            {isAuthenticated && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative w-8 h-8"
+                asChild
+              >
+                <Link to="/notifications">
+                  <Bell className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <span className={`absolute -top-0.5 -right-0.5 text-white text-[10px] rounded-full w-3.5 h-3.5 flex items-center justify-center ${
+                      userRole === "official" ? "bg-red-500" : 
+                      userRole === "superadmin" ? "bg-purple-500" : 
+                      "bg-blue-500"
+                    }`}>
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </Link>
+              </Button>
+            )}
+
+            {/* Profile/User Icon */}
+            <Button asChild variant="ghost" size="icon" className="rounded-full w-8 h-8">
+              <Link to={isAuthenticated ? "/resident-profile" : "/login"}>
+                <User className="h-5 w-5" />
+              </Link>
+            </Button>
+          </div>
         </div>
       </header>
     );
