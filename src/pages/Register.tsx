@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,29 @@ export default function Register() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 768px)");
+
+  // Dynamic color helper function
+  const getRoleColors = () => {
+    return formData.role === "official" ? {
+      primary: "red-600",
+      primaryHover: "red-700",
+      primaryLight: "red-50",
+      primaryBorder: "red-500",
+      primaryText: "red-600",
+      primaryDark: "red-700",
+      focusRing: "red-500"
+    } : {
+      primary: "blue-600", 
+      primaryHover: "blue-700",
+      primaryLight: "blue-50",
+      primaryBorder: "blue-500", 
+      primaryText: "blue-600",
+      primaryDark: "blue-800",
+      focusRing: "blue-500"
+    };
+  };
+
+  const colors = getRoleColors();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,14 +125,14 @@ export default function Register() {
                     htmlFor="resident-mobile" 
                     className={`flex flex-col items-center justify-center h-32 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
                       formData.role === "resident" 
-                        ? "border-blue-500 bg-blue-50" 
+                        ? `border-${colors.primaryBorder} bg-${colors.primaryLight}` 
                         : "border-gray-200"
                     }`}
                   >
                     <div className={`p-3 rounded-full mb-2 ${
                       formData.role === "resident" 
-                        ? "bg-blue-500 text-white" 
-                        : "bg-blue-100 text-blue-600"
+                        ? `bg-${colors.primary} text-white` 
+                        : `bg-${colors.primaryLight} text-${colors.primaryText}`
                     }`}>
                       <Users className="w-6 h-6" />
                     </div>
@@ -124,14 +148,14 @@ export default function Register() {
                     htmlFor="official-mobile" 
                     className={`flex flex-col items-center justify-center h-32 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
                       formData.role === "official" 
-                        ? "border-red-500 bg-red-50" 
+                        ? `border-${colors.primaryBorder} bg-${colors.primaryLight}` 
                         : "border-gray-200"
                     }`}
                   >
                     <div className={`p-3 rounded-full mb-2 ${
                       formData.role === "official" 
-                        ? "bg-red-500 text-white" 
-                        : "bg-red-100 text-red-600"
+                        ? `bg-${colors.primary} text-white` 
+                        : `bg-${colors.primaryLight} text-${colors.primaryText}`
                     }`}>
                       <Shield className="w-6 h-6" />
                     </div>
@@ -154,7 +178,7 @@ export default function Register() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
+                  className={`pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-${colors.focusRing}`}
                   required
                 />
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -171,7 +195,7 @@ export default function Register() {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="pl-10 pr-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
+                  className={`pl-10 pr-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-${colors.focusRing}`}
                   required
                 />
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -193,13 +217,13 @@ export default function Register() {
             <div className="flex items-center space-x-2 pt-2">
               <input type="checkbox" id="terms" className="rounded border-gray-300" required />
               <label htmlFor="terms" className="text-sm text-gray-600 font-inter">
-                I agree to the <Link to="/terms" className="text-blue-600 font-medium">Terms of Service</Link> and <Link to="/privacy" className="text-blue-600 font-medium">Privacy Policy</Link>
+                I agree to the <Link to="/terms" className={`text-${colors.primaryText} font-medium`}>Terms of Service</Link> and <Link to="/privacy" className={`text-${colors.primaryText} font-medium`}>Privacy Policy</Link>
               </label>
             </div>
             
             <Button
               type="submit"
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg py-3 transition font-medium text-base"
+              className={`w-full bg-${colors.primary} hover:bg-${colors.primaryHover} text-white rounded-lg py-3 transition font-medium text-base`}
               disabled={isLoading}
             >
               {isLoading ? "Registering..." : "Register Account"}
@@ -209,7 +233,7 @@ export default function Register() {
           <div className="mt-6 text-center">
             <p className="text-gray-500 text-sm font-inter">
               Already have an account?{" "}
-              <Link to="/mpin" className="font-medium text-blue-600 hover:text-blue-800 transition">
+              <Link to="/mpin" className={`font-medium text-${colors.primaryText} hover:text-${colors.primaryDark} transition`}>
                 Login
               </Link>
             </p>
@@ -245,14 +269,14 @@ export default function Register() {
                   htmlFor="resident" 
                   className={`flex flex-col items-center h-28 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
                     formData.role === "resident" 
-                      ? "border-blue-500 bg-blue-50" 
+                      ? `border-${colors.primaryBorder} bg-${colors.primaryLight}` 
                       : "border-gray-200"
                   }`}
                 >
                   <div className={`p-2 rounded-full mb-2 ${
                     formData.role === "resident" 
-                      ? "bg-blue-500 text-white" 
-                      : "bg-blue-100 text-blue-600"
+                      ? `bg-${colors.primary} text-white` 
+                      : `bg-${colors.primaryLight} text-${colors.primaryText}`
                   }`}>
                     <Users className="w-5 h-5" />
                   </div>
@@ -268,14 +292,14 @@ export default function Register() {
                   htmlFor="official" 
                   className={`flex flex-col items-center h-28 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
                     formData.role === "official" 
-                      ? "border-red-500 bg-red-50" 
+                      ? `border-${colors.primaryBorder} bg-${colors.primaryLight}` 
                       : "border-gray-200"
                   }`}
                 >
                   <div className={`p-2 rounded-full mb-2 ${
                     formData.role === "official" 
-                      ? "bg-red-500 text-white" 
-                      : "bg-red-100 text-red-600"
+                      ? `bg-${colors.primary} text-white` 
+                      : `bg-${colors.primaryLight} text-${colors.primaryText}`
                   }`}>
                     <Shield className="w-5 h-5" />
                   </div>
@@ -298,7 +322,7 @@ export default function Register() {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
+                className={`pl-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-${colors.focusRing}`}
                 required
               />
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -315,7 +339,7 @@ export default function Register() {
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className="pl-10 pr-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-blue-500"
+                className={`pl-10 pr-10 font-inter border-gray-200 bg-gray-50 rounded-lg focus-visible:ring-${colors.focusRing}`}
                 required
               />
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -337,13 +361,13 @@ export default function Register() {
           <div className="flex items-center space-x-2 pt-2">
             <input type="checkbox" id="terms-desktop" className="rounded border-gray-300" required />
             <label htmlFor="terms-desktop" className="text-sm text-gray-600 font-inter">
-              I agree to the <Link to="/terms" className="text-blue-600 font-medium">Terms of Service</Link> and <Link to="/privacy" className="text-blue-600 font-medium">Privacy Policy</Link>
+              I agree to the <Link to="/terms" className={`text-${colors.primaryText} font-medium`}>Terms of Service</Link> and <Link to="/privacy" className={`text-${colors.primaryText} font-medium`}>Privacy Policy</Link>
             </label>
           </div>
           
           <Button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 font-inter text-white rounded-lg py-3 transition font-medium text-base"
+            className={`w-full bg-${colors.primary} hover:bg-${colors.primaryHover} font-inter text-white rounded-lg py-3 transition font-medium text-base`}
             disabled={isLoading}
           >
             {isLoading ? "Registering..." : "Register Account"}
@@ -353,7 +377,7 @@ export default function Register() {
         <div className="mt-6 text-center">
           <p className="text-gray-500 text-sm font-inter">
             Already have an account?{" "}
-            <Link to="/login" className="font-medium text-blue-600 hover:text-blue-800 transition">
+            <Link to="/login" className={`font-medium text-${colors.primaryText} hover:text-${colors.primaryDark} transition`}>
               Login
             </Link>
           </p>
