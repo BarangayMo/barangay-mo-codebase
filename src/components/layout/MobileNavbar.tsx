@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { Home, MessageSquare, Store, Menu, LifeBuoy, Shield } from "lucide-react";
+import { Home, MessageSquare, Store, Menu, LifeBuoy } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
@@ -27,79 +27,38 @@ export const MobileNavbar = () => {
     return isAuthenticated ? "/messages" : "/login";
   };
 
-  // Different navigation items based on user role
-  const getNavItems = () => {
-    if (userRole === "official") {
-      return [
-        {
-          icon: Home,
-          path: "/official-dashboard",
-          label: "Home",
-          key: "home"
-        },
-        {
-          icon: Shield,
-          path: "/official",
-          label: "Official",
-          key: "official"
-        },
-        {
-          icon: Store,
-          path: "/marketplace",
-          label: "Market",
-          key: "marketplace"
-        },
-        {
-          icon: LifeBuoy,
-          path: "/services",
-          label: "Services",
-          key: "services"
-        },
-        {
-          icon: MessageSquare,
-          path: getMessagesRoute(),
-          label: "Messages",
-          key: "messages"
-        }
-      ];
+  const navItems = [
+    {
+      icon: Home,
+      path: getHomeRoute(),
+      label: "Home",
+      key: "home"
+    },
+    {
+      icon: MessageSquare,
+      path: getMessagesRoute(),
+      label: "Messages",
+      key: "messages"
+    },
+    {
+      icon: Store,
+      path: "/marketplace",
+      label: "Market",
+      key: "marketplace"
+    },
+    {
+      icon: LifeBuoy,
+      path: "/services",
+      label: "Services",
+      key: "services"
+    },
+    {
+      icon: Menu,
+      path: "/menu",
+      label: "Menu",
+      key: "menu"
     }
-
-    // Default navigation for residents and non-authenticated users
-    return [
-      {
-        icon: Home,
-        path: getHomeRoute(),
-        label: "Home",
-        key: "home"
-      },
-      {
-        icon: MessageSquare,
-        path: getMessagesRoute(),
-        label: "Messages",
-        key: "messages"
-      },
-      {
-        icon: Store,
-        path: "/marketplace",
-        label: "Market",
-        key: "marketplace"
-      },
-      {
-        icon: LifeBuoy,
-        path: "/services",
-        label: "Services",
-        key: "services"
-      },
-      {
-        icon: Menu,
-        path: "/menu",
-        label: "Menu",
-        key: "menu"
-      }
-    ];
-  };
-
-  const navItems = getNavItems();
+  ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md bg-white/90 border-t border-white/20 shadow-lg rounded-t-xl pb-8">
@@ -109,21 +68,17 @@ export const MobileNavbar = () => {
             <Icon className={cn(
               "h-6 w-6 transition-colors",
               pathname === path 
-                ? userRole === "official" 
-                  ? "text-[#ea384c]" 
-                  : userRole === "resident" 
-                    ? "text-[#1a237e]" 
-                    : "text-[#ea384c]"
+                ? userRole === "resident" 
+                  ? "text-[#1a237e]" 
+                  : "text-[#ea384c]"
                 : "text-black"
             )} />
             <span className={cn(
               "text-xs mt-1 text-center",
               pathname === path 
-                ? userRole === "official" 
-                  ? "text-[#ea384c] font-medium" 
-                  : userRole === "resident" 
-                    ? "text-[#1a237e] font-medium" 
-                    : "text-[#ea384c] font-medium"
+                ? userRole === "resident" 
+                  ? "text-[#1a237e] font-medium" 
+                  : "text-[#ea384c] font-medium"
                 : "text-black"
             )}>
               {label}
