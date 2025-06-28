@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
@@ -7,6 +6,7 @@ import { Layout } from "@/components/layout/Layout";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { LoadingScreen } from "@/components/ui/loading";
 
 export default function Index() {
   const currentYear = new Date().getFullYear();
@@ -20,9 +20,9 @@ export default function Index() {
     }
   }, [isMobile, navigate]);
 
-  // Show loading or nothing for mobile users while redirecting
+  // Show loading screen for mobile users while redirecting
   if (isMobile) {
-    return null;
+    return <LoadingScreen />;
   }
   
   return (
