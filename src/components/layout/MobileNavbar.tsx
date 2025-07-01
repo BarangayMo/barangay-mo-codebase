@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { Home, MessageSquare, Store, Menu, LifeBuoy } from "lucide-react";
+import { Home, MessageSquare, Store, Menu, LifeBuoy, User, Briefcase } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
@@ -27,38 +27,94 @@ export const MobileNavbar = () => {
     return isAuthenticated ? "/messages" : "/login";
   };
 
-  const navItems = [
-    {
-      icon: Home,
-      path: getHomeRoute(),
-      label: "Home",
-      key: "home"
-    },
-    {
-      icon: MessageSquare,
-      path: getMessagesRoute(),
-      label: "Messages",
-      key: "messages"
-    },
-    {
-      icon: Store,
-      path: "/marketplace",
-      label: "Market",
-      key: "marketplace"
-    },
-    {
-      icon: LifeBuoy,
-      path: "/services",
-      label: "Services",
-      key: "services"
-    },
-    {
-      icon: Menu,
-      path: "/menu",
-      label: "Menu",
-      key: "menu"
+  const getProfileRoute = () => {
+    if (!isAuthenticated) {
+      return "/login";
     }
-  ];
+    switch (userRole) {
+      case "official":
+        return "/resident-profile"; // Officials use the same profile page
+      case "superadmin":
+        return "/resident-profile";
+      case "resident":
+      default:
+        return "/resident-profile";
+    }
+  };
+
+  // Different nav items based on user role
+  const getNavItems = () => {
+    if (userRole === "official") {
+      return [
+        {
+          icon: Home,
+          path: getHomeRoute(),
+          label: "Home",
+          key: "home"
+        },
+        {
+          icon: Briefcase,
+          path: "/official-dashboard",
+          label: "Official",
+          key: "official"
+        },
+        {
+          icon: MessageSquare,
+          path: getMessagesRoute(),
+          label: "Messages",
+          key: "messages"
+        },
+        {
+          icon: LifeBuoy,
+          path: "/services",
+          label: "Services",
+          key: "services"
+        },
+        {
+          icon: User,
+          path: getProfileRoute(),
+          label: "Profile",
+          key: "profile"
+        }
+      ];
+    }
+
+    // Default nav items for other roles
+    return [
+      {
+        icon: Home,
+        path: getHomeRoute(),
+        label: "Home",
+        key: "home"
+      },
+      {
+        icon: MessageSquare,
+        path: getMessagesRoute(),
+        label: "Messages",
+        key: "messages"
+      },
+      {
+        icon: Store,
+        path: "/marketplace",
+        label: "Market",
+        key: "marketplace"
+      },
+      {
+        icon: LifeBuoy,
+        path: "/services",
+        label: "Services",
+        key: "services"
+      },
+      {
+        icon: Menu,
+        path: "/menu",
+        label: "Menu",
+        key: "menu"
+      }
+    ];
+  };
+
+  const navItems = getNavItems();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md bg-white/90 border-t border-white/20 shadow-lg rounded-t-xl pb-8">
