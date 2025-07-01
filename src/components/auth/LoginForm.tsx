@@ -26,21 +26,15 @@ export const LoginForm = () => {
       const { error } = await login(email, password);
       
       if (error) {
-        console.error("Login error:", error.message);
         toast({
           variant: "destructive",
           title: "Login failed",
           description: error.message
         });
         setLoginError(error.message);
-      } else {
-        console.log("Login form: Login successful, waiting for redirect...");
-        // Clear form on success
-        setEmail("");
-        setPassword("");
       }
-    } catch (err: any) {
-      console.error("Unexpected login error:", err);
+      // Removed success toast - user will be redirected automatically
+    } catch (err) {
       toast({
         variant: "destructive",
         title: "Login failed",
@@ -57,7 +51,6 @@ export const LoginForm = () => {
     setLoginError(null);
     
     try {
-      console.log(`Starting demo login for ${role}`);
       const { error } = await demoLogin(role);
       
       if (error) {
@@ -68,9 +61,8 @@ export const LoginForm = () => {
           description: error.message
         });
         setLoginError(error.message);
-      } else {
-        console.log("Demo login successful, waiting for redirect...");
       }
+      // Removed success toast - user will be redirected automatically
     } catch (err: any) {
       console.error("Unexpected demo login error:", err);
       toast({
@@ -82,6 +74,12 @@ export const LoginForm = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleBiometricLogin = () => {
+    setTimeout(() => {
+      handleDemoLogin("resident");
+    }, 1000);
   };
 
   return (
@@ -103,7 +101,6 @@ export const LoginForm = () => {
             onChange={e => setEmail(e.target.value)}
             className="mt-1 text-base"
             required
-            disabled={isLoading}
           />
         </div>
         <div>
@@ -116,7 +113,6 @@ export const LoginForm = () => {
             onChange={e => setPassword(e.target.value)}
             className={`mt-1 text-base ${loginError ? "border-red-400 ring-2 ring-red-100" : ""}`}
             required
-            disabled={isLoading}
           />
           {loginError && (
             <div className="text-xs text-red-600 mt-2">{loginError}</div>
@@ -139,7 +135,6 @@ export const LoginForm = () => {
             variant="outline"
             onClick={() => handleDemoLogin("resident")}
             className="text-[#2da94f] bg-[#f0fbe9] hover:bg-[#c3edcb]/80 border border-[#b8e7be]"
-            disabled={isLoading}
           >
             Resident Demo
           </Button>
@@ -148,7 +143,6 @@ export const LoginForm = () => {
             variant="outline"
             onClick={() => handleDemoLogin("official")}
             className="text-[#c11f3c] bg-[#fbeaed] hover:bg-[#f2ced4]/80 border border-[#ebb5c2]"
-            disabled={isLoading}
           >
             Official Demo
           </Button>
@@ -157,7 +151,6 @@ export const LoginForm = () => {
             variant="outline"
             onClick={() => handleDemoLogin("superadmin")}
             className="text-[#3c41ff] bg-[#eef0fe] hover:bg-[#d5d7f9] border border-[#b1b7f0]"
-            disabled={isLoading}
           >
             Super Admin Demo
           </Button>
