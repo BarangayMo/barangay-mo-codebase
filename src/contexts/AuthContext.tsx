@@ -1,5 +1,5 @@
 
-import { createContext, useContext, useState, ReactNode, useEffect, useRef } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -39,7 +39,6 @@ interface AuthProviderProps {
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const currentPath = location.pathname;
   
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState<UserRole>(null);
@@ -47,8 +46,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [session, setSession] = useState<Session | null>(null);
   const [rbiCompleted, setRbiCompleted] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
-  
-  const redirectInProgress = useRef(false);
 
   // Function to fetch user profile data
   const fetchUserProfile = async (userId: string) => {
@@ -90,6 +87,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return { role, redirectPath };
   };
 
+  // Simple redirect function
+  const handleRedirect = (redirectPath: string, currentPath: string) => {
+    console.log(`Attempting redirect from ${currentPath} to ${redirectPath}`);
+    if (currentPath === '/login' || currentPath === '/register') {
+      navigate(redirectPath, { replace: true });
+    }
+  };
+
   // Handle auth state changes
   useEffect(() => {
     console.log("Setting up auth state change listener");
@@ -121,25 +126,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           setUser(userData);
           setUserRole(role);
           
-          // Handle redirects after successful login
-          if (event === 'SIGNED_IN' && !redirectInProgress.current && isInitialized) {
-            if (currentPath === '/login' || currentPath === '/register') {
-              console.log("Redirecting to:", redirectPath, "after login");
-              redirectInProgress.current = true;
-              navigate(redirectPath, { replace: true });
-              setTimeout(() => { redirectInProgress.current = false; }, 1000);
-            }
+          // Handle redirects after successful login - simplified logic
+          if (event === 'SIGNED_IN' && isInitialized) {
+            console.log("Signed in - checking for redirect");
+            handleRedirect(redirectPath, location.pathname);
           }
         } else {
           // User signed out
           setUser(null);
           setUserRole(null);
           
-          if (event === 'SIGNED_OUT' && !redirectInProgress.current && isInitialized) {
-            console.log("Redirecting to login after sign out");
-            redirectInProgress.current = true;
+          if (event === 'SIGNED_OUT' && isInitialized) {
+            console.log("Signed out - redirecting to login");
             navigate('/login', { replace: true });
-            setTimeout(() => { redirectInProgress.current = false; }, 1000);
           }
         }
       }
@@ -171,19 +170,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setUserRole(role);
         
         // Redirect if user is on login/register page with existing session
-        if ((currentPath === '/login' || currentPath === '/register') && !redirectInProgress.current) {
-          console.log("Redirecting existing session from login/register to:", redirectPath);
-          redirectInProgress.current = true;
-          navigate(redirectPath, { replace: true });
-          setTimeout(() => { redirectInProgress.current = false; }, 1000);
-        }
+        handleRedirect(redirectPath, location.pathname);
       }
       
       setIsInitialized(true);
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, currentPath, isInitialized]);
+  }, [navigate, location.pathname, isInitialized]);
 
   const login = async (email: string, password: string) => {
     console.log("Login attempt:", email);
@@ -238,12 +232,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUserRole(null);
       setUser(null);
       setSession(null);
-      
-      if (!redirectInProgress.current) {
-        redirectInProgress.current = true;
-        navigate(navigateToPath || "/login", { replace: true });
-        setTimeout(() => { redirectInProgress.current = false; }, 1000);
-      }
+      navigate(navigateToPath || "/login", { replace: true });
     } else {
       console.error("Logout error:", error.message);
     }
