@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode, useEffect, useRef } from "react";
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -50,20 +49,24 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   
   const redirectInProgress = useRef(false);
 
+  console.log('AuthProvider state:', { isAuthenticated, userRole, isInitialized, currentPath });
+
   // Function to fetch user profile data with better error handling
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log('Fetching user profile for:', userId);
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('barangay, created_at')
         .eq('id', userId)
-        .maybeSingle(); // Use maybeSingle instead of single
+        .maybeSingle();
       
       if (error) {
         console.warn('Profile fetch warning (continuing anyway):', error);
         return {};
       }
       
+      console.log('Profile fetched successfully:', profile);
       return {
         barangay: profile?.barangay,
         createdAt: profile?.created_at
@@ -87,6 +90,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       redirectPath = '/admin';
     }
     
+    console.log('User role determined:', { email, role, redirectPath });
     return { role, redirectPath };
   };
 
@@ -102,34 +106,39 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setIsAuthenticated(!!session);
         
         if (session?.user) {
-          // Fetch additional profile data
-          const profileData = await fetchUserProfile(session.user.id);
-          
-          const { role, redirectPath } = getUserRoleAndRedirect(session.user.email || '');
-          
-          const userData = {
-            id: session.user.id,
-            name: session.user.email || '',
-            email: session.user.email,
-            firstName: session.user.user_metadata?.first_name,
-            lastName: session.user.user_metadata?.last_name,
-            role,
-            barangay: profileData.barangay,
-            createdAt: profileData.createdAt
-          };
-          
-          setUser(userData);
-          setUserRole(role);
-          
-          // Handle redirects after successful login
-          if (event === 'SIGNED_IN' && !redirectInProgress.current && isInitialized) {
-            if (currentPath === '/login' || currentPath === '/register') {
-              console.log("Redirecting to:", redirectPath, "after login");
-              redirectInProgress.current = true;
-              navigate(redirectPath, { replace: true });
-              setTimeout(() => { redirectInProgress.current = false; }, 1000);
+          // Use setTimeout to prevent blocking other queries
+          setTimeout(async () => {
+            try {
+              const profileData = await fetchUserProfile(session.user.id);
+              const { role, redirectPath } = getUserRoleAndRedirect(session.user.email || '');
+              
+              const userData = {
+                id: session.user.id,
+                name: session.user.email || '',
+                email: session.user.email,
+                firstName: session.user.user_metadata?.first_name,
+                lastName: session.user.user_metadata?.last_name,
+                role,
+                barangay: profileData.barangay,
+                createdAt: profileData.createdAt
+              };
+              
+              setUser(userData);
+              setUserRole(role);
+              
+              // Handle redirects after successful login
+              if (event === 'SIGNED_IN' && !redirectInProgress.current && isInitialized) {
+                if (currentPath === '/login' || currentPath === '/register') {
+                  console.log("Redirecting to:", redirectPath, "after login");
+                  redirectInProgress.current = true;
+                  navigate(redirectPath, { replace: true });
+                  setTimeout(() => { redirectInProgress.current = false; }, 1000);
+                }
+              }
+            } catch (error) {
+              console.error('Error in auth state change handler:', error);
             }
-          }
+          }, 0);
         } else {
           // User signed out
           setUser(null);
@@ -157,33 +166,40 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setIsAuthenticated(!!session);
       
       if (session?.user) {
-        const profileData = await fetchUserProfile(session.user.id);
-        const { role, redirectPath } = getUserRoleAndRedirect(session.user.email || '');
-        
-        const userData = {
-          id: session.user.id,
-          name: session.user.email || '',
-          email: session.user.email,
-          firstName: session.user.user_metadata?.first_name,
-          lastName: session.user.user_metadata?.last_name,
-          role,
-          barangay: profileData.barangay,
-          createdAt: profileData.createdAt
-        };
-        
-        setUser(userData);
-        setUserRole(role);
-        
-        // Redirect if user is on login/register page with existing session
-        if ((currentPath === '/login' || currentPath === '/register') && !redirectInProgress.current) {
-          console.log("Redirecting existing session from login/register to:", redirectPath);
-          redirectInProgress.current = true;
-          navigate(redirectPath, { replace: true });
-          setTimeout(() => { redirectInProgress.current = false; }, 1000);
-        }
+        setTimeout(async () => {
+          try {
+            const profileData = await fetchUserProfile(session.user.id);
+            const { role, redirectPath } = getUserRoleAndRedirect(session.user.email || '');
+            
+            const userData = {
+              id: session.user.id,
+              name: session.user.email || '',
+              email: session.user.email,
+              firstName: session.user.user_metadata?.first_name,
+              lastName: session.user.user_metadata?.last_name,
+              role,
+              barangay: profileData.barangay,
+              createdAt: profileData.createdAt
+            };
+            
+            setUser(userData);
+            setUserRole(role);
+            
+            // Redirect if user is on login/register page with existing session
+            if ((currentPath === '/login' || currentPath === '/register') && !redirectInProgress.current) {
+              console.log("Redirecting existing session from login/register to:", redirectPath);
+              redirectInProgress.current = true;
+              navigate(redirectPath, { replace: true });
+              setTimeout(() => { redirectInProgress.current = false; }, 1000);
+            }
+          } catch (error) {
+            console.error('Error in initial session handler:', error);
+          }
+        }, 0);
       }
       
       setIsInitialized(true);
+      console.log('Auth initialization completed');
     });
 
     return () => subscription.unsubscribe();

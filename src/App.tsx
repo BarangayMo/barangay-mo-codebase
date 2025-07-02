@@ -10,30 +10,45 @@ import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { SupabaseWarning } from "./components/ui/supabase-warning";
 import { ScrollToTop } from "./components/ScrollToTop";
 
-// Create a client
+// Create a client with aggressive cache settings to force fresh data
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: false,
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+      refetchOnReconnect: true,
+      staleTime: 0, // Data is always stale, force refetch
+      cacheTime: 0, // Don't cache data
+      retry: 1, // Reduce retries to speed up error detection
+      retryDelay: 1000,
     },
   },
 });
 
+// Add global error logging for React Query
+queryClient.setQueryDefaults(['*'], {
+  onError: (error) => {
+    console.error('React Query Error:', error);
+  },
+  onSuccess: (data, query) => {
+    console.log('React Query Success:', { queryKey: query.queryKey, dataLength: Array.isArray(data) ? data.length : 'not-array' });
+  },
+});
+
 function App() {
+  console.log('App component rendering...');
+  
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
         <LanguageProvider>
           <AuthProvider>
-            {/* Router component removed from here */}
             <FaviconManager />
             <ScrollToTop />
             <AppRoutes />
             <ShadcnToaster />
             <SonnerToaster />
             <SupabaseWarning />
-            {/* Router component removed from here */}
           </AuthProvider>
         </LanguageProvider>
       </ThemeProvider>
@@ -42,4 +57,3 @@ function App() {
 }
 
 export default App;
-

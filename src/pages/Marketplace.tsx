@@ -1,15 +1,14 @@
 
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
-// import { CategoryList } from "@/components/marketplace/CategoryList"; // We are mapping categories directly
 import { SearchBar } from "@/components/marketplace/SearchBar";
 import { MobileNavigation } from "@/components/marketplace/MobileNavigation";
-import { FilterButton } from "@/components/marketplace/FilterButton"; // Keep if used for advanced filters
+import { FilterButton } from "@/components/marketplace/FilterButton";
 import { MarketHero } from "@/components/marketplace/MarketHero";
 import { ProductList } from "@/components/marketplace/ProductList";
-import { ProductCardType } from "@/components/marketplace/ProductCard"; // Import type
+import { ProductCardType } from "@/components/marketplace/ProductCard";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQueryWithDebug } from "@/hooks/use-query-with-debug";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Define Category type based on Supabase schema
@@ -21,7 +20,7 @@ interface Category {
 
 // Fetch products with joined vendor and category names
 const fetchProducts = async (): Promise<ProductCardType[]> => {
-  console.log("Fetching products...");
+  console.log("🔄 Starting products fetch...");
   
   const { data, error } = await supabase
     .from("products")
@@ -40,61 +39,69 @@ const fetchProducts = async (): Promise<ProductCardType[]> => {
       vendors (shop_name), 
       product_categories (name)
     `)
-    .eq('is_active', true) // Only fetch active products
+    .eq('is_active', true)
     .order('created_at', { ascending: false });
 
-  console.log("Products query result:", { data, error });
+  console.log("📦 Products query completed:", { 
+    success: !error, 
+    dataCount: data?.length || 0, 
+    error: error?.message 
+  });
   
   if (error) {
-    console.error("Error fetching products:", error);
+    console.error("❌ Products fetch error:", error);
     throw error;
   }
   
-  console.log("Successfully fetched products:", data?.length || 0);
-  return data as ProductCardType[]; // Cast needed because Supabase types might not perfectly match joined structure
+  return data as ProductCardType[];
 };
 
 // Fetch categories
 const fetchCategories = async (): Promise<Category[]> => {
-  console.log("Fetching categories...");
+  console.log("🔄 Starting categories fetch...");
   
   const { data, error } = await supabase
     .from("product_categories")
     .select("id, name, image_url")
     .order("name", { ascending: true });
     
-  console.log("Categories query result:", { data, error });
+  console.log("📂 Categories query completed:", { 
+    success: !error, 
+    dataCount: data?.length || 0, 
+    error: error?.message 
+  });
   
   if (error) {
-    console.error("Error fetching categories:", error);
+    console.error("❌ Categories fetch error:", error);
     throw error;
   }
   
-  console.log("Successfully fetched categories:", data?.length || 0);
   return data || [];
 };
 
 export default function Marketplace() {
   const [search, setSearch] = useState("");
-  const [activeFilter, setActiveFilter] = useState("All"); // This is category name
+  const [activeFilter, setActiveFilter] = useState("All");
 
-  const { data: products, isLoading: isLoadingProducts, error: productsError } = useQuery<ProductCardType[]>({
-    queryKey: ['products'],
-    queryFn: fetchProducts,
-  });
+  console.log("🏪 Marketplace component rendering...");
 
-  const { data: categories, isLoading: isLoadingCategories, error: categoriesError } = useQuery<Category[]>({
-    queryKey: ['categories'],
-    queryFn: fetchCategories,
-  });
+  const { data: products, isLoading: isLoadingProducts, error: productsError } = useQueryWithDebug(
+    ['products'],
+    fetchProducts
+  );
 
-  console.log("Component state:", { 
-    products: products?.length || 0, 
-    categories: categories?.length || 0, 
+  const { data: categories, isLoading: isLoadingCategories, error: categoriesError } = useQueryWithDebug(
+    ['categories'],
+    fetchCategories
+  );
+
+  console.log("🏪 Marketplace state:", { 
+    productsCount: products?.length || 0, 
+    categoriesCount: categories?.length || 0, 
     isLoadingProducts, 
     isLoadingCategories,
-    productsError,
-    categoriesError
+    hasProductsError: !!productsError,
+    hasCategoriesError: !!categoriesError
   });
 
   const displayCategories = [{ id: "all-cat", name: "All" }, ...(categories || [])];
@@ -107,7 +114,7 @@ export default function Marketplace() {
         <MarketHero />
         
         <div className="mt-6 mb-8 flex items-center gap-4 overflow-x-auto pb-2 scrollbar-none">
-          <FilterButton /> {/* Keep if it's for more advanced filtering options */}
+          <FilterButton />
           {isLoadingCategories ? (
             Array.from({ length: 5 }).map((_, index) => <Skeleton key={index} className="h-10 w-24 rounded-full" />)
           ) : categoriesError ? (

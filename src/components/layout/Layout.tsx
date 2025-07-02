@@ -30,7 +30,7 @@ const pageVariants = {
     opacity: 1,
     x: 0,
     transition: { 
-      duration: 0.3,
+      duration: 0.2, // Reduced from 0.3
       ease: "easeInOut" 
     }
   },
@@ -38,7 +38,7 @@ const pageVariants = {
     opacity: 0,
     x: -10,
     transition: { 
-      duration: 0.2 
+      duration: 0.1 // Reduced from 0.2
     }
   }
 };
@@ -47,11 +47,13 @@ export const Layout = ({ children, hideHeader = false, hideFooter = false, hideM
   const { isAuthenticated, userRole } = useAuth();
   const isMobile = useIsMobile();
   const { pathname } = useLocation();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // Changed from true to false
   
   // Prevent loading screen on tab visibility change
   const previousPathRef = useRef(pathname);
   const isVisibilityChange = useRef(false);
+
+  console.log('Layout rendering:', { pathname, isLoading, isAuthenticated });
 
   // Only show footer on mobile for homepage
   const shouldShowFooter = !hideFooter && (!isMobile || pathname === '/');
@@ -68,12 +70,14 @@ export const Layout = ({ children, hideHeader = false, hideFooter = false, hideM
   }, []);
 
   useEffect(() => {
-    // Only show loading state if this is a genuine navigation, not a visibility change
+    // Significantly reduce loading times and only show loading for genuine navigation
     if (pathname !== previousPathRef.current && !isVisibilityChange.current) {
+      console.log('Path changed, showing loading:', { from: previousPathRef.current, to: pathname });
       setIsLoading(true);
       const timer = setTimeout(() => {
         setIsLoading(false);
-      }, 800);
+        console.log('Loading completed for:', pathname);
+      }, 200); // Reduced from 800ms
       return () => clearTimeout(timer);
     } else {
       // Reset visibility change flag
