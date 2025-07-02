@@ -116,7 +116,7 @@ export const PostCard = ({ post }: PostCardProps) => {
             <div className="flex gap-2 mb-4">
               <Avatar className="h-8 w-8">
                 <AvatarFallback className="text-xs">
-                  {user?.user_metadata?.first_name?.[0]}
+                  {user?.email?.[0]?.toUpperCase() || "U"}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 flex gap-2">

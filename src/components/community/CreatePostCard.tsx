@@ -28,9 +28,9 @@ export const CreatePostCard = () => {
       <CardContent className="p-4">
         <div className="flex gap-3">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={user?.user_metadata?.avatar_url || ""} />
+            <AvatarImage src={""} />
             <AvatarFallback>
-              {user?.user_metadata?.first_name?.[0]}{user?.user_metadata?.last_name?.[0]}
+              {user?.email?.[0]?.toUpperCase() || "U"}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 space-y-3">

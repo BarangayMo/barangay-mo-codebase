@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { Home, MessageSquare, Store, Menu, LifeBuoy, User, Briefcase, Users } from "lucide-react";
+import { Home, MessageSquare, Store, Menu, LifeBuoy, User, Briefcase } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
@@ -51,12 +51,6 @@ export const MobileNavbar = () => {
           path: getHomeRoute(),
           label: "Home",
           key: "home"
-        },
-        {
-          icon: Users,
-          path: "/community",
-          label: "Community",
-          key: "community"
         },
         {
           icon: Briefcase,
