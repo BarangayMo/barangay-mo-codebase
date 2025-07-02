@@ -12,12 +12,14 @@ import {
   Settings,
   MapPin,
   Bell,
-  Image,
+  Plus,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const PunongBarangayDashboard = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [currentDate] = useState(new Date());
 
   const quickActions = [
@@ -95,7 +97,7 @@ const PunongBarangayDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 relative">
       {/* Header */}
       <div className="bg-red-600 text-white p-4">
         <div className="flex items-center gap-3">
@@ -215,11 +217,6 @@ const PunongBarangayDashboard = () => {
                 {renderCalendar()}
               </div>
             </div>
-
-            {/* POST TO COMMUNITY Button */}
-            <Button className="w-full bg-red-600 hover:bg-red-700">
-              + POST TO COMMUNITY
-            </Button>
           </CardContent>
         </Card>
 
@@ -251,7 +248,7 @@ const PunongBarangayDashboard = () => {
             <CardTitle className="text-base">Gallery</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-2 mb-4">
+            <div className="grid grid-cols-2 gap-2">
               {galleryImages.map((image, index) => (
                 <div key={index} className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
                   <img 
@@ -262,12 +259,19 @@ const PunongBarangayDashboard = () => {
                 </div>
               ))}
             </div>
-            <Button className="w-full bg-red-600 hover:bg-red-700">
-              + POST TO COMMUNITY
-            </Button>
           </CardContent>
         </Card>
       </div>
+
+      {/* Floating POST TO COMMUNITY Button - Mobile Only */}
+      {isMobile && (
+        <Button 
+          className="fixed bottom-6 right-6 bg-red-600 hover:bg-red-700 text-white rounded-full p-4 shadow-lg z-50"
+          onClick={() => console.log("Post to community")}
+        >
+          <Plus className="h-6 w-6" />
+        </Button>
+      )}
     </div>
   );
 };
