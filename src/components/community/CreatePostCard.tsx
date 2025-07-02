@@ -49,6 +49,26 @@ export const CreatePostCard = () => {
     { icon: Users, label: "Tag friends", color: "text-indigo-600" }
   ];
 
+  // Get user's name from either user profile or email
+  const getUserDisplayName = () => {
+    if (user?.user_metadata?.first_name || user?.user_metadata?.last_name) {
+      return `${user.user_metadata.first_name || ''} ${user.user_metadata.last_name || ''}`.trim();
+    }
+    return user?.email || 'User';
+  };
+
+  const getUserInitials = () => {
+    const firstName = user?.user_metadata?.first_name;
+    const lastName = user?.user_metadata?.last_name;
+    if (firstName && lastName) {
+      return `${firstName[0]}${lastName[0]}`.toUpperCase();
+    }
+    if (firstName) {
+      return firstName[0].toUpperCase();
+    }
+    return user?.email?.[0]?.toUpperCase() || "U";
+  };
+
   return (
     <Card className="mb-4 border-gray-200">
       <CardContent className="p-3">
@@ -57,24 +77,38 @@ export const CreatePostCard = () => {
           onFocus={handleFocus}
           onBlur={handleBlur}
         >
-          <Avatar className="h-8 w-8 flex-shrink-0">
-            <AvatarImage src={""} />
-            <AvatarFallback className="text-xs bg-gray-300">
-              {user?.email?.[0]?.toUpperCase() || "U"}
-            </AvatarFallback>
-          </Avatar>
+          {/* Hide Avatar when expanded */}
+          {!isExpanded && (
+            <Avatar className="h-8 w-8 flex-shrink-0">
+              <AvatarImage src={user?.user_metadata?.avatar_url || ""} />
+              <AvatarFallback className="text-xs bg-gray-300">
+                {getUserInitials()}
+              </AvatarFallback>
+            </Avatar>
+          )}
           
-          <div className="flex-1 min-w-0">
+          <div className={`${isExpanded ? 'w-full' : 'flex-1'} min-w-0`}>
             {!isExpanded ? (
               <div 
                 className="border border-gray-300 rounded-full px-4 py-2 cursor-text bg-gray-50 hover:bg-gray-100 transition-colors"
                 onClick={handleFocus}
                 tabIndex={0}
               >
-                <p className="text-gray-500 text-sm">What's on your mind?</p>
+                <p className="text-gray-500 text-sm">What's on your mind, {getUserDisplayName().split(' ')[0]}?</p>
               </div>
             ) : (
               <div className="space-y-3">
+                {/* Show user info when expanded */}
+                <div className="flex items-center gap-2 mb-2">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user?.user_metadata?.avatar_url || ""} />
+                    <AvatarFallback className="text-xs bg-gray-300">
+                      {getUserInitials()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm font-medium text-gray-900">{getUserDisplayName()}</span>
+                </div>
+
                 <div className="border border-gray-300 rounded-lg p-3 bg-gray-50">
                   <Textarea
                     placeholder="What's on your mind?"
