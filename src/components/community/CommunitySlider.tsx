@@ -44,13 +44,13 @@ export const CommunitySlider = () => {
                 <Avatar className="h-10 w-10 flex-shrink-0">
                   <AvatarImage src={post.profiles?.avatar_url || ""} />
                   <AvatarFallback className="text-xs">
-                    {post.profiles?.first_name?.[0]}{post.profiles?.last_name?.[0]}
+                    {post.profiles?.first_name?.[0] || 'U'}{post.profiles?.last_name?.[0] || ''}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <p className="font-medium text-sm text-gray-900 truncate">
-                      {post.profiles?.first_name} {post.profiles?.last_name}
+                      {post.profiles?.first_name || 'User'} {post.profiles?.last_name || ''}
                     </p>
                     <p className="text-xs text-gray-500 flex-shrink-0">
                       {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}

@@ -18,7 +18,7 @@ export interface CommunityPost {
     first_name: string | null;
     last_name: string | null;
     avatar_url: string | null;
-  };
+  } | null;
   user_has_liked?: boolean;
 }
 
@@ -33,7 +33,7 @@ export interface CommunityComment {
     first_name: string | null;
     last_name: string | null;
     avatar_url: string | null;
-  };
+  } | null;
 }
 
 export const useCommunityPosts = (limit?: number) => {
@@ -67,7 +67,7 @@ export const useCommunityPosts = (limit?: number) => {
         .from('community_posts')
         .select(`
           *,
-          profiles!community_posts_user_id_fkey (
+          profiles:user_id (
             first_name,
             last_name,
             avatar_url
@@ -173,7 +173,7 @@ export const usePostComments = (postId: string) => {
         .from('community_comments')
         .select(`
           *,
-          profiles!community_comments_user_id_fkey (
+          profiles:user_id (
             first_name,
             last_name,
             avatar_url
