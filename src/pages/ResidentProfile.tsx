@@ -22,11 +22,23 @@ import RbiFormsSection from "@/components/users/profile/RbiFormsSection";
 import RbiSubmissionSuccess from "@/components/rbi/RbiSubmissionSuccess";
 
 export default function ResidentProfile() {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const { profile, isLoading } = useResidentProfile();
   const location = useLocation();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [rbiNumber, setRbiNumber] = useState<string | null>(null);
+
+  // Redirect officials to their dashboard
+  useEffect(() => {
+    if (userRole === 'official') {
+      window.location.href = '/official-dashboard';
+      return;
+    }
+    if (userRole === 'superadmin') {
+      window.location.href = '/admin';
+      return;
+    }
+  }, [userRole]);
 
   useEffect(() => {
     if (location.state?.showSuccess && location.state?.rbiNumber) {
@@ -34,6 +46,11 @@ export default function ResidentProfile() {
       setShowSuccessModal(true);
     }
   }, [location.state]);
+
+  // Don't render anything for non-residents while redirecting
+  if (userRole !== 'resident' && userRole !== null) {
+    return null;
+  }
 
   if (isLoading) {
     return (
