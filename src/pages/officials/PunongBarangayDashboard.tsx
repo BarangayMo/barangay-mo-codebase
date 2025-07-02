@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   ArrowLeft,
   UserPlus,
@@ -14,15 +17,78 @@ import {
   Plus,
   UserCheck,
   Shield,
+  Search,
+  Eye,
+  MessageCircle,
+  UserMinus,
+  MoreVertical,
+  Edit,
+  Lock,
+  Globe,
+  Palette,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { format } from "date-fns";
 
 const PunongBarangayDashboard = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [currentDate] = useState(new Date());
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [searchQuery, setSearchQuery] = useState("");
+  const { user } = useAuth();
+
+  // Fetch residents data
+  const { data: residents = [], isLoading: residentsLoading } = useQuery({
+    queryKey: ['pb-residents', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      // Get official's barangay first
+      const { data: officialProfile } = await supabase
+        .from('profiles')
+        .select('barangay')
+        .eq('id', user.id)
+        .single();
+
+      if (!officialProfile?.barangay) return [];
+
+      // Get residents in the same barangay
+      const { data: residents, error } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          first_name,
+          last_name,
+          barangay,
+          role,
+          created_at,
+          last_login,
+          status
+        `)
+        .eq('barangay', officialProfile.barangay)
+        .eq('role', 'resident')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return residents || [];
+    },
+    enabled: !!user?.id && activeTab === 'residents'
+  });
+
+  const filteredResidents = residents.filter(resident => 
+    `${resident.first_name} ${resident.last_name}`.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const quickActions = [
     {
@@ -96,58 +162,140 @@ const PunongBarangayDashboard = () => {
 
   const handleTabClick = (tabId: string) => {
     setActiveTab(tabId);
-    
-    // Navigate to different pages based on tab
-    switch (tabId) {
-      case "residents":
-        navigate("/official/residents");
-        break;
-      case "council":
-        console.log("Navigate to council management");
-        break;
-      case "settings":
-        navigate("/settings");
-        break;
-      default:
-        // Stay on dashboard
-        break;
-    }
   };
 
   const renderTabContent = () => {
     switch (activeTab) {
       case "residents":
         return (
-          <div className="p-4">
+          <div className="p-4 space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Residents Management</CardTitle>
+                <CardTitle className="text-base">Residents Management</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600 mb-4">Manage barangay residents and their information.</p>
-                <Button onClick={() => navigate("/official/residents")} className="bg-red-600 hover:bg-red-700">
-                  View All Residents
-                </Button>
+                <div className="relative mb-4">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Search residents..."
+                    className="pl-10"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+
+                {residentsLoading ? (
+                  <div className="space-y-3">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse"></div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {filteredResidents.map((resident) => (
+                      <div key={resident.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <Avatar className="h-10 w-10">
+                            <AvatarFallback className="text-sm">
+                              {resident.first_name?.[0]}{resident.last_name?.[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <div className="font-medium text-sm">
+                              {resident.first_name} {resident.last_name}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              Joined {format(new Date(resident.created_at), 'MMM dd, yyyy')}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <Badge 
+                            variant={resident.status === 'online' ? 'default' : 'secondary'}
+                            className={`text-xs ${resident.status === 'online' ? 'bg-green-100 text-green-700' : ''}`}
+                          >
+                            {resident.status || 'offline'}
+                          </Badge>
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>
+                                <Eye className="h-4 w-4 mr-2" />
+                                View Profile
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <MessageCircle className="h-4 w-4 mr-2" />
+                                Message
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-red-600">
+                                <UserMinus className="h-4 w-4 mr-2" />
+                                Remove
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {filteredResidents.length === 0 && !residentsLoading && (
+                      <div className="text-center py-8 text-gray-500">
+                        {searchQuery ? 'No residents found matching your search' : 'No residents found'}
+                      </div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
         );
       case "council":
         return (
-          <div className="p-4">
+          <div className="p-4 space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Barangay Council</CardTitle>
+                <CardTitle className="text-base">Barangay Council</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600 mb-4">Manage council members and their roles.</p>
-                <div className="space-y-2">
+                <p className="text-sm text-gray-600 mb-4">Manage council members and their roles.</p>
+                <div className="space-y-3">
                   <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                     <UserCheck className="h-5 w-5 text-green-600" />
-                    <div>
-                      <div className="font-medium">Council Members</div>
-                      <div className="text-sm text-gray-600">View and manage council</div>
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">Barangay Captain</div>
+                      <div className="text-xs text-gray-600">Leader of the barangay</div>
                     </div>
+                    <Button variant="outline" size="sm">
+                      <Edit className="h-4 w-4 mr-1" />
+                      Edit
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <Shield className="h-5 w-5 text-blue-600" />
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">Barangay Kagawads</div>
+                      <div className="text-xs text-gray-600">Council members (7 positions)</div>
+                    </div>
+                    <Button variant="outline" size="sm">
+                      <Users className="h-4 w-4 mr-1" />
+                      Manage
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <UserCheck className="h-5 w-5 text-purple-600" />
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">SK Chairman</div>
+                      <div className="text-xs text-gray-600">Youth representative</div>
+                    </div>
+                    <Button variant="outline" size="sm">
+                      <Edit className="h-4 w-4 mr-1" />
+                      Edit
+                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -156,16 +304,58 @@ const PunongBarangayDashboard = () => {
         );
       case "settings":
         return (
-          <div className="p-4">
+          <div className="p-4 space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Settings</CardTitle>
+                <CardTitle className="text-base">Punong Barangay Settings</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600 mb-4">Configure barangay settings and preferences.</p>
-                <Button onClick={() => navigate("/settings")} className="bg-red-600 hover:bg-red-700">
-                  Open Settings
-                </Button>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <Edit className="h-5 w-5 text-gray-600" />
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">Profile Settings</div>
+                      <div className="text-xs text-gray-600">Update your personal information</div>
+                    </div>
+                    <Button variant="outline" size="sm">Edit</Button>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <Globe className="h-5 w-5 text-gray-600" />
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">Barangay Information</div>
+                      <div className="text-xs text-gray-600">Update barangay details and contact info</div>
+                    </div>
+                    <Button variant="outline" size="sm">Manage</Button>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <Bell className="h-5 w-5 text-gray-600" />
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">Notification Preferences</div>
+                      <div className="text-xs text-gray-600">Configure how you receive notifications</div>
+                    </div>
+                    <Button variant="outline" size="sm">Configure</Button>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <Lock className="h-5 w-5 text-gray-600" />
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">Security Settings</div>
+                      <div className="text-xs text-gray-600">Change password and security options</div>
+                    </div>
+                    <Button variant="outline" size="sm">Update</Button>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <Palette className="h-5 w-5 text-gray-600" />
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">App Appearance</div>
+                      <div className="text-xs text-gray-600">Customize the look and feel</div>
+                    </div>
+                    <Button variant="outline" size="sm">Customize</Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
