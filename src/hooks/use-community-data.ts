@@ -63,16 +63,10 @@ export const useCommunityPosts = (limit?: number) => {
         return [];
       }
 
+      // Fetch posts without profile join
       let query = supabase
         .from('community_posts')
-        .select(`
-          *,
-          profiles (
-            first_name,
-            last_name,
-            avatar_url
-          )
-        `)
+        .select('*')
         .eq('barangay_id', profile.barangay)
         .order('created_at', { ascending: false });
 
@@ -89,27 +83,50 @@ export const useCommunityPosts = (limit?: number) => {
         throw error;
       }
 
-      // Check which posts the current user has liked
-      if (posts && posts.length > 0) {
-        const postIds = posts.map(post => post.id);
-        const { data: likes } = await supabase
-          .from('community_likes')
-          .select('post_id')
-          .eq('user_id', user.id)
-          .in('post_id', postIds);
-
-        const likedPostIds = new Set(likes?.map(like => like.post_id) || []);
-
-        // Add user_has_liked flag to each post
-        const postsWithLikes = posts.map(post => ({
-          ...post,
-          user_has_liked: likedPostIds.has(post.id)
-        }));
-
-        return postsWithLikes;
+      if (!posts || posts.length === 0) {
+        return [];
       }
+
+      // Get unique user IDs from posts
+      const userIds = [...new Set(posts.map(post => post.user_id))];
       
-      return posts || [];
+      // Fetch profiles for these users
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, avatar_url')
+        .in('id', userIds);
+
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        // Continue without profiles if there's an error
+      }
+
+      // Create a map of user_id to profile
+      const profileMap = new Map();
+      if (profiles) {
+        profiles.forEach(profile => {
+          profileMap.set(profile.id, profile);
+        });
+      }
+
+      // Check which posts the current user has liked
+      const postIds = posts.map(post => post.id);
+      const { data: likes } = await supabase
+        .from('community_likes')
+        .select('post_id')
+        .eq('user_id', user.id)
+        .in('post_id', postIds);
+
+      const likedPostIds = new Set(likes?.map(like => like.post_id) || []);
+
+      // Combine posts with their profiles
+      const postsWithProfiles = posts.map(post => ({
+        ...post,
+        profiles: profileMap.get(post.user_id) || null,
+        user_has_liked: likedPostIds.has(post.id)
+      }));
+
+      return postsWithProfiles;
     },
     enabled: !!user?.id
   });
@@ -169,21 +186,48 @@ export const usePostComments = (postId: string) => {
   return useQuery({
     queryKey: ['community-comments', postId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Fetch comments without profile join
+      const { data: comments, error } = await supabase
         .from('community_comments')
-        .select(`
-          *,
-          profiles (
-            first_name,
-            last_name,
-            avatar_url
-          )
-        `)
+        .select('*')
         .eq('post_id', postId)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      return data || [];
+      
+      if (!comments || comments.length === 0) {
+        return [];
+      }
+
+      // Get unique user IDs from comments
+      const userIds = [...new Set(comments.map(comment => comment.user_id))];
+      
+      // Fetch profiles for these users
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, avatar_url')
+        .in('id', userIds);
+
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        // Continue without profiles if there's an error
+      }
+
+      // Create a map of user_id to profile
+      const profileMap = new Map();
+      if (profiles) {
+        profiles.forEach(profile => {
+          profileMap.set(profile.id, profile);
+        });
+      }
+
+      // Combine comments with their profiles
+      const commentsWithProfiles = comments.map(comment => ({
+        ...comment,
+        profiles: profileMap.get(comment.user_id) || null
+      }));
+
+      return commentsWithProfiles;
     },
     enabled: !!postId
   });
