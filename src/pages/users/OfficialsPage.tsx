@@ -16,6 +16,11 @@ import {
   Trash2,
   Mail,
   Phone,
+  MapPin,
+  Calendar,
+  Users,
+  Award,
+  AlertCircle,
 } from "lucide-react";
 import {
   Table,
@@ -35,11 +40,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const OfficialsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [roleFilter, setRoleFilter] = useState("all");
 
-  // Sample data
+  // Enhanced sample data with more realistic information
   const officials = [
     {
       id: 1,
@@ -51,6 +65,9 @@ const OfficialsPage = () => {
       status: "active",
       photo: "/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png",
       dateAppointed: "Jan 1, 2025",
+      termEnd: "Dec 31, 2027",
+      achievements: ["Outstanding Leadership", "Community Development"],
+      yearsOfService: 8,
     },
     {
       id: 2,
@@ -62,6 +79,9 @@ const OfficialsPage = () => {
       status: "active",
       photo: "",
       dateAppointed: "Jan 1, 2025",
+      termEnd: "Dec 31, 2027",
+      achievements: ["Excellent Record Keeping"],
+      yearsOfService: 5,
     },
     {
       id: 3,
@@ -73,6 +93,9 @@ const OfficialsPage = () => {
       status: "active",
       photo: "",
       dateAppointed: "Jan 1, 2025",
+      termEnd: "Dec 31, 2027",
+      achievements: ["Financial Excellence"],
+      yearsOfService: 6,
     },
     {
       id: 4,
@@ -84,6 +107,9 @@ const OfficialsPage = () => {
       status: "active",
       photo: "",
       dateAppointed: "Jan 1, 2025",
+      termEnd: "Dec 31, 2027",
+      achievements: ["Community Engagement"],
+      yearsOfService: 3,
     },
     {
       id: 5,
@@ -95,27 +121,50 @@ const OfficialsPage = () => {
       status: "inactive",
       photo: "",
       dateAppointed: "Jan 1, 2025",
+      termEnd: "Dec 31, 2027",
+      achievements: [],
+      yearsOfService: 1,
     },
   ];
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "active":
-        return <Badge className="bg-green-500">Active</Badge>;
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Active</Badge>;
       case "inactive":
-        return <Badge className="bg-red-500">Inactive</Badge>;
+        return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Inactive</Badge>;
       default:
-        return <Badge>Unknown</Badge>;
+        return <Badge variant="secondary">Unknown</Badge>;
     }
   };
 
-  const filteredOfficials = officials.filter(
-    (official) =>
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case "Barangay Captain":
+        return <ShieldCheck className="h-4 w-4 text-blue-600" />;
+      case "Secretary":
+        return <PenLine className="h-4 w-4 text-green-600" />;
+      case "Treasurer":
+        return <Award className="h-4 w-4 text-purple-600" />;
+      default:
+        return <Users className="h-4 w-4 text-gray-500" />;
+    }
+  };
+
+  const filteredOfficials = officials.filter((official) => {
+    const matchesSearch = 
       official.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       official.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
       official.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      official.ward.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      official.ward.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === "all" || official.status === statusFilter;
+    const matchesRole = roleFilter === "all" || official.role === roleFilter;
+    
+    return matchesSearch && matchesStatus && matchesRole;
+  });
+
+  const uniqueRoles = [...new Set(officials.map(official => official.role))];
 
   return (
     <AdminLayout title="Officials Management">
@@ -134,6 +183,71 @@ const OfficialsPage = () => {
         }}
       />
 
+      {/* Enhanced Stats Cards */}
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Users className="h-6 w-6 text-blue-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-2xl font-bold text-gray-900">{officials.length}</p>
+                <p className="text-sm text-gray-600">Total Officials</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <ShieldCheck className="h-6 w-6 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-2xl font-bold text-gray-900">
+                  {officials.filter(o => o.status === "active").length}
+                </p>
+                <p className="text-sm text-gray-600">Active Officials</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-yellow-100 rounded-lg">
+                <Award className="h-6 w-6 text-yellow-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-2xl font-bold text-gray-900">
+                  {Math.round(officials.reduce((acc, o) => acc + o.yearsOfService, 0) / officials.length)}
+                </p>
+                <p className="text-sm text-gray-600">Avg Years Service</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-red-100 rounded-lg">
+                <AlertCircle className="h-6 w-6 text-red-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-2xl font-bold text-gray-900">
+                  {officials.filter(o => o.status === "inactive").length}
+                </p>
+                <p className="text-sm text-gray-600">Inactive Officials</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="mb-6">
         <Card>
           <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -151,10 +265,27 @@ const OfficialsPage = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <Button variant="outline" className="flex items-center gap-2">
-                <Filter className="h-4 w-4" />
-                <span>Filter</span>
-              </Button>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={roleFilter} onValueChange={setRoleFilter}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Roles</SelectItem>
+                  {uniqueRoles.map(role => (
+                    <SelectItem key={role} value={role}>{role}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Button variant="outline" className="flex items-center gap-2">
                 <Download className="h-4 w-4" />
                 <span>Export</span>
@@ -166,9 +297,9 @@ const OfficialsPage = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Official</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Ward</TableHead>
+                  <TableHead>Role & Contact</TableHead>
+                  <TableHead>Assignment</TableHead>
+                  <TableHead>Service</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -177,8 +308,8 @@ const OfficialsPage = () => {
                 {filteredOfficials.map((official) => (
                   <TableRow key={official.id}>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-9 w-9">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-10 w-10">
                           {official.photo ? (
                             <AvatarImage src={official.photo} alt={official.name} />
                           ) : null}
@@ -186,28 +317,51 @@ const OfficialsPage = () => {
                             {official.name.substring(0, 2).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="font-medium">{official.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <ShieldCheck className={`h-4 w-4 ${official.role === "Barangay Captain" ? "text-blue-600" : "text-gray-500"}`} />
-                        <span>{official.role}</span>
+                        <div>
+                          <p className="font-medium">{official.name}</p>
+                          <div className="flex items-center gap-1 text-xs text-gray-500">
+                            <Calendar className="h-3 w-3" />
+                            <span>Since {official.dateAppointed}</span>
+                          </div>
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
-                        <div className="flex items-center gap-1 text-sm">
-                          <Mail className="h-3.5 w-3.5 text-gray-500" />
+                        <div className="flex items-center gap-2">
+                          {getRoleIcon(official.role)}
+                          <span className="font-medium">{official.role}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-sm text-gray-600">
+                          <Mail className="h-3.5 w-3.5" />
                           <span>{official.email}</span>
                         </div>
-                        <div className="flex items-center gap-1 text-sm">
-                          <Phone className="h-3.5 w-3.5 text-gray-500" />
+                        <div className="flex items-center gap-1 text-sm text-gray-600">
+                          <Phone className="h-3.5 w-3.5" />
                           <span>{official.phone}</span>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>{official.ward}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <MapPin className="h-4 w-4 text-gray-500" />
+                        <span>{official.ward}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <p className="font-medium">{official.yearsOfService} years</p>
+                        <p className="text-xs text-gray-500">Until {official.termEnd}</p>
+                        {official.achievements.length > 0 && (
+                          <div className="flex items-center gap-1">
+                            <Award className="h-3 w-3 text-yellow-500" />
+                            <span className="text-xs text-gray-600">
+                              {official.achievements.length} achievement{official.achievements.length > 1 ? 's' : ''}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>{getStatusBadge(official.status)}</TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
@@ -225,7 +379,10 @@ const OfficialsPage = () => {
                             <Eye className="mr-2 h-4 w-4" /> View Profile
                           </DropdownMenuItem>
                           <DropdownMenuItem>
-                            <PenLine className="mr-2 h-4 w-4" /> Edit
+                            <PenLine className="mr-2 h-4 w-4" /> Edit Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Mail className="mr-2 h-4 w-4" /> Send Message
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem className="text-red-600">
@@ -257,7 +414,8 @@ const OfficialsPage = () => {
         </Card>
       </div>
 
-      <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Enhanced Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Ward Distribution</CardTitle>
@@ -265,29 +423,21 @@ const OfficialsPage = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span>Ward 1</span>
-                <Badge variant="outline">3 Officials</Badge>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>Ward 2</span>
-                <Badge variant="outline">2 Officials</Badge>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>Ward 3</span>
-                <Badge variant="outline">3 Officials</Badge>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>Ward 4</span>
-                <Badge variant="outline">2 Officials</Badge>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>Ward 5</span>
-                <Badge variant="outline">3 Officials</Badge>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>All Wards</span>
-                <Badge variant="outline">3 Officials</Badge>
+              {["Ward 1", "Ward 2", "Ward 3", "Ward 4", "Ward 5"].map((ward, index) => (
+                <div key={ward} className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-gray-500" />
+                    <span>{ward}</span>
+                  </div>
+                  <Badge variant="outline">{2 + index} Officials</Badge>
+                </div>
+              ))}
+              <div className="flex justify-between items-center border-t pt-4">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-blue-600" />
+                  <span className="font-medium">All Wards Coverage</span>
+                </div>
+                <Badge className="bg-blue-100 text-blue-800">3 Officials</Badge>
               </div>
             </div>
           </CardContent>
@@ -295,38 +445,27 @@ const OfficialsPage = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Role Distribution</CardTitle>
-            <CardDescription>Officials by position</CardDescription>
+            <CardTitle>Position Summary</CardTitle>
+            <CardDescription>Current officials by role</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="flex items-center gap-2">
-                  <ShieldCheck className="h-4 w-4 text-blue-600" />
-                  <span>Barangay Captain</span>
-                </span>
-                <Badge variant="outline">1</Badge>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>Secretary</span>
-                <Badge variant="outline">1</Badge>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>Treasurer</span>
-                <Badge variant="outline">1</Badge>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>Ward Councilor</span>
-                <Badge variant="outline">10</Badge>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>SK Chairman</span>
-                <Badge variant="outline">1</Badge>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>Committee Head</span>
-                <Badge variant="outline">2</Badge>
-              </div>
+              {[
+                { role: "Barangay Captain", count: 1, icon: ShieldCheck, color: "text-blue-600" },
+                { role: "Secretary", count: 1, icon: PenLine, color: "text-green-600" },
+                { role: "Treasurer", count: 1, icon: Award, color: "text-purple-600" },
+                { role: "Ward Councilor", count: 10, icon: Users, color: "text-gray-600" },
+                { role: "SK Chairman", count: 1, icon: Users, color: "text-orange-600" },
+                { role: "Committee Head", count: 2, icon: Users, color: "text-indigo-600" }
+              ].map(({ role, count, icon: Icon, color }) => (
+                <div key={role} className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <Icon className={`h-4 w-4 ${color}`} />
+                    <span>{role}</span>
+                  </div>
+                  <Badge variant="outline">{count}</Badge>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
