@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { Notification } from '@/hooks/useNotifications';
 
 const getCategoryIcon = (category: string) => {
@@ -382,6 +383,7 @@ export default function Notifications() {
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const [activeTab, setActiveTab] = useState<'active' | 'archived' | 'unread'>('active');
   const { userRole } = useAuth();
+  const isMobile = useIsMobile();
   const {
     notifications,
     archivedNotifications,
@@ -454,7 +456,11 @@ export default function Notifications() {
   return (
     <AdminLayout title="Notifications">
       <div className="w-full">
-        <div className="mb-6">
+        {/* Enhanced Header with proper mobile background */}
+        <div className={cn(
+          "mb-6 p-4 -mx-4 sm:mx-0 sm:p-0",
+          isMobile && "bg-white border-b border-gray-200"
+        )}>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             Notifications
             {userRole === 'superadmin' && ' - Admin Dashboard'}
@@ -468,18 +474,21 @@ export default function Notifications() {
 
         {/* Compact Stats for Mobile with Role Colors */}
         <div className="mb-6">
-          <div className="flex items-center gap-3 overflow-x-auto pb-2 md:justify-center">
-            <div className={`flex items-center gap-2 ${roleColors.stats} px-3 py-2 rounded-lg whitespace-nowrap`}>
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 px-1">
+            <div className={cn(
+              "flex items-center gap-2 px-3 py-2 rounded-full whitespace-nowrap flex-shrink-0",
+              roleColors.stats
+            )}>
               <Bell className="h-4 w-4" />
               <span className="text-sm font-medium">{filteredNotifications.length}</span>
               <span className="text-xs hidden sm:inline">Total</span>
             </div>
-            <div className="flex items-center gap-2 bg-orange-50 text-orange-700 px-3 py-2 rounded-lg whitespace-nowrap">
+            <div className="flex items-center gap-2 bg-orange-50 text-orange-700 px-3 py-2 rounded-full whitespace-nowrap flex-shrink-0">
               <Clock className="h-4 w-4" />
               <span className="text-sm font-medium">{unreadNotifications.length}</span>
               <span className="text-xs hidden sm:inline">Unread</span>
             </div>
-            <div className="flex items-center gap-2 bg-red-50 text-red-700 px-3 py-2 rounded-lg whitespace-nowrap">
+            <div className="flex items-center gap-2 bg-red-50 text-red-700 px-3 py-2 rounded-full whitespace-nowrap flex-shrink-0">
               <AlertTriangle className="h-4 w-4" />
               <span className="text-sm font-medium">{urgentNotifications.length}</span>
               <span className="text-xs hidden sm:inline">Urgent</span>
@@ -487,10 +496,19 @@ export default function Notifications() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 h-[calc(100vh-20rem)]">
+        <div className={cn(
+          "grid gap-6",
+          isMobile ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-5",
+          isMobile ? "h-auto" : "h-[calc(100vh-20rem)]"
+        )}>
           {/* Notifications List */}
-          <div className="lg:col-span-2">
-            <Card className="h-full flex flex-col">
+          <div className={cn(
+            isMobile ? "order-1" : "lg:col-span-2"
+          )}>
+            <Card className={cn(
+              "flex flex-col",
+              isMobile ? "h-auto" : "h-full"
+            )}>
               <CardHeader className="pb-4 sticky top-0 bg-white z-10 border-b">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
@@ -555,7 +573,10 @@ export default function Notifications() {
                 )}
               </CardHeader>
 
-              <ScrollArea className="flex-1">
+              <ScrollArea className={cn(
+                "flex-1",
+                isMobile && "max-h-96"
+              )}>
                 {filteredNotifications.length > 0 ? (
                   filteredNotifications.map((notification) => (
                     <NotificationListItem
@@ -598,30 +619,47 @@ export default function Notifications() {
           </div>
 
           {/* Notification Details */}
-          <div className="lg:col-span-3">
-            <Card className="h-full">
-              {selectedNotification ? (
-                <NotificationDetails
-                  notification={selectedNotification}
-                  onMarkAsRead={markAsRead}
-                  onArchive={archiveNotification}
-                  onUnarchive={unarchiveNotification}
-                  onClose={() => setSelectedNotification(null)}
-                  isArchived={activeTab === 'archived'}
-                  userRole={userRole || 'resident'}
-                />
-              ) : (
-                <div className="h-full flex items-center justify-center">
-                  <div className="text-center">
-                    <Bell className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-500 mb-2">Select a notification</h3>
-                    <p className="text-gray-400">Choose a notification from the list to view its details</p>
+          {!isMobile && (
+            <div className="lg:col-span-3">
+              <Card className="h-full">
+                {selectedNotification ? (
+                  <NotificationDetails
+                    notification={selectedNotification}
+                    onMarkAsRead={markAsRead}
+                    onArchive={archiveNotification}
+                    onUnarchive={unarchiveNotification}
+                    onClose={() => setSelectedNotification(null)}
+                    isArchived={activeTab === 'archived'}
+                    userRole={userRole || 'resident'}
+                  />
+                ) : (
+                  <div className="h-full flex items-center justify-center">
+                    <div className="text-center">
+                      <Bell className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-500 mb-2">Select a notification</h3>
+                      <p className="text-gray-400">Choose a notification from the list to view its details</p>
+                    </div>
                   </div>
-                </div>
-              )}
-            </Card>
-          </div>
+                )}
+              </Card>
+            </div>
+          )}
         </div>
+
+        {/* Mobile notification details modal */}
+        {isMobile && selectedNotification && (
+          <div className="fixed inset-0 bg-white z-50 overflow-hidden">
+            <NotificationDetails
+              notification={selectedNotification}
+              onMarkAsRead={markAsRead}
+              onArchive={archiveNotification}
+              onUnarchive={unarchiveNotification}
+              onClose={() => setSelectedNotification(null)}
+              isArchived={activeTab === 'archived'}
+              userRole={userRole || 'resident'}
+            />
+          </div>
+        )}
       </div>
     </AdminLayout>
   );
