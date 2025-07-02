@@ -244,25 +244,23 @@ const OfficialsPage = () => {
         {/* Header - Mobile Only */}
         {isMobile && (
           <div className="bg-red-600 text-white p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <ArrowLeft 
-                  className="h-6 w-6 cursor-pointer" 
-                  onClick={() => navigate(-1)}
-                />
-                <div>
-                  <h1 className="text-lg font-bold">Officials Management</h1>
-                  <p className="text-sm text-red-100 mt-1">Manage barangay officials and their roles</p>
-                </div>
+            <div className="flex items-center gap-3 mb-4">
+              <ArrowLeft 
+                className="h-6 w-6 cursor-pointer" 
+                onClick={() => navigate(-1)}
+              />
+              <div className="flex-1">
+                <h1 className="text-lg font-bold">Officials Management</h1>
+                <p className="text-sm text-red-100 mt-1">Manage barangay officials and their roles</p>
               </div>
-              <Button 
-                className="bg-white text-red-600 hover:bg-red-50 px-4 py-2"
-                onClick={() => console.log("Add official")}
-              >
-                <UserPlus className="h-4 w-4 mr-2" />
-                Add Official
-              </Button>
             </div>
+            <Button 
+              className="bg-white text-red-600 hover:bg-red-50 px-4 py-2 w-full"
+              onClick={() => console.log("Add official")}
+            >
+              <UserPlus className="h-4 w-4 mr-2" />
+              Add Official
+            </Button>
           </div>
         )}
 
