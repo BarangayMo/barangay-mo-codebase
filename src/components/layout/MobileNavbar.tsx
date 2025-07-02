@@ -65,6 +65,12 @@ export const MobileNavbar = () => {
           key: "messages"
         },
         {
+          icon: LifeBuoy,
+          path: "/services",
+          label: "Services",
+          key: "services"
+        },
+        {
           icon: User,
           path: getProfileRoute(),
           label: "Profile",
