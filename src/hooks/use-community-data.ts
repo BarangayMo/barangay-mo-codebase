@@ -66,7 +66,7 @@ export const useCommunityPosts = (limit?: number) => {
         .from('community_posts')
         .select(`
           *,
-          profiles (
+          profiles!community_posts_user_id_fkey (
             first_name,
             last_name,
             avatar_url
@@ -172,7 +172,7 @@ export const usePostComments = (postId: string) => {
         .from('community_comments')
         .select(`
           *,
-          profiles (
+          profiles!community_comments_user_id_fkey (
             first_name,
             last_name,
             avatar_url
