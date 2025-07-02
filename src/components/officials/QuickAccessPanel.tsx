@@ -2,11 +2,11 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { 
-  Shield, 
+  Siren, 
   QrCode, 
   FileText, 
   Phone, 
-  UserCheck, 
+  CreditCard, 
   BarChart3,
   ChevronRight
 } from "lucide-react";
@@ -14,7 +14,7 @@ import {
 const quickAccessItems = [
   {
     title: "Responder",
-    icon: Shield,
+    icon: Siren,
     href: "/official/emergency-responder",
     color: "bg-red-50 text-red-600"
   },
@@ -38,7 +38,7 @@ const quickAccessItems = [
   },
   {
     title: "Barangay Clearance",
-    icon: UserCheck,
+    icon: CreditCard,
     href: "/official/clearance",
     color: "bg-orange-50 text-orange-600"
   },
