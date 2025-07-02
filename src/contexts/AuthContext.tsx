@@ -50,17 +50,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   
   const redirectInProgress = useRef(false);
 
-  // Function to fetch user profile data
+  // Function to fetch user profile data with better error handling
   const fetchUserProfile = async (userId: string) => {
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('barangay, created_at')
         .eq('id', userId)
-        .single();
+        .maybeSingle(); // Use maybeSingle instead of single
       
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching profile:', error);
+      if (error) {
+        console.warn('Profile fetch warning (continuing anyway):', error);
         return {};
       }
       
@@ -69,7 +69,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         createdAt: profile?.created_at
       };
     } catch (error) {
-      console.error('Error fetching user profile:', error);
+      console.warn('Error fetching user profile (continuing anyway):', error);
       return {};
     }
   };
@@ -146,7 +146,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     );
 
     // Check for existing session on mount
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
+      if (error) {
+        console.warn("Session check error (continuing anyway):", error);
+      }
+      
       console.log("Initial session check:", session?.user?.email);
       
       setSession(session);
