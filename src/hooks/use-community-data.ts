@@ -106,10 +106,10 @@ export const useCommunityPosts = (limit?: number) => {
           user_has_liked: likedPostIds.has(post.id)
         }));
 
-        return postsWithLikes as CommunityPost[];
+        return postsWithLikes;
       }
       
-      return (posts as CommunityPost[]) || [];
+      return posts || [];
     },
     enabled: !!user?.id
   });
@@ -183,7 +183,7 @@ export const usePostComments = (postId: string) => {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      return (data as CommunityComment[]) || [];
+      return data || [];
     },
     enabled: !!postId
   });
