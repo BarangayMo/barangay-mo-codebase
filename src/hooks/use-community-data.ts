@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -66,7 +67,7 @@ export const useCommunityPosts = (limit?: number) => {
         .from('community_posts')
         .select(`
           *,
-          profiles!community_posts_user_id_fkey (
+          profiles (
             first_name,
             last_name,
             avatar_url
@@ -172,7 +173,7 @@ export const usePostComments = (postId: string) => {
         .from('community_comments')
         .select(`
           *,
-          profiles!community_comments_user_id_fkey (
+          profiles (
             first_name,
             last_name,
             avatar_url
