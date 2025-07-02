@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -18,6 +17,7 @@ interface PostCardProps {
 export const PostCard = ({ post }: PostCardProps) => {
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
+  const [replyTo, setReplyTo] = useState<string | null>(null);
   const [optimisticLiked, setOptimisticLiked] = useState(post.user_has_liked);
   const [optimisticLikesCount, setOptimisticLikesCount] = useState(post.likes_count);
   const { user } = useAuth();
@@ -37,6 +37,7 @@ export const PostCard = ({ post }: PostCardProps) => {
     });
     
     setCommentText("");
+    setReplyTo(null);
   };
 
   const handleLike = async () => {
@@ -68,33 +69,32 @@ export const PostCard = ({ post }: PostCardProps) => {
     };
 
     try {
-      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      if (navigator.share) {
         await navigator.share(shareData);
       } else {
-        // Fallback to copying to clipboard
-        await navigator.clipboard.writeText(`${post.content}\n\n${window.location.href}`);
+        // Fallback for browsers that don't support Web Share API
         toast({
-          title: "Copied to clipboard",
-          description: "Post content and link copied to clipboard",
+          title: "Share not supported",
+          description: "Your browser doesn't support native sharing",
+          variant: "destructive",
         });
       }
     } catch (error) {
-      console.error('Error sharing:', error);
-      // Final fallback - just copy the content
-      try {
-        await navigator.clipboard.writeText(post.content);
-        toast({
-          title: "Copied to clipboard",
-          description: "Post content copied to clipboard",
-        });
-      } catch (clipboardError) {
+      if (error instanceof Error && error.name !== 'AbortError') {
+        console.error('Error sharing:', error);
         toast({
           title: "Share failed",
-          description: "Unable to share or copy content",
+          description: "Unable to share the post",
           variant: "destructive",
         });
       }
     }
+  };
+
+  const handleReply = (commentId: string, authorName: string) => {
+    setReplyTo(commentId);
+    setCommentText(`@${authorName} `);
+    setShowComments(true);
   };
 
   const getPostAuthorName = () => {
@@ -244,7 +244,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                 </Avatar>
                 <div className="flex-1 flex gap-2">
                   <Input
-                    placeholder="Write a comment..."
+                    placeholder={replyTo ? "Write a reply..." : "Write a comment..."}
                     value={commentText}
                     onChange={(e) => setCommentText(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleComment()}
@@ -322,7 +322,10 @@ export const PostCard = ({ post }: PostCardProps) => {
                           <p className="text-xs text-gray-500">
                             {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
                           </p>
-                          <button className="text-xs text-gray-500 hover:text-gray-700 font-medium">
+                          <button 
+                            onClick={() => handleReply(comment.id, commentAuthorName())}
+                            className="text-xs text-gray-500 hover:text-gray-700 font-medium"
+                          >
                             Reply
                           </button>
                         </div>
