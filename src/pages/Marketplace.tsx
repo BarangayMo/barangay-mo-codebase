@@ -21,6 +21,8 @@ interface Category {
 
 // Fetch products with joined vendor and category names
 const fetchProducts = async (): Promise<ProductCardType[]> => {
+  console.log("Fetching products...");
+  
   const { data, error } = await supabase
     .from("products")
     .select(`
@@ -41,19 +43,34 @@ const fetchProducts = async (): Promise<ProductCardType[]> => {
     .eq('is_active', true) // Only fetch active products
     .order('created_at', { ascending: false });
 
-  if (error) throw error;
-  // console.log("Fetched products:", data); 
+  console.log("Products query result:", { data, error });
+  
+  if (error) {
+    console.error("Error fetching products:", error);
+    throw error;
+  }
+  
+  console.log("Successfully fetched products:", data?.length || 0);
   return data as ProductCardType[]; // Cast needed because Supabase types might not perfectly match joined structure
 };
 
 // Fetch categories
 const fetchCategories = async (): Promise<Category[]> => {
+  console.log("Fetching categories...");
+  
   const { data, error } = await supabase
     .from("product_categories")
     .select("id, name, image_url")
     .order("name", { ascending: true });
-  if (error) throw error;
-  // console.log("Fetched categories:", data);
+    
+  console.log("Categories query result:", { data, error });
+  
+  if (error) {
+    console.error("Error fetching categories:", error);
+    throw error;
+  }
+  
+  console.log("Successfully fetched categories:", data?.length || 0);
   return data || [];
 };
 
@@ -71,6 +88,15 @@ export default function Marketplace() {
     queryFn: fetchCategories,
   });
 
+  console.log("Component state:", { 
+    products: products?.length || 0, 
+    categories: categories?.length || 0, 
+    isLoadingProducts, 
+    isLoadingCategories,
+    productsError,
+    categoriesError
+  });
+
   const displayCategories = [{ id: "all-cat", name: "All" }, ...(categories || [])];
 
   return (
@@ -85,7 +111,10 @@ export default function Marketplace() {
           {isLoadingCategories ? (
             Array.from({ length: 5 }).map((_, index) => <Skeleton key={index} className="h-10 w-24 rounded-full" />)
           ) : categoriesError ? (
-            <p className="text-red-500">Error loading categories.</p>
+            <div>
+              <p className="text-red-500">Error loading categories.</p>
+              <p className="text-xs text-gray-500">Error: {categoriesError.message}</p>
+            </div>
           ) : (
             displayCategories.map((cat) => (
               <button
@@ -115,7 +144,13 @@ export default function Marketplace() {
             ))}
           </div>
         ) : productsError ? (
-          <p className="text-red-500 text-center py-10">Error loading products: {productsError.message}</p>
+          <div className="text-center py-10">
+            <p className="text-red-500 mb-2">Error loading products: {productsError.message}</p>
+            <details className="text-left bg-red-50 p-4 rounded">
+              <summary className="cursor-pointer text-sm font-medium">Technical Details</summary>
+              <pre className="text-xs mt-2 overflow-auto">{JSON.stringify(productsError, null, 2)}</pre>
+            </details>
+          </div>
         ) : products && products.length > 0 ? (
           <ProductList 
             products={products} 
