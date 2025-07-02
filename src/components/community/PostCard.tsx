@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -16,7 +15,6 @@ interface PostCardProps {
 export const PostCard = ({ post }: PostCardProps) => {
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
-  const [isLiked, setIsLiked] = useState(false);
   const { user } = useAuth();
   
   const { data: comments = [] } = usePostComments(showComments ? post.id : "");
@@ -37,9 +35,8 @@ export const PostCard = ({ post }: PostCardProps) => {
   const handleLike = async () => {
     await toggleLike.mutateAsync({
       postId: post.id,
-      isLiked
+      isLiked: post.user_has_liked || false
     });
-    setIsLiked(!isLiked);
   };
 
   const getPostAuthorName = () => {
@@ -148,9 +145,9 @@ export const PostCard = ({ post }: PostCardProps) => {
             variant="ghost"
             size="sm"
             onClick={handleLike}
-            className={`flex items-center gap-2 px-3 py-1 rounded-lg hover:bg-gray-100 ${isLiked ? 'text-red-500' : 'text-gray-600'}`}
+            className={`flex items-center gap-2 px-3 py-1 rounded-lg hover:bg-gray-100 ${post.user_has_liked ? 'text-red-500' : 'text-gray-600'}`}
           >
-            <Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
+            <Heart className={`h-4 w-4 ${post.user_has_liked ? 'fill-current' : ''}`} />
             <span className="text-sm font-medium">Like</span>
           </Button>
           

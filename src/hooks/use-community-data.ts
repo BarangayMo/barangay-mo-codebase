@@ -18,6 +18,7 @@ export interface CommunityPost {
     last_name: string | null;
     avatar_url: string | null;
   };
+  user_has_liked?: boolean;
 }
 
 export interface CommunityComment {
@@ -78,16 +79,36 @@ export const useCommunityPosts = (limit?: number) => {
         query = query.limit(limit);
       }
 
-      const { data, error } = await query;
+      const { data: posts, error } = await query;
       
-      console.log('Community posts query result:', { data, error });
+      console.log('Community posts query result:', { data: posts, error });
       
       if (error) {
         console.error('Error fetching community posts:', error);
         throw error;
       }
+
+      // Check which posts the current user has liked
+      if (posts && posts.length > 0) {
+        const postIds = posts.map(post => post.id);
+        const { data: likes } = await supabase
+          .from('community_likes')
+          .select('post_id')
+          .eq('user_id', user.id)
+          .in('post_id', postIds);
+
+        const likedPostIds = new Set(likes?.map(like => like.post_id) || []);
+
+        // Add user_has_liked flag to each post
+        const postsWithLikes = posts.map(post => ({
+          ...post,
+          user_has_liked: likedPostIds.has(post.id)
+        }));
+
+        return postsWithLikes as CommunityPost[];
+      }
       
-      return (data as unknown as CommunityPost[]) || [];
+      return (posts as unknown as CommunityPost[]) || [];
     },
     enabled: !!user?.id
   });
