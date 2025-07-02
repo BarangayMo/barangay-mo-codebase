@@ -16,8 +16,6 @@ const queryClient = new QueryClient({
     queries: {
       refetchOnWindowFocus: false,
       staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 3,
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     },
   },
 });
@@ -28,12 +26,14 @@ function App() {
       <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
         <LanguageProvider>
           <AuthProvider>
+            {/* Router component removed from here */}
             <FaviconManager />
             <ScrollToTop />
             <AppRoutes />
             <ShadcnToaster />
             <SonnerToaster />
             <SupabaseWarning />
+            {/* Router component removed from here */}
           </AuthProvider>
         </LanguageProvider>
       </ThemeProvider>

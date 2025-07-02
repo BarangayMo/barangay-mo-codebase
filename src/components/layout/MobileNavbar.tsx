@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { Home, MessageSquare, Store, Menu, LifeBuoy, Shield, User } from "lucide-react";
+import { Home, MessageSquare, Store, Menu, LifeBuoy, User, Briefcase } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +27,22 @@ export const MobileNavbar = () => {
     return isAuthenticated ? "/messages" : "/login";
   };
 
+  const getProfileRoute = () => {
+    if (!isAuthenticated) {
+      return "/login";
+    }
+    switch (userRole) {
+      case "official":
+        return "/resident-profile"; // Officials use the same profile page
+      case "superadmin":
+        return "/resident-profile";
+      case "resident":
+      default:
+        return "/resident-profile";
+    }
+  };
+
+  // Different nav items based on user role
   const getNavItems = () => {
     if (userRole === "official") {
       return [
@@ -37,7 +53,7 @@ export const MobileNavbar = () => {
           key: "home"
         },
         {
-          icon: Shield,
+          icon: Briefcase,
           path: "/official-dashboard",
           label: "Official",
           key: "official"
@@ -45,7 +61,7 @@ export const MobileNavbar = () => {
         {
           icon: MessageSquare,
           path: getMessagesRoute(),
-          label: "Message",
+          label: "Messages",
           key: "messages"
         },
         {
@@ -56,14 +72,14 @@ export const MobileNavbar = () => {
         },
         {
           icon: User,
-          path: "/edit-profile",
+          path: getProfileRoute(),
           label: "Profile",
           key: "profile"
         }
       ];
     }
 
-    // Default navigation for residents and other roles
+    // Default nav items for other roles
     return [
       {
         icon: Home,

@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, ReactNode, useEffect, useRef } from "react";
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,8 +46,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<UserData | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [rbiCompleted, setRbiCompleted] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   
-  const isInitialMount = useRef(true);
   const redirectInProgress = useRef(false);
 
   // Function to fetch user profile data
@@ -56,7 +57,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         .from('profiles')
         .select('barangay, created_at')
         .eq('id', userId)
-        .maybeSingle();
+        .single();
       
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching profile:', error);
@@ -73,15 +74,29 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  // Function to determine user role and redirect path
+  const getUserRoleAndRedirect = (email: string) => {
+    let role: UserRole = "resident";
+    let redirectPath = "/resident-home";
+    
+    if (email.includes('official')) {
+      role = 'official';
+      redirectPath = '/official-dashboard';
+    } else if (email.includes('admin')) {
+      role = 'superadmin';
+      redirectPath = '/admin';
+    }
+    
+    return { role, redirectPath };
+  };
+
+  // Handle auth state changes
   useEffect(() => {
     console.log("Setting up auth state change listener");
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log("Auth state changed:", event, session?.user?.email);
-        
-        const isSignInEvent = event === 'SIGNED_IN';
-        const isSignOutEvent = event === 'SIGNED_OUT';
         
         setSession(session);
         setIsAuthenticated(!!session);
@@ -90,57 +105,41 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           // Fetch additional profile data
           const profileData = await fetchUserProfile(session.user.id);
           
+          const { role, redirectPath } = getUserRoleAndRedirect(session.user.email || '');
+          
           const userData = {
             id: session.user.id,
             name: session.user.email || '',
             email: session.user.email,
             firstName: session.user.user_metadata?.first_name,
             lastName: session.user.user_metadata?.last_name,
+            role,
             barangay: profileData.barangay,
             createdAt: profileData.createdAt
           };
           
           setUser(userData);
+          setUserRole(role);
           
-          if (session.user.email) {
-            let role: UserRole = "resident";
-            
-            if (session.user.email.includes('official')) {
-              role = 'official';
-            } else if (session.user.email.includes('admin')) {
-              role = 'superadmin';
+          // Handle redirects after successful login
+          if (event === 'SIGNED_IN' && !redirectInProgress.current && isInitialized) {
+            if (currentPath === '/login' || currentPath === '/register') {
+              console.log("Redirecting to:", redirectPath, "after login");
+              redirectInProgress.current = true;
+              navigate(redirectPath, { replace: true });
+              setTimeout(() => { redirectInProgress.current = false; }, 1000);
             }
-            
-            setUserRole(role);
-            setUser(prev => prev ? { ...prev, role } : null);
-            
-            // Redirect after successful login
-            if (isSignInEvent && !redirectInProgress.current) {
-              const redirectPath = role === 'official' 
-                ? '/official-dashboard' 
-                : role === 'superadmin' 
-                  ? '/admin' 
-                  : '/resident-home';
-                
-              if (currentPath === '/login' || currentPath === '/register') {
-                console.log("Redirecting to:", redirectPath, "after login");
-                redirectInProgress.current = true;
-                navigate(redirectPath);
-                setTimeout(() => { redirectInProgress.current = false; }, 500);
-              }
-            }
-          } else {
-            setUserRole(null);
           }
         } else {
+          // User signed out
           setUser(null);
           setUserRole(null);
           
-          if (isSignOutEvent && !redirectInProgress.current) {
+          if (event === 'SIGNED_OUT' && !redirectInProgress.current && isInitialized) {
             console.log("Redirecting to login after sign out");
             redirectInProgress.current = true;
-            navigate('/login');
-            setTimeout(() => { redirectInProgress.current = false; }, 500);
+            navigate('/login', { replace: true });
+            setTimeout(() => { redirectInProgress.current = false; }, 1000);
           }
         }
       }
@@ -154,8 +153,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setIsAuthenticated(!!session);
       
       if (session?.user) {
-        // Fetch additional profile data
         const profileData = await fetchUserProfile(session.user.id);
+        const { role, redirectPath } = getUserRoleAndRedirect(session.user.email || '');
         
         const userData = {
           id: session.user.id,
@@ -163,43 +162,28 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           email: session.user.email,
           firstName: session.user.user_metadata?.first_name,
           lastName: session.user.user_metadata?.last_name,
+          role,
           barangay: profileData.barangay,
           createdAt: profileData.createdAt
         };
         
         setUser(userData);
+        setUserRole(role);
         
-        if (session.user.email) {
-          let role: UserRole = "resident";
-          if (session.user.email.includes('official')) {
-            role = 'official';
-          } else if (session.user.email.includes('admin')) {
-            role = 'superadmin';
-          }
-          setUserRole(role);
-          setUser(prev => prev ? { ...prev, role } : null);
-          
-          // Redirect if user is on login/register page with existing session
-          if ((currentPath === '/login' || currentPath === '/register') && !redirectInProgress.current) {
-            const redirectPath = role === 'official' 
-              ? '/official-dashboard' 
-              : role === 'superadmin' 
-                ? '/admin' 
-                : '/resident-home';
-            
-            console.log("Redirecting existing session from login/register to:", redirectPath);
-            redirectInProgress.current = true;
-            navigate(redirectPath);
-            setTimeout(() => { redirectInProgress.current = false; }, 500);
-          }
+        // Redirect if user is on login/register page with existing session
+        if ((currentPath === '/login' || currentPath === '/register') && !redirectInProgress.current) {
+          console.log("Redirecting existing session from login/register to:", redirectPath);
+          redirectInProgress.current = true;
+          navigate(redirectPath, { replace: true });
+          setTimeout(() => { redirectInProgress.current = false; }, 1000);
         }
       }
       
-      isInitialMount.current = false;
+      setIsInitialized(true);
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, currentPath]);
+  }, [navigate, currentPath, isInitialized]);
 
   const login = async (email: string, password: string) => {
     console.log("Login attempt:", email);
@@ -231,7 +215,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           data: {
             first_name: userData.firstName,
             last_name: userData.lastName,
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/`
         }
       });
 
@@ -256,8 +241,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       if (!redirectInProgress.current) {
         redirectInProgress.current = true;
-        navigate(navigateToPath || "/login");
-        setTimeout(() => { redirectInProgress.current = false; }, 500);
+        navigate(navigateToPath || "/login", { replace: true });
+        setTimeout(() => { redirectInProgress.current = false; }, 1000);
       }
     } else {
       console.error("Logout error:", error.message);
