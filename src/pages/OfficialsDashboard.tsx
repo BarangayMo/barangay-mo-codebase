@@ -1,8 +1,8 @@
-
 import { Layout } from "@/components/layout/Layout";
 import { DashboardStats } from "@/components/officials/DashboardStats";
 import { BudgetAllocationChart } from "@/components/officials/BudgetAllocationChart";
 import { QuickAccessPanel } from "@/components/officials/QuickAccessPanel";
+import { CommunitySlider } from "@/components/community/CommunitySlider";
 import { Button } from "@/components/ui/button";
 import { CalendarDays, Download, Plus, Search, Bell, Filter, Users, FileText, AlertTriangle, Home, MessageSquare, BarChart3, FolderOpen, Settings, UsersIcon, Hospital, ClipboardList, Siren } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -226,7 +226,7 @@ const OfficialsDashboard = () => {
       
       {/* Mobile View */}
       <div className="block lg:hidden">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-4 py-4 pb-28">
           {/* Mobile Profile Card */}
           <div className="mb-4">
             <ProfileCard />
@@ -298,6 +298,9 @@ const OfficialsDashboard = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Community Slider */}
+          <CommunitySlider />
         </div>
       </div>
 

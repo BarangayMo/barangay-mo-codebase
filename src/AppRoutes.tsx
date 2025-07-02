@@ -1,4 +1,3 @@
-
 import { Route, Routes } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import Index from "@/pages/Index";
@@ -33,6 +32,7 @@ import Pricing from "@/pages/Pricing";
 import RequestAccess from "@/pages/RequestAccess";
 import Partnerships from "@/pages/Partnerships";
 import MediaLibraryPage from "@/pages/admin/MediaLibraryPage";
+import Community from "@/pages/Community";
 
 // Import marketplace components
 import SmarketplaceIndex from "@/pages/smarketplace/SmarketplaceIndex";
@@ -104,6 +104,7 @@ export function AppRoutes() {
       <Route path="/resident-home" element={<ResidentHome />} />
       <Route path="/rbi-registration" element={<RbiRegistration />} />
       <Route path="/resident-profile" element={<ResidentProfile />} />
+      <Route path="/community" element={<Community />} />
       
       <Route path="/official-dashboard" element={<OfficialsDashboard />} />
       <Route path="/official/residents" element={<OfficialResidents />} />
