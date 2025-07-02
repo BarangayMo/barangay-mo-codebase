@@ -8,6 +8,7 @@ import { Heart, MessageCircle, Share, MoreHorizontal } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { CommunityPost, usePostComments, useCreateComment, useToggleLike } from "@/hooks/use-community-data";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface PostCardProps {
   post: CommunityPost;
@@ -17,6 +18,7 @@ export const PostCard = ({ post }: PostCardProps) => {
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
   const { user } = useAuth();
+  const { toast } = useToast();
   
   const { data: comments = [] } = usePostComments(showComments ? post.id : "");
   const createComment = useCreateComment();
@@ -38,6 +40,43 @@ export const PostCard = ({ post }: PostCardProps) => {
       postId: post.id,
       isLiked: post.user_has_liked || false
     });
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: `Community Post by ${getPostAuthorName()}`,
+      text: post.content,
+      url: window.location.href
+    };
+
+    try {
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        // Fallback to copying to clipboard
+        await navigator.clipboard.writeText(`${post.content}\n\n${window.location.href}`);
+        toast({
+          title: "Copied to clipboard",
+          description: "Post content and link copied to clipboard",
+        });
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+      // Final fallback - just copy the content
+      try {
+        await navigator.clipboard.writeText(post.content);
+        toast({
+          title: "Copied to clipboard",
+          description: "Post content copied to clipboard",
+        });
+      } catch (clipboardError) {
+        toast({
+          title: "Share failed",
+          description: "Unable to share or copy content",
+          variant: "destructive",
+        });
+      }
+    }
   };
 
   const getPostAuthorName = () => {
@@ -165,6 +204,7 @@ export const PostCard = ({ post }: PostCardProps) => {
           <Button 
             variant="ghost" 
             size="sm" 
+            onClick={handleShare}
             className="flex items-center gap-2 px-3 py-1 rounded-lg hover:bg-gray-100 text-gray-600"
           >
             <Share className="h-4 w-4" />
@@ -172,37 +212,40 @@ export const PostCard = ({ post }: PostCardProps) => {
           </Button>
         </div>
 
-        {/* Comments Section */}
-        {showComments && (
+        {/* Comments Section - Always show when there are comments or when toggled */}
+        {(showComments || comments.length > 0) && (
           <div className="mt-3 pt-3 border-t border-gray-100">
             {/* Add Comment */}
-            <div className="flex gap-2 mb-3">
-              <Avatar className="h-7 w-7">
-                <AvatarImage src={user?.avatar || ""} />
-                <AvatarFallback className="text-xs bg-blue-500 text-white">
-                  {getCurrentUserInitials()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 flex gap-2">
-                <Input
-                  placeholder="Write a comment..."
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  className="h-8 text-sm rounded-full bg-gray-100 border-gray-200"
-                />
-                <Button
-                  size="sm"
-                  onClick={handleComment}
-                  disabled={!commentText.trim() || createComment.isPending}
-                  className="h-8 px-3 bg-blue-600 hover:bg-blue-700"
-                >
-                  Post
-                </Button>
+            {user && (
+              <div className="flex gap-2 mb-3">
+                <Avatar className="h-7 w-7">
+                  <AvatarImage src={user?.avatar || ""} />
+                  <AvatarFallback className="text-xs bg-blue-500 text-white">
+                    {getCurrentUserInitials()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 flex gap-2">
+                  <Input
+                    placeholder="Write a comment..."
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleComment()}
+                    className="h-8 text-sm rounded-full bg-gray-100 border-gray-200"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={handleComment}
+                    disabled={!commentText.trim() || createComment.isPending}
+                    className="h-8 px-3 bg-blue-600 hover:bg-blue-700"
+                  >
+                    Post
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Comments List */}
-            <div className="space-y-2">
+            {/* Comments List with Threading */}
+            <div className="space-y-3">
               {comments.map((comment) => {
                 const commentAuthorName = () => {
                   const firstName = comment.profiles?.first_name;
@@ -232,27 +275,44 @@ export const PostCard = ({ post }: PostCardProps) => {
 
                 return (
                   <div key={comment.id} className="flex gap-2">
-                    <Avatar className="h-6 w-6">
+                    <Avatar className="h-6 w-6 flex-shrink-0">
                       <AvatarImage src={comment.profiles?.avatar_url || ""} />
                       <AvatarFallback className="text-xs bg-blue-500 text-white">
                         {commentAuthorInitials()}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="bg-gray-100 rounded-2xl px-3 py-2">
                         <p className="font-semibold text-xs text-gray-900">
                           {commentAuthorName()}
                         </p>
-                        <p className="text-sm text-gray-800">{comment.content}</p>
+                        <p className="text-sm text-gray-800 break-words">{comment.content}</p>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1 ml-3">
-                        {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-                      </p>
+                      <div className="flex items-center gap-3 mt-1 ml-3">
+                        <p className="text-xs text-gray-500">
+                          {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                        </p>
+                        <button className="text-xs text-gray-500 hover:text-gray-700 font-medium">
+                          Reply
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
               })}
             </div>
+            
+            {/* Show comments toggle when closed */}
+            {!showComments && comments.length === 0 && post.comments_count > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowComments(true)}
+                className="w-full text-gray-600 hover:text-gray-800"
+              >
+                View all {post.comments_count} comments
+              </Button>
+            )}
           </div>
         )}
       </CardContent>
