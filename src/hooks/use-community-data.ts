@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -225,7 +226,8 @@ export const usePostComments = (postId: string) => {
       // Combine comments with their profiles
       const commentsWithProfiles = comments.map(comment => ({
         ...comment,
-        profiles: profileMap.get(comment.user_id) || null
+        profiles: profileMap.get(comment.user_id) || null,
+        replies: []
       }));
 
       // Organize comments into threads
