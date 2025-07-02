@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -66,7 +67,7 @@ export const useCommunityPosts = (limit?: number) => {
         .from('community_posts')
         .select(`
           *,
-          profiles:user_id (
+          profiles!community_posts_user_id_fkey (
             first_name,
             last_name,
             avatar_url
@@ -108,7 +109,7 @@ export const useCommunityPosts = (limit?: number) => {
         return postsWithLikes as CommunityPost[];
       }
       
-      return (posts as unknown as CommunityPost[]) || [];
+      return (posts as CommunityPost[]) || [];
     },
     enabled: !!user?.id
   });
@@ -172,7 +173,7 @@ export const usePostComments = (postId: string) => {
         .from('community_comments')
         .select(`
           *,
-          profiles:user_id (
+          profiles!community_comments_user_id_fkey (
             first_name,
             last_name,
             avatar_url
@@ -182,7 +183,7 @@ export const usePostComments = (postId: string) => {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      return (data as unknown as CommunityComment[]) || [];
+      return (data as CommunityComment[]) || [];
     },
     enabled: !!postId
   });
