@@ -94,7 +94,7 @@ export const CreatePostCard = () => {
                 onClick={handleFocus}
                 tabIndex={0}
               >
-                <p className="text-gray-500 text-sm">What's on your mind, {getUserDisplayName().split(' ')[0]}?</p>
+                <p className="text-gray-500 text-sm">What's on your mind?</p>
               </div>
             ) : (
               <div className="space-y-3">
