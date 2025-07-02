@@ -10,8 +10,8 @@ export function useSupabaseStatus() {
   useEffect(() => {
     const checkSupabaseConnection = async () => {
       try {
-        // Try a simple query to check connection using the actual client
-        const { error } = await supabase.from('Barangays').select('count', { count: 'exact' }).limit(1);
+        // Try a simple query to check connection - use collections table which has public read access
+        const { error } = await supabase.from('collections').select('count', { count: 'exact' }).limit(1);
         
         if (error) {
           throw error;
