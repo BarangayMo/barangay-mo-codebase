@@ -54,7 +54,7 @@ export const MobileNavbar = () => {
         },
         {
           icon: Briefcase,
-          path: "/official-dashboard",
+          path: "/admin/users/officials",
           label: "Official",
           key: "official"
         },
