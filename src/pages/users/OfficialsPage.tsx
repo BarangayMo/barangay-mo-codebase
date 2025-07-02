@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Download,
-  Filter,
   Search,
   ShieldCheck,
   UserPlus,
@@ -61,49 +60,49 @@ const OfficialsPage = () => {
       title: "Punong Barangay",
       icon: ShieldCheck,
       count: 1,
-      color: "bg-red-50 text-red-600"
+      color: "bg-red-50 text-red-600 border-red-100"
     },
     {
       title: "SK Chairman", 
       icon: Settings,
       count: 1,
-      color: "bg-blue-50 text-blue-600"
+      color: "bg-blue-50 text-blue-600 border-blue-100"
     },
     {
       title: "Barangay Councilor",
       icon: Users,
       count: 7,
-      color: "bg-green-50 text-green-600"
+      color: "bg-green-50 text-green-600 border-green-100"
     },
     {
       title: "SK Council",
       icon: UserCheck,
       count: 7,
-      color: "bg-purple-50 text-purple-600"
+      color: "bg-purple-50 text-purple-600 border-purple-100"
     },
     {
       title: "Brgy Secretary",
       icon: PenLine,
       count: 1,
-      color: "bg-orange-50 text-orange-600"
+      color: "bg-orange-50 text-orange-600 border-orange-100"
     },
     {
       title: "Brgy Treasurer",
       icon: Award,
       count: 1,
-      color: "bg-indigo-50 text-indigo-600"
+      color: "bg-indigo-50 text-indigo-600 border-indigo-100"
     },
     {
       title: "SK Secretary",
       icon: Mail,
       count: 1,
-      color: "bg-pink-50 text-pink-600"
+      color: "bg-pink-50 text-pink-600 border-pink-100"
     },
     {
       title: "SK Treasurer",
       icon: Crown,
       count: 1,
-      color: "bg-yellow-50 text-yellow-600"
+      color: "bg-yellow-50 text-yellow-600 border-yellow-100"
     }
   ];
 
@@ -222,123 +221,124 @@ const OfficialsPage = () => {
 
   return (
     <AdminLayout title="Officials Management">
-      {/* Header with red theme */}
-      <div className="mb-8">
+      {/* Header */}
+      <div className="mb-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Officials Management</h1>
-            <p className="text-muted-foreground mt-2">Manage barangay officials and their roles</p>
+            <h1 className="text-2xl font-bold text-gray-900">Officials Management</h1>
+            <p className="text-sm text-gray-600 mt-1">Manage barangay officials and their roles</p>
           </div>
           <Button 
-            className="flex items-center gap-2 text-slate-50 bg-red-600 hover:bg-red-500"
+            className="bg-red-600 hover:bg-red-700 text-white"
             onClick={() => console.log("Add official")}
           >
-            <UserPlus className="h-4 w-4" />
+            <UserPlus className="h-4 w-4 mr-2" />
             Add Official
           </Button>
         </div>
       </div>
 
-      {/* Officials Grid - Similar to your image */}
-      <div className="mb-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Official Positions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-4 gap-4">
-              {officialRoles.map((role, index) => (
-                <div
-                  key={index}
-                  className="flex flex-col items-center p-4 rounded-lg hover:bg-gray-50 transition-all duration-200 cursor-pointer"
-                >
-                  <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-3 ${role.color} shadow-sm`}>
-                    <role.icon className="h-8 w-8" />
-                  </div>
-                  <span className="text-sm text-center font-medium text-gray-700 leading-tight">
-                    {role.title}
-                  </span>
-                  <span className="text-xs text-gray-500 mt-1">
-                    {role.count} {role.count === 1 ? 'Official' : 'Officials'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Enhanced Stats Cards */}
-      <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <Users className="h-6 w-6 text-red-600" />
+      {/* Stats Cards - Compact Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <Card className="bg-white border border-gray-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-lg font-bold text-gray-900">{officials.length}</p>
+                <p className="text-xs text-gray-600">Total Officials</p>
               </div>
-              <div className="ml-4">
-                <p className="text-2xl font-bold text-gray-900">{officials.length}</p>
-                <p className="text-sm text-gray-600">Total Officials</p>
+              <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                <Users className="h-4 w-4 text-red-600" />
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <ShieldCheck className="h-6 w-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-2xl font-bold text-gray-900">
+        <Card className="bg-white border border-gray-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-lg font-bold text-gray-900">
                   {officials.filter(o => o.status === "active").length}
                 </p>
-                <p className="text-sm text-gray-600">Active Officials</p>
+                <p className="text-xs text-gray-600">Active Officials</p>
+              </div>
+              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <ShieldCheck className="h-4 w-4 text-green-600" />
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Award className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-2xl font-bold text-gray-900">
+        <Card className="bg-white border border-gray-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-lg font-bold text-gray-900">
                   {Math.round(officials.reduce((acc, o) => acc + o.yearsOfService, 0) / officials.length)}
                 </p>
-                <p className="text-sm text-gray-600">Avg Years Service</p>
+                <p className="text-xs text-gray-600">Avg Years</p>
+              </div>
+              <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                <Award className="h-4 w-4 text-yellow-600" />
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <AlertCircle className="h-6 w-6 text-red-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-2xl font-bold text-gray-900">
+        <Card className="bg-white border border-gray-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-lg font-bold text-gray-900">
                   {officials.filter(o => o.status === "inactive").length}
                 </p>
-                <p className="text-sm text-gray-600">Inactive Officials</p>
+                <p className="text-xs text-gray-600">Inactive</p>
+              </div>
+              <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                <AlertCircle className="h-4 w-4 text-red-600" />
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="mb-6">
-        <Card>
-          <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <CardTitle>Barangay Officials</CardTitle>
-            </div>
+      {/* Official Positions - Professional Grid */}
+      <Card className="mb-6">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg font-semibold">Official Positions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {officialRoles.map((role, index) => (
+              <div
+                key={index}
+                className={`p-4 rounded-lg border-2 ${role.color} hover:shadow-md transition-all duration-200 cursor-pointer`}
+              >
+                <div className="flex flex-col items-center text-center space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-white/50 flex items-center justify-center">
+                    <role.icon className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm leading-tight">
+                      {role.title}
+                    </p>
+                    <p className="text-xs opacity-75 mt-1">
+                      {role.count} {role.count === 1 ? 'Official' : 'Officials'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Officials Table */}
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <CardTitle className="text-lg font-semibold">Barangay Officials</CardTitle>
             <div className="flex flex-wrap gap-2">
               <div className="relative">
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
@@ -372,37 +372,39 @@ const OfficialsPage = () => {
               </Select>
               <Button variant="outline" className="flex items-center gap-2">
                 <Download className="h-4 w-4" />
-                <span>Export</span>
+                Export
               </Button>
             </div>
-          </CardHeader>
-          <CardContent className="p-0">
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Official</TableHead>
-                  <TableHead>Role & Contact</TableHead>
-                  <TableHead>Assignment</TableHead>
-                  <TableHead>Service</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                <TableRow className="bg-gray-50">
+                  <TableHead className="font-semibold text-gray-700 py-4">Official</TableHead>
+                  <TableHead className="font-semibold text-gray-700 py-4">Role & Contact</TableHead>
+                  <TableHead className="font-semibold text-gray-700 py-4">Assignment</TableHead>
+                  <TableHead className="font-semibold text-gray-700 py-4">Service</TableHead>
+                  <TableHead className="font-semibold text-gray-700 py-4">Status</TableHead>
+                  <TableHead className="font-semibold text-gray-700 py-4 text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredOfficials.map((official) => (
-                  <TableRow key={official.id}>
-                    <TableCell>
+                  <TableRow key={official.id} className="hover:bg-gray-50">
+                    <TableCell className="py-4">
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10">
+                        <Avatar className="h-12 w-12 border-2 border-gray-200">
                           {official.photo ? (
                             <AvatarImage src={official.photo} alt={official.name} />
                           ) : null}
-                          <AvatarFallback className="bg-red-600 text-white">
+                          <AvatarFallback className="bg-red-600 text-white font-semibold">
                             {official.name.substring(0, 2).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
-                        <div>
-                          <p className="font-medium">{official.name}</p>
+                        <div className="space-y-1">
+                          <p className="font-semibold text-gray-900">{official.name}</p>
                           <div className="flex items-center gap-1 text-xs text-gray-500">
                             <Calendar className="h-3 w-3" />
                             <span>Since {official.dateAppointed}</span>
@@ -410,31 +412,33 @@ const OfficialsPage = () => {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
+                    <TableCell className="py-4">
+                      <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           {getRoleIcon(official.role)}
-                          <span className="font-medium">{official.role}</span>
+                          <span className="font-medium text-gray-900">{official.role}</span>
                         </div>
-                        <div className="flex items-center gap-1 text-sm text-gray-600">
-                          <Mail className="h-3.5 w-3.5" />
-                          <span>{official.email}</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-sm text-gray-600">
-                          <Phone className="h-3.5 w-3.5" />
-                          <span>{official.phone}</span>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Mail className="h-3.5 w-3.5" />
+                            <span>{official.email}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Phone className="h-3.5 w-3.5" />
+                            <span>{official.phone}</span>
+                          </div>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
+                    <TableCell className="py-4">
+                      <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4 text-gray-500" />
-                        <span>{official.ward}</span>
+                        <span className="text-gray-900">{official.ward}</span>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-4">
                       <div className="space-y-1">
-                        <p className="font-medium">{official.yearsOfService} years</p>
+                        <p className="font-semibold text-gray-900">{official.yearsOfService} years</p>
                         <p className="text-xs text-gray-500">Until {official.termEnd}</p>
                         {official.achievements.length > 0 && (
                           <div className="flex items-center gap-1">
@@ -446,8 +450,8 @@ const OfficialsPage = () => {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>{getStatusBadge(official.status)}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="py-4">{getStatusBadge(official.status)}</TableCell>
+                    <TableCell className="py-4 text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
@@ -479,24 +483,24 @@ const OfficialsPage = () => {
                 ))}
               </TableBody>
             </Table>
-            <div className="p-4 border-t">
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-muted-foreground">
-                  Showing {filteredOfficials.length} of {officials.length} officials
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" disabled>
-                    Previous
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    Next
-                  </Button>
-                </div>
+          </div>
+          <div className="p-4 border-t bg-gray-50">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                Showing {filteredOfficials.length} of {officials.length} officials
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" disabled>
+                  Previous
+                </Button>
+                <Button variant="outline" size="sm">
+                  Next
+                </Button>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
     </AdminLayout>
   );
 };
