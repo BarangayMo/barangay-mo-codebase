@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -127,25 +128,49 @@ const Services = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Ad Space */}
+        <div className="mb-8">
+          <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-dashed border-blue-200">
+            <CardContent className="p-8 text-center">
+              <div className="text-gray-500 text-lg font-medium mb-2">Advertisement Space</div>
+              <div className="text-gray-400 text-sm">
+                Your ads could be here • Contact us for advertising opportunities
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
           {filteredServices.map((service) => (
             <Card 
               key={service.id} 
               className="overflow-hidden hover:shadow-md transition-shadow border-t-4"
               style={{ borderTopColor: service.color }}
             >
-              <CardContent className="p-6">
+              <CardContent className="p-4 lg:p-6">
                 <div 
-                  className="w-12 h-12 rounded-full flex items-center justify-center mb-4"
+                  className="w-10 h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center mb-3 lg:mb-4"
                   style={{ backgroundColor: service.bgColor }}
                 >
-                  <service.icon style={{ color: service.color }} className="h-6 w-6" />
+                  <service.icon style={{ color: service.color }} className="h-5 w-5 lg:h-6 lg:w-6" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">{service.title}</h3>
-                <p className="text-muted-foreground">{service.description}</p>
+                <h3 className="text-lg lg:text-xl font-bold mb-2">{service.title}</h3>
+                <p className="text-muted-foreground text-sm lg:text-base">{service.description}</p>
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        {/* Bottom Ad Space */}
+        <div className="mt-12">
+          <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-2 border-dashed border-green-200">
+            <CardContent className="p-6 text-center">
+              <div className="text-gray-500 font-medium mb-1">Sponsored Content</div>
+              <div className="text-gray-400 text-sm">
+                Promote your business to the community
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="mt-12 text-center">
