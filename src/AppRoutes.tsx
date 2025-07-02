@@ -1,3 +1,4 @@
+
 import { Route, Routes } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import Index from "@/pages/Index";
@@ -77,6 +78,7 @@ import PrivateProfile from "@/pages/PrivateProfile";
 import OfficialResidents from "@/pages/officials/OfficialResidents";
 import OfficialServices from "@/pages/officials/OfficialServices";
 import OfficialRequests from "@/pages/officials/OfficialRequests";
+import PunongBarangayDashboard from "@/pages/officials/PunongBarangayDashboard";
 
 export function AppRoutes() {
   return (
@@ -108,6 +110,7 @@ export function AppRoutes() {
       <Route path="/official/services" element={<OfficialServices />} />
       <Route path="/official/requests" element={<OfficialRequests />} />
       <Route path="/official/officials" element={<OfficialsPage />} />
+      <Route path="/official/punong-barangay" element={<PunongBarangayDashboard />} />
       
       <Route path="/admin" element={<AdminDashboard />} />
       
