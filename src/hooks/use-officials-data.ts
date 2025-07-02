@@ -35,7 +35,7 @@ export const useOfficials = (barangay?: string) => {
 
         const { data, error } = await query;
         if (error) throw error;
-        return (data || []) as Official[];
+        return (data as unknown as Official[]) || [];
       } catch (error) {
         console.error('Error fetching officials:', error);
         return [];
@@ -58,7 +58,7 @@ export const useCreateOfficial = () => {
           .single();
 
         if (error) throw error;
-        return data as Official;
+        return data as unknown as Official;
       } catch (error) {
         console.error('Error creating official:', error);
         throw error;
@@ -97,7 +97,7 @@ export const useUpdateOfficial = () => {
           .single();
 
         if (error) throw error;
-        return data as Official;
+        return data as unknown as Official;
       } catch (error) {
         console.error('Error updating official:', error);
         throw error;
