@@ -21,6 +21,7 @@ import {
   UserCheck,
   Crown,
   Filter,
+  ArrowLeft,
 } from "lucide-react";
 import {
   Table,
@@ -64,7 +65,8 @@ const OfficialsPage = () => {
       title: "Punong Barangay",
       icon: ShieldCheck,
       count: 1,
-      color: "bg-red-50 text-red-600 border-red-100"
+      color: "bg-red-50 text-red-600 border-red-100",
+      route: "/official/punong-barangay"
     },
     {
       title: "SK Chairman", 
@@ -230,114 +232,148 @@ const OfficialsPage = () => {
     // Add other role-specific navigation here
   };
 
+  const handleRoleClick = (role: any) => {
+    if (role.route) {
+      navigate(role.route);
+    }
+  };
+
   return (
     <>
       <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <div className="bg-red-600 text-white p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-lg font-bold">Officials Management</h1>
-              <p className="text-sm text-red-100 mt-1">Manage barangay officials and their roles</p>
+        {/* Header - Mobile Only */}
+        {isMobile && (
+          <div className="bg-red-600 text-white p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <ArrowLeft 
+                  className="h-6 w-6 cursor-pointer" 
+                  onClick={() => navigate(-1)}
+                />
+                <div>
+                  <h1 className="text-lg font-bold">Officials Management</h1>
+                  <p className="text-sm text-red-100 mt-1">Manage barangay officials and their roles</p>
+                </div>
+              </div>
+              <Button 
+                className="bg-white text-red-600 hover:bg-red-50 px-4 py-2"
+                onClick={() => console.log("Add official")}
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add Official
+              </Button>
             </div>
-            <Button 
-              className="bg-white text-red-600 hover:bg-red-50 px-4 py-2"
-              onClick={() => console.log("Add official")}
-            >
-              <UserPlus className="h-4 w-4 mr-2" />
-              Add Official
-            </Button>
           </div>
-        </div>
+        )}
+
+        {/* Desktop Header */}
+        {!isMobile && (
+          <div className="bg-white border-b p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Officials Management</h1>
+                <p className="text-gray-600 mt-1">Manage barangay officials and their roles</p>
+              </div>
+              <Button 
+                className="bg-red-600 hover:bg-red-700 text-white"
+                onClick={() => console.log("Add official")}
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add Official
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Content */}
-        <div className="p-4 pb-24">
-          {/* Stats Cards - Compact Grid */}
-          <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className={`p-4 ${isMobile ? 'pb-24' : 'pb-8'}`}>
+          {/* Stats Cards */}
+          <div className={`grid gap-4 mb-6 ${isMobile ? 'grid-cols-2' : 'grid-cols-4'}`}>
             <Card className="bg-white border border-gray-200">
-              <CardContent className="p-3">
+              <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-lg font-bold text-gray-900">{officials.length}</p>
-                    <p className="text-xs text-gray-600">Total Officials</p>
+                    <p className={`font-bold text-gray-900 ${isMobile ? 'text-lg' : 'text-2xl'}`}>{officials.length}</p>
+                    <p className={`text-gray-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>Total Officials</p>
                   </div>
-                  <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                    <Users className="h-4 w-4 text-red-600" />
+                  <div className={`bg-red-100 rounded-full flex items-center justify-center ${isMobile ? 'w-8 h-8' : 'w-12 h-12'}`}>
+                    <Users className={`text-red-600 ${isMobile ? 'h-4 w-4' : 'h-6 w-6'}`} />
                   </div>
                 </div>
               </CardContent>
             </Card>
             
             <Card className="bg-white border border-gray-200">
-              <CardContent className="p-3">
+              <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-lg font-bold text-gray-900">
+                    <p className={`font-bold text-gray-900 ${isMobile ? 'text-lg' : 'text-2xl'}`}>
                       {officials.filter(o => o.status === "active").length}
                     </p>
-                    <p className="text-xs text-gray-600">Active Officials</p>
+                    <p className={`text-gray-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>Active Officials</p>
                   </div>
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                    <ShieldCheck className="h-4 w-4 text-green-600" />
+                  <div className={`bg-green-100 rounded-full flex items-center justify-center ${isMobile ? 'w-8 h-8' : 'w-12 h-12'}`}>
+                    <ShieldCheck className={`text-green-600 ${isMobile ? 'h-4 w-4' : 'h-6 w-6'}`} />
                   </div>
                 </div>
               </CardContent>
             </Card>
             
             <Card className="bg-white border border-gray-200">
-              <CardContent className="p-3">
+              <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-lg font-bold text-gray-900">
+                    <p className={`font-bold text-gray-900 ${isMobile ? 'text-lg' : 'text-2xl'}`}>
                       {Math.round(officials.reduce((acc, o) => acc + o.yearsOfService, 0) / officials.length)}
                     </p>
-                    <p className="text-xs text-gray-600">Avg Years</p>
+                    <p className={`text-gray-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>Avg Years</p>
                   </div>
-                  <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                    <Award className="h-4 w-4 text-yellow-600" />
+                  <div className={`bg-yellow-100 rounded-full flex items-center justify-center ${isMobile ? 'w-8 h-8' : 'w-12 h-12'}`}>
+                    <Award className={`text-yellow-600 ${isMobile ? 'h-4 w-4' : 'h-6 w-6'}`} />
                   </div>
                 </div>
               </CardContent>
             </Card>
             
             <Card className="bg-white border border-gray-200">
-              <CardContent className="p-3">
+              <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-lg font-bold text-gray-900">
+                    <p className={`font-bold text-gray-900 ${isMobile ? 'text-lg' : 'text-2xl'}`}>
                       {officials.filter(o => o.status === "inactive").length}
                     </p>
-                    <p className="text-xs text-gray-600">Inactive</p>
+                    <p className={`text-gray-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>Inactive</p>
                   </div>
-                  <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                    <AlertCircle className="h-4 w-4 text-red-600" />
+                  <div className={`bg-red-100 rounded-full flex items-center justify-center ${isMobile ? 'w-8 h-8' : 'w-12 h-12'}`}>
+                    <AlertCircle className={`text-red-600 ${isMobile ? 'h-4 w-4' : 'h-6 w-6'}`} />
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Official Positions - Professional Grid */}
-          <Card className="mb-4">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold">Official Positions</CardTitle>
+          {/* Official Positions */}
+          <Card className="mb-6">
+            <CardHeader className="pb-4">
+              <CardTitle className={`font-semibold ${isMobile ? 'text-base' : 'text-lg'}`}>Official Positions</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-3">
+              <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-4'}`}>
                 {officialRoles.map((role, index) => (
                   <div
                     key={index}
-                    className={`p-3 rounded-lg border-2 ${role.color} hover:shadow-md transition-all duration-200 cursor-pointer`}
+                    className={`p-4 rounded-lg border-2 ${role.color} hover:shadow-md transition-all duration-200 cursor-pointer`}
+                    onClick={() => handleRoleClick(role)}
                   >
-                    <div className="flex flex-col items-center text-center space-y-2">
-                      <div className="w-10 h-10 rounded-full bg-white/50 flex items-center justify-center">
-                        <role.icon className="h-5 w-5" />
+                    <div className="flex flex-col items-center text-center space-y-3">
+                      <div className={`rounded-full bg-white/50 flex items-center justify-center ${isMobile ? 'w-10 h-10' : 'w-12 h-12'}`}>
+                        <role.icon className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'}`} />
                       </div>
                       <div>
-                        <p className="font-medium text-xs leading-tight">
+                        <p className={`font-medium leading-tight ${isMobile ? 'text-xs' : 'text-sm'}`}>
                           {role.title}
                         </p>
-                        <p className="text-xs opacity-75 mt-1">
+                        <p className={`opacity-75 mt-1 ${isMobile ? 'text-xs' : 'text-sm'}`}>
                           {role.count} {role.count === 1 ? 'Official' : 'Officials'}
                         </p>
                       </div>
@@ -348,10 +384,10 @@ const OfficialsPage = () => {
             </CardContent>
           </Card>
 
-          {/* Search and Filters - Mobile Optimized */}
-          <Card className="mb-4">
+          {/* Search and Filters */}
+          <Card className="mb-6">
             <CardContent className="p-4">
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {/* Search Bar */}
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -364,7 +400,7 @@ const OfficialsPage = () => {
                 </div>
                 
                 {/* Filters Row */}
-                <div className="flex gap-2">
+                <div className="flex gap-3">
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger className="flex-1 h-10">
                       <SelectValue placeholder="Status" />
@@ -398,8 +434,8 @@ const OfficialsPage = () => {
 
           {/* Officials Table */}
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold">Barangay Officials</CardTitle>
+            <CardHeader className="pb-4">
+              <CardTitle className={`font-semibold ${isMobile ? 'text-base' : 'text-lg'}`}>Barangay Officials</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
@@ -616,8 +652,8 @@ const OfficialsPage = () => {
         </div>
       </div>
       
-      {/* Mobile Navigation */}
-      <MobileNavbar />
+      {/* Mobile Navigation - Only show on mobile */}
+      {isMobile && <MobileNavbar />}
     </>
   );
 };
