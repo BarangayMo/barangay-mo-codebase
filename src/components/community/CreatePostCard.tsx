@@ -51,15 +51,15 @@ export const CreatePostCard = () => {
 
   // Get user's name from either user profile or email
   const getUserDisplayName = () => {
-    if (user?.user_metadata?.first_name || user?.user_metadata?.last_name) {
-      return `${user.user_metadata.first_name || ''} ${user.user_metadata.last_name || ''}`.trim();
+    if (user?.firstName || user?.lastName) {
+      return `${user.firstName || ''} ${user.lastName || ''}`.trim();
     }
     return user?.email || 'User';
   };
 
   const getUserInitials = () => {
-    const firstName = user?.user_metadata?.first_name;
-    const lastName = user?.user_metadata?.last_name;
+    const firstName = user?.firstName;
+    const lastName = user?.lastName;
     if (firstName && lastName) {
       return `${firstName[0]}${lastName[0]}`.toUpperCase();
     }
@@ -80,7 +80,7 @@ export const CreatePostCard = () => {
           {/* Hide Avatar when expanded */}
           {!isExpanded && (
             <Avatar className="h-8 w-8 flex-shrink-0">
-              <AvatarImage src={user?.user_metadata?.avatar_url || ""} />
+              <AvatarImage src={user?.avatar || ""} />
               <AvatarFallback className="text-xs bg-gray-300">
                 {getUserInitials()}
               </AvatarFallback>
@@ -101,7 +101,7 @@ export const CreatePostCard = () => {
                 {/* Show user info when expanded */}
                 <div className="flex items-center gap-2 mb-2">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={user?.user_metadata?.avatar_url || ""} />
+                    <AvatarImage src={user?.avatar || ""} />
                     <AvatarFallback className="text-xs bg-gray-300">
                       {getUserInitials()}
                     </AvatarFallback>
