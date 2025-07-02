@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { Home, MessageSquare, Store, Menu, LifeBuoy, User, Briefcase } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -54,9 +53,9 @@ export const MobileNavbar = () => {
         },
         {
           icon: Briefcase,
-          path: "/admin/users/officials",
-          label: "Official",
-          key: "official"
+          path: "/official/officials",
+          label: "Officials",
+          key: "officials"
         },
         {
           icon: MessageSquare,
