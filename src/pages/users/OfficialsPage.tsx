@@ -1,8 +1,7 @@
 
 import { useState } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
-import { DashboardPageHeader } from "@/components/dashboard/PageHeader";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Download,
@@ -21,6 +20,9 @@ import {
   Users,
   Award,
   AlertCircle,
+  Settings,
+  UserCheck,
+  Crown,
 } from "lucide-react";
 import {
   Table,
@@ -52,6 +54,58 @@ const OfficialsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState("all");
+
+  // Official roles with their corresponding icons
+  const officialRoles = [
+    {
+      title: "Punong Barangay",
+      icon: ShieldCheck,
+      count: 1,
+      color: "bg-red-50 text-red-600"
+    },
+    {
+      title: "SK Chairman", 
+      icon: Settings,
+      count: 1,
+      color: "bg-blue-50 text-blue-600"
+    },
+    {
+      title: "Barangay Councilor",
+      icon: Users,
+      count: 7,
+      color: "bg-green-50 text-green-600"
+    },
+    {
+      title: "SK Council",
+      icon: UserCheck,
+      count: 7,
+      color: "bg-purple-50 text-purple-600"
+    },
+    {
+      title: "Brgy Secretary",
+      icon: PenLine,
+      count: 1,
+      color: "bg-orange-50 text-orange-600"
+    },
+    {
+      title: "Brgy Treasurer",
+      icon: Award,
+      count: 1,
+      color: "bg-indigo-50 text-indigo-600"
+    },
+    {
+      title: "SK Secretary",
+      icon: Mail,
+      count: 1,
+      color: "bg-pink-50 text-pink-600"
+    },
+    {
+      title: "SK Treasurer",
+      icon: Crown,
+      count: 1,
+      color: "bg-yellow-50 text-yellow-600"
+    }
+  ];
 
   // Enhanced sample data with more realistic information
   const officials = [
@@ -141,7 +195,7 @@ const OfficialsPage = () => {
   const getRoleIcon = (role: string) => {
     switch (role) {
       case "Barangay Captain":
-        return <ShieldCheck className="h-4 w-4 text-blue-600" />;
+        return <ShieldCheck className="h-4 w-4 text-red-600" />;
       case "Secretary":
         return <PenLine className="h-4 w-4 text-green-600" />;
       case "Treasurer":
@@ -168,28 +222,59 @@ const OfficialsPage = () => {
 
   return (
     <AdminLayout title="Officials Management">
-      <DashboardPageHeader
-        title="Officials Management"
-        description="Manage barangay officials and their roles"
-        breadcrumbItems={[
-          { label: "Dashboard", href: "/admin" },
-          { label: "User Management", href: "/admin/users" },
-          { label: "Officials" },
-        ]}
-        actionButton={{
-          label: "Add Official",
-          onClick: () => console.log("Add official"),
-          icon: <UserPlus className="h-4 w-4" />,
-        }}
-      />
+      {/* Header with red theme */}
+      <div className="mb-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Officials Management</h1>
+            <p className="text-muted-foreground mt-2">Manage barangay officials and their roles</p>
+          </div>
+          <Button 
+            className="flex items-center gap-2 text-slate-50 bg-red-600 hover:bg-red-500"
+            onClick={() => console.log("Add official")}
+          >
+            <UserPlus className="h-4 w-4" />
+            Add Official
+          </Button>
+        </div>
+      </div>
+
+      {/* Officials Grid - Similar to your image */}
+      <div className="mb-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Official Positions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-4 gap-4">
+              {officialRoles.map((role, index) => (
+                <div
+                  key={index}
+                  className="flex flex-col items-center p-4 rounded-lg hover:bg-gray-50 transition-all duration-200 cursor-pointer"
+                >
+                  <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-3 ${role.color} shadow-sm`}>
+                    <role.icon className="h-8 w-8" />
+                  </div>
+                  <span className="text-sm text-center font-medium text-gray-700 leading-tight">
+                    {role.title}
+                  </span>
+                  <span className="text-xs text-gray-500 mt-1">
+                    {role.count} {role.count === 1 ? 'Official' : 'Officials'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Enhanced Stats Cards */}
       <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Users className="h-6 w-6 text-blue-600" />
+              <div className="p-2 bg-red-100 rounded-lg">
+                <Users className="h-6 w-6 text-red-600" />
               </div>
               <div className="ml-4">
                 <p className="text-2xl font-bold text-gray-900">{officials.length}</p>
@@ -253,7 +338,6 @@ const OfficialsPage = () => {
           <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <CardTitle>Barangay Officials</CardTitle>
-              <CardDescription>View and manage all barangay officials</CardDescription>
             </div>
             <div className="flex flex-wrap gap-2">
               <div className="relative">
@@ -313,7 +397,7 @@ const OfficialsPage = () => {
                           {official.photo ? (
                             <AvatarImage src={official.photo} alt={official.name} />
                           ) : null}
-                          <AvatarFallback className="bg-primary text-white">
+                          <AvatarFallback className="bg-red-600 text-white">
                             {official.name.substring(0, 2).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
@@ -409,63 +493,6 @@ const OfficialsPage = () => {
                   </Button>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Enhanced Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Ward Distribution</CardTitle>
-            <CardDescription>Officials assigned per ward</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {["Ward 1", "Ward 2", "Ward 3", "Ward 4", "Ward 5"].map((ward, index) => (
-                <div key={ward} className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-gray-500" />
-                    <span>{ward}</span>
-                  </div>
-                  <Badge variant="outline">{2 + index} Officials</Badge>
-                </div>
-              ))}
-              <div className="flex justify-between items-center border-t pt-4">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="h-4 w-4 text-blue-600" />
-                  <span className="font-medium">All Wards Coverage</span>
-                </div>
-                <Badge className="bg-blue-100 text-blue-800">3 Officials</Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Position Summary</CardTitle>
-            <CardDescription>Current officials by role</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[
-                { role: "Barangay Captain", count: 1, icon: ShieldCheck, color: "text-blue-600" },
-                { role: "Secretary", count: 1, icon: PenLine, color: "text-green-600" },
-                { role: "Treasurer", count: 1, icon: Award, color: "text-purple-600" },
-                { role: "Ward Councilor", count: 10, icon: Users, color: "text-gray-600" },
-                { role: "SK Chairman", count: 1, icon: Users, color: "text-orange-600" },
-                { role: "Committee Head", count: 2, icon: Users, color: "text-indigo-600" }
-              ].map(({ role, count, icon: Icon, color }) => (
-                <div key={role} className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <Icon className={`h-4 w-4 ${color}`} />
-                    <span>{role}</span>
-                  </div>
-                  <Badge variant="outline">{count}</Badge>
-                </div>
-              ))}
             </div>
           </CardContent>
         </Card>
