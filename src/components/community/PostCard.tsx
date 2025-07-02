@@ -17,7 +17,7 @@ interface PostCardProps {
 export const PostCard = ({ post }: PostCardProps) => {
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
-  const [replyTo, setReplyTo] = useState<string | null>(null);
+  const [replyTo, setReplyTo] = useState<{ id: string; name: string } | null>(null);
   const [optimisticLiked, setOptimisticLiked] = useState(post.user_has_liked);
   const [optimisticLikesCount, setOptimisticLikesCount] = useState(post.likes_count);
   const { user } = useAuth();
@@ -33,7 +33,8 @@ export const PostCard = ({ post }: PostCardProps) => {
     
     await createComment.mutateAsync({
       postId: post.id,
-      content: commentText.trim()
+      content: commentText.trim(),
+      parentCommentId: replyTo?.id
     });
     
     setCommentText("");
@@ -72,29 +73,43 @@ export const PostCard = ({ post }: PostCardProps) => {
       if (navigator.share) {
         await navigator.share(shareData);
       } else {
-        // Fallback for browsers that don't support Web Share API
+        // Fallback to copying URL to clipboard
+        await navigator.clipboard.writeText(window.location.href);
         toast({
-          title: "Share not supported",
-          description: "Your browser doesn't support native sharing",
-          variant: "destructive",
+          title: "Link copied",
+          description: "Post link copied to clipboard",
         });
       }
     } catch (error) {
       if (error instanceof Error && error.name !== 'AbortError') {
         console.error('Error sharing:', error);
-        toast({
-          title: "Share failed",
-          description: "Unable to share the post",
-          variant: "destructive",
-        });
+        // Try clipboard as fallback
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          toast({
+            title: "Link copied",
+            description: "Post link copied to clipboard",
+          });
+        } catch (clipboardError) {
+          toast({
+            title: "Share failed",
+            description: "Unable to share the post",
+            variant: "destructive",
+          });
+        }
       }
     }
   };
 
   const handleReply = (commentId: string, authorName: string) => {
-    setReplyTo(commentId);
+    setReplyTo({ id: commentId, name: authorName });
     setCommentText(`@${authorName} `);
     setShowComments(true);
+  };
+
+  const cancelReply = () => {
+    setReplyTo(null);
+    setCommentText("");
   };
 
   const getPostAuthorName = () => {
@@ -134,6 +149,73 @@ export const PostCard = ({ post }: PostCardProps) => {
       return user.lastName.substring(0, 2).toUpperCase();
     }
     return user?.email?.substring(0, 2).toUpperCase() || "U";
+  };
+
+  const renderComment = (comment: any, isReply = false) => {
+    const commentAuthorName = () => {
+      const firstName = comment.profiles?.first_name;
+      const lastName = comment.profiles?.last_name;
+      if (firstName && lastName) {
+        return `${firstName} ${lastName}`;
+      }
+      if (firstName) return firstName;
+      if (lastName) return lastName;
+      return "User";
+    };
+
+    const commentAuthorInitials = () => {
+      const firstName = comment.profiles?.first_name;
+      const lastName = comment.profiles?.last_name;
+      if (firstName && lastName) {
+        return `${firstName[0]}${lastName[0]}`.toUpperCase();
+      }
+      if (firstName) {
+        return firstName.substring(0, 2).toUpperCase();
+      }
+      if (lastName) {
+        return lastName.substring(0, 2).toUpperCase();
+      }
+      return "U";
+    };
+
+    return (
+      <div key={comment.id} className={`flex gap-2 ${isReply ? 'ml-8 mt-2' : ''}`}>
+        <Avatar className="h-6 w-6 flex-shrink-0">
+          <AvatarImage src={comment.profiles?.avatar_url || ""} />
+          <AvatarFallback className="text-xs bg-blue-500 text-white">
+            {commentAuthorInitials()}
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1 min-w-0">
+          <div className="bg-gray-100 rounded-2xl px-3 py-2">
+            <p className="font-semibold text-xs text-gray-900">
+              {commentAuthorName()}
+            </p>
+            <p className="text-sm text-gray-800 break-words">{comment.content}</p>
+          </div>
+          <div className="flex items-center gap-3 mt-1 ml-3">
+            <p className="text-xs text-gray-500">
+              {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+            </p>
+            {!isReply && (
+              <button 
+                onClick={() => handleReply(comment.id, commentAuthorName())}
+                className="text-xs text-gray-500 hover:text-gray-700 font-medium"
+              >
+                Reply
+              </button>
+            )}
+          </div>
+          
+          {/* Render replies */}
+          {comment.replies && comment.replies.length > 0 && (
+            <div className="mt-2">
+              {comment.replies.map((reply: any) => renderComment(reply, true))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -235,29 +317,42 @@ export const PostCard = ({ post }: PostCardProps) => {
           <div className="mt-3 pt-3 border-t border-gray-100">
             {/* Add Comment */}
             {user && (
-              <div className="flex gap-2 mb-3">
-                <Avatar className="h-7 w-7">
-                  <AvatarImage src={user?.avatar || ""} />
-                  <AvatarFallback className="text-xs bg-blue-500 text-white">
-                    {getCurrentUserInitials()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 flex gap-2">
-                  <Input
-                    placeholder={replyTo ? "Write a reply..." : "Write a comment..."}
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleComment()}
-                    className="h-8 text-sm rounded-full bg-gray-100 border-gray-200"
-                  />
-                  <Button
-                    size="sm"
-                    onClick={handleComment}
-                    disabled={!commentText.trim() || createComment.isPending}
-                    className="h-8 px-3 bg-blue-600 hover:bg-blue-700"
-                  >
-                    Post
-                  </Button>
+              <div className="mb-3">
+                {replyTo && (
+                  <div className="mb-2 flex items-center justify-between bg-blue-50 p-2 rounded">
+                    <span className="text-sm text-blue-700">Replying to @{replyTo.name}</span>
+                    <button 
+                      onClick={cancelReply}
+                      className="text-blue-500 hover:text-blue-700 text-sm"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <Avatar className="h-7 w-7">
+                    <AvatarImage src={user?.avatar || ""} />
+                    <AvatarFallback className="text-xs bg-blue-500 text-white">
+                      {getCurrentUserInitials()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 flex gap-2">
+                    <Input
+                      placeholder={replyTo ? "Write a reply..." : "Write a comment..."}
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleComment()}
+                      className="h-8 text-sm rounded-full bg-gray-100 border-gray-200"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={handleComment}
+                      disabled={!commentText.trim() || createComment.isPending}
+                      className="h-8 px-3 bg-blue-600 hover:bg-blue-700"
+                    >
+                      Post
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
@@ -276,63 +371,7 @@ export const PostCard = ({ post }: PostCardProps) => {
               </div>
             ) : comments.length > 0 ? (
               <div className="space-y-3">
-                {comments.map((comment) => {
-                  const commentAuthorName = () => {
-                    const firstName = comment.profiles?.first_name;
-                    const lastName = comment.profiles?.last_name;
-                    if (firstName && lastName) {
-                      return `${firstName} ${lastName}`;
-                    }
-                    if (firstName) return firstName;
-                    if (lastName) return lastName;
-                    return "User";
-                  };
-
-                  const commentAuthorInitials = () => {
-                    const firstName = comment.profiles?.first_name;
-                    const lastName = comment.profiles?.last_name;
-                    if (firstName && lastName) {
-                      return `${firstName[0]}${lastName[0]}`.toUpperCase();
-                    }
-                    if (firstName) {
-                      return firstName.substring(0, 2).toUpperCase();
-                    }
-                    if (lastName) {
-                      return lastName.substring(0, 2).toUpperCase();
-                    }
-                    return "U";
-                  };
-
-                  return (
-                    <div key={comment.id} className="flex gap-2">
-                      <Avatar className="h-6 w-6 flex-shrink-0">
-                        <AvatarImage src={comment.profiles?.avatar_url || ""} />
-                        <AvatarFallback className="text-xs bg-blue-500 text-white">
-                          {commentAuthorInitials()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <div className="bg-gray-100 rounded-2xl px-3 py-2">
-                          <p className="font-semibold text-xs text-gray-900">
-                            {commentAuthorName()}
-                          </p>
-                          <p className="text-sm text-gray-800 break-words">{comment.content}</p>
-                        </div>
-                        <div className="flex items-center gap-3 mt-1 ml-3">
-                          <p className="text-xs text-gray-500">
-                            {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-                          </p>
-                          <button 
-                            onClick={() => handleReply(comment.id, commentAuthorName())}
-                            className="text-xs text-gray-500 hover:text-gray-700 font-medium"
-                          >
-                            Reply
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                {comments.map((comment) => renderComment(comment))}
               </div>
             ) : (
               <div className="text-center py-4 text-gray-500">

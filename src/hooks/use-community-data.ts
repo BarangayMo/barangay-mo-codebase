@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -27,6 +26,7 @@ export interface CommunityComment {
   post_id: string;
   user_id: string;
   content: string;
+  parent_comment_id: string | null;
   created_at: string;
   updated_at: string;
   profiles: {
@@ -34,6 +34,7 @@ export interface CommunityComment {
     last_name: string | null;
     avatar_url: string | null;
   } | null;
+  replies?: CommunityComment[];
 }
 
 export const useCommunityPosts = (limit?: number) => {
@@ -227,7 +228,31 @@ export const usePostComments = (postId: string) => {
         profiles: profileMap.get(comment.user_id) || null
       }));
 
-      return commentsWithProfiles;
+      // Organize comments into threads
+      const commentMap = new Map();
+      const topLevelComments: CommunityComment[] = [];
+
+      // First pass: create comment objects
+      commentsWithProfiles.forEach(comment => {
+        const commentWithReplies = { ...comment, replies: [] };
+        commentMap.set(comment.id, commentWithReplies);
+        
+        if (!comment.parent_comment_id) {
+          topLevelComments.push(commentWithReplies);
+        }
+      });
+
+      // Second pass: organize replies
+      commentsWithProfiles.forEach(comment => {
+        if (comment.parent_comment_id) {
+          const parentComment = commentMap.get(comment.parent_comment_id);
+          if (parentComment) {
+            parentComment.replies.push(commentMap.get(comment.id));
+          }
+        }
+      });
+
+      return topLevelComments;
     },
     enabled: !!postId
   });
@@ -239,7 +264,7 @@ export const useCreateComment = () => {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ postId, content }: { postId: string; content: string }) => {
+    mutationFn: async ({ postId, content, parentCommentId }: { postId: string; content: string; parentCommentId?: string }) => {
       if (!user?.id) throw new Error('User not authenticated');
 
       const { data, error } = await supabase
@@ -247,7 +272,8 @@ export const useCreateComment = () => {
         .insert({
           post_id: postId,
           user_id: user.id,
-          content
+          content,
+          parent_comment_id: parentCommentId || null
         })
         .select()
         .single();
