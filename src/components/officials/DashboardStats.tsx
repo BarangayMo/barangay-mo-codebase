@@ -49,48 +49,58 @@ export const DashboardStats = () => {
     queryFn: async () => {
       if (!user?.id) return null;
       
-      // Get official's barangay
-      const { data: officialProfile } = await supabase
-        .from('profiles')
-        .select('barangay')
-        .eq('id', user.id)
-        .single();
+      try {
+        // Get official's barangay
+        const { data: officialProfile } = await supabase
+          .from('profiles')
+          .select('barangay')
+          .eq('id', user.id)
+          .single();
 
-      if (!officialProfile?.barangay) return null;
+        if (!officialProfile?.barangay) return null;
 
-      // Get residents count
-      const { count: residentsCount } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('barangay', officialProfile.barangay)
-        .eq('role', 'resident');
+        // Get residents count
+        const { count: residentsCount } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('barangay', officialProfile.barangay)
+          .eq('role', 'resident');
 
-      // Get RBI submissions count
-      const { count: rbiCount } = await supabase
-        .from('rbi_forms')
-        .select('*', { count: 'exact', head: true })
-        .eq('barangay_id', officialProfile.barangay);
+        // Get RBI submissions count
+        const { count: rbiCount } = await supabase
+          .from('rbi_forms')
+          .select('*', { count: 'exact', head: true })
+          .eq('barangay_id', officialProfile.barangay);
 
-      // Get pending requests count
-      const { count: pendingRequests } = await supabase
-        .from('complaints_requests')
-        .select('*', { count: 'exact', head: true })
-        .eq('barangay_id', officialProfile.barangay)
-        .eq('status', 'pending');
+        // Get pending requests count
+        const { count: pendingRequests } = await supabase
+          .from('complaints_requests')
+          .select('*', { count: 'exact', head: true })
+          .eq('barangay_id', officialProfile.barangay)
+          .eq('status', 'pending');
 
-      // Get officials count in the same barangay
-      const { count: officialsCount } = await supabase
-        .from('officials')
-        .select('*', { count: 'exact', head: true })
-        .eq('barangay', officialProfile.barangay)
-        .eq('status', 'active');
+        // Get officials count in the same barangay
+        const { count: officialsCount } = await supabase
+          .from('officials' as any)
+          .select('*', { count: 'exact', head: true })
+          .eq('barangay', officialProfile.barangay)
+          .eq('status', 'active');
 
-      return {
-        residents: residentsCount || 0,
-        rbiSubmissions: rbiCount || 0,
-        pendingRequests: pendingRequests || 0,
-        officials: officialsCount || 0
-      };
+        return {
+          residents: residentsCount || 0,
+          rbiSubmissions: rbiCount || 0,
+          pendingRequests: pendingRequests || 0,
+          officials: officialsCount || 0
+        };
+      } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+        return {
+          residents: 0,
+          rbiSubmissions: 0,
+          pendingRequests: 0,
+          officials: 0
+        };
+      }
     },
     enabled: !!user?.id
   });

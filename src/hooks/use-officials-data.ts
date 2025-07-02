@@ -23,18 +23,23 @@ export const useOfficials = (barangay?: string) => {
   return useQuery({
     queryKey: ['officials', barangay],
     queryFn: async () => {
-      let query = supabase
-        .from('officials')
-        .select('*')
-        .order('created_at', { ascending: false });
+      try {
+        let query = supabase
+          .from('officials' as any)
+          .select('*')
+          .order('created_at', { ascending: false });
 
-      if (barangay) {
-        query = query.eq('barangay', barangay);
+        if (barangay) {
+          query = query.eq('barangay', barangay);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+        return (data || []) as Official[];
+      } catch (error) {
+        console.error('Error fetching officials:', error);
+        return [];
       }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as Official[];
     },
   });
 };
@@ -45,14 +50,19 @@ export const useCreateOfficial = () => {
 
   return useMutation({
     mutationFn: async (official: Omit<Official, 'id' | 'created_at' | 'updated_at'>) => {
-      const { data, error } = await supabase
-        .from('officials')
-        .insert(official)
-        .select()
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('officials' as any)
+          .insert(official)
+          .select()
+          .single();
 
-      if (error) throw error;
-      return data;
+        if (error) throw error;
+        return data as Official;
+      } catch (error) {
+        console.error('Error creating official:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['officials'] });
@@ -78,15 +88,20 @@ export const useUpdateOfficial = () => {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Official> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('officials')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('officials' as any)
+          .update(updates)
+          .eq('id', id)
+          .select()
+          .single();
 
-      if (error) throw error;
-      return data;
+        if (error) throw error;
+        return data as Official;
+      } catch (error) {
+        console.error('Error updating official:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['officials'] });
