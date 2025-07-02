@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { AdminLayout } from "@/components/layout/AdminLayout";
@@ -60,32 +61,63 @@ const getPriorityColor = (priority: string) => {
   }
 };
 
-const getActionButtons = (notification: Notification) => {
+const getRoleColors = (userRole: string) => {
+  switch (userRole) {
+    case 'superadmin':
+      return {
+        primary: 'bg-purple-600 hover:bg-purple-700 border-purple-200 text-purple-600 hover:bg-purple-50',
+        secondary: 'border-purple-200 text-purple-600 hover:bg-purple-50',
+        stats: 'bg-purple-50 text-purple-700'
+      };
+    case 'official':
+      return {
+        primary: 'bg-blue-600 hover:bg-blue-700 border-blue-200 text-blue-600 hover:bg-blue-50',
+        secondary: 'border-blue-200 text-blue-600 hover:bg-blue-50',
+        stats: 'bg-blue-50 text-blue-700'
+      };
+    case 'resident':
+      return {
+        primary: 'bg-green-600 hover:bg-green-700 border-green-200 text-green-600 hover:bg-green-50',
+        secondary: 'border-green-200 text-green-600 hover:bg-green-50',
+        stats: 'bg-green-50 text-green-700'
+      };
+    default:
+      return {
+        primary: 'bg-blue-600 hover:bg-blue-700 border-blue-200 text-blue-600 hover:bg-blue-50',
+        secondary: 'border-blue-200 text-blue-600 hover:bg-blue-50',
+        stats: 'bg-blue-50 text-blue-700'
+      };
+  }
+};
+
+const getActionButtons = (notification: Notification, userRole: string) => {
   const buttons = [];
+  const roleColors = getRoleColors(userRole);
 
   switch (notification.category) {
     case 'registration':
       buttons.push(
-        <Button key="approve" size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+        <Button key="approve" size="sm" className="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1">
           <UserCheck className="h-3 w-3 mr-1" />
-          Approve
+          <span className="hidden sm:inline">Approve</span>
         </Button>,
-        <Button key="reject" variant="outline" size="sm" className="border-red-200 text-red-600 hover:bg-red-50">
-          Reject
+        <Button key="reject" variant="outline" size="sm" className="border-red-200 text-red-600 hover:bg-red-50 text-xs px-2 py-1">
+          <span className="hidden sm:inline">Reject</span>
+          <X className="h-3 w-3 sm:hidden" />
         </Button>
       );
       break;
     case 'message':
     case 'feedback':
       buttons.push(
-        <Button key="reply" size="sm" variant="outline">
+        <Button key="reply" size="sm" variant="outline" className={`${roleColors.secondary} text-xs px-2 py-1`}>
           <MessageSquare className="h-3 w-3 mr-1" />
-          Reply
+          <span className="hidden sm:inline">Reply</span>
         </Button>,
-        <Button key="view" size="sm" asChild>
+        <Button key="view" size="sm" asChild className={`${roleColors.primary} text-xs px-2 py-1`}>
           <Link to="/admin/messages">
             <Eye className="h-3 w-3 mr-1" />
-            View
+            <span className="hidden sm:inline">View</span>
           </Link>
         </Button>
       );
@@ -93,28 +125,29 @@ const getActionButtons = (notification: Notification) => {
     case 'approval':
     case 'finance':
       buttons.push(
-        <Button key="review" size="sm">
+        <Button key="review" size="sm" className={`${roleColors.primary} text-xs px-2 py-1`}>
           <FileText className="h-3 w-3 mr-1" />
-          Review
+          <span className="hidden sm:inline">Review</span>
         </Button>,
-        <Button key="approve" size="sm" className="bg-green-600 hover:bg-green-700 text-white">
-          Approve
+        <Button key="approve" size="sm" className="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1">
+          <span className="hidden sm:inline">Approve</span>
+          <CheckCircle className="h-3 w-3 sm:hidden" />
         </Button>
       );
       break;
     case 'meeting':
       buttons.push(
-        <Button key="join" size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+        <Button key="join" size="sm" className={`${roleColors.primary} text-xs px-2 py-1`}>
           <Users className="h-3 w-3 mr-1" />
-          Join Meeting
+          <span className="hidden sm:inline">Join Meeting</span>
         </Button>
       );
       break;
     default:
       buttons.push(
-        <Button key="view" size="sm" variant="outline">
+        <Button key="view" size="sm" variant="outline" className={`${roleColors.secondary} text-xs px-2 py-1`}>
           <Eye className="h-3 w-3 mr-1" />
-          View Details
+          <span className="hidden sm:inline">View Details</span>
         </Button>
       );
   }
@@ -129,7 +162,8 @@ const NotificationListItem = ({
   onUnarchive,
   isSelected,
   onSelect,
-  isArchived = false
+  isArchived = false,
+  userRole
 }: { 
   notification: Notification; 
   onMarkAsRead: (id: string) => void; 
@@ -138,33 +172,35 @@ const NotificationListItem = ({
   isSelected: boolean;
   onSelect: (notification: Notification) => void;
   isArchived?: boolean;
+  userRole: string;
 }) => {
   const isUnread = notification.status === 'unread';
+  const roleColors = getRoleColors(userRole);
   
   return (
     <div 
       className={cn(
-        "p-4 border-b cursor-pointer transition-colors hover:bg-gray-50",
+        "p-3 sm:p-4 border-b cursor-pointer transition-colors hover:bg-gray-50",
         isUnread && "bg-blue-50/50",
-        isSelected && "bg-blue-100 border-l-4 border-l-blue-500"
+        isSelected && `bg-${userRole === 'official' ? 'blue' : userRole === 'resident' ? 'green' : 'purple'}-100 border-l-4 border-l-${userRole === 'official' ? 'blue' : userRole === 'resident' ? 'green' : 'purple'}-500`
       )}
       onClick={() => onSelect(notification)}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-2 sm:gap-3">
         <div className="flex-shrink-0 mt-1">
           {getCategoryIcon(notification.category)}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-1">
             <h4 className={cn(
-              "text-sm font-semibold",
+              "text-sm font-semibold leading-tight",
               isUnread ? "text-gray-900" : "text-gray-700"
             )}>
               {notification.title}
             </h4>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={(e) => e.stopPropagation()}>
+                <Button variant="ghost" size="sm" className="h-6 w-6 p-0 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                   <MoreHorizontal className="h-3 w-3" />
                 </Button>
               </DropdownMenuTrigger>
@@ -189,10 +225,10 @@ const NotificationListItem = ({
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+          <p className="text-xs sm:text-sm text-gray-600 mb-2 line-clamp-2">
             {notification.message}
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
             <span className="text-xs text-gray-500 flex items-center gap-1">
               <Calendar className="h-3 w-3" />
               {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
@@ -204,7 +240,7 @@ const NotificationListItem = ({
               {notification.category}
             </Badge>
             {isUnread && (
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <div className={`w-2 h-2 rounded-full ${userRole === 'official' ? 'bg-blue-500' : userRole === 'resident' ? 'bg-green-500' : 'bg-purple-500'}`}></div>
             )}
           </div>
         </div>
@@ -219,7 +255,8 @@ const NotificationDetails = ({
   onArchive,
   onUnarchive,
   onClose,
-  isArchived = false
+  isArchived = false,
+  userRole
 }: { 
   notification: Notification; 
   onMarkAsRead: (id: string) => void; 
@@ -227,9 +264,11 @@ const NotificationDetails = ({
   onUnarchive: (id: string) => void;
   onClose: () => void;
   isArchived?: boolean;
+  userRole: string;
 }) => {
   const isUnread = notification.status === 'unread';
-  const actionButtons = getActionButtons(notification);
+  const actionButtons = getActionButtons(notification, userRole);
+  const roleColors = getRoleColors(userRole);
   
   return (
     <div className="h-full flex flex-col">
@@ -258,7 +297,7 @@ const NotificationDetails = ({
                   {notification.category}
                 </Badge>
                 {isUnread && (
-                  <Badge className="bg-blue-500 text-white text-sm">
+                  <Badge className={`${roleColors.primary.split(' ')[0]} text-white text-sm`}>
                     Unread
                   </Badge>
                 )}
@@ -275,7 +314,7 @@ const NotificationDetails = ({
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             <div>
               <span className="font-medium text-gray-700">Created:</span>
               <p className="text-gray-600">
@@ -316,18 +355,18 @@ const NotificationDetails = ({
         {/* Standard Actions */}
         <div className="flex items-center gap-2">
           {isUnread && (
-            <Button onClick={() => onMarkAsRead(notification.id)} className="flex-1 bg-blue-600 hover:bg-blue-700">
+            <Button onClick={() => onMarkAsRead(notification.id)} className={`flex-1 ${roleColors.primary.split('hover:')[0]}`}>
               <CheckCircle className="h-4 w-4 mr-2" />
               Mark as Read
             </Button>
           )}
           {isArchived ? (
-            <Button variant="outline" onClick={() => onUnarchive(notification.id)} className="flex-1 border-blue-200 text-blue-600 hover:bg-blue-50">
+            <Button variant="outline" onClick={() => onUnarchive(notification.id)} className={`flex-1 ${roleColors.secondary}`}>
               <ArchiveRestore className="h-4 w-4 mr-2" />
               Unarchive
             </Button>
           ) : (
-            <Button variant="outline" onClick={() => onArchive(notification.id)} className="flex-1 border-blue-200 text-blue-600 hover:bg-blue-50">
+            <Button variant="outline" onClick={() => onArchive(notification.id)} className={`flex-1 ${roleColors.secondary}`}>
               <Archive className="h-4 w-4 mr-2" />
               Archive
             </Button>
@@ -341,7 +380,7 @@ const NotificationDetails = ({
 export default function Notifications() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
-  const [activeTab, setActiveTab] = useState<'active' | 'archived' | 'unread' | 'archived' | 'unread'>('active');
+  const [activeTab, setActiveTab] = useState<'active' | 'archived' | 'unread'>('active');
   const { userRole } = useAuth();
   const {
     notifications,
@@ -354,6 +393,8 @@ export default function Notifications() {
     markAllAsRead,
     isMarkingAllAsRead
   } = useNotifications();
+
+  const roleColors = getRoleColors(userRole || 'resident');
 
   // Updated role-based filtering to include actual database categories
   const filterNotificationsByRole = (notificationList: Notification[]) => {
@@ -425,10 +466,10 @@ export default function Notifications() {
           </p>
         </div>
 
-        {/* Compact Stats for Mobile */}
+        {/* Compact Stats for Mobile with Role Colors */}
         <div className="mb-6">
           <div className="flex items-center gap-3 overflow-x-auto pb-2 md:justify-center">
-            <div className="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-2 rounded-lg whitespace-nowrap">
+            <div className={`flex items-center gap-2 ${roleColors.stats} px-3 py-2 rounded-lg whitespace-nowrap`}>
               <Bell className="h-4 w-4" />
               <span className="text-sm font-medium">{filteredNotifications.length}</span>
               <span className="text-xs hidden sm:inline">Total</span>
@@ -451,13 +492,13 @@ export default function Notifications() {
           <div className="lg:col-span-2">
             <Card className="h-full flex flex-col">
               <CardHeader className="pb-4 sticky top-0 bg-white z-10 border-b">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <Button
                       variant={activeTab === 'active' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setActiveTab('active')}
-                      className={activeTab === 'active' ? 'bg-blue-600 hover:bg-blue-700' : 'border-blue-200 text-blue-600 hover:bg-blue-50'}
+                      className={activeTab === 'active' ? roleColors.primary.split('hover:')[0] : roleColors.secondary}
                     >
                       Active
                     </Button>
@@ -465,7 +506,7 @@ export default function Notifications() {
                       variant={activeTab === 'unread' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setActiveTab('unread')}
-                      className={activeTab === 'unread' ? 'bg-blue-600 hover:bg-blue-700' : 'border-blue-200 text-blue-600 hover:bg-blue-50'}
+                      className={activeTab === 'unread' ? roleColors.primary.split('hover:')[0] : roleColors.secondary}
                     >
                       Unread ({unreadNotifications.length})
                     </Button>
@@ -473,10 +514,10 @@ export default function Notifications() {
                       variant={activeTab === 'archived' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setActiveTab('archived')}
-                      className={activeTab === 'archived' ? 'bg-blue-600 hover:bg-blue-700' : 'border-blue-200 text-blue-600 hover:bg-blue-50'}
+                      className={activeTab === 'archived' ? roleColors.primary.split('hover:')[0] : roleColors.secondary}
                     >
                       <Archive className="h-4 w-4 mr-1" />
-                      Archived
+                      <span className="hidden sm:inline">Archived</span>
                     </Button>
                   </div>
                   {unreadCount > 0 && activeTab === 'active' && (
@@ -485,14 +526,14 @@ export default function Notifications() {
                       size="sm"
                       onClick={() => markAllAsRead()}
                       disabled={isMarkingAllAsRead}
-                      className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                      className={roleColors.secondary}
                     >
                       {isMarkingAllAsRead ? (
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
                       ) : (
                         <CheckCircle className="h-4 w-4 mr-2" />
                       )}
-                      Mark all read
+                      <span className="hidden sm:inline">Mark all read</span>
                     </Button>
                   )}
                 </div>
@@ -503,7 +544,7 @@ export default function Notifications() {
                     placeholder="Search notifications..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9 border-blue-200 focus:border-blue-500"
+                    className={`pl-9 ${roleColors.secondary.includes('border-') ? roleColors.secondary.split('hover:')[0] : 'border-blue-200 focus:border-blue-500'}`}
                   />
                 </div>
 
@@ -526,6 +567,7 @@ export default function Notifications() {
                       isSelected={selectedNotification?.id === notification.id}
                       onSelect={handleNotificationSelect}
                       isArchived={activeTab === 'archived'}
+                      userRole={userRole || 'resident'}
                     />
                   ))
                 ) : (
@@ -566,6 +608,7 @@ export default function Notifications() {
                   onUnarchive={unarchiveNotification}
                   onClose={() => setSelectedNotification(null)}
                   isArchived={activeTab === 'archived'}
+                  userRole={userRole || 'resident'}
                 />
               ) : (
                 <div className="h-full flex items-center justify-center">
