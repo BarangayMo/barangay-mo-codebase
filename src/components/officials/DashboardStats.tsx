@@ -78,23 +78,38 @@ export const DashboardStats = () => {
         .eq('barangay_id', officialProfile.barangay)
         .eq('status', 'pending');
 
+      // Get officials count in the same barangay
+      const { count: officialsCount } = await supabase
+        .from('officials')
+        .select('*', { count: 'exact', head: true })
+        .eq('barangay', officialProfile.barangay)
+        .eq('status', 'active');
+
       return {
         residents: residentsCount || 0,
         rbiSubmissions: rbiCount || 0,
-        pendingRequests: pendingRequests || 0
+        pendingRequests: pendingRequests || 0,
+        officials: officialsCount || 0
       };
     },
     enabled: !!user?.id
   });
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-6">
       <StatCard
         title="Total Residents"
         value={stats?.residents?.toString() || "0"}
         subtitle="registered residents"
         trend="up"
         trendValue="+2"
+      />
+      <StatCard
+        title="Active Officials"
+        value={stats?.officials?.toString() || "0"}
+        subtitle="barangay officials"
+        trend="up"
+        trendValue="+1"
       />
       <StatCard
         title="RBI Submissions"

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,138 +52,51 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileNavbar } from "@/components/layout/MobileNavbar";
 import { useNavigate } from "react-router-dom";
+import { useOfficials } from "@/hooks/use-officials-data";
+import { format } from "date-fns";
 
 const OfficialsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [roleFilter, setRoleFilter] = useState("all");
+  const [positionFilter, setPositionFilter] = useState("all");
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+
+  // Fetch officials data from database
+  const { data: officials = [], isLoading } = useOfficials();
 
   // Official roles with their corresponding icons
   const officialRoles = [
     {
       title: "Punong Barangay",
       icon: ShieldCheck,
-      count: 1,
+      count: officials.filter(o => o.position === "Punong Barangay").length,
       color: "bg-red-50 text-red-600 border-red-100",
       route: "/official/punong-barangay"
     },
     {
       title: "SK Chairman", 
       icon: Settings,
-      count: 1,
+      count: officials.filter(o => o.position === "SK Chairman").length,
       color: "bg-blue-50 text-blue-600 border-blue-100"
     },
     {
       title: "Barangay Councilor",
       icon: Users,
-      count: 7,
+      count: officials.filter(o => o.position === "Barangay Councilor").length,
       color: "bg-green-50 text-green-600 border-green-100"
     },
     {
-      title: "SK Council",
-      icon: UserCheck,
-      count: 7,
-      color: "bg-purple-50 text-purple-600 border-purple-100"
-    },
-    {
-      title: "Brgy Secretary",
+      title: "Barangay Secretary",
       icon: PenLine,
-      count: 1,
+      count: officials.filter(o => o.position === "Barangay Secretary").length,
       color: "bg-orange-50 text-orange-600 border-orange-100"
     },
     {
-      title: "Brgy Treasurer",
+      title: "Barangay Treasurer",
       icon: Award,
-      count: 1,
+      count: officials.filter(o => o.position === "Barangay Treasurer").length,
       color: "bg-indigo-50 text-indigo-600 border-indigo-100"
-    },
-    {
-      title: "SK Secretary",
-      icon: Mail,
-      count: 1,
-      color: "bg-pink-50 text-pink-600 border-pink-100"
-    },
-    {
-      title: "SK Treasurer",
-      icon: Crown,
-      count: 1,
-      color: "bg-yellow-50 text-yellow-600 border-yellow-100"
-    }
-  ];
-
-  // Enhanced sample data with more realistic information
-  const officials = [
-    {
-      id: 1,
-      name: "Juan Dela Cruz",
-      role: "Barangay Captain",
-      email: "juandelacruz@example.com",
-      phone: "0917-111-2222",
-      ward: "All Wards",
-      status: "active",
-      photo: "/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png",
-      dateAppointed: "Jan 1, 2025",
-      termEnd: "Dec 31, 2027",
-      achievements: ["Outstanding Leadership", "Community Development"],
-      yearsOfService: 8,
-    },
-    {
-      id: 2,
-      name: "Maria Santos",
-      role: "Secretary",
-      email: "maria.santos@example.com",
-      phone: "0918-222-3333",
-      ward: "All Wards",
-      status: "active",
-      photo: "",
-      dateAppointed: "Jan 1, 2025",
-      termEnd: "Dec 31, 2027",
-      achievements: ["Excellent Record Keeping"],
-      yearsOfService: 5,
-    },
-    {
-      id: 3,
-      name: "Pedro Reyes",
-      role: "Treasurer",
-      email: "pedro.reyes@example.com",
-      phone: "0919-333-4444",
-      ward: "All Wards",
-      status: "active",
-      photo: "",
-      dateAppointed: "Jan 1, 2025",
-      termEnd: "Dec 31, 2027",
-      achievements: ["Financial Excellence"],
-      yearsOfService: 6,
-    },
-    {
-      id: 4,
-      name: "Elena Garcia",
-      role: "Ward Councilor",
-      email: "elena.garcia@example.com",
-      phone: "0920-444-5555",
-      ward: "Ward 1",
-      status: "active",
-      photo: "",
-      dateAppointed: "Jan 1, 2025",
-      termEnd: "Dec 31, 2027",
-      achievements: ["Community Engagement"],
-      yearsOfService: 3,
-    },
-    {
-      id: 5,
-      name: "Carlos Lim",
-      role: "Ward Councilor",
-      email: "carlos.lim@example.com",
-      phone: "0921-555-6666",
-      ward: "Ward 2",
-      status: "inactive",
-      photo: "",
-      dateAppointed: "Jan 1, 2025",
-      termEnd: "Dec 31, 2027",
-      achievements: [],
-      yearsOfService: 1,
     },
   ];
 
@@ -197,14 +111,16 @@ const OfficialsPage = () => {
     }
   };
 
-  const getRoleIcon = (role: string) => {
-    switch (role) {
-      case "Barangay Captain":
+  const getRoleIcon = (position: string) => {
+    switch (position) {
+      case "Punong Barangay":
         return <ShieldCheck className="h-4 w-4 text-red-600" />;
-      case "Secretary":
+      case "Barangay Secretary":
         return <PenLine className="h-4 w-4 text-green-600" />;
-      case "Treasurer":
+      case "Barangay Treasurer":
         return <Award className="h-4 w-4 text-purple-600" />;
+      case "SK Chairman":
+        return <Settings className="h-4 w-4 text-blue-600" />;
       default:
         return <Users className="h-4 w-4 text-gray-500" />;
     }
@@ -212,24 +128,23 @@ const OfficialsPage = () => {
 
   const filteredOfficials = officials.filter((official) => {
     const matchesSearch = 
-      official.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      official.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      official.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      official.ward.toLowerCase().includes(searchTerm.toLowerCase());
+      official.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (official.contact_email && official.contact_email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      official.barangay.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === "all" || official.status === statusFilter;
-    const matchesRole = roleFilter === "all" || official.role === roleFilter;
+    const matchesPosition = positionFilter === "all" || official.position === positionFilter;
     
-    return matchesSearch && matchesStatus && matchesRole;
+    return matchesSearch && matchesStatus && matchesPosition;
   });
 
-  const uniqueRoles = [...new Set(officials.map(official => official.role))];
+  const uniquePositions = [...new Set(officials.map(official => official.position))];
 
   const handleOfficialClick = (official: any) => {
-    if (official.role === "Barangay Captain") {
+    if (official.position === "Punong Barangay") {
       navigate("/official/punong-barangay");
     }
-    // Add other role-specific navigation here
+    // Add other position-specific navigation here
   };
 
   const handleRoleClick = (role: any) => {
@@ -237,6 +152,17 @@ const OfficialsPage = () => {
       navigate(role.route);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading officials...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -251,7 +177,7 @@ const OfficialsPage = () => {
               />
               <div className="flex-1">
                 <h1 className="text-lg font-bold">Officials Management</h1>
-                <p className="text-sm text-red-100 mt-1">Manage barangay officials and their roles</p>
+                <p className="text-sm text-red-100 mt-1">Manage barangay officials and their positions</p>
               </div>
             </div>
             <Button 
@@ -270,7 +196,7 @@ const OfficialsPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Officials Management</h1>
-                <p className="text-gray-600 mt-1">Manage barangay officials and their roles</p>
+                <p className="text-gray-600 mt-1">Manage barangay officials and their positions</p>
               </div>
               <Button 
                 className="bg-red-600 hover:bg-red-700 text-white"
@@ -322,7 +248,7 @@ const OfficialsPage = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className={`font-bold text-gray-900 ${isMobile ? 'text-lg' : 'text-2xl'}`}>
-                      {Math.round(officials.reduce((acc, o) => acc + o.yearsOfService, 0) / officials.length)}
+                      {officials.length > 0 ? Math.round(officials.reduce((acc, o) => acc + o.years_of_service, 0) / officials.length) : 0}
                     </p>
                     <p className={`text-gray-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>Avg Years</p>
                   </div>
@@ -410,14 +336,14 @@ const OfficialsPage = () => {
                     </SelectContent>
                   </Select>
                   
-                  <Select value={roleFilter} onValueChange={setRoleFilter}>
+                  <Select value={positionFilter} onValueChange={setPositionFilter}>
                     <SelectTrigger className="flex-1 h-10">
-                      <SelectValue placeholder="Role" />
+                      <SelectValue placeholder="Position" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Roles</SelectItem>
-                      {uniqueRoles.map(role => (
-                        <SelectItem key={role} value={role}>{role}</SelectItem>
+                      <SelectItem value="all">All Positions</SelectItem>
+                      {uniquePositions.map(position => (
+                        <SelectItem key={position} value={position}>{position}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -449,11 +375,8 @@ const OfficialsPage = () => {
                         <CardContent className="p-4">
                           <div className="flex items-start gap-3">
                             <Avatar className="h-14 w-14 border-2 border-gray-200 flex-shrink-0">
-                              {official.photo ? (
-                                <AvatarImage src={official.photo} alt={official.name} />
-                              ) : null}
                               <AvatarFallback className="bg-red-600 text-white font-semibold text-sm">
-                                {official.name.substring(0, 2).toUpperCase()}
+                                {official.position.substring(0, 2).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
                             
@@ -462,15 +385,17 @@ const OfficialsPage = () => {
                               <div className="flex items-start justify-between mb-3">
                                 <div className="min-w-0 flex-1">
                                   <h3 className="font-semibold text-gray-900 text-base mb-1">
-                                    {official.name}
+                                    {official.position}
                                   </h3>
                                   <div className="flex items-center gap-2 mb-2">
-                                    {getRoleIcon(official.role)}
-                                    <span className="text-sm text-gray-700 font-medium">{official.role}</span>
+                                    {getRoleIcon(official.position)}
+                                    <span className="text-sm text-gray-700 font-medium">{official.barangay}</span>
                                   </div>
                                 </div>
+                                
                                 <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                                   {getStatusBadge(official.status)}
+                                  
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -479,14 +404,17 @@ const OfficialsPage = () => {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                       <DropdownMenuItem>
-                                        <Eye className="mr-2 h-4 w-4" /> View
+                                        <Eye className="h-4 w-4 mr-2" />
+                                        View Profile
                                       </DropdownMenuItem>
                                       <DropdownMenuItem>
-                                        <PenLine className="mr-2 h-4 w-4" /> Edit
+                                        <PenLine className="h-4 w-4 mr-2" />
+                                        Edit
                                       </DropdownMenuItem>
                                       <DropdownMenuSeparator />
                                       <DropdownMenuItem className="text-red-600">
-                                        <Trash2 className="mr-2 h-4 w-4" /> Remove
+                                        <Trash2 className="h-4 w-4 mr-2" />
+                                        Remove
                                       </DropdownMenuItem>
                                     </DropdownMenuContent>
                                   </DropdownMenu>
@@ -495,26 +423,26 @@ const OfficialsPage = () => {
                               
                               {/* Contact and Service Info */}
                               <div className="space-y-2">
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                  <Mail className="h-4 w-4 flex-shrink-0" />
-                                  <span className="truncate">{official.email}</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                  <Phone className="h-4 w-4 flex-shrink-0" />
-                                  <span>{official.phone}</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                  <MapPin className="h-4 w-4 flex-shrink-0" />
-                                  <span>{official.ward}</span>
-                                </div>
+                                {official.contact_email && (
+                                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                                    <Mail className="h-4 w-4 flex-shrink-0" />
+                                    <span className="truncate">{official.contact_email}</span>
+                                  </div>
+                                )}
+                                {official.contact_phone && (
+                                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                                    <Phone className="h-4 w-4 flex-shrink-0" />
+                                    <span>{official.contact_phone}</span>
+                                  </div>
+                                )}
                                 <div className="flex items-center justify-between text-sm text-gray-600 pt-2 border-t border-gray-100">
                                   <div className="flex items-center gap-2">
                                     <Calendar className="h-4 w-4" />
-                                    <span>Since {official.dateAppointed}</span>
+                                    <span>Since {official.term_start ? format(new Date(official.term_start), 'MMM yyyy') : 'N/A'}</span>
                                   </div>
                                   <div className="flex items-center gap-1">
                                     <Award className="h-4 w-4 text-yellow-500" />
-                                    <span>{official.yearsOfService} years</span>
+                                    <span>{official.years_of_service} years</span>
                                   </div>
                                 </div>
                               </div>
@@ -529,8 +457,8 @@ const OfficialsPage = () => {
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-gray-50">
-                        <TableHead className="font-semibold text-gray-700 py-4">Official</TableHead>
-                        <TableHead className="font-semibold text-gray-700 py-4">Role & Contact</TableHead>
+                        <TableHead className="font-semibold text-gray-700 py-4">Position</TableHead>
+                        <TableHead className="font-semibold text-gray-700 py-4">Contact Info</TableHead>
                         <TableHead className="font-semibold text-gray-700 py-4">Assignment</TableHead>
                         <TableHead className="font-semibold text-gray-700 py-4">Service</TableHead>
                         <TableHead className="font-semibold text-gray-700 py-4">Status</TableHead>
@@ -543,51 +471,46 @@ const OfficialsPage = () => {
                           <TableCell className="py-4">
                             <div className="flex items-center gap-3">
                               <Avatar className="h-12 w-12 border-2 border-gray-200">
-                                {official.photo ? (
-                                  <AvatarImage src={official.photo} alt={official.name} />
-                                ) : null}
                                 <AvatarFallback className="bg-red-600 text-white font-semibold">
-                                  {official.name.substring(0, 2).toUpperCase()}
+                                  {official.position.substring(0, 2).toUpperCase()}
                                 </AvatarFallback>
                               </Avatar>
                               <div className="space-y-1">
-                                <p className="font-semibold text-gray-900">{official.name}</p>
+                                <p className="font-semibold text-gray-900">{official.position}</p>
                                 <div className="flex items-center gap-1 text-xs text-gray-500">
                                   <Calendar className="h-3 w-3" />
-                                  <span>Since {official.dateAppointed}</span>
+                                  <span>Since {official.term_start ? format(new Date(official.term_start), 'MMM yyyy') : 'N/A'}</span>
                                 </div>
                               </div>
                             </div>
                           </TableCell>
                           <TableCell className="py-4">
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                {getRoleIcon(official.role)}
-                                <span className="font-medium text-gray-900">{official.role}</span>
-                              </div>
-                              <div className="space-y-1">
+                            <div className="space-y-1">
+                              {official.contact_email && (
                                 <div className="flex items-center gap-2 text-sm text-gray-600">
                                   <Mail className="h-3.5 w-3.5" />
-                                  <span>{official.email}</span>
+                                  <span>{official.contact_email}</span>
                                 </div>
+                              )}
+                              {official.contact_phone && (
                                 <div className="flex items-center gap-2 text-sm text-gray-600">
                                   <Phone className="h-3.5 w-3.5" />
-                                  <span>{official.phone}</span>
+                                  <span>{official.contact_phone}</span>
                                 </div>
-                              </div>
+                              )}
                             </div>
                           </TableCell>
                           <TableCell className="py-4">
                             <div className="flex items-center gap-2">
                               <MapPin className="h-4 w-4 text-gray-500" />
-                              <span className="text-gray-900">{official.ward}</span>
+                              <span className="text-gray-900">{official.barangay}</span>
                             </div>
                           </TableCell>
                           <TableCell className="py-4">
                             <div className="space-y-1">
-                              <p className="font-semibold text-gray-900">{official.yearsOfService} years</p>
-                              <p className="text-xs text-gray-500">Until {official.termEnd}</p>
-                              {official.achievements.length > 0 && (
+                              <p className="font-semibold text-gray-900">{official.years_of_service} years</p>
+                              <p className="text-xs text-gray-500">Until {official.term_end ? format(new Date(official.term_end), 'MMM yyyy') : 'N/A'}</p>
+                              {official.achievements && official.achievements.length > 0 && (
                                 <div className="flex items-center gap-1">
                                   <Award className="h-3 w-3 text-yellow-500" />
                                   <span className="text-xs text-gray-600">

@@ -39,6 +39,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
+import { useOfficials } from "@/hooks/use-officials-data";
 
 const PunongBarangayDashboard = () => {
   const navigate = useNavigate();
@@ -47,6 +48,9 @@ const PunongBarangayDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [searchQuery, setSearchQuery] = useState("");
   const { user } = useAuth();
+
+  // Fetch officials data for council section
+  const { data: officials = [] } = useOfficials();
 
   // Fetch residents data
   const { data: residents = [], isLoading: residentsLoading } = useQuery({
@@ -262,41 +266,46 @@ const PunongBarangayDashboard = () => {
                 <CardTitle className="text-base">Barangay Council</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-600 mb-4">Manage council members and their roles.</p>
+                <p className="text-sm text-gray-600 mb-4">Current barangay officials and their positions.</p>
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <UserCheck className="h-5 w-5 text-green-600" />
-                    <div className="flex-1">
-                      <div className="font-medium text-sm">Barangay Captain</div>
-                      <div className="text-xs text-gray-600">Leader of the barangay</div>
+                  {officials.map((official) => (
+                    <div key={official.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                      <div className="flex-shrink-0">
+                        {official.position === 'Punong Barangay' && <UserCheck className="h-5 w-5 text-green-600" />}
+                        {official.position === 'Barangay Secretary' && <Edit className="h-5 w-5 text-blue-600" />}
+                        {official.position === 'Barangay Treasurer' && <Shield className="h-5 w-5 text-purple-600" />}
+                        {official.position === 'Barangay Councilor' && <Users className="h-5 w-5 text-orange-600" />}
+                        {official.position === 'SK Chairman' && <UserCheck className="h-5 w-5 text-indigo-600" />}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium text-sm">{official.position}</div>
+                        <div className="text-xs text-gray-600">
+                          {official.years_of_service} years of service • {official.status}
+                        </div>
+                        {official.contact_email && (
+                          <div className="text-xs text-gray-500 mt-1">{official.contact_email}</div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge 
+                          variant={official.status === 'active' ? 'default' : 'secondary'}
+                          className={`text-xs ${official.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}
+                        >
+                          {official.status}
+                        </Badge>
+                        <Button variant="outline" size="sm">
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                      </div>
                     </div>
-                    <Button variant="outline" size="sm">
-                      <Edit className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <Shield className="h-5 w-5 text-blue-600" />
-                    <div className="flex-1">
-                      <div className="font-medium text-sm">Barangay Kagawads</div>
-                      <div className="text-xs text-gray-600">Council members (7 positions)</div>
+                  ))}
+                  
+                  {officials.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      No officials found in the database
                     </div>
-                    <Button variant="outline" size="sm">
-                      <Users className="h-4 w-4 mr-1" />
-                      Manage
-                    </Button>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <UserCheck className="h-5 w-5 text-purple-600" />
-                    <div className="flex-1">
-                      <div className="font-medium text-sm">SK Chairman</div>
-                      <div className="text-xs text-gray-600">Youth representative</div>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      <Edit className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
-                  </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -537,8 +546,8 @@ const PunongBarangayDashboard = () => {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="bg-white border-b">
-        <div className="flex justify-around relative">
+      <div className="bg-white border-b relative">
+        <div className="flex justify-around">
           {tabs.map((tab) => (
             <button
               key={tab.id}
