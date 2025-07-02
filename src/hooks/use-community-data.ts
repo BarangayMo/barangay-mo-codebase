@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -41,7 +40,12 @@ export const useCommunityPosts = (limit?: number) => {
   return useQuery({
     queryKey: ['community-posts', user?.id, limit],
     queryFn: async () => {
-      if (!user?.id) return [];
+      console.log('Fetching community posts for user:', user?.id);
+      
+      if (!user?.id) {
+        console.log('No user ID found');
+        return [];
+      }
 
       // Get user's barangay
       const { data: profile } = await supabase
@@ -50,7 +54,12 @@ export const useCommunityPosts = (limit?: number) => {
         .eq('id', user.id)
         .single();
 
-      if (!profile?.barangay) return [];
+      console.log('User profile:', profile);
+
+      if (!profile?.barangay) {
+        console.log('No barangay found for user');
+        return [];
+      }
 
       let query = supabase
         .from('community_posts')
@@ -70,7 +79,13 @@ export const useCommunityPosts = (limit?: number) => {
       }
 
       const { data, error } = await query;
-      if (error) throw error;
+      
+      console.log('Community posts query result:', { data, error });
+      
+      if (error) {
+        console.error('Error fetching community posts:', error);
+        throw error;
+      }
       
       return (data as unknown as CommunityPost[]) || [];
     },
