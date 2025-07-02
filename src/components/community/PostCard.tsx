@@ -1,9 +1,10 @@
+
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Heart, MessageCircle, Share, MoreHorizontal } from "lucide-react";
+import { Heart, MessageCircle, Share, MoreHorizontal, CornerDownRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { CommunityPost, usePostComments, useCreateComment, useToggleLike } from "@/hooks/use-community-data";
 import { useAuth } from "@/contexts/AuthContext";
@@ -151,6 +152,32 @@ export const PostCard = ({ post }: PostCardProps) => {
     return user?.email?.substring(0, 2).toUpperCase() || "U";
   };
 
+  const renderMentions = (text: string) => {
+    // Split text by @ mentions and render them as clickable elements
+    const parts = text.split(/(@\w+)/g);
+    return parts.map((part, index) => {
+      if (part.startsWith('@')) {
+        const username = part.substring(1);
+        return (
+          <span
+            key={index}
+            className="text-blue-600 font-medium cursor-pointer hover:underline"
+            onClick={() => {
+              // In a real app, this would navigate to the user's profile
+              toast({
+                title: "Profile",
+                description: `View ${username}'s profile`,
+              });
+            }}
+          >
+            {part}
+          </span>
+        );
+      }
+      return part;
+    });
+  };
+
   const renderComment = (comment: any, isReply = false) => {
     const commentAuthorName = () => {
       const firstName = comment.profiles?.first_name;
@@ -180,6 +207,13 @@ export const PostCard = ({ post }: PostCardProps) => {
 
     return (
       <div key={comment.id} className={`flex gap-2 ${isReply ? 'ml-8 mt-2' : ''}`}>
+        {/* Thread arrow for replies */}
+        {isReply && (
+          <div className="flex items-start pt-1 mr-1">
+            <CornerDownRight className="h-3 w-3 text-gray-400" />
+          </div>
+        )}
+        
         <Avatar className="h-6 w-6 flex-shrink-0">
           <AvatarImage src={comment.profiles?.avatar_url || ""} />
           <AvatarFallback className="text-xs bg-blue-500 text-white">
@@ -191,7 +225,9 @@ export const PostCard = ({ post }: PostCardProps) => {
             <p className="font-semibold text-xs text-gray-900">
               {commentAuthorName()}
             </p>
-            <p className="text-sm text-gray-800 break-words">{comment.content}</p>
+            <p className="text-sm text-gray-800 break-words">
+              {renderMentions(comment.content)}
+            </p>
           </div>
           <div className="flex items-center gap-3 mt-1 ml-3">
             <p className="text-xs text-gray-500">
@@ -219,7 +255,7 @@ export const PostCard = ({ post }: PostCardProps) => {
   };
 
   return (
-    <Card className="mb-3 border-gray-200 shadow-sm">
+    <Card className="mb-4 border-gray-200 shadow-sm">
       <CardContent className="p-4">
         {/* Post Header */}
         <div className="flex items-center justify-between mb-3">
@@ -246,7 +282,9 @@ export const PostCard = ({ post }: PostCardProps) => {
 
         {/* Post Content */}
         <div className="mb-3">
-          <p className="text-gray-800 text-sm leading-relaxed">{post.content}</p>
+          <p className="text-gray-800 text-sm leading-relaxed">
+            {renderMentions(post.content)}
+          </p>
           
           {/* Images */}
           {post.image_urls && post.image_urls.length > 0 && (
@@ -263,7 +301,7 @@ export const PostCard = ({ post }: PostCardProps) => {
           )}
         </div>
 
-        {/* Engagement Stats */}
+        {/* Engagement Stats - Real counts from database */}
         {(optimisticLikesCount > 0 || post.comments_count > 0) && (
           <div className="flex items-center justify-between py-2 border-b border-gray-100 mb-2">
             <div className="flex items-center gap-4 text-sm text-gray-500">
@@ -314,10 +352,10 @@ export const PostCard = ({ post }: PostCardProps) => {
 
         {/* Comments Section */}
         {showComments && (
-          <div className="mt-3 pt-3 border-t border-gray-100">
+          <div className="mt-4 pt-3 border-t border-gray-100 space-y-4">
             {/* Add Comment */}
             {user && (
-              <div className="mb-3">
+              <div className="mb-4">
                 {replyTo && (
                   <div className="mb-2 flex items-center justify-between bg-blue-50 p-2 rounded">
                     <span className="text-sm text-blue-700">Replying to @{replyTo.name}</span>
@@ -370,7 +408,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                 ))}
               </div>
             ) : comments.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {comments.map((comment) => renderComment(comment))}
               </div>
             ) : (
