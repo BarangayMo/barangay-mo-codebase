@@ -18,7 +18,7 @@ const queryClient = new QueryClient({
       refetchOnMount: true,
       refetchOnReconnect: true,
       staleTime: 0, // Data is always stale, force refetch
-      cacheTime: 0, // Don't cache data
+      gcTime: 0, // Don't cache data (renamed from cacheTime)
       retry: 1, // Reduce retries to speed up error detection
       retryDelay: 1000,
     },
@@ -27,12 +27,14 @@ const queryClient = new QueryClient({
 
 // Add global error logging for React Query
 queryClient.setQueryDefaults(['*'], {
-  onError: (error) => {
-    console.error('React Query Error:', error);
-  },
-  onSuccess: (data, query) => {
-    console.log('React Query Success:', { queryKey: query.queryKey, dataLength: Array.isArray(data) ? data.length : 'not-array' });
-  },
+  meta: {
+    onError: (error) => {
+      console.error('React Query Error:', error);
+    },
+    onSuccess: (data, query) => {
+      console.log('React Query Success:', { queryKey: query.queryKey, dataLength: Array.isArray(data) ? data.length : 'not-array' });
+    },
+  }
 });
 
 function App() {
