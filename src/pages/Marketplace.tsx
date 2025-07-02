@@ -21,40 +21,61 @@ interface Category {
 
 // Fetch products with joined vendor and category names
 const fetchProducts = async (): Promise<ProductCardType[]> => {
-  const { data, error } = await supabase
-    .from("products")
-    .select(`
-      id,
-      name,
-      price,
-      original_price,
-      stock_quantity,
-      main_image_url,
-      average_rating,
-      rating_count,
-      sold_count,
-      is_active,
-      tags,
-      vendors (shop_name), 
-      product_categories (name)
-    `)
-    .eq('is_active', true) // Only fetch active products
-    .order('created_at', { ascending: false });
+  console.log("Fetching products...");
+  try {
+    const { data, error } = await supabase
+      .from("products")
+      .select(`
+        id,
+        name,
+        price,
+        original_price,
+        stock_quantity,
+        main_image_url,
+        average_rating,
+        rating_count,
+        sold_count,
+        is_active,
+        tags,
+        vendors (shop_name), 
+        product_categories (name)
+      `)
+      .eq('is_active', true) // Only fetch active products
+      .order('created_at', { ascending: false });
 
-  if (error) throw error;
-  // console.log("Fetched products:", data); 
-  return data as ProductCardType[]; // Cast needed because Supabase types might not perfectly match joined structure
+    if (error) {
+      console.error("Products fetch error:", error);
+      throw error;
+    }
+    
+    console.log("Fetched products successfully:", data?.length || 0, "products");
+    return data as ProductCardType[]; // Cast needed because Supabase types might not perfectly match joined structure
+  } catch (err) {
+    console.error("Error in fetchProducts:", err);
+    throw err;
+  }
 };
 
 // Fetch categories
 const fetchCategories = async (): Promise<Category[]> => {
-  const { data, error } = await supabase
-    .from("product_categories")
-    .select("id, name, image_url")
-    .order("name", { ascending: true });
-  if (error) throw error;
-  // console.log("Fetched categories:", data);
-  return data || [];
+  console.log("Fetching categories...");
+  try {
+    const { data, error } = await supabase
+      .from("product_categories")
+      .select("id, name, image_url")
+      .order("name", { ascending: true });
+    
+    if (error) {
+      console.error("Categories fetch error:", error);
+      throw error;
+    }
+    
+    console.log("Fetched categories successfully:", data?.length || 0, "categories");
+    return data || [];
+  } catch (err) {
+    console.error("Error in fetchCategories:", err);
+    throw err;
+  }
 };
 
 export default function Marketplace() {
