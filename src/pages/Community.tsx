@@ -3,7 +3,10 @@ import { Layout } from "@/components/layout/Layout";
 import { CreatePostCard } from "@/components/community/CreatePostCard";
 import { PostCard } from "@/components/community/PostCard";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 import { Helmet } from "react-helmet";
+import { useNavigate } from "react-router-dom";
 import { useCommunityPosts } from "@/hooks/use-community-data";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -12,6 +15,7 @@ const Community = () => {
   const { data: posts = [], isLoading } = useCommunityPosts();
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
   return (
     <Layout hideHeader={isMobile}>
@@ -23,8 +27,18 @@ const Community = () => {
         <div className="max-w-2xl mx-auto px-4 py-4">
           {/* Mobile Header */}
           {isMobile && (
-            <div className="mb-4">
-              <h1 className="text-xl font-bold text-gray-900">Community</h1>
+            <div className="mb-4 -mx-4 px-4 py-3 bg-red-600 text-white">
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate(-1)}
+                  className="text-white hover:bg-red-700 p-1 h-8 w-8"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <h1 className="text-lg font-semibold">Community</h1>
+              </div>
             </div>
           )}
 

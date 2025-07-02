@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Image, Video, Smile, MapPin, Users, Palette } from "lucide-react";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCreatePost } from "@/hooks/use-community-data";
 
@@ -38,6 +39,15 @@ export const CreatePostCard = () => {
       }
     }
   };
+
+  const actionButtons = [
+    { icon: Image, label: "Photo", color: "text-green-600" },
+    { icon: Video, label: "Video", color: "text-blue-600" },
+    { icon: Smile, label: "Feeling", color: "text-yellow-600" },
+    { icon: MapPin, label: "Check in", color: "text-red-600" },
+    { icon: Palette, label: "Background", color: "text-purple-600" },
+    { icon: Users, label: "Tag friends", color: "text-indigo-600" }
+  ];
 
   return (
     <Card className="mb-4 border-gray-200">
@@ -75,37 +85,24 @@ export const CreatePostCard = () => {
                   />
                 </div>
                 
-                {/* Action buttons - Mobile responsive */}
-                <div className="space-y-2">
-                  <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
-                    <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-800 h-8 justify-start">
-                      <Image className="h-4 w-4 mr-1" />
-                      <span className="text-xs">Photo</span>
-                    </Button>
-                    <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-800 h-8 justify-start">
-                      <Video className="h-4 w-4 mr-1" />
-                      <span className="text-xs">Video</span>
-                    </Button>
-                    <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-800 h-8 justify-start">
-                      <Smile className="h-4 w-4 mr-1" />
-                      <span className="text-xs">Feeling</span>
-                    </Button>
-                    <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-800 h-8 justify-start">
-                      <MapPin className="h-4 w-4 mr-1" />
-                      <span className="text-xs">Check in</span>
-                    </Button>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
-                    <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-800 h-8 justify-start">
-                      <Palette className="h-4 w-4 mr-1" />
-                      <span className="text-xs">Background</span>
-                    </Button>
-                    <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-800 h-8 justify-start">
-                      <Users className="h-4 w-4 mr-1" />
-                      <span className="text-xs">Tag friends</span>
-                    </Button>
-                  </div>
+                {/* Slidable Action buttons */}
+                <div className="w-full">
+                  <Carousel className="w-full">
+                    <CarouselContent className="-ml-2">
+                      {actionButtons.map((button, index) => (
+                        <CarouselItem key={index} className="basis-auto pl-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className={`${button.color} hover:bg-gray-100 h-10 px-3 rounded-full border border-gray-200 bg-white shadow-sm`}
+                          >
+                            <button.icon className="h-4 w-4 mr-2" />
+                            <span className="text-xs font-medium">{button.label}</span>
+                          </Button>
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                  </Carousel>
                 </div>
                 
                 <div className="flex justify-end pt-2 border-t border-gray-200">
