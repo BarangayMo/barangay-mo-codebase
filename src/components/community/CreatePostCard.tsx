@@ -51,22 +51,33 @@ export const CreatePostCard = () => {
 
   // Get user's name from either user profile or email
   const getUserDisplayName = () => {
-    if (user?.firstName || user?.lastName) {
-      return `${user.firstName || ''} ${user.lastName || ''}`.trim();
+    if (user?.firstName && user?.lastName) {
+      return `${user.firstName} ${user.lastName}`;
     }
-    return user?.email || 'User';
+    if (user?.firstName) {
+      return user.firstName;
+    }
+    if (user?.lastName) {
+      return user.lastName;
+    }
+    return user?.email?.split('@')[0] || 'User';
   };
 
   const getUserInitials = () => {
-    const firstName = user?.firstName;
-    const lastName = user?.lastName;
-    if (firstName && lastName) {
-      return `${firstName[0]}${lastName[0]}`.toUpperCase();
+    if (user?.firstName && user?.lastName) {
+      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
     }
-    if (firstName) {
-      return firstName[0].toUpperCase();
+    if (user?.firstName) {
+      return user.firstName.substring(0, 2).toUpperCase();
     }
-    return user?.email?.[0]?.toUpperCase() || "U";
+    if (user?.lastName) {
+      return user.lastName.substring(0, 2).toUpperCase();
+    }
+    return user?.email?.substring(0, 2).toUpperCase() || "U";
+  };
+
+  const getUserAvatarUrl = () => {
+    return user?.avatar || "";
   };
 
   return (
@@ -80,8 +91,8 @@ export const CreatePostCard = () => {
           {/* Hide Avatar when expanded */}
           {!isExpanded && (
             <Avatar className="h-8 w-8 flex-shrink-0">
-              <AvatarImage src={user?.avatar || ""} />
-              <AvatarFallback className="text-xs bg-gray-300">
+              <AvatarImage src={getUserAvatarUrl()} />
+              <AvatarFallback className="text-xs bg-blue-500 text-white">
                 {getUserInitials()}
               </AvatarFallback>
             </Avatar>
@@ -101,8 +112,8 @@ export const CreatePostCard = () => {
                 {/* Show user info when expanded */}
                 <div className="flex items-center gap-2 mb-2">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={user?.avatar || ""} />
-                    <AvatarFallback className="text-xs bg-gray-300">
+                    <AvatarImage src={getUserAvatarUrl()} />
+                    <AvatarFallback className="text-xs bg-blue-500 text-white">
                       {getUserInitials()}
                     </AvatarFallback>
                   </Avatar>

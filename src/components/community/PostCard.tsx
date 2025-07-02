@@ -42,6 +42,45 @@ export const PostCard = ({ post }: PostCardProps) => {
     setIsLiked(!isLiked);
   };
 
+  const getPostAuthorName = () => {
+    const firstName = post.profiles?.first_name;
+    const lastName = post.profiles?.last_name;
+    if (firstName && lastName) {
+      return `${firstName} ${lastName}`;
+    }
+    if (firstName) return firstName;
+    if (lastName) return lastName;
+    return "User";
+  };
+
+  const getPostAuthorInitials = () => {
+    const firstName = post.profiles?.first_name;
+    const lastName = post.profiles?.last_name;
+    if (firstName && lastName) {
+      return `${firstName[0]}${lastName[0]}`.toUpperCase();
+    }
+    if (firstName) {
+      return firstName.substring(0, 2).toUpperCase();
+    }
+    if (lastName) {
+      return lastName.substring(0, 2).toUpperCase();
+    }
+    return "U";
+  };
+
+  const getCurrentUserInitials = () => {
+    if (user?.firstName && user?.lastName) {
+      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+    }
+    if (user?.firstName) {
+      return user.firstName.substring(0, 2).toUpperCase();
+    }
+    if (user?.lastName) {
+      return user.lastName.substring(0, 2).toUpperCase();
+    }
+    return user?.email?.substring(0, 2).toUpperCase() || "U";
+  };
+
   return (
     <Card className="mb-3 border-gray-200 shadow-sm">
       <CardContent className="p-4">
@@ -50,13 +89,13 @@ export const PostCard = ({ post }: PostCardProps) => {
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
               <AvatarImage src={post.profiles?.avatar_url || ""} />
-              <AvatarFallback className="bg-gray-300 text-gray-700">
-                {post.profiles?.first_name?.[0]}{post.profiles?.last_name?.[0]}
+              <AvatarFallback className="bg-blue-500 text-white">
+                {getPostAuthorInitials()}
               </AvatarFallback>
             </Avatar>
             <div>
               <p className="font-semibold text-sm text-gray-900">
-                {post.profiles?.first_name} {post.profiles?.last_name}
+                {getPostAuthorName()}
               </p>
               <p className="text-xs text-gray-500">
                 {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
@@ -141,8 +180,9 @@ export const PostCard = ({ post }: PostCardProps) => {
             {/* Add Comment */}
             <div className="flex gap-2 mb-3">
               <Avatar className="h-7 w-7">
-                <AvatarFallback className="text-xs bg-gray-300">
-                  {user?.email?.[0]?.toUpperCase() || "U"}
+                <AvatarImage src={user?.avatar || ""} />
+                <AvatarFallback className="text-xs bg-blue-500 text-white">
+                  {getCurrentUserInitials()}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 flex gap-2">
@@ -165,27 +205,55 @@ export const PostCard = ({ post }: PostCardProps) => {
 
             {/* Comments List */}
             <div className="space-y-2">
-              {comments.map((comment) => (
-                <div key={comment.id} className="flex gap-2">
-                  <Avatar className="h-6 w-6">
-                    <AvatarImage src={comment.profiles?.avatar_url || ""} />
-                    <AvatarFallback className="text-xs bg-gray-300">
-                      {comment.profiles?.first_name?.[0]}{comment.profiles?.last_name?.[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="bg-gray-100 rounded-2xl px-3 py-2">
-                      <p className="font-semibold text-xs text-gray-900">
-                        {comment.profiles?.first_name} {comment.profiles?.last_name}
+              {comments.map((comment) => {
+                const commentAuthorName = () => {
+                  const firstName = comment.profiles?.first_name;
+                  const lastName = comment.profiles?.last_name;
+                  if (firstName && lastName) {
+                    return `${firstName} ${lastName}`;
+                  }
+                  if (firstName) return firstName;
+                  if (lastName) return lastName;
+                  return "User";
+                };
+
+                const commentAuthorInitials = () => {
+                  const firstName = comment.profiles?.first_name;
+                  const lastName = comment.profiles?.last_name;
+                  if (firstName && lastName) {
+                    return `${firstName[0]}${lastName[0]}`.toUpperCase();
+                  }
+                  if (firstName) {
+                    return firstName.substring(0, 2).toUpperCase();
+                  }
+                  if (lastName) {
+                    return lastName.substring(0, 2).toUpperCase();
+                  }
+                  return "U";
+                };
+
+                return (
+                  <div key={comment.id} className="flex gap-2">
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage src={comment.profiles?.avatar_url || ""} />
+                      <AvatarFallback className="text-xs bg-blue-500 text-white">
+                        {commentAuthorInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <div className="bg-gray-100 rounded-2xl px-3 py-2">
+                        <p className="font-semibold text-xs text-gray-900">
+                          {commentAuthorName()}
+                        </p>
+                        <p className="text-sm text-gray-800">{comment.content}</p>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1 ml-3">
+                        {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
                       </p>
-                      <p className="text-sm text-gray-800">{comment.content}</p>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1 ml-3">
-                      {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-                    </p>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
