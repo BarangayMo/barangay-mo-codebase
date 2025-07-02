@@ -425,48 +425,25 @@ export default function Notifications() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Bell className="h-5 w-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Notifications</p>
-                  <p className="text-2xl font-bold text-gray-900">{filteredNotifications.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <Clock className="h-5 w-5 text-orange-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Unread</p>
-                  <p className="text-2xl font-bold text-gray-900">{unreadNotifications.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-red-100 rounded-lg">
-                  <AlertTriangle className="h-5 w-5 text-red-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Urgent</p>
-                  <p className="text-2xl font-bold text-gray-900">{urgentNotifications.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Compact Stats for Mobile */}
+        <div className="mb-6">
+          <div className="flex items-center gap-3 overflow-x-auto pb-2 md:justify-center">
+            <div className="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-2 rounded-lg whitespace-nowrap">
+              <Bell className="h-4 w-4" />
+              <span className="text-sm font-medium">{filteredNotifications.length}</span>
+              <span className="text-xs hidden sm:inline">Total</span>
+            </div>
+            <div className="flex items-center gap-2 bg-orange-50 text-orange-700 px-3 py-2 rounded-lg whitespace-nowrap">
+              <Clock className="h-4 w-4" />
+              <span className="text-sm font-medium">{unreadNotifications.length}</span>
+              <span className="text-xs hidden sm:inline">Unread</span>
+            </div>
+            <div className="flex items-center gap-2 bg-red-50 text-red-700 px-3 py-2 rounded-lg whitespace-nowrap">
+              <AlertTriangle className="h-4 w-4" />
+              <span className="text-sm font-medium">{urgentNotifications.length}</span>
+              <span className="text-xs hidden sm:inline">Urgent</span>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 h-[calc(100vh-20rem)]">
