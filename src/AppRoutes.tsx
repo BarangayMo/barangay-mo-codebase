@@ -33,6 +33,7 @@ import RequestAccess from "@/pages/RequestAccess";
 import Partnerships from "@/pages/Partnerships";
 import MediaLibraryPage from "@/pages/admin/MediaLibraryPage";
 import Community from "@/pages/Community";
+import CommunityPostDetail from "@/pages/CommunityPostDetail";
 
 // Import marketplace components
 import SmarketplaceIndex from "@/pages/smarketplace/SmarketplaceIndex";
@@ -105,6 +106,8 @@ export function AppRoutes() {
       <Route path="/rbi-registration" element={<RbiRegistration />} />
       <Route path="/resident-profile" element={<ResidentProfile />} />
       <Route path="/community" element={<Community />} />
+      
+      <Route path="/community/post/:postId" element={<CommunityPostDetail />} />
       
       <Route path="/official-dashboard" element={<OfficialsDashboard />} />
       <Route path="/official/residents" element={<OfficialResidents />} />

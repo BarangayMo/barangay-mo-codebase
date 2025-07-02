@@ -9,6 +9,7 @@ import { formatDistanceToNow } from "date-fns";
 import { CommunityPost, usePostComments, useCreateComment, useToggleLike } from "@/hooks/use-community-data";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface PostCardProps {
   post: CommunityPost;
@@ -17,10 +18,13 @@ interface PostCardProps {
 export const PostCard = ({ post }: PostCardProps) => {
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
+  const [optimisticLiked, setOptimisticLiked] = useState(post.user_has_liked);
+  const [optimisticLikesCount, setOptimisticLikesCount] = useState(post.likes_count);
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
-  const { data: comments = [] } = usePostComments(showComments ? post.id : "");
+  const { data: comments = [], isLoading: commentsLoading } = usePostComments(showComments ? post.id : "");
   const createComment = useCreateComment();
   const toggleLike = useToggleLike();
 
@@ -36,10 +40,24 @@ export const PostCard = ({ post }: PostCardProps) => {
   };
 
   const handleLike = async () => {
-    await toggleLike.mutateAsync({
-      postId: post.id,
-      isLiked: post.user_has_liked || false
-    });
+    if (!user?.id) return;
+    
+    // Optimistic update
+    const wasLiked = optimisticLiked;
+    setOptimisticLiked(!wasLiked);
+    setOptimisticLikesCount(prev => wasLiked ? prev - 1 : prev + 1);
+    
+    try {
+      await toggleLike.mutateAsync({
+        postId: post.id,
+        isLiked: wasLiked || false
+      });
+    } catch (error) {
+      // Revert optimistic update on error
+      setOptimisticLiked(wasLiked);
+      setOptimisticLikesCount(post.likes_count);
+      console.error('Error toggling like:', error);
+    }
   };
 
   const handleShare = async () => {
@@ -164,11 +182,11 @@ export const PostCard = ({ post }: PostCardProps) => {
         </div>
 
         {/* Engagement Stats */}
-        {(post.likes_count > 0 || post.comments_count > 0) && (
+        {(optimisticLikesCount > 0 || post.comments_count > 0) && (
           <div className="flex items-center justify-between py-2 border-b border-gray-100 mb-2">
             <div className="flex items-center gap-4 text-sm text-gray-500">
-              {post.likes_count > 0 && (
-                <span>{post.likes_count} {post.likes_count === 1 ? 'like' : 'likes'}</span>
+              {optimisticLikesCount > 0 && (
+                <span>{optimisticLikesCount} {optimisticLikesCount === 1 ? 'like' : 'likes'}</span>
               )}
               {post.comments_count > 0 && (
                 <span onClick={() => setShowComments(!showComments)} className="cursor-pointer hover:underline">
@@ -185,9 +203,9 @@ export const PostCard = ({ post }: PostCardProps) => {
             variant="ghost"
             size="sm"
             onClick={handleLike}
-            className={`flex items-center gap-2 px-3 py-1 rounded-lg hover:bg-gray-100 ${post.user_has_liked ? 'text-red-500' : 'text-gray-600'}`}
+            className={`flex items-center gap-2 px-3 py-1 rounded-lg hover:bg-gray-100 ${optimisticLiked ? 'text-red-500' : 'text-gray-600'}`}
           >
-            <Heart className={`h-4 w-4 ${post.user_has_liked ? 'fill-current' : ''}`} />
+            <Heart className={`h-4 w-4 ${optimisticLiked ? 'fill-current' : ''}`} />
             <span className="text-sm font-medium">Like</span>
           </Button>
           
@@ -212,8 +230,8 @@ export const PostCard = ({ post }: PostCardProps) => {
           </Button>
         </div>
 
-        {/* Comments Section - Always show when there are comments or when toggled */}
-        {(showComments || comments.length > 0) && (
+        {/* Comments Section */}
+        {showComments && (
           <div className="mt-3 pt-3 border-t border-gray-100">
             {/* Add Comment */}
             {user && (
@@ -244,74 +262,80 @@ export const PostCard = ({ post }: PostCardProps) => {
               </div>
             )}
 
-            {/* Comments List with Threading */}
-            <div className="space-y-3">
-              {comments.map((comment) => {
-                const commentAuthorName = () => {
-                  const firstName = comment.profiles?.first_name;
-                  const lastName = comment.profiles?.last_name;
-                  if (firstName && lastName) {
-                    return `${firstName} ${lastName}`;
-                  }
-                  if (firstName) return firstName;
-                  if (lastName) return lastName;
-                  return "User";
-                };
-
-                const commentAuthorInitials = () => {
-                  const firstName = comment.profiles?.first_name;
-                  const lastName = comment.profiles?.last_name;
-                  if (firstName && lastName) {
-                    return `${firstName[0]}${lastName[0]}`.toUpperCase();
-                  }
-                  if (firstName) {
-                    return firstName.substring(0, 2).toUpperCase();
-                  }
-                  if (lastName) {
-                    return lastName.substring(0, 2).toUpperCase();
-                  }
-                  return "U";
-                };
-
-                return (
-                  <div key={comment.id} className="flex gap-2">
-                    <Avatar className="h-6 w-6 flex-shrink-0">
-                      <AvatarImage src={comment.profiles?.avatar_url || ""} />
-                      <AvatarFallback className="text-xs bg-blue-500 text-white">
-                        {commentAuthorInitials()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <div className="bg-gray-100 rounded-2xl px-3 py-2">
-                        <p className="font-semibold text-xs text-gray-900">
-                          {commentAuthorName()}
-                        </p>
-                        <p className="text-sm text-gray-800 break-words">{comment.content}</p>
-                      </div>
-                      <div className="flex items-center gap-3 mt-1 ml-3">
-                        <p className="text-xs text-gray-500">
-                          {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-                        </p>
-                        <button className="text-xs text-gray-500 hover:text-gray-700 font-medium">
-                          Reply
-                        </button>
-                      </div>
+            {/* Comments List */}
+            {commentsLoading ? (
+              <div className="space-y-3">
+                {[...Array(2)].map((_, i) => (
+                  <div key={i} className="flex gap-2">
+                    <div className="w-6 h-6 bg-gray-200 rounded-full animate-pulse"></div>
+                    <div className="flex-1">
+                      <div className="bg-gray-200 rounded-lg h-12 animate-pulse"></div>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-            
-            {/* Show comments toggle when closed */}
-            {!showComments && comments.length === 0 && post.comments_count > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowComments(true)}
-                className="w-full text-gray-600 hover:text-gray-800"
-              >
-                View all {post.comments_count} comments
-              </Button>
+                ))}
+              </div>
+            ) : comments.length > 0 ? (
+              <div className="space-y-3">
+                {comments.map((comment) => {
+                  const commentAuthorName = () => {
+                    const firstName = comment.profiles?.first_name;
+                    const lastName = comment.profiles?.last_name;
+                    if (firstName && lastName) {
+                      return `${firstName} ${lastName}`;
+                    }
+                    if (firstName) return firstName;
+                    if (lastName) return lastName;
+                    return "User";
+                  };
+
+                  const commentAuthorInitials = () => {
+                    const firstName = comment.profiles?.first_name;
+                    const lastName = comment.profiles?.last_name;
+                    if (firstName && lastName) {
+                      return `${firstName[0]}${lastName[0]}`.toUpperCase();
+                    }
+                    if (firstName) {
+                      return firstName.substring(0, 2).toUpperCase();
+                    }
+                    if (lastName) {
+                      return lastName.substring(0, 2).toUpperCase();
+                    }
+                    return "U";
+                  };
+
+                  return (
+                    <div key={comment.id} className="flex gap-2">
+                      <Avatar className="h-6 w-6 flex-shrink-0">
+                        <AvatarImage src={comment.profiles?.avatar_url || ""} />
+                        <AvatarFallback className="text-xs bg-blue-500 text-white">
+                          {commentAuthorInitials()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="bg-gray-100 rounded-2xl px-3 py-2">
+                          <p className="font-semibold text-xs text-gray-900">
+                            {commentAuthorName()}
+                          </p>
+                          <p className="text-sm text-gray-800 break-words">{comment.content}</p>
+                        </div>
+                        <div className="flex items-center gap-3 mt-1 ml-3">
+                          <p className="text-xs text-gray-500">
+                            {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                          </p>
+                          <button className="text-xs text-gray-500 hover:text-gray-700 font-medium">
+                            Reply
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-4 text-gray-500">
+                <p className="text-sm">No comments yet</p>
+                <p className="text-xs">Be the first to comment!</p>
+              </div>
             )}
           </div>
         )}
