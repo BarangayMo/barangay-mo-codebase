@@ -4,19 +4,39 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, AlertTriangle } from "lucide-react";
 
 export default function EmailConfirmation() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'expired'>('loading');
   const [message, setMessage] = useState('');
 
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Check URL hash for auth callback data (from email confirmation)
+        // Check URL hash for auth callback data or errors
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        
+        // Check for error parameters first
+        const error = hashParams.get('error');
+        const errorCode = hashParams.get('error_code');
+        const errorDescription = hashParams.get('error_description');
+
+        if (error) {
+          console.log('Auth callback error:', { error, errorCode, errorDescription });
+          
+          if (errorCode === 'otp_expired') {
+            setStatus('expired');
+            setMessage('Your email confirmation link has expired. Please request a new confirmation email.');
+          } else {
+            setStatus('error');
+            setMessage(errorDescription ? decodeURIComponent(errorDescription.replace(/\+/g, ' ')) : 'Authentication failed');
+          }
+          return;
+        }
+
+        // Check for successful auth tokens
         const accessToken = hashParams.get('access_token');
         const refreshToken = hashParams.get('refresh_token');
         const tokenType = hashParams.get('token_type');
@@ -26,15 +46,15 @@ export default function EmailConfirmation() {
 
         if (accessToken && refreshToken && type === 'signup') {
           // Set the session using the tokens from the URL
-          const { data, error } = await supabase.auth.setSession({
+          const { data, error: sessionError } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken
           });
 
-          if (error) {
-            console.error('Session setting error:', error);
+          if (sessionError) {
+            console.error('Session setting error:', sessionError);
             setStatus('error');
-            setMessage(error.message);
+            setMessage(sessionError.message);
             return;
           }
 
@@ -61,12 +81,12 @@ export default function EmailConfirmation() {
           }
         } else {
           // Try to get existing session
-          const { data, error } = await supabase.auth.getSession();
+          const { data, error: sessionError } = await supabase.auth.getSession();
 
-          if (error) {
-            console.error('Session error:', error);
+          if (sessionError) {
+            console.error('Session error:', sessionError);
             setStatus('error');
-            setMessage(error.message);
+            setMessage(sessionError.message);
             return;
           }
 
@@ -108,6 +128,15 @@ export default function EmailConfirmation() {
     navigate('/');
   };
 
+  const handleResendConfirmation = () => {
+    // For expired tokens, we need to guide user to register again
+    navigate('/register', { 
+      state: { 
+        message: 'Please register again to receive a new confirmation email.' 
+      } 
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#e4ecfc] via-[#fff] to-[#fbedda] flex items-center justify-center px-4">
       <Card className="w-full max-w-md">
@@ -129,6 +158,28 @@ export default function EmailConfirmation() {
                 <div className="flex items-center gap-2 mt-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   <span className="text-sm text-gray-500">Redirecting...</span>
+                </div>
+              </div>
+            )}
+
+            {status === 'expired' && (
+              <div className="flex flex-col items-center gap-4">
+                <AlertTriangle className="h-12 w-12 text-amber-600" />
+                <h2 className="text-xl font-semibold text-gray-900">Link Expired</h2>
+                <p className="text-gray-600">{message}</p>
+                <div className="flex gap-3 mt-4">
+                  <button
+                    onClick={handleResendConfirmation}
+                    className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
+                  >
+                    Register Again
+                  </button>
+                  <button
+                    onClick={handleGoHome}
+                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                  >
+                    Go Home
+                  </button>
                 </div>
               </div>
             )}
