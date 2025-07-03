@@ -88,6 +88,9 @@ import EmailConfirmation from "@/pages/EmailConfirmation";
 // Import the new QR Scanner component
 import QRScanner from "@/pages/officials/QRScanner";
 
+// Import the new RBI Forms component
+import RbiForms from "@/pages/officials/RbiForms";
+
 export function AppRoutes() {
   return (
     <Routes>
@@ -125,6 +128,7 @@ export function AppRoutes() {
       <Route path="/official/officials" element={<OfficialsPage />} />
       <Route path="/official/punong-barangay" element={<PunongBarangayDashboard />} />
       <Route path="/official/emergency-response" element={<EmergencyResponse />} />
+      <Route path="/official/rbi-forms" element={<RbiForms />} />
       
       <Route path="/official/qr-verification" element={<QRScanner />} />
       

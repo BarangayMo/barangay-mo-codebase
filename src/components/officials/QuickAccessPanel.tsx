@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { 
   Siren, 
-  QrCode, 
+  Scan, 
   FileText, 
   Phone, 
   CreditCard, 
@@ -20,7 +20,7 @@ const quickAccessItems = [
   },
   {
     title: "QR ID",
-    icon: QrCode,
+    icon: Scan,
     href: "/official/qr-verification", 
     color: "bg-blue-50 text-blue-600"
   },

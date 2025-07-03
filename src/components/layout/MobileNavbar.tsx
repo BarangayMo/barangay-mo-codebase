@@ -129,17 +129,21 @@ export const MobileNavbar = () => {
                 <Icon className={cn(
                   "h-8 w-8 transition-colors mb-0.5",
                   pathname === path 
-                    ? userRole === "resident" 
-                      ? "text-resident" 
-                      : "text-black"
+                    ? userRole === "official" 
+                      ? "text-red-600" 
+                      : userRole === "resident" 
+                        ? "text-resident" 
+                        : "text-black"
                     : "text-black"
                 )} />
                 <span className={cn(
                   "text-sm text-center leading-tight",
                   pathname === path 
-                    ? userRole === "resident" 
-                      ? "text-resident font-medium" 
-                      : "text-black font-medium"
+                    ? userRole === "official" 
+                      ? "text-red-600 font-medium" 
+                      : userRole === "resident" 
+                        ? "text-resident font-medium" 
+                        : "text-black font-medium"
                     : "text-black"
                 )}>
                   {label}
