@@ -44,13 +44,13 @@ export default function ResidentHome() {
       <div className="min-h-screen pt-16 bg-[url('https://static.wixstatic.com/media/b17ef9_2fba412130514c60a718736b8cc42bf6~mv2.jpg')] bg-cover bg-fixed overflow-hidden relative">
         <div className="absolute inset-0 bg-black/70" />
         
-        <div className="relative z-10 h-full px-4 pt-6 max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-4">
+        <div className="relative z-10 h-full px-4 pt-2 max-w-6xl mx-auto">
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               {isLoading ? (
-                <Skeleton className="rounded-full w-14 h-14" />
+                <Skeleton className="rounded-full w-16 h-16" />
               ) : (
-                <img src={avatarUrl} alt="Profile" className="rounded-full w-14 h-14 border-2 border-green-400" />
+                <img src={avatarUrl} alt="Profile" className="rounded-full w-16 h-16 border-2 border-green-400" />
               )}
               <div>
                 {isLoading ? (
@@ -67,7 +67,7 @@ export default function ResidentHome() {
               </div>
             </div>
             <div className="rounded-full border-2 border-white p-1">
-              <svg width="32" height="32" fill="none" className="text-white" viewBox="0 0 24 24">
+              <svg width="36" height="36" fill="none" className="text-white" viewBox="0 0 24 24">
                 <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
                 <circle cx="8" cy="8" r="1" fill="currentColor"/>
                 <circle cx="16" cy="8" r="1" fill="currentColor"/>
@@ -77,12 +77,12 @@ export default function ResidentHome() {
             </div>
           </div>
 
-          <div className="rounded-2xl bg-white/20 backdrop-blur-xl shadow-lg px-5 py-4 mb-6">
+          <div className="rounded-2xl bg-white/20 backdrop-blur-xl shadow-lg px-5 py-4 mb-4">
             {isLoading ? (
               <div className="space-y-3">
                 <Skeleton className="h-6 w-48" />
                 <Skeleton className="h-4 w-36" />
-                <div className="h-8"></div>
+                <div className="h-6"></div>
                 <div className="flex justify-between">
                   <Skeleton className="h-10 w-20" />
                   <Skeleton className="h-10 w-20" />
@@ -95,7 +95,7 @@ export default function ResidentHome() {
                 <div className="text-xs uppercase opacity-90 mt-1 text-white">
                   {barangayLocation}
                 </div>
-                <div className="flex justify-between mt-4">
+                <div className="flex justify-between mt-3">
                   <div className="text-center">
                     <div className="text-xl font-bold text-white">{barangayPopulation}</div>
                     <div className="text-xs text-white">Population</div>
@@ -113,8 +113,8 @@ export default function ResidentHome() {
             )}
           </div>
 
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-3">
               <div className="text-white font-semibold text-lg">Quick Actions</div>
               <Button 
                 asChild 
@@ -138,7 +138,7 @@ export default function ResidentHome() {
             </div>
           </div>
 
-          <div className="max-w-4xl">
+          <div className="max-w-4xl pb-24">
             <div className="text-white font-semibold mb-2 text-lg">Announcements</div>
             <div className="rounded-2xl bg-white/20 backdrop-blur-xl p-4 mb-2">
               <div className="flex items-center gap-2 mb-1">

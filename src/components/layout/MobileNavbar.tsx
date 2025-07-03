@@ -118,29 +118,31 @@ export const MobileNavbar = () => {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md bg-white/90 border-t border-white/20 shadow-lg rounded-t-xl pb-6">
-      <div className="flex items-center justify-around px-2 py-1 max-w-md mx-auto">
-        {navItems.map(({ icon: Icon, path, label, key }) => (
-          <Link key={key} to={path} className="flex flex-col items-center justify-center p-2 min-w-0 flex-1">
-            <Icon className={cn(
-              "h-5 w-5 transition-colors mb-1",
-              pathname === path 
-                ? userRole === "resident" 
-                  ? "text-[#1a237e]" 
-                  : "text-[#ea384c]"
-                : "text-gray-600"
-            )} />
-            <span className={cn(
-              "text-[10px] font-medium text-center leading-tight",
-              pathname === path 
-                ? userRole === "resident" 
-                  ? "text-[#1a237e]" 
-                  : "text-[#ea384c]"
-                : "text-gray-600"
-            )}>
-              {label}
-            </span>
-          </Link>
-        ))}
+      <div className="flex items-center justify-center px-4 py-3 max-w-md mx-auto">
+        <div className="flex items-center justify-between w-full max-w-sm">
+          {navItems.map(({ icon: Icon, path, label, key }) => (
+            <Link key={key} to={path} className="flex flex-col items-center justify-center p-2 min-w-0">
+              <Icon className={cn(
+                "h-6 w-6 transition-colors mb-1.5",
+                pathname === path 
+                  ? userRole === "resident" 
+                    ? "text-[#1a237e]" 
+                    : "text-[#ea384c]"
+                  : "text-gray-600"
+              )} />
+              <span className={cn(
+                "text-xs font-medium text-center leading-tight",
+                pathname === path 
+                  ? userRole === "resident" 
+                    ? "text-[#1a237e]" 
+                    : "text-[#ea384c]"
+                  : "text-gray-600"
+              )}>
+                {label}
+              </span>
+            </Link>
+          ))}
+        </div>
       </div>
     </nav>
   );
