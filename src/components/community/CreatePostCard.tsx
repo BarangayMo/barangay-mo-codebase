@@ -92,7 +92,7 @@ export const CreatePostCard = () => {
           {!isExpanded && (
             <Avatar className="h-8 w-8 flex-shrink-0">
               <AvatarImage src={getUserAvatarUrl()} />
-              <AvatarFallback className="text-xs bg-blue-500 text-white">
+              <AvatarFallback className="text-xs bg-resident text-white">
                 {getUserInitials()}
               </AvatarFallback>
             </Avatar>
@@ -113,7 +113,7 @@ export const CreatePostCard = () => {
                 <div className="flex items-center gap-2 mb-2">
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={getUserAvatarUrl()} />
-                    <AvatarFallback className="text-xs bg-blue-500 text-white">
+                    <AvatarFallback className="text-xs bg-resident text-white">
                       {getUserInitials()}
                     </AvatarFallback>
                   </Avatar>
@@ -155,7 +155,7 @@ export const CreatePostCard = () => {
                     onClick={handleSubmit}
                     disabled={!content.trim() || createPost.isPending}
                     size="sm"
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4"
+                    className="bg-resident hover:bg-resident-dark text-white px-4"
                   >
                     {createPost.isPending ? "Posting..." : "Post"}
                   </Button>

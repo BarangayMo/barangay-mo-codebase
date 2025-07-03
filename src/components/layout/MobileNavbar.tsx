@@ -163,7 +163,7 @@ export const MobileNavbar = () => {
               <span className="text-sm font-medium text-gray-700">RBI Registration</span>
               <span className="text-sm text-gray-600">{rbiProgress}%</span>
             </div>
-            <Progress value={rbiProgress} className="mb-2" />
+            <Progress value={rbiProgress} className="mb-2" indicatorClassName="bg-resident" />
             <div className="text-xs text-gray-500">
               {rbiProgress === 0 && "Start your RBI registration"}
               {rbiProgress === 75 && "Waiting for approval"}
@@ -172,7 +172,7 @@ export const MobileNavbar = () => {
             {rbiProgress < 100 && (
               <Link 
                 to="/rbi-registration" 
-                className="inline-block mt-2 text-xs text-blue-600 hover:underline"
+                className="inline-block mt-2 text-xs text-resident hover:underline"
               >
                 {rbiProgress === 0 ? "Start RBI" : "Check Status"}
               </Link>
@@ -210,7 +210,7 @@ export const MobileNavbar = () => {
                   "h-6 w-6 transition-colors mb-0.5",
                   pathname === path 
                     ? userRole === "resident" 
-                      ? "text-[#000084]" 
+                      ? "text-resident" 
                       : "text-black"
                     : "text-black"
                 )} />
@@ -218,8 +218,8 @@ export const MobileNavbar = () => {
                   "text-sm text-center leading-tight",
                   pathname === path 
                     ? userRole === "resident" 
-                      ? "text-[#000084] font-bold" 
-                      : "text-black font-bold"
+                      ? "text-resident font-medium" 
+                      : "text-black font-medium"
                     : "text-black"
                 )}>
                   {label}

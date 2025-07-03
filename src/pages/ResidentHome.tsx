@@ -111,7 +111,7 @@ export default function ResidentHome() {
                   <Button 
                     asChild 
                     size="sm"
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    className="bg-resident hover:bg-resident-dark text-white"
                   >
                     <Link to="/rbi-registration">Start RBI</Link>
                   </Button>
