@@ -1,49 +1,37 @@
 
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 
 export default function EmailConfirmation() {
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    const confirmEmail = async () => {
+    const handleAuthCallback = async () => {
       try {
-        const token_hash = searchParams.get('token_hash');
-        const type = searchParams.get('type');
-
-        if (!token_hash || type !== 'email') {
-          setStatus('error');
-          setMessage('Invalid confirmation link');
-          return;
-        }
-
-        // Verify the email confirmation
-        const { data, error } = await supabase.auth.verifyOtp({
-          token_hash,
-          type: 'email'
-        });
+        // Handle the auth callback from the URL hash
+        const { data, error } = await supabase.auth.getSession();
 
         if (error) {
-          console.error('Email confirmation error:', error);
+          console.error('Session error:', error);
           setStatus('error');
           setMessage(error.message);
           return;
         }
 
-        if (data.user) {
+        if (data.session?.user) {
+          console.log('User authenticated successfully:', data.session.user.email);
           setStatus('success');
           setMessage('Email confirmed successfully! Redirecting to your dashboard...');
           
           // Determine user role and redirect
-          const userRole = data.user.user_metadata?.role || 'resident';
+          const userRole = data.session.user.user_metadata?.role || 'resident';
           const redirectPath = userRole === 'official' 
             ? '/official-dashboard' 
             : userRole === 'superadmin' 
@@ -56,7 +44,7 @@ export default function EmailConfirmation() {
           }, 2000);
         } else {
           setStatus('error');
-          setMessage('Email confirmation failed');
+          setMessage('No active session found. Please try registering again.');
         }
       } catch (error) {
         console.error('Unexpected error during email confirmation:', error);
@@ -65,8 +53,8 @@ export default function EmailConfirmation() {
       }
     };
 
-    confirmEmail();
-  }, [searchParams, navigate]);
+    handleAuthCallback();
+  }, [navigate]);
 
   const handleRetry = () => {
     navigate('/register');
