@@ -30,7 +30,7 @@ export function SearchBar({ search, setSearch }: SearchBarProps) {
         </div>
         <Link to="/marketplace/cart">
           <div className="relative">
-            <ShoppingCart className="w-6 h-6 text-white" />
+            <ShoppingCart className="w-10 h-10 text-white" />
             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
               2
             </span>
