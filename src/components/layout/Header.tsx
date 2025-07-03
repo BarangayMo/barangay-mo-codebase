@@ -1,3 +1,4 @@
+
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Bell, User, ShoppingBag, Menu, LogOut, Home, MessageSquare, BarChart3, FolderOpen, Settings, UsersIcon, Hospital, ClipboardList, Siren, FileText, Store, LifeBuoy, Info, Phone } from "lucide-react";
@@ -73,7 +74,7 @@ export const Header = () => {
           {/* Mobile Menu Sheet */}
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="w-8 h-8">
+              <Button variant="ghost" size="icon" className="w-12 h-12">
                 <Menu className="h-10 w-10 text-black" />
               </Button>
             </SheetTrigger>
@@ -292,7 +293,7 @@ export const Header = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative w-8 h-8"
+                className="relative w-12 h-12"
                 asChild
               >
                 <Link to="/notifications">
