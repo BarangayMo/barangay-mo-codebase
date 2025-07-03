@@ -81,6 +81,9 @@ import OfficialServices from "@/pages/officials/OfficialServices";
 import OfficialRequests from "@/pages/officials/OfficialRequests";
 import PunongBarangayDashboard from "@/pages/officials/PunongBarangayDashboard";
 
+// Import the new EmailConfirmation component
+import EmailConfirmation from "@/pages/EmailConfirmation";
+
 export function AppRoutes() {
   return (
     <Routes>
@@ -88,6 +91,7 @@ export function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/email-verification" element={<EmailVerification />} />
+      <Route path="/auth/confirm" element={<EmailConfirmation />} />
       <Route path="/verify" element={<Verify />} />
       <Route path="/mpin" element={<MPIN />} />
       <Route path="/forgot-mpin" element={<ForgotMPIN />} />
