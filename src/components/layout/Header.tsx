@@ -73,7 +73,7 @@ export const Header = () => {
           {/* Mobile Menu Sheet */}
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="w-10 h-10">
+              <Button variant="ghost" size="icon" className="w-8 h-8">
                 <Menu className="h-8 w-8 text-gray-700" />
               </Button>
             </SheetTrigger>
@@ -285,28 +285,14 @@ export const Header = () => {
             <HeaderLogo />
           </div>
 
-          {/* Right side icons */}
+          {/* Right side icons - only notifications */}
           <div className="flex items-center gap-1">
-            {/* Cart Icon - only show on marketplace pages */}
-            {showCartIcon && (
-              <Button asChild variant="ghost" size="icon" className="relative w-10 h-10">
-                <Link to="/marketplace/cart">
-                  <ShoppingBag className="h-8 w-8" />
-                  {cartItemCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 text-white text-[10px] rounded-full w-3.5 h-3.5 flex items-center justify-center bg-blue-500">
-                      {cartItemCount}
-                    </span>
-                  )}
-                </Link>
-              </Button>
-            )}
-
             {/* Notification Bell - only for authenticated users */}
             {isAuthenticated && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative w-10 h-10"
+                className="relative w-8 h-8"
                 asChild
               >
                 <Link to="/notifications">
