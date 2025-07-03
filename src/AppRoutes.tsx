@@ -85,6 +85,9 @@ import EmergencyResponse from "@/pages/officials/EmergencyResponse";
 // Import the new EmailConfirmation component
 import EmailConfirmation from "@/pages/EmailConfirmation";
 
+// Import the new QR Scanner component
+import QRScanner from "@/pages/officials/QRScanner";
+
 export function AppRoutes() {
   return (
     <Routes>
@@ -122,6 +125,8 @@ export function AppRoutes() {
       <Route path="/official/officials" element={<OfficialsPage />} />
       <Route path="/official/punong-barangay" element={<PunongBarangayDashboard />} />
       <Route path="/official/emergency-response" element={<EmergencyResponse />} />
+      
+      <Route path="/official/qr-verification" element={<QRScanner />} />
       
       <Route path="/admin" element={<AdminDashboard />} />
       
