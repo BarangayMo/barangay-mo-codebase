@@ -1,34 +1,43 @@
 
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Layout } from "@/components/layout/Layout";
-import { ShoppingCart, Briefcase, FileText } from "lucide-react";
+import { ShoppingCart, Briefcase, FileText, AlertCircle, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Helmet } from "react-helmet";
 import { useAuth } from "@/contexts/AuthContext";
 import { useResidentProfile } from "@/hooks/use-resident-profile";
+import { useRbiForms } from "@/hooks/use-rbi-forms";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 
 export default function ResidentHome() {
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const { profile, isLoading } = useResidentProfile();
+  const { rbiForms, isLoading: rbiLoading } = useRbiForms();
   
   const firstName = profile?.first_name || user?.firstName || "Resident";
-  // Fix: Provide fallback for rbi_number
-  const rbiNumber = profile?.settings?.rbi_number || "RBI-3-334-2,297-13";
-  // Fix: Type handling for avatar_url in address
-  const avatarUrl = profile?.settings?.address && typeof profile.settings.address === 'object'
+  const rbiNumber = profile?.settings?.rbi_number || "Complete RBI to get number";
+  const avatarUrl = profile?.settings?.avatar_url && typeof profile.settings.address === 'object'
     ? (profile.settings.address as any)?.avatar_url
     : `https://api.dicebear.com/7.x/initials/svg?seed=${profile?.first_name || ''} ${profile?.last_name || ''}` ||
       "/placeholder.svg";
   
-  // Fix: Profile.barangay access - now included in UserProfile interface
-  const barangayName = profile?.barangay || "Barangay New Cabalan";
-  const barangayLocation = "City of Olongapo, Zambales";
-  const barangayPopulation = "35,000";
-  const barangayPuroks = "14";
-  const barangayAge = "45";
+  // Check RBI completion status
+  const hasCompletedRbi = rbiForms && rbiForms.length > 0;
+  const approvedRbi = rbiForms?.find(form => form.status === 'approved');
+  
+  // Use actual barangay data from profile or show completion message
+  const barangayName = hasCompletedRbi && profile?.barangay 
+    ? profile.barangay 
+    : "Complete RBI Registration";
+  const barangayLocation = hasCompletedRbi 
+    ? "City of Olongapo, Zambales" 
+    : "Select your address to see barangay details";
+  const barangayPopulation = hasCompletedRbi ? "35,000" : "—";
+  const barangayPuroks = hasCompletedRbi ? "14" : "—";
+  const barangayAge = hasCompletedRbi ? "45" : "—";
 
   const quickActions = [
     { icon: ShoppingCart, label: "Market", path: "/marketplace" },
@@ -45,6 +54,7 @@ export default function ResidentHome() {
         <div className="absolute inset-0 bg-black/70" />
         
         <div className="relative z-10 h-full px-4 pt-1 max-w-6xl mx-auto">
+          {/* Header with larger icons */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               {isLoading ? (
@@ -66,8 +76,8 @@ export default function ResidentHome() {
                 )}
               </div>
             </div>
-            <div className="rounded-full border-2 border-white p-1">
-              <svg width="36" height="36" fill="none" className="text-white" viewBox="0 0 24 24">
+            <div className="rounded-full border-2 border-white p-2">
+              <svg width="40" height="40" fill="none" className="text-white" viewBox="0 0 24 24">
                 <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
                 <circle cx="8" cy="8" r="1" fill="currentColor"/>
                 <circle cx="16" cy="8" r="1" fill="currentColor"/>
@@ -77,6 +87,40 @@ export default function ResidentHome() {
             </div>
           </div>
 
+          {/* RBI Progress Section */}
+          {!rbiLoading && (
+            <div className="rounded-2xl bg-white/20 backdrop-blur-xl shadow-lg px-5 py-3 mb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {hasCompletedRbi ? (
+                    <>
+                      <CheckCircle className="h-5 w-5 text-green-400" />
+                      <span className="text-white font-medium">RBI Registration Complete</span>
+                      {approvedRbi && (
+                        <Badge className="bg-green-500 text-white">Approved</Badge>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="h-5 w-5 text-yellow-400" />
+                      <span className="text-white font-medium">Complete RBI Registration</span>
+                    </>
+                  )}
+                </div>
+                {!hasCompletedRbi && (
+                  <Button 
+                    asChild 
+                    size="sm"
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <Link to="/rbi-registration">Start RBI</Link>
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Barangay Info Section */}
           <div className="rounded-2xl bg-white/20 backdrop-blur-xl shadow-lg px-5 py-4 mb-4">
             {isLoading ? (
               <div className="space-y-3">
@@ -95,6 +139,12 @@ export default function ResidentHome() {
                 <div className="text-xs uppercase opacity-90 mt-1 text-white">
                   {barangayLocation}
                 </div>
+                {!hasCompletedRbi && (
+                  <div className="text-sm text-yellow-300 mt-2 flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4" />
+                    Complete your RBI registration to see your barangay details
+                  </div>
+                )}
                 <div className="flex justify-between mt-3">
                   <div className="text-center">
                     <div className="text-xl font-bold text-white">{barangayPopulation}</div>
@@ -113,6 +163,7 @@ export default function ResidentHome() {
             )}
           </div>
 
+          {/* Quick Actions */}
           <div className="mb-4">
             <div className="flex items-center justify-between mb-3">
               <div className="text-white font-semibold text-lg">Quick Actions</div>
@@ -138,6 +189,7 @@ export default function ResidentHome() {
             </div>
           </div>
 
+          {/* Announcements */}
           <div className="max-w-4xl pb-24">
             <div className="text-white font-semibold mb-2 text-lg">Announcements</div>
             <div className="rounded-2xl bg-white/20 backdrop-blur-xl p-4 mb-2">
