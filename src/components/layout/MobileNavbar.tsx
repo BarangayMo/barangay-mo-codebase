@@ -67,7 +67,7 @@ export const MobileNavbar = () => {
       ];
     }
 
-    // Default nav items for residents - show cart only on marketplace pages
+    // Default nav items for residents
     const baseItems = [
       {
         icon: Home,
@@ -89,7 +89,7 @@ export const MobileNavbar = () => {
       }
     ];
 
-    // Add cart only if we're in marketplace pages
+    // Add cart only if we're in marketplace pages, otherwise add notifications
     if (isMarketplacePage) {
       baseItems.push({
         icon: ShoppingCart,
@@ -106,6 +106,7 @@ export const MobileNavbar = () => {
       });
     }
 
+    // Always add menu as the last item
     baseItems.push({
       icon: Menu,
       path: "/menu",
