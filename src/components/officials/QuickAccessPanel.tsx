@@ -15,7 +15,7 @@ const quickAccessItems = [
   {
     title: "Responder",
     icon: Siren,
-    href: "/official/emergency-responder",
+    href: "/official/emergency-response",
     color: "bg-red-50 text-red-600"
   },
   {
