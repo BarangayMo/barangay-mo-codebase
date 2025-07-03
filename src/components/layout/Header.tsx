@@ -1,3 +1,4 @@
+
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Bell, User, ShoppingBag, Menu, LogOut, Home, MessageSquare, BarChart3, FolderOpen, Settings, UsersIcon, Hospital, ClipboardList, Siren, FileText, Store, LifeBuoy, Info, Phone } from "lucide-react";
@@ -74,7 +75,7 @@ export const Header = () => {
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="w-8 h-8">
-                <Menu size={48} className="text-black" />
+                <Menu className="h-8 w-8 text-black" />
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-80 p-0">
@@ -310,7 +311,7 @@ export const Header = () => {
                 asChild
               >
                 <Link to="/notifications">
-                  <Bell size={48} className="text-black" />
+                  <Bell className="h-8 w-8 text-black" />
                   {unreadCount > 0 && (
                     <span className={`absolute -top-0.5 -right-0.5 text-white text-[10px] rounded-full w-3.5 h-3.5 flex items-center justify-center ${
                       userRole === "official" ? "bg-red-500" : 
