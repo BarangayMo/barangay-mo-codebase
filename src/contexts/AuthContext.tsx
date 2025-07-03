@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode, useEffect, useRef } from "react";
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -129,7 +128,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               
               // Handle redirects after successful login
               if (event === 'SIGNED_IN' && !redirectInProgress.current && isInitialized) {
-                if (currentPath === '/login' || currentPath === '/register') {
+                if (currentPath === '/login' || currentPath === '/register' || currentPath === '/email-confirmation') {
                   console.log("Redirecting to:", redirectPath, "after login");
                   redirectInProgress.current = true;
                   navigate(redirectPath, { replace: true });
@@ -238,7 +237,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             last_name: userData.lastName,
             role: userData.role,
           },
-          emailRedirectTo: `https://www.trybarangaymo.com/auth/confirm`
+          emailRedirectTo: `${window.location.origin}/email-confirmation`
         }
       });
 

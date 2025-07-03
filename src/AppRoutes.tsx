@@ -91,6 +91,7 @@ export function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/email-verification" element={<EmailVerification />} />
+      <Route path="/email-confirmation" element={<EmailConfirmation />} />
       <Route path="/auth/confirm" element={<EmailConfirmation />} />
       <Route path="/verify" element={<Verify />} />
       <Route path="/mpin" element={<MPIN />} />

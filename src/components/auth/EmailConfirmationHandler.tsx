@@ -1,0 +1,268 @@
+
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent } from "@/components/ui/card";
+import { CheckCircle, XCircle, Loader2, AlertTriangle, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+type ConfirmationStatus = 'loading' | 'success' | 'error' | 'expired' | 'already_confirmed';
+
+export const EmailConfirmationHandler = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const [status, setStatus] = useState<ConfirmationStatus>('loading');
+  const [message, setMessage] = useState('');
+  const [userEmail, setUserEmail] = useState('');
+
+  useEffect(() => {
+    const handleEmailConfirmation = async () => {
+      try {
+        console.log('Starting email confirmation process...');
+        
+        // Check URL hash for auth callback data
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        
+        // Also check query parameters as backup
+        const queryParams = new URLSearchParams(window.location.search);
+        
+        // Get all possible parameters from both sources
+        const getParam = (key: string) => hashParams.get(key) || queryParams.get(key);
+        
+        const error = getParam('error');
+        const errorCode = getParam('error_code');
+        const errorDescription = getParam('error_description');
+        const accessToken = getParam('access_token');
+        const refreshToken = getParam('refresh_token');
+        const type = getParam('type');
+        
+        console.log('Confirmation params:', { 
+          error, 
+          errorCode, 
+          errorDescription, 
+          hasAccessToken: !!accessToken, 
+          hasRefreshToken: !!refreshToken, 
+          type 
+        });
+
+        // Handle errors first
+        if (error) {
+          console.log('Auth callback error:', { error, errorCode, errorDescription });
+          
+          if (errorCode === 'otp_expired') {
+            setStatus('expired');
+            setMessage('Your email confirmation link has expired. Please request a new confirmation email.');
+          } else if (errorDescription?.includes('already_confirmed')) {
+            setStatus('already_confirmed');
+            setMessage('Your email has already been confirmed. You can now sign in.');
+          } else {
+            setStatus('error');
+            setMessage(errorDescription ? decodeURIComponent(errorDescription.replace(/\+/g, ' ')) : 'Email confirmation failed');
+          }
+          return;
+        }
+
+        // Handle successful confirmation with tokens
+        if (accessToken && refreshToken && type === 'signup') {
+          console.log('Processing successful email confirmation...');
+          
+          const { data, error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
+
+          if (sessionError) {
+            console.error('Session setting error:', sessionError);
+            setStatus('error');
+            setMessage('Failed to establish session. Please try signing in manually.');
+            return;
+          }
+
+          if (data.session?.user) {
+            console.log('User confirmed successfully:', data.session.user.email);
+            setUserEmail(data.session.user.email || '');
+            setStatus('success');
+            setMessage('Email confirmed successfully! Redirecting to your dashboard...');
+            
+            // Let the AuthContext handle the redirect
+            setTimeout(() => {
+              // The AuthContext will handle navigation based on user role
+            }, 2000);
+          } else {
+            setStatus('error');
+            setMessage('Authentication failed. Please try registering again.');
+          }
+          return;
+        }
+
+        // If no tokens in URL, check if user is already authenticated
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('Session check error:', sessionError);
+          setStatus('error');
+          setMessage('Unable to verify authentication status.');
+          return;
+        }
+
+        if (sessionData.session?.user) {
+          console.log('User already authenticated:', sessionData.session.user.email);
+          setUserEmail(sessionData.session.user.email || '');
+          setStatus('success');
+          setMessage('You are already signed in! Redirecting to your dashboard...');
+          
+          setTimeout(() => {
+            // Let AuthContext handle the redirect
+          }, 1000);
+          return;
+        }
+
+        // No valid tokens and no existing session
+        setStatus('error');
+        setMessage('No valid confirmation data found. Please try the confirmation link again or request a new one.');
+        
+      } catch (error) {
+        console.error('Unexpected error during email confirmation:', error);
+        setStatus('error');
+        setMessage('An unexpected error occurred during confirmation.');
+      }
+    };
+
+    handleEmailConfirmation();
+  }, []);
+
+  const handleRetry = () => {
+    navigate('/register');
+  };
+
+  const handleGoToLogin = () => {
+    navigate('/login');
+  };
+
+  const handleGoHome = () => {
+    navigate('/');
+  };
+
+  const handleResendConfirmation = async () => {
+    if (!userEmail) {
+      navigate('/register', { 
+        state: { 
+          message: 'Please register again to receive a new confirmation email.' 
+        } 
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: userEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/email-confirmation`
+        }
+      });
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to resend confirmation email. Please try again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Email Sent",
+          description: "A new confirmation email has been sent to your inbox.",
+        });
+        navigate('/email-verification', { state: { email: userEmail } });
+      }
+    } catch (error) {
+      console.error('Resend confirmation error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to resend confirmation email.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#e4ecfc] via-[#fff] to-[#fbedda] flex items-center justify-center px-4">
+      <Card className="w-full max-w-md">
+        <CardContent className="p-8 text-center">
+          <div className="mb-6">
+            {status === 'loading' && (
+              <div className="flex flex-col items-center gap-4">
+                <Loader2 className="h-12 w-12 text-blue-600 animate-spin" />
+                <h2 className="text-xl font-semibold text-gray-900">Confirming your email...</h2>
+                <p className="text-gray-600">Please wait while we verify your email address.</p>
+              </div>
+            )}
+
+            {status === 'success' && (
+              <div className="flex flex-col items-center gap-4">
+                <CheckCircle className="h-12 w-12 text-green-600" />
+                <h2 className="text-xl font-semibold text-gray-900">Email Confirmed!</h2>
+                <p className="text-gray-600">{message}</p>
+                <div className="flex items-center gap-2 mt-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm text-gray-500">Redirecting...</span>
+                </div>
+              </div>
+            )}
+
+            {status === 'already_confirmed' && (
+              <div className="flex flex-col items-center gap-4">
+                <CheckCircle className="h-12 w-12 text-blue-600" />
+                <h2 className="text-xl font-semibold text-gray-900">Already Confirmed</h2>
+                <p className="text-gray-600">{message}</p>
+                <div className="flex gap-3 mt-4">
+                  <Button onClick={handleGoToLogin} className="bg-blue-600 hover:bg-blue-700">
+                    Sign In
+                  </Button>
+                  <Button onClick={handleGoHome} variant="outline">
+                    Go Home
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {status === 'expired' && (
+              <div className="flex flex-col items-center gap-4">
+                <AlertTriangle className="h-12 w-12 text-amber-600" />
+                <h2 className="text-xl font-semibold text-gray-900">Link Expired</h2>
+                <p className="text-gray-600">{message}</p>
+                <div className="flex gap-3 mt-4">
+                  <Button onClick={handleResendConfirmation} className="bg-amber-600 hover:bg-amber-700">
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Resend Email
+                  </Button>
+                  <Button onClick={handleRetry} variant="outline">
+                    Register Again
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {status === 'error' && (
+              <div className="flex flex-col items-center gap-4">
+                <XCircle className="h-12 w-12 text-red-600" />
+                <h2 className="text-xl font-semibold text-gray-900">Confirmation Failed</h2>
+                <p className="text-gray-600">{message}</p>
+                <div className="flex gap-3 mt-4">
+                  <Button onClick={handleRetry} className="bg-blue-600 hover:bg-blue-700">
+                    Try Again
+                  </Button>
+                  <Button onClick={handleGoHome} variant="outline">
+                    Go Home
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
