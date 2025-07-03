@@ -80,6 +80,7 @@ import OfficialResidents from "@/pages/officials/OfficialResidents";
 import OfficialServices from "@/pages/officials/OfficialServices";
 import OfficialRequests from "@/pages/officials/OfficialRequests";
 import PunongBarangayDashboard from "@/pages/officials/PunongBarangayDashboard";
+import EmergencyResponse from "@/pages/officials/EmergencyResponse";
 
 // Import the new EmailConfirmation component
 import EmailConfirmation from "@/pages/EmailConfirmation";
@@ -120,6 +121,7 @@ export function AppRoutes() {
       <Route path="/official/requests" element={<OfficialRequests />} />
       <Route path="/official/officials" element={<OfficialsPage />} />
       <Route path="/official/punong-barangay" element={<PunongBarangayDashboard />} />
+      <Route path="/official/emergency-response" element={<EmergencyResponse />} />
       
       <Route path="/admin" element={<AdminDashboard />} />
       

@@ -222,7 +222,7 @@ export const Header = () => {
                         { name: "Resident Management", icon: UsersIcon, href: "/official/residents" },
                         { name: "Community Services", icon: Hospital, href: "/official/services" },
                         { name: "RBI Forms", icon: ClipboardList, href: "/official/rbi-forms" },
-                        { name: "Emergency Response", icon: Siren, href: "/official/emergency-responder" }
+                        { name: "Emergency Response", icon: Siren, href: "/official/emergency-response" }
                       ].map((item, index) => (
                         <Link 
                           key={index} 
