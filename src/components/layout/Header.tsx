@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Bell, User, ShoppingBag, Menu, LogOut, Home, MessageSquare, BarChart3, FolderOpen, Settings, UsersIcon, Hospital, ClipboardList, Siren, FileText, Store, LifeBuoy, Info, Phone } from "lucide-react";
@@ -64,7 +63,7 @@ export const Header = () => {
     setIsMobileMenuOpen(false);
   };
 
-  const showCartIcon = location.pathname.startsWith('/marketplace') || location.pathname.startsWith('/resident-home');
+  const showCartIcon = location.pathname.startsWith('/marketplace');
 
   // Consistent mobile header for all users
   if (isMobile) {
@@ -74,8 +73,8 @@ export const Header = () => {
           {/* Mobile Menu Sheet */}
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="w-8 h-8">
-                <Menu className="h-5 w-5 text-gray-700" />
+              <Button variant="ghost" size="icon" className="w-10 h-10">
+                <Menu className="h-8 w-8 text-gray-700" />
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-80 p-0">
@@ -288,11 +287,11 @@ export const Header = () => {
 
           {/* Right side icons */}
           <div className="flex items-center gap-1">
-            {/* Cart Icon - show for marketplace or home */}
+            {/* Cart Icon - only show on marketplace pages */}
             {showCartIcon && (
-              <Button asChild variant="ghost" size="icon" className="relative w-8 h-8">
+              <Button asChild variant="ghost" size="icon" className="relative w-10 h-10">
                 <Link to="/marketplace/cart">
-                  <ShoppingBag className="h-5 w-5" />
+                  <ShoppingBag className="h-8 w-8" />
                   {cartItemCount > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 text-white text-[10px] rounded-full w-3.5 h-3.5 flex items-center justify-center bg-blue-500">
                       {cartItemCount}
@@ -307,11 +306,11 @@ export const Header = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative w-8 h-8"
+                className="relative w-10 h-10"
                 asChild
               >
                 <Link to="/notifications">
-                  <Bell className="h-5 w-5" />
+                  <Bell className="h-8 w-8" />
                   {unreadCount > 0 && (
                     <span className={`absolute -top-0.5 -right-0.5 text-white text-[10px] rounded-full w-3.5 h-3.5 flex items-center justify-center ${
                       userRole === "official" ? "bg-red-500" : 
@@ -324,13 +323,6 @@ export const Header = () => {
                 </Link>
               </Button>
             )}
-
-            {/* Profile/User Icon */}
-            <Button asChild variant="ghost" size="icon" className="rounded-full w-8 h-8">
-              <Link to={isAuthenticated ? "/resident-profile" : "/login"}>
-                <User className="h-5 w-5" />
-              </Link>
-            </Button>
           </div>
         </div>
       </header>
@@ -447,13 +439,6 @@ export const Header = () => {
                 
                 {!isMobile && <ProfileMenu />}
               </div>
-              {isMobile && userRole !== "official" && (
-                <Button asChild variant="ghost" size="icon" className="rounded-full w-8 h-8">
-                  <Link to="/resident-profile">
-                    <User className="h-4 w-4 md:h-5 md:w-5" />
-                  </Link>
-                </Button>
-              )}
             </>
           ) : (
             <div className="flex items-center gap-0 md:gap-2">
@@ -482,13 +467,6 @@ export const Header = () => {
                      </Link>
                   </Button>
                 )
-              )}
-              {isMobile && (
-                <Button asChild variant="ghost" size="icon" className="rounded-full w-8 h-8">
-                  <Link to="/login">
-                    <User className="h-4 w-4 md:h-5 md:w-5" />
-                  </Link>
-                </Button>
               )}
             </div>
           )}
