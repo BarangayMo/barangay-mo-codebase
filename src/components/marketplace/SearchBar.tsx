@@ -1,7 +1,6 @@
 
 import { Input } from "@/components/ui/input";
-import { Search, ShoppingCart } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Search } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
@@ -26,16 +25,8 @@ export function SearchBar({ search, setSearch }: SearchBarProps) {
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10 bg-white/90 rounded-full"
           />
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 text-muted-foreground" />
         </div>
-        <Link to="/marketplace/cart">
-          <div className="relative">
-            <ShoppingCart className="w-10 h-10 text-white" />
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-              2
-            </span>
-          </div>
-        </Link>
       </div>
     </div>
   );

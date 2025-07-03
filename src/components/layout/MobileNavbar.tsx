@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { Home, MessageSquare, Store, Menu, LifeBuoy, User, Briefcase } from "lucide-react";
+import { Home, MessageSquare, Store, Menu, LifeBuoy, User, Briefcase, Bell, ShoppingCart } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
@@ -27,20 +27,8 @@ export const MobileNavbar = () => {
     return isAuthenticated ? "/messages" : "/login";
   };
 
-  const getProfileRoute = () => {
-    if (!isAuthenticated) {
-      return "/login";
-    }
-    switch (userRole) {
-      case "official":
-        return "/resident-profile";
-      case "superadmin":
-        return "/resident-profile";
-      case "resident":
-      default:
-        return "/resident-profile";
-    }
-  };
+  // Check if we're in marketplace pages
+  const isMarketplacePage = pathname.startsWith('/marketplace');
 
   // Different nav items based on user role
   const getNavItems = () => {
@@ -65,22 +53,22 @@ export const MobileNavbar = () => {
           key: "messages"
         },
         {
-          icon: LifeBuoy,
-          path: "/services",
-          label: "Services",
-          key: "services"
+          icon: Bell,
+          path: "/notifications",
+          label: "Notifications",
+          key: "notifications"
         },
         {
-          icon: User,
-          path: getProfileRoute(),
-          label: "Profile",
-          key: "profile"
+          icon: Menu,
+          path: "/menu",
+          label: "Menu",
+          key: "menu"
         }
       ];
     }
 
-    // Default nav items for other roles
-    return [
+    // Default nav items for residents - show cart only on marketplace pages
+    const baseItems = [
       {
         icon: Home,
         path: getHomeRoute(),
@@ -98,20 +86,34 @@ export const MobileNavbar = () => {
         path: "/marketplace",
         label: "Market",
         key: "marketplace"
-      },
-      {
-        icon: LifeBuoy,
-        path: "/services",
-        label: "Services",
-        key: "services"
-      },
-      {
-        icon: Menu,
-        path: "/menu",
-        label: "Menu",
-        key: "menu"
       }
     ];
+
+    // Add cart only if we're in marketplace pages
+    if (isMarketplacePage) {
+      baseItems.push({
+        icon: ShoppingCart,
+        path: "/marketplace/cart",
+        label: "Cart",
+        key: "cart"
+      });
+    } else {
+      baseItems.push({
+        icon: Bell,
+        path: "/notifications",
+        label: "Notifications",
+        key: "notifications"
+      });
+    }
+
+    baseItems.push({
+      icon: Menu,
+      path: "/menu",
+      label: "Menu",
+      key: "menu"
+    });
+
+    return baseItems;
   };
 
   const navItems = getNavItems();
@@ -124,7 +126,7 @@ export const MobileNavbar = () => {
             return (
               <Link key={key} to={path} className="flex flex-col items-center justify-center p-2 min-w-0">
                 <Icon className={cn(
-                  "h-6 w-6 transition-colors mb-0.5",
+                  "h-8 w-8 transition-colors mb-0.5",
                   pathname === path 
                     ? userRole === "resident" 
                       ? "text-resident" 
