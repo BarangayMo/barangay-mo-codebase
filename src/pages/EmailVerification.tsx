@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { RoleButton } from "@/components/ui/role-button";
+import { Button } from "@/components/ui/button";
 
 export default function EmailVerification() {
   const [isResending, setIsResending] = useState(false);
@@ -140,12 +140,12 @@ export default function EmailVerification() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.6 }}
         >
-          <RoleButton 
+          <Button 
             onClick={handleOpenEmailApp}
-            className="w-full h-12 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+            className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
           >
             Open Email App
-          </RoleButton>
+          </Button>
 
           <div className="text-center">
             <p className="text-sm text-gray-500 mb-2">
