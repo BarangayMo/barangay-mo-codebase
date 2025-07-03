@@ -15,36 +15,80 @@ export default function EmailConfirmation() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Handle the auth callback from the URL hash
-        const { data, error } = await supabase.auth.getSession();
+        // Check URL hash for auth callback data (from email confirmation)
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        const tokenType = hashParams.get('token_type');
+        const type = hashParams.get('type');
 
-        if (error) {
-          console.error('Session error:', error);
-          setStatus('error');
-          setMessage(error.message);
-          return;
-        }
+        console.log('Auth callback params:', { accessToken: !!accessToken, refreshToken: !!refreshToken, type });
 
-        if (data.session?.user) {
-          console.log('User authenticated successfully:', data.session.user.email);
-          setStatus('success');
-          setMessage('Email confirmed successfully! Redirecting to your dashboard...');
-          
-          // Determine user role and redirect
-          const userRole = data.session.user.user_metadata?.role || 'resident';
-          const redirectPath = userRole === 'official' 
-            ? '/official-dashboard' 
-            : userRole === 'superadmin' 
-            ? '/admin' 
-            : '/resident-home';
+        if (accessToken && refreshToken && type === 'signup') {
+          // Set the session using the tokens from the URL
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
 
-          // Show success message briefly before redirecting
-          setTimeout(() => {
-            navigate(redirectPath, { replace: true });
-          }, 2000);
+          if (error) {
+            console.error('Session setting error:', error);
+            setStatus('error');
+            setMessage(error.message);
+            return;
+          }
+
+          if (data.session?.user) {
+            console.log('User authenticated successfully:', data.session.user.email);
+            setStatus('success');
+            setMessage('Email confirmed successfully! Redirecting to your dashboard...');
+            
+            // Determine user role and redirect
+            const userRole = data.session.user.user_metadata?.role || 'resident';
+            const redirectPath = userRole === 'official' 
+              ? '/official-dashboard' 
+              : userRole === 'superadmin' 
+              ? '/admin' 
+              : '/resident-home';
+
+            // Show success message briefly before redirecting
+            setTimeout(() => {
+              navigate(redirectPath, { replace: true });
+            }, 2000);
+          } else {
+            setStatus('error');
+            setMessage('Authentication failed. Please try registering again.');
+          }
         } else {
-          setStatus('error');
-          setMessage('No active session found. Please try registering again.');
+          // Try to get existing session
+          const { data, error } = await supabase.auth.getSession();
+
+          if (error) {
+            console.error('Session error:', error);
+            setStatus('error');
+            setMessage(error.message);
+            return;
+          }
+
+          if (data.session?.user) {
+            console.log('Existing session found:', data.session.user.email);
+            setStatus('success');
+            setMessage('Already authenticated! Redirecting to your dashboard...');
+            
+            const userRole = data.session.user.user_metadata?.role || 'resident';
+            const redirectPath = userRole === 'official' 
+              ? '/official-dashboard' 
+              : userRole === 'superadmin' 
+              ? '/admin' 
+              : '/resident-home';
+
+            setTimeout(() => {
+              navigate(redirectPath, { replace: true });
+            }, 1000);
+          } else {
+            setStatus('error');
+            setMessage('No authentication data found. Please try registering again.');
+          }
         }
       } catch (error) {
         console.error('Unexpected error during email confirmation:', error);
