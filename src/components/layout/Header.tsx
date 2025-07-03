@@ -64,7 +64,7 @@ export const Header = () => {
     setIsMobileMenuOpen(false);
   };
 
-  const showCartIcon = location.pathname.startsWith('/marketplace');
+  const showCartIcon = location.pathname.startsWith('/marketplace') || location.pathname.startsWith('/resident-home');
 
   // Consistent mobile header for all users
   if (isMobile) {
@@ -74,8 +74,8 @@ export const Header = () => {
           {/* Mobile Menu Sheet */}
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="w-12 h-12">
-                <Menu size={48} className="text-black" />
+              <Button variant="ghost" size="icon" className="w-8 h-8">
+                <Menu className="h-10 w-10 text-black-700" />
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-80 p-0">
@@ -286,18 +286,32 @@ export const Header = () => {
             <HeaderLogo />
           </div>
 
-          {/* Right side icons - only notifications */}
+          {/* Right side icons */}
           <div className="flex items-center gap-1">
+            {/* Cart Icon - show for marketplace or home */}
+            {showCartIcon && (
+              <Button asChild variant="ghost" size="icon" className="relative w-8 h-8">
+                <Link to="/marketplace/cart">
+                  <ShoppingBag className="h-5 w-5" />
+                  {cartItemCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 text-white text-[10px] rounded-full w-3.5 h-3.5 flex items-center justify-center bg-blue-500">
+                      {cartItemCount}
+                    </span>
+                  )}
+                </Link>
+              </Button>
+            )}
+
             {/* Notification Bell - only for authenticated users */}
             {isAuthenticated && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative w-12 h-12"
+                className="relative w-8 h-8"
                 asChild
               >
                 <Link to="/notifications">
-                  <Bell size={48} className="text-black" />
+                  <Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
                     <span className={`absolute -top-0.5 -right-0.5 text-white text-[10px] rounded-full w-3.5 h-3.5 flex items-center justify-center ${
                       userRole === "official" ? "bg-red-500" : 
@@ -310,6 +324,13 @@ export const Header = () => {
                 </Link>
               </Button>
             )}
+
+            {/* Profile/User Icon */}
+            <Button asChild variant="ghost" size="icon" className="rounded-full w-8 h-8">
+              <Link to={isAuthenticated ? "/resident-profile" : "/login"}>
+                <User className="h-5 w-5" />
+              </Link>
+            </Button>
           </div>
         </div>
       </header>
@@ -426,6 +447,13 @@ export const Header = () => {
                 
                 {!isMobile && <ProfileMenu />}
               </div>
+              {isMobile && userRole !== "official" && (
+                <Button asChild variant="ghost" size="icon" className="rounded-full w-8 h-8">
+                  <Link to="/resident-profile">
+                    <User className="h-4 w-4 md:h-5 md:w-5" />
+                  </Link>
+                </Button>
+              )}
             </>
           ) : (
             <div className="flex items-center gap-0 md:gap-2">
@@ -454,6 +482,13 @@ export const Header = () => {
                      </Link>
                   </Button>
                 )
+              )}
+              {isMobile && (
+                <Button asChild variant="ghost" size="icon" className="rounded-full w-8 h-8">
+                  <Link to="/login">
+                    <User className="h-4 w-4 md:h-5 md:w-5" />
+                  </Link>
+                </Button>
               )}
             </div>
           )}
