@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, ReactNode, useEffect, useRef } from "react";
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -242,7 +243,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       });
 
       if (!error) {
-        navigate("/verify");
+        navigate("/email-verification", { state: { email } });
       }
 
       return { error };
