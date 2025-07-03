@@ -17,6 +17,21 @@ export const EmailConfirmationHandler = () => {
   const [message, setMessage] = useState('');
   const [userEmail, setUserEmail] = useState('');
 
+  // Check if user has completed RBI registration
+  const checkRbiFormStatus = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('rbi_forms')
+        .select('id')
+        .eq('user_id', userId)
+        .single();
+        
+      return !!data && !error;
+    } catch (error) {
+      return false;
+    }
+  };
+
   useEffect(() => {
     const handleEmailConfirmation = async () => {
       try {
@@ -83,17 +98,27 @@ export const EmailConfirmationHandler = () => {
           if (data.session?.user) {
             console.log('User confirmed successfully:', data.session.user.email);
             setUserEmail(data.session.user.email || '');
-            setStatus('success');
-            setMessage('Email confirmed successfully! Redirecting to your dashboard...');
             
-            // Let the AuthContext handle the redirect after a short delay
-            setTimeout(() => {
-              // The AuthContext will handle navigation based on user role
-              // If it doesn't redirect automatically, fallback to login
+            // Check if user has completed RBI registration
+            const hasCompletedRbi = await checkRbiFormStatus(data.session.user.id);
+            
+            if (hasCompletedRbi) {
+              // User has completed everything, go to dashboard
+              setStatus('success');
+              setMessage('Email confirmed successfully! Redirecting to your dashboard...');
+              
               setTimeout(() => {
-                navigate('/login', { replace: true });
-              }, 3000);
-            }, 2000);
+                navigate('/resident-home', { replace: true });
+              }, 2000);
+            } else {
+              // New user needs to complete signup flow
+              setStatus('success');
+              setMessage('Email confirmed successfully! Continue with phone verification...');
+              
+              setTimeout(() => {
+                navigate('/phone', { replace: true });
+              }, 2000);
+            }
           } else {
             setStatus('error');
             setMessage('Authentication failed. Please try registering again.');
@@ -114,15 +139,25 @@ export const EmailConfirmationHandler = () => {
         if (sessionData.session?.user) {
           console.log('User already authenticated:', sessionData.session.user.email);
           setUserEmail(sessionData.session.user.email || '');
-          setStatus('success');
-          setMessage('You are already signed in! Redirecting to your dashboard...');
           
-          setTimeout(() => {
-            // Let AuthContext handle the redirect, with fallback
+          // Check if user has completed RBI registration
+          const hasCompletedRbi = await checkRbiFormStatus(sessionData.session.user.id);
+          
+          if (hasCompletedRbi) {
+            setStatus('success');
+            setMessage('You are already signed in! Redirecting to your dashboard...');
+            
             setTimeout(() => {
-              navigate('/login', { replace: true });
-            }, 2000);
-          }, 1000);
+              navigate('/resident-home', { replace: true });
+            }, 1000);
+          } else {
+            setStatus('success');
+            setMessage('Continue with your registration process...');
+            
+            setTimeout(() => {
+              navigate('/phone', { replace: true });
+            }, 1000);
+          }
           return;
         }
 
