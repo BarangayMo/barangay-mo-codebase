@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, ReactNode, useEffect, useRef } from "react";
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -237,7 +238,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             last_name: userData.lastName,
             role: userData.role,
           },
-          emailRedirectTo: `http://trybarangaymo.com/auth/confirm`
+          emailRedirectTo: `https://www.trybarangaymo.com/auth/confirm`
         }
       });
 
