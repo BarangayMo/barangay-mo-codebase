@@ -128,7 +128,7 @@ export default function Marketplace() {
                 key={cat.id}
                 className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${
                   activeFilter === cat.name
-                    ? "bg-blue-100 text-blue-800 font-medium"
+                    ? "bg-resident text-white font-medium"
                     : "bg-gray-100 text-gray-800 hover:bg-gray-200"
                 }`}
                 onClick={() => setActiveFilter(cat.name)}

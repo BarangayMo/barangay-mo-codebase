@@ -1,6 +1,6 @@
-
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRbiForms } from "@/hooks/use-rbi-forms";
 import { 
   LogOut, 
   ThumbsUp, 
@@ -10,13 +10,19 @@ import {
   User,
   ChevronLeft, 
   ChevronRight,
-  LogIn
+  LogIn,
+  AlertCircle,
+  CheckCircle
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { MobileNavbar } from "@/components/layout/MobileNavbar";
-import { useTheme } from "@/components/theme-provider"; // Changed import
+import { useTheme } from "@/components/theme-provider";
 import { motion } from "framer-motion";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 // Translation dictionary for all text in the component
 const translations = {
@@ -80,12 +86,26 @@ const itemVariants = {
 
 export const Menu = () => {
   const navigate = useNavigate();
-  const { logout, isAuthenticated } = useAuth();
+  const { logout, isAuthenticated, userRole } = useAuth();
   const { language } = useLanguage();
-  const { theme, setTheme } = useTheme(); // This will now use the theme from src/components/theme-provider.tsx
+  const { theme, setTheme } = useTheme();
+  const { rbiForms, isLoading: rbiLoading } = useRbiForms();
   
   // Select the appropriate translations based on language
   const t = translations[language];
+
+  // Calculate RBI progress for residents
+  const getRbiProgress = () => {
+    if (!rbiForms || rbiLoading) return 0;
+    const hasCompletedRbi = rbiForms.length > 0;
+    const approvedRbi = rbiForms.find(form => form.status === 'approved');
+    
+    if (approvedRbi) return 100;
+    if (hasCompletedRbi) return 75; // Submitted but not approved
+    return 0; // Not started
+  };
+
+  const rbiProgress = getRbiProgress();
 
   const handleLogout = () => {
     logout();
@@ -110,7 +130,7 @@ export const Menu = () => {
 
   return (
     <motion.div 
-      className="bg-gray-50 min-h-screen pb-20 dark:bg-zinc-900" // Added dark mode class
+      className="bg-gray-50 min-h-screen pb-20 dark:bg-zinc-900"
       initial="hidden"
       animate="visible"
       exit="exit"
@@ -118,7 +138,7 @@ export const Menu = () => {
     >
       {/* Header */}
       <motion.div 
-        className="px-4 py-4 flex items-center border-b bg-white dark:bg-zinc-800 dark:border-zinc-700" // Added dark mode classes
+        className="px-4 py-4 flex items-center border-b bg-white dark:bg-zinc-800 dark:border-zinc-700"
         variants={itemVariants}
       >
         <button onClick={handleBack} className="mr-4 text-gray-700 dark:text-gray-300">
@@ -128,6 +148,41 @@ export const Menu = () => {
       </motion.div>
 
       <motion.div className="px-4 py-3" variants={itemVariants}>
+        {/* RBI Progress Section for Residents */}
+        {userRole === "resident" && !rbiLoading && (
+          <div className="mb-6 p-4 bg-white dark:bg-zinc-800 rounded-lg shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                {rbiProgress === 100 ? (
+                  <>
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    <span className="font-medium text-gray-800 dark:text-gray-200">RBI Registration Complete</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle className="h-5 w-5 text-yellow-500" />
+                    <span className="font-medium text-gray-800 dark:text-gray-200">RBI Registration</span>
+                  </>
+                )}
+              </div>
+              <span className="text-sm text-gray-600 dark:text-gray-400">{rbiProgress}%</span>
+            </div>
+            <Progress value={rbiProgress} className="mb-2" indicatorClassName="bg-resident" />
+            <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+              {rbiProgress === 0 && "Start your RBI registration"}
+              {rbiProgress === 75 && "Waiting for approval"}
+              {rbiProgress === 100 && "Registration complete"}
+            </div>
+            {rbiProgress < 100 && (
+              <Button asChild size="sm" className="bg-resident hover:bg-resident-dark text-white">
+                <Link to="/rbi-registration">
+                  {rbiProgress === 0 ? "Start RBI" : "Check Status"}
+                </Link>
+              </Button>
+            )}
+          </div>
+        )}
+
         <h2 className="text-sm text-gray-500 dark:text-gray-400 mb-2">{t.general}</h2>
         
         {/* General Settings Group */}
@@ -236,7 +291,6 @@ export const Menu = () => {
         <motion.div 
           className="bg-white dark:bg-zinc-800 rounded-lg shadow-sm overflow-hidden"
           variants={itemVariants}
-          // Removed whileTap, button has its own feedback
         >
           {isAuthenticated ? (
             <button 
