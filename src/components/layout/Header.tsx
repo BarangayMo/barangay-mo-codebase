@@ -75,7 +75,7 @@ export const Header = () => {
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="w-8 h-8">
-                <Menu className="h-10 w-10 text-gray-700" />
+                <Menu className="h-5 w-5 text-gray-700" />
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-80 p-0">
