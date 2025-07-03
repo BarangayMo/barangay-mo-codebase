@@ -27,7 +27,7 @@ export const MobileNavbar = () => {
     return isAuthenticated ? "/messages" : "/login";
   };
 
-  // Check if we're in marketplace pages
+  // Check if we're in marketplace pages (including all marketplace routes)
   const isMarketplacePage = pathname.startsWith('/marketplace');
 
   // Different nav items based on user role

@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRbiForms } from "@/hooks/use-rbi-forms";
@@ -142,7 +143,7 @@ export const Menu = () => {
         variants={itemVariants}
       >
         <button onClick={handleBack} className="mr-4 text-gray-700 dark:text-gray-300">
-          <ChevronLeft className="w-6 h-6" />
+          <ChevronLeft className="w-8 h-8" />
         </button>
         <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t.menu}</h1>
       </motion.div>
@@ -155,12 +156,12 @@ export const Menu = () => {
               <div className="flex items-center gap-2">
                 {rbiProgress === 100 ? (
                   <>
-                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    <CheckCircle className="h-6 w-6 text-green-500" />
                     <span className="font-medium text-gray-800 dark:text-gray-200">RBI Registration Complete</span>
                   </>
                 ) : (
                   <>
-                    <AlertCircle className="h-5 w-5 text-yellow-500" />
+                    <AlertCircle className="h-6 w-6 text-yellow-500" />
                     <span className="font-medium text-gray-800 dark:text-gray-200">RBI Registration</span>
                   </>
                 )}
@@ -195,10 +196,10 @@ export const Menu = () => {
             onClick={handleProfileClick}
           >
             <div className="flex items-center">
-              <User className="text-gray-600 dark:text-gray-400 w-5 h-5 mr-3" />
+              <User className="text-gray-600 dark:text-gray-400 w-6 h-6 mr-3" />
               <p className="font-medium text-gray-800 dark:text-gray-200">{t.profile}</p>
             </div>
-            <ChevronRight className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+            <ChevronRight className="h-6 w-6 text-gray-400 dark:text-gray-500" />
           </motion.div>
 
           {/* Feedback Item */}
@@ -207,7 +208,7 @@ export const Menu = () => {
             variants={itemVariants}
             whileTap={{ scale: 0.98 }}
           >
-            <ThumbsUp className="text-gray-600 dark:text-gray-400 w-5 h-5 mr-3" />
+            <ThumbsUp className="text-gray-600 dark:text-gray-400 w-6 h-6 mr-3" />
             <div>
               <p className="font-medium text-gray-800 dark:text-gray-200">{t.feedback}</p>
               <p className="text-sm text-gray-500 dark:text-gray-400">{t.feedbackDesc}</p>
@@ -218,10 +219,9 @@ export const Menu = () => {
           <motion.div 
             className="p-4 flex items-center justify-between border-b dark:border-zinc-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-700/50"
             variants={itemVariants}
-            // Removed whileTap for Switch, as it interferes with the switch interaction
           >
             <div className="flex items-center">
-              <ToggleRight className="text-gray-600 dark:text-gray-400 w-5 h-5 mr-3" />
+              <ToggleRight className="text-gray-600 dark:text-gray-400 w-6 h-6 mr-3" />
               <p className="font-medium text-gray-800 dark:text-gray-200">{t.themes}</p>
             </div>
             <Switch
@@ -238,7 +238,7 @@ export const Menu = () => {
             whileTap={{ scale: 0.98 }}
           >
             <div className="flex items-center flex-1">
-              <FileText className="text-gray-600 dark:text-gray-400 w-5 h-5 mr-3" />
+              <FileText className="text-gray-600 dark:text-gray-400 w-6 h-6 mr-3" />
               <p className="font-medium text-gray-800 dark:text-gray-200">{t.cache}</p>
             </div>
           </motion.div>
@@ -250,10 +250,10 @@ export const Menu = () => {
             whileTap={{ scale: 0.98 }}
           >
             <div className="flex items-center">
-              <CircleHelp className="text-gray-600 dark:text-gray-400 w-5 h-5 mr-3" />
+              <CircleHelp className="text-gray-600 dark:text-gray-400 w-6 h-6 mr-3" />
               <p className="font-medium text-gray-800 dark:text-gray-200">{t.faq}</p>
             </div>
-            <ChevronRight className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+            <ChevronRight className="h-6 w-6 text-gray-400 dark:text-gray-500" />
           </motion.div>
         </div>
         
@@ -267,10 +267,10 @@ export const Menu = () => {
             whileTap={{ scale: 0.98 }}
           >
             <div className="flex items-center">
-              <FileText className="text-gray-600 dark:text-gray-400 w-5 h-5 mr-3" />
+              <FileText className="text-gray-600 dark:text-gray-400 w-6 h-6 mr-3" />
               <p className="font-medium text-gray-800 dark:text-gray-200">{t.privacy}</p>
             </div>
-            <ChevronRight className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+            <ChevronRight className="h-6 w-6 text-gray-400 dark:text-gray-500" />
           </motion.div>
           
           {/* Terms and Conditions Item */}
@@ -280,10 +280,10 @@ export const Menu = () => {
             whileTap={{ scale: 0.98 }}
           >
             <div className="flex items-center">
-              <FileText className="text-gray-600 dark:text-gray-400 w-5 h-5 mr-3" />
+              <FileText className="text-gray-600 dark:text-gray-400 w-6 h-6 mr-3" />
               <p className="font-medium text-gray-800 dark:text-gray-200">{t.terms}</p>
             </div>
-            <ChevronRight className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+            <ChevronRight className="h-6 w-6 text-gray-400 dark:text-gray-500" />
           </motion.div>
         </div>
         
@@ -297,7 +297,7 @@ export const Menu = () => {
               onClick={handleLogout}
               className="p-4 flex items-center w-full text-left text-red-600 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
             >
-              <LogOut className="w-5 h-5 mr-3" />
+              <LogOut className="w-6 h-6 mr-3" />
               <p className="font-medium">{t.logout}</p>
             </button>
           ) : (
@@ -305,7 +305,7 @@ export const Menu = () => {
               onClick={handleLogin}
               className="p-4 flex items-center w-full text-left text-primary hover:bg-primary/10 dark:text-blue-400 dark:hover:bg-blue-400/10"
             >
-              <LogIn className="w-5 h-5 mr-3" />
+              <LogIn className="w-6 h-6 mr-3" />
               <p className="font-medium">{t.login}</p>
             </button>
           )}
