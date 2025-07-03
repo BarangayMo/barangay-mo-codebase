@@ -75,7 +75,7 @@ export const Header = () => {
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="w-8 h-8">
-                <Menu className="h-8 w-8 text-black" />
+                <Menu className="h-5 w-5 text-gray-700" />
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-80 p-0">
@@ -311,7 +311,7 @@ export const Header = () => {
                 asChild
               >
                 <Link to="/notifications">
-                  <Bell className="h-8 w-8 text-black" />
+                  <Bell className="h-10 w-10" />
                   {unreadCount > 0 && (
                     <span className={`absolute -top-0.5 -right-0.5 text-white text-[10px] rounded-full w-3.5 h-3.5 flex items-center justify-center ${
                       userRole === "official" ? "bg-red-500" : 
@@ -324,6 +324,13 @@ export const Header = () => {
                 </Link>
               </Button>
             )}
+
+            {/* Profile/User Icon */}
+            <Button asChild variant="ghost" size="icon" className="rounded-full w-8 h-8">
+              <Link to={isAuthenticated ? "/resident-profile" : "/login"}>
+                <User className="h-5 w-5" />
+              </Link>
+            </Button>
           </div>
         </div>
       </header>
