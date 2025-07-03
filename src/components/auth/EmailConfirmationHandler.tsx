@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, XCircle, Loader2, AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-type ConfirmationStatus = 'loading' | 'success' | 'error' | 'expired' | 'already_confirmed';
+type ConfirmationStatus = 'loading' | 'success' | 'error' | 'expired' | 'already_confirmed' | 'login_required';
 
 export const EmailConfirmationHandler = () => {
   const navigate = useNavigate();
@@ -56,7 +56,7 @@ export const EmailConfirmationHandler = () => {
             setMessage('Your email confirmation link has expired. Please request a new confirmation email.');
           } else if (errorDescription?.includes('already_confirmed')) {
             setStatus('already_confirmed');
-            setMessage('Your email has already been confirmed. You can now sign in.');
+            setMessage('Your email has already been confirmed. Please sign in to continue.');
           } else {
             setStatus('error');
             setMessage(errorDescription ? decodeURIComponent(errorDescription.replace(/\+/g, ' ')) : 'Email confirmation failed');
@@ -86,9 +86,13 @@ export const EmailConfirmationHandler = () => {
             setStatus('success');
             setMessage('Email confirmed successfully! Redirecting to your dashboard...');
             
-            // Let the AuthContext handle the redirect
+            // Let the AuthContext handle the redirect after a short delay
             setTimeout(() => {
               // The AuthContext will handle navigation based on user role
+              // If it doesn't redirect automatically, fallback to login
+              setTimeout(() => {
+                navigate('/login', { replace: true });
+              }, 3000);
             }, 2000);
           } else {
             setStatus('error');
@@ -102,8 +106,8 @@ export const EmailConfirmationHandler = () => {
         
         if (sessionError) {
           console.error('Session check error:', sessionError);
-          setStatus('error');
-          setMessage('Unable to verify authentication status.');
+          setStatus('login_required');
+          setMessage('Unable to verify authentication status. Please sign in to continue.');
           return;
         }
 
@@ -114,14 +118,17 @@ export const EmailConfirmationHandler = () => {
           setMessage('You are already signed in! Redirecting to your dashboard...');
           
           setTimeout(() => {
-            // Let AuthContext handle the redirect
+            // Let AuthContext handle the redirect, with fallback
+            setTimeout(() => {
+              navigate('/login', { replace: true });
+            }, 2000);
           }, 1000);
           return;
         }
 
-        // No valid tokens and no existing session
-        setStatus('error');
-        setMessage('No valid confirmation data found. Please try the confirmation link again or request a new one.');
+        // No valid tokens and no existing session - user needs to login
+        setStatus('login_required');
+        setMessage('Email confirmation completed. Please sign in to access your account.');
         
       } catch (error) {
         console.error('Unexpected error during email confirmation:', error);
@@ -131,7 +138,7 @@ export const EmailConfirmationHandler = () => {
     };
 
     handleEmailConfirmation();
-  }, []);
+  }, [navigate]);
 
   const handleRetry = () => {
     navigate('/register');
@@ -228,6 +235,22 @@ export const EmailConfirmationHandler = () => {
               </div>
             )}
 
+            {status === 'login_required' && (
+              <div className="flex flex-col items-center gap-4">
+                <CheckCircle className="h-12 w-12 text-blue-600" />
+                <h2 className="text-xl font-semibold text-gray-900">Email Confirmed</h2>
+                <p className="text-gray-600">{message}</p>
+                <div className="flex gap-3 mt-4">
+                  <Button onClick={handleGoToLogin} className="bg-blue-600 hover:bg-blue-700">
+                    Sign In Now
+                  </Button>
+                  <Button onClick={handleGoHome} variant="outline">
+                    Go Home
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {status === 'expired' && (
               <div className="flex flex-col items-center gap-4">
                 <AlertTriangle className="h-12 w-12 text-amber-600" />
@@ -251,8 +274,8 @@ export const EmailConfirmationHandler = () => {
                 <h2 className="text-xl font-semibold text-gray-900">Confirmation Failed</h2>
                 <p className="text-gray-600">{message}</p>
                 <div className="flex gap-3 mt-4">
-                  <Button onClick={handleRetry} className="bg-blue-600 hover:bg-blue-700">
-                    Try Again
+                  <Button onClick={handleGoToLogin} className="bg-blue-600 hover:bg-blue-700">
+                    Sign In
                   </Button>
                   <Button onClick={handleGoHome} variant="outline">
                     Go Home
