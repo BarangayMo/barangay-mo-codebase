@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -534,7 +533,7 @@ const PunongBarangayDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-red-600 relative">
+    <div className="min-h-screen bg-gray-50 relative">
       {/* Header */}
       <div className="bg-red-600 text-white p-4">
         <div className="flex items-center gap-3">
@@ -571,8 +570,8 @@ const PunongBarangayDashboard = () => {
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gray-200"></div>
       </div>
 
-      {/* Content with curved top */}
-      <div className="bg-gray-50 min-h-screen rounded-t-lg pb-24">
+      {/* Content */}
+      <div className="pb-24">
         {renderTabContent()}
       </div>
 
