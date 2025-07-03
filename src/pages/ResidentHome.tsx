@@ -60,7 +60,7 @@ export default function ResidentHome() {
               {isLoading ? (
                 <Skeleton className="rounded-full w-16 h-16" />
               ) : (
-                <img src={avatarUrl} alt="Profile" className="rounded-full w-16 h-16 border-2 border-green-400" />
+                <img src={avatarUrl} alt="Profile" className="rounded-full w-20 h-20 border-2 border-green-400" />
               )}
               <div>
                 {isLoading ? (
