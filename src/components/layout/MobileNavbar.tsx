@@ -123,20 +123,16 @@ export const MobileNavbar = () => {
           {navItems.map(({ icon: Icon, path, label, key }) => (
             <Link key={key} to={path} className="flex flex-col items-center justify-center p-2 min-w-0">
               <Icon className={cn(
-                "h-6 w-6 transition-colors mb-1.5",
+                "h-7 w-7 transition-colors mb-1.5 font-bold",
                 pathname === path 
-                  ? userRole === "resident" 
-                    ? "text-[#1a237e]" 
-                    : "text-[#ea384c]"
-                  : "text-gray-600"
+                  ? "text-black" 
+                  : "text-black"
               )} />
               <span className={cn(
-                "text-xs font-medium text-center leading-tight",
+                "text-sm font-bold text-center leading-tight",
                 pathname === path 
-                  ? userRole === "resident" 
-                    ? "text-[#1a237e]" 
-                    : "text-[#ea384c]"
-                  : "text-gray-600"
+                  ? "text-black" 
+                  : "text-black"
               )}>
                 {label}
               </span>
