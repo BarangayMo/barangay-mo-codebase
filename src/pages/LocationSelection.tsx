@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Search, X } from "lucide-react";
+import { ChevronLeft, ChevronDown, X } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -83,7 +83,7 @@ export default function LocationSelection() {
       console.log("Raw region data:", data);
       
       if (data && data.length > 0) {
-        const uniqueRegions = [...new Set(data.map(item => item.REGION).filter(Boolean))];
+        const uniqueRegions = [...new Set(data.map(item => item.REGION).filter(region => region && region.trim() !== ''))];
         console.log("Unique regions:", uniqueRegions);
         setRegions(uniqueRegions.sort());
       } else {
@@ -221,59 +221,63 @@ export default function LocationSelection() {
           <div className="w-6" />
         </div>
 
-        {/* Progress Bar */}
-        <div className="px-4 py-6 bg-gray-50">
-          <div className="flex justify-center items-center space-x-4 mb-4">
-            <div className="text-center">
-              <div className="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center text-sm font-medium mb-2">1</div>
-              <div className="text-xs text-red-600 font-medium">Address</div>
+        {/* Simple Progress Bar */}
+        <div className="px-6 py-8 bg-gray-50">
+          <div className="flex justify-center items-center space-x-8 mb-6">
+            <div className="flex items-center">
+              <div className="h-1 w-16 bg-red-500 rounded-full"></div>
             </div>
-            <div className="w-8 h-0.5 bg-gray-300"></div>
-            <div className="text-center">
-              <div className="w-8 h-8 rounded-full bg-gray-300 text-gray-500 flex items-center justify-center text-sm font-medium mb-2">2</div>
-              <div className="text-xs text-gray-400">Details</div>
+            <div className="flex items-center">
+              <div className="h-1 w-16 bg-gray-300 rounded-full"></div>
             </div>
-            <div className="w-8 h-0.5 bg-gray-300"></div>
-            <div className="text-center">
-              <div className="w-8 h-8 rounded-full bg-gray-300 text-gray-500 flex items-center justify-center text-sm font-medium mb-2">3</div>
-              <div className="text-xs text-gray-400">Logo</div>
+            <div className="flex items-center">
+              <div className="h-1 w-16 bg-gray-300 rounded-full"></div>
             </div>
           </div>
           <div className="text-center">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Address</h2>
             <p className="text-sm text-gray-600">Please Complete Your Address Details</p>
           </div>
         </div>
 
         {/* Content */}
         <div className="flex-1 p-6 space-y-8">
-          {/* Region */}
+          {/* Region Dropdown */}
           <div className="relative">
             <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Region</Label>
             <div className="relative">
-              <Input
-                placeholder="Select Region"
-                value={selectedRegion || regionSearch}
-                onChange={(e) => {
-                  setRegionSearch(e.target.value);
-                  if (!selectedRegion) setShowRegionDropdown(true);
-                }}
-                onFocus={() => setShowRegionDropdown(true)}
-                className="h-12 text-base"
-              />
+              <div 
+                onClick={() => setShowRegionDropdown(!showRegionDropdown)}
+                className="flex items-center justify-between w-full h-12 px-4 border border-gray-300 rounded-lg bg-white cursor-pointer hover:border-gray-400 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+              >
+                <span className={selectedRegion ? "text-gray-900" : "text-gray-400"}>
+                  {selectedRegion || "Select Region"}
+                </span>
+                <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showRegionDropdown ? 'rotate-180' : ''}`} />
+              </div>
               {selectedRegion && (
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setSelectedRegion("");
                     setRegionSearch("");
                   }}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   <X className="h-4 w-4" />
                 </button>
               )}
             </div>
-            {showRegionDropdown && !selectedRegion && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+            {showRegionDropdown && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                <div className="p-2 border-b">
+                  <Input
+                    placeholder="Search regions..."
+                    value={regionSearch}
+                    onChange={(e) => setRegionSearch(e.target.value)}
+                    className="h-8"
+                  />
+                </div>
                 {isLoading ? (
                   <div className="p-4 text-center text-gray-500">Loading regions...</div>
                 ) : filteredRegions.length === 0 ? (
@@ -297,35 +301,42 @@ export default function LocationSelection() {
             )}
           </div>
 
-          {/* Province */}
+          {/* Province Dropdown */}
           <div className="relative">
             <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Province</Label>
             <div className="relative">
-              <Input
-                placeholder="Select Province"
-                value={selectedProvince || provinceSearch}
-                onChange={(e) => {
-                  setProvinceSearch(e.target.value);
-                  if (!selectedProvince) setShowProvinceDropdown(true);
-                }}
-                onFocus={() => selectedRegion && setShowProvinceDropdown(true)}
-                disabled={!selectedRegion}
-                className="h-12 text-base"
-              />
+              <div 
+                onClick={() => selectedRegion && setShowProvinceDropdown(!showProvinceDropdown)}
+                className={`flex items-center justify-between w-full h-12 px-4 border border-gray-300 rounded-lg bg-white cursor-pointer hover:border-gray-400 focus:border-red-500 focus:ring-1 focus:ring-red-500 ${!selectedRegion ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <span className={selectedProvince ? "text-gray-900" : "text-gray-400"}>
+                  {selectedProvince || "Select Province"}
+                </span>
+                <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showProvinceDropdown ? 'rotate-180' : ''}`} />
+              </div>
               {selectedProvince && (
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setSelectedProvince("");
                     setProvinceSearch("");
                   }}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   <X className="h-4 w-4" />
                 </button>
               )}
             </div>
-            {showProvinceDropdown && !selectedProvince && selectedRegion && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+            {showProvinceDropdown && selectedRegion && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                <div className="p-2 border-b">
+                  <Input
+                    placeholder="Search provinces..."
+                    value={provinceSearch}
+                    onChange={(e) => setProvinceSearch(e.target.value)}
+                    className="h-8"
+                  />
+                </div>
                 {isLoading ? (
                   <div className="p-4 text-center text-gray-500">Loading provinces...</div>
                 ) : filteredProvinces.length === 0 ? (
@@ -349,35 +360,42 @@ export default function LocationSelection() {
             )}
           </div>
 
-          {/* Municipality */}
+          {/* Municipality Dropdown */}
           <div className="relative">
             <Label className="text-sm font-medium text-gray-700 mb-3 block">Select City/Municipality</Label>
             <div className="relative">
-              <Input
-                placeholder="Select City/Municipality"
-                value={selectedMunicipality || municipalitySearch}
-                onChange={(e) => {
-                  setMunicipalitySearch(e.target.value);
-                  if (!selectedMunicipality) setShowMunicipalityDropdown(true);
-                }}
-                onFocus={() => selectedProvince && setShowMunicipalityDropdown(true)}
-                disabled={!selectedProvince}
-                className="h-12 text-base"
-              />
+              <div 
+                onClick={() => selectedProvince && setShowMunicipalityDropdown(!showMunicipalityDropdown)}
+                className={`flex items-center justify-between w-full h-12 px-4 border border-gray-300 rounded-lg bg-white cursor-pointer hover:border-gray-400 focus:border-red-500 focus:ring-1 focus:ring-red-500 ${!selectedProvince ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <span className={selectedMunicipality ? "text-gray-900" : "text-gray-400"}>
+                  {selectedMunicipality || "Select City/Municipality"}
+                </span>
+                <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showMunicipalityDropdown ? 'rotate-180' : ''}`} />
+              </div>
               {selectedMunicipality && (
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setSelectedMunicipality("");
                     setMunicipalitySearch("");
                   }}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   <X className="h-4 w-4" />
                 </button>
               )}
             </div>
-            {showMunicipalityDropdown && !selectedMunicipality && selectedProvince && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+            {showMunicipalityDropdown && selectedProvince && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                <div className="p-2 border-b">
+                  <Input
+                    placeholder="Search municipalities..."
+                    value={municipalitySearch}
+                    onChange={(e) => setMunicipalitySearch(e.target.value)}
+                    className="h-8"
+                  />
+                </div>
                 {isLoading ? (
                   <div className="p-4 text-center text-gray-500">Loading municipalities...</div>
                 ) : filteredMunicipalities.length === 0 ? (
@@ -401,35 +419,42 @@ export default function LocationSelection() {
             )}
           </div>
 
-          {/* Barangay */}
+          {/* Barangay Dropdown */}
           <div className="relative">
             <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Barangay</Label>
             <div className="relative">
-              <Input
-                placeholder="Select Barangay"
-                value={selectedBarangay || barangaySearch}
-                onChange={(e) => {
-                  setBarangaySearch(e.target.value);
-                  if (!selectedBarangay) setShowBarangayDropdown(true);
-                }}
-                onFocus={() => selectedMunicipality && setShowBarangayDropdown(true)}
-                disabled={!selectedMunicipality}
-                className="h-12 text-base"
-              />
+              <div 
+                onClick={() => selectedMunicipality && setShowBarangayDropdown(!showBarangayDropdown)}
+                className={`flex items-center justify-between w-full h-12 px-4 border border-gray-300 rounded-lg bg-white cursor-pointer hover:border-gray-400 focus:border-red-500 focus:ring-1 focus:ring-red-500 ${!selectedMunicipality ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <span className={selectedBarangay ? "text-gray-900" : "text-gray-400"}>
+                  {selectedBarangay || "Select Barangay"}
+                </span>
+                <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showBarangayDropdown ? 'rotate-180' : ''}`} />
+              </div>
               {selectedBarangay && (
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setSelectedBarangay("");
                     setBarangaySearch("");
                   }}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   <X className="h-4 w-4" />
                 </button>
               )}
             </div>
-            {showBarangayDropdown && !selectedBarangay && selectedMunicipality && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+            {showBarangayDropdown && selectedMunicipality && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                <div className="p-2 border-b">
+                  <Input
+                    placeholder="Search barangays..."
+                    value={barangaySearch}
+                    onChange={(e) => setBarangaySearch(e.target.value)}
+                    className="h-8"
+                  />
+                </div>
                 {isLoading ? (
                   <div className="p-4 text-center text-gray-500">Loading barangays...</div>
                 ) : filteredBarangays.length === 0 ? (
@@ -482,25 +507,21 @@ export default function LocationSelection() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-white to-orange-50 px-4 py-8">
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
-        {/* Progress Bar */}
-        <div className="px-6 py-6 border-b bg-gray-50">
-          <div className="flex justify-center items-center space-x-4 mb-4">
-            <div className="text-center">
-              <div className="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center text-sm font-medium mb-2">1</div>
-              <div className="text-xs text-red-600 font-medium">Address</div>
+        {/* Simple Progress Bar */}
+        <div className="px-6 py-8 border-b bg-gray-50">
+          <div className="flex justify-center items-center space-x-8 mb-6">
+            <div className="flex items-center">
+              <div className="h-1 w-16 bg-red-500 rounded-full"></div>
             </div>
-            <div className="w-8 h-0.5 bg-gray-300"></div>
-            <div className="text-center">
-              <div className="w-8 h-8 rounded-full bg-gray-300 text-gray-500 flex items-center justify-center text-sm font-medium mb-2">2</div>
-              <div className="text-xs text-gray-400">Details</div>
+            <div className="flex items-center">
+              <div className="h-1 w-16 bg-gray-300 rounded-full"></div>
             </div>
-            <div className="w-8 h-0.5 bg-gray-300"></div>
-            <div className="text-center">
-              <div className="w-8 h-8 rounded-full bg-gray-300 text-gray-500 flex items-center justify-center text-sm font-medium mb-2">3</div>
-              <div className="text-xs text-gray-400">Logo</div>
+            <div className="flex items-center">
+              <div className="h-1 w-16 bg-gray-300 rounded-full"></div>
             </div>
           </div>
           <div className="text-center">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Address</h2>
             <p className="text-sm text-gray-600">Please Complete Your Address Details</p>
           </div>
         </div>
@@ -517,34 +538,42 @@ export default function LocationSelection() {
           </div>
 
           <div className="space-y-8">
-            {/* Region */}
+            {/* Region Dropdown */}
             <div className="relative">
               <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Region</Label>
               <div className="relative">
-                <Input
-                  placeholder="Select Region"
-                  value={selectedRegion || regionSearch}
-                  onChange={(e) => {
-                    setRegionSearch(e.target.value);
-                    if (!selectedRegion) setShowRegionDropdown(true);
-                  }}
-                  onFocus={() => setShowRegionDropdown(true)}
-                  className="h-12 text-base"
-                />
+                <div 
+                  onClick={() => setShowRegionDropdown(!showRegionDropdown)}
+                  className="flex items-center justify-between w-full h-12 px-4 border border-gray-300 rounded-lg bg-white cursor-pointer hover:border-gray-400 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                >
+                  <span className={selectedRegion ? "text-gray-900" : "text-gray-400"}>
+                    {selectedRegion || "Select Region"}
+                  </span>
+                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showRegionDropdown ? 'rotate-180' : ''}`} />
+                </div>
                 {selectedRegion && (
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setSelectedRegion("");
                       setRegionSearch("");
                     }}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
                     <X className="h-4 w-4" />
                   </button>
                 )}
               </div>
-              {showRegionDropdown && !selectedRegion && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
+              {showRegionDropdown && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  <div className="p-2 border-b">
+                    <Input
+                      placeholder="Search regions..."
+                      value={regionSearch}
+                      onChange={(e) => setRegionSearch(e.target.value)}
+                      className="h-8"
+                    />
+                  </div>
                   {isLoading ? (
                     <div className="p-4 text-center text-gray-500">Loading regions...</div>
                   ) : filteredRegions.length === 0 ? (
@@ -568,35 +597,42 @@ export default function LocationSelection() {
               )}
             </div>
 
-            {/* Province */}
+            {/* Province Dropdown */}
             <div className="relative">
               <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Province</Label>
               <div className="relative">
-                <Input
-                  placeholder="Select Province"
-                  value={selectedProvince || provinceSearch}
-                  onChange={(e) => {
-                    setProvinceSearch(e.target.value);
-                    if (!selectedProvince) setShowProvinceDropdown(true);
-                  }}
-                  onFocus={() => selectedRegion && setShowProvinceDropdown(true)}
-                  disabled={!selectedRegion}
-                  className="h-12 text-base"
-                />
+                <div 
+                  onClick={() => selectedRegion && setShowProvinceDropdown(!showProvinceDropdown)}
+                  className={`flex items-center justify-between w-full h-12 px-4 border border-gray-300 rounded-lg bg-white cursor-pointer hover:border-gray-400 focus:border-red-500 focus:ring-1 focus:ring-red-500 ${!selectedRegion ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <span className={selectedProvince ? "text-gray-900" : "text-gray-400"}>
+                    {selectedProvince || "Select Province"}
+                  </span>
+                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showProvinceDropdown ? 'rotate-180' : ''}`} />
+                </div>
                 {selectedProvince && (
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setSelectedProvince("");
                       setProvinceSearch("");
                     }}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
                     <X className="h-4 w-4" />
                   </button>
                 )}
               </div>
-              {showProvinceDropdown && !selectedProvince && selectedRegion && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
+              {showProvinceDropdown && selectedRegion && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  <div className="p-2 border-b">
+                    <Input
+                      placeholder="Search provinces..."
+                      value={provinceSearch}
+                      onChange={(e) => setProvinceSearch(e.target.value)}
+                      className="h-8"
+                    />
+                  </div>
                   {isLoading ? (
                     <div className="p-4 text-center text-gray-500">Loading provinces...</div>
                   ) : filteredProvinces.length === 0 ? (
@@ -620,35 +656,42 @@ export default function LocationSelection() {
               )}
             </div>
 
-            {/* Municipality */}
+            {/* Municipality Dropdown */}
             <div className="relative">
               <Label className="text-sm font-medium text-gray-700 mb-3 block">Select City/Municipality</Label>
               <div className="relative">
-                <Input
-                  placeholder="Select City/Municipality"
-                  value={selectedMunicipality || municipalitySearch}
-                  onChange={(e) => {
-                    setMunicipalitySearch(e.target.value);
-                    if (!selectedMunicipality) setShowMunicipalityDropdown(true);
-                  }}
-                  onFocus={() => selectedProvince && setShowMunicipalityDropdown(true)}
-                  disabled={!selectedProvince}
-                  className="h-12 text-base"
-                />
+                <div 
+                  onClick={() => selectedProvince && setShowMunicipalityDropdown(!showMunicipalityDropdown)}
+                  className={`flex items-center justify-between w-full h-12 px-4 border border-gray-300 rounded-lg bg-white cursor-pointer hover:border-gray-400 focus:border-red-500 focus:ring-1 focus:ring-red-500 ${!selectedProvince ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <span className={selectedMunicipality ? "text-gray-900" : "text-gray-400"}>
+                    {selectedMunicipality || "Select City/Municipality"}
+                  </span>
+                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showMunicipalityDropdown ? 'rotate-180' : ''}`} />
+                </div>
                 {selectedMunicipality && (
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setSelectedMunicipality("");
                       setMunicipalitySearch("");
                     }}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
                     <X className="h-4 w-4" />
                   </button>
                 )}
               </div>
-              {showMunicipalityDropdown && !selectedMunicipality && selectedProvince && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
+              {showMunicipalityDropdown && selectedProvince && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  <div className="p-2 border-b">
+                    <Input
+                      placeholder="Search municipalities..."
+                      value={municipalitySearch}
+                      onChange={(e) => setMunicipalitySearch(e.target.value)}
+                      className="h-8"
+                    />
+                  </div>
                   {isLoading ? (
                     <div className="p-4 text-center text-gray-500">Loading municipalities...</div>
                   ) : filteredMunicipalities.length === 0 ? (
@@ -672,35 +715,42 @@ export default function LocationSelection() {
               )}
             </div>
 
-            {/* Barangay */}
+            {/* Barangay Dropdown */}
             <div className="relative">
               <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Barangay</Label>
               <div className="relative">
-                <Input
-                  placeholder="Select Barangay"
-                  value={selectedBarangay || barangaySearch}
-                  onChange={(e) => {
-                    setBarangaySearch(e.target.value);
-                    if (!selectedBarangay) setShowBarangayDropdown(true);
-                  }}
-                  onFocus={() => selectedMunicipality && setShowBarangayDropdown(true)}
-                  disabled={!selectedMunicipality}
-                  className="h-12 text-base"
-                />
+                <div 
+                  onClick={() => selectedMunicipality && setShowBarangayDropdown(!showBarangayDropdown)}
+                  className={`flex items-center justify-between w-full h-12 px-4 border border-gray-300 rounded-lg bg-white cursor-pointer hover:border-gray-400 focus:border-red-500 focus:ring-1 focus:ring-red-500 ${!selectedMunicipality ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <span className={selectedBarangay ? "text-gray-900" : "text-gray-400"}>
+                    {selectedBarangay || "Select Barangay"}
+                  </span>
+                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showBarangayDropdown ? 'rotate-180' : ''}`} />
+                </div>
                 {selectedBarangay && (
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setSelectedBarangay("");
                       setBarangaySearch("");
                     }}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
                     <X className="h-4 w-4" />
                   </button>
                 )}
               </div>
-              {showBarangayDropdown && !selectedBarangay && selectedMunicipality && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
+              {showBarangayDropdown && selectedMunicipality && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  <div className="p-2 border-b">
+                    <Input
+                      placeholder="Search barangays..."
+                      value={barangaySearch}
+                      onChange={(e) => setBarangaySearch(e.target.value)}
+                      className="h-8"
+                    />
+                  </div>
                   {isLoading ? (
                     <div className="p-4 text-center text-gray-500">Loading barangays...</div>
                   ) : filteredBarangays.length === 0 ? (
