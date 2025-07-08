@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -68,7 +67,7 @@ export default function OfficialsInfo() {
   useEffect(() => {
     const loadOfficials = async () => {
       if (!locationState?.barangay || !locationState?.region) {
-        console.log('Missing location data, skipping officials load');
+        console.log('Missing location data, skipping officials load. LocationState:', locationState);
         return;
       }
 
@@ -80,16 +79,16 @@ export default function OfficialsInfo() {
           province: locationState.province
         });
 
-        // Query the region table directly
+        // Query the region table directly with properly quoted column names
         const regionTableName = locationState.region;
         console.log('Querying table:', regionTableName);
 
         const { data, error } = await supabase
           .from(regionTableName as any)
-          .select('POSITION, FIRSTNAME, MIDDLENAME, LASTNAME, SUFFIX')
-          .eq('BARANGAY', locationState.barangay)
-          .eq('PROVINCE', locationState.province)
-          .eq('CITY/MUNICIPALITY', locationState.municipality);
+          .select('"POSITION", "FIRSTNAME", "MIDDLENAME", "LASTNAME", "SUFFIX"')
+          .eq('"BARANGAY"', locationState.barangay)
+          .eq('"PROVINCE"', locationState.province)
+          .eq('"CITY/MUNICIPALITY"', locationState.municipality);
 
         if (error) {
           console.error('Error loading officials:', error);
@@ -99,12 +98,14 @@ export default function OfficialsInfo() {
         console.log('Raw officials data from DB:', data);
 
         if (data && data.length > 0) {
+          console.log('Processing officials data...');
+          
           // Update officials with database data
           setOfficials(prevOfficials => {
-            return prevOfficials.map(official => {
+            const updatedOfficials = prevOfficials.map(official => {
               let matchingDbOfficial;
               
-              // Direct position mapping
+              // Direct position mapping for exact matches
               const positionMappings = {
                 'Punong Barangay': 'Punong Barangay',
                 'Barangay Secretary': 'Barangay Secretary',
@@ -124,12 +125,15 @@ export default function OfficialsInfo() {
                   d.POSITION === 'Sangguniang Barangay Member'
                 );
                 
+                console.log('Found Sangguniang members:', sangguniangMembers.length);
+                
                 // Get the member number from the position (e.g., "Member 1" -> 1)
                 const memberNumber = parseInt(official.position.split(' ').pop() || '1');
                 
                 // Try to assign members in order
                 if (sangguniangMembers[memberNumber - 1]) {
                   matchingDbOfficial = sangguniangMembers[memberNumber - 1];
+                  console.log(`Assigned ${official.position} to:`, matchingDbOfficial);
                 }
               }
 
@@ -147,9 +151,15 @@ export default function OfficialsInfo() {
                 };
               }
               
+              console.log(`No data found for ${official.position}`);
               return official;
             });
+            
+            console.log('Updated officials:', updatedOfficials);
+            return updatedOfficials;
           });
+        } else {
+          console.log('No officials data found in database');
         }
       } catch (error) {
         console.error('Error in loadOfficials:', error);
