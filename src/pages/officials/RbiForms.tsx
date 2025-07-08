@@ -60,21 +60,32 @@ const RbiForms = () => {
     queryFn: async () => {
       if (!officialProfile?.barangay) return [];
       
-      const { data, error } = await supabase
+      // First get the RBI forms
+      const { data: forms, error: formsError } = await supabase
         .from('rbi_forms')
-        .select(`
-          *,
-          profiles:user_id (
-            first_name,
-            last_name,
-            avatar_url
-          )
-        `)
+        .select('*')
         .eq('barangay_id', officialProfile.barangay)
         .order('submitted_at', { ascending: false });
 
-      if (error) throw error;
-      return data || [];
+      if (formsError) throw formsError;
+
+      // Then get the profile data for each form
+      const formsWithProfiles = await Promise.all(
+        (forms || []).map(async (form) => {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('first_name, last_name, avatar_url')
+            .eq('id', form.user_id)
+            .single();
+
+          return {
+            ...form,
+            profiles: profile
+          };
+        })
+      );
+
+      return formsWithProfiles;
     },
     enabled: !!officialProfile?.barangay
   });
@@ -83,7 +94,7 @@ const RbiForms = () => {
   const filteredForms = rbiForms.filter(form => {
     const matchesSearch = searchQuery === "" || 
       form.rbi_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      `${form.profiles?.first_name} ${form.profiles?.last_name}`.toLowerCase().includes(searchQuery.toLowerCase());
+      `${form.profiles?.first_name || ''} ${form.profiles?.last_name || ''}`.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesStatus = statusFilter === "all" || form.status === statusFilter;
     
@@ -265,7 +276,7 @@ const RbiForms = () => {
                     <div className="flex items-center space-x-3">
                       <Avatar className="h-10 w-10">
                         <AvatarFallback className="text-sm">
-                          {form.profiles?.first_name?.[0]}{form.profiles?.last_name?.[0]}
+                          {form.profiles?.first_name?.[0] || 'U'}{form.profiles?.last_name?.[0] || 'N'}
                         </AvatarFallback>
                       </Avatar>
                       <div>
@@ -273,7 +284,7 @@ const RbiForms = () => {
                           {form.rbi_number || 'Pending RBI Number'}
                         </div>
                         <div className="text-xs text-gray-600">
-                          {form.profiles?.first_name} {form.profiles?.last_name}
+                          {form.profiles?.first_name || 'Unknown'} {form.profiles?.last_name || 'User'}
                         </div>
                         <div className="text-xs text-gray-500">
                           Submitted {format(new Date(form.submitted_at), 'MMM dd, yyyy')}
