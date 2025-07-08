@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -264,148 +263,150 @@ export default function LocationSelection() {
     try {
       let data, error;
       
-      // Use specific queries for each region
+      // Use specific queries for each region with properly quoted column name
       switch(selectedRegion) {
         case 'NCR':
           ({ data, error } = await supabase
             .from('NCR')
-            .select('CITY/MUNICIPALITY')
+            .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
-            .not('CITY/MUNICIPALITY', 'is', null)
-            .neq('CITY/MUNICIPALITY', ''));
+            .not('"CITY/MUNICIPALITY"', 'is', null)
+            .neq('"CITY/MUNICIPALITY"', ''));
           break;
         case 'REGION 1':
           ({ data, error } = await supabase
             .from('REGION 1')
-            .select('CITY/MUNICIPALITY')
+            .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
-            .not('CITY/MUNICIPALITY', 'is', null)
-            .neq('CITY/MUNICIPALITY', ''));
+            .not('"CITY/MUNICIPALITY"', 'is', null)
+            .neq('"CITY/MUNICIPALITY"', ''));
           break;
         case 'REGION 2':
           ({ data, error } = await supabase
             .from('REGION 2')
-            .select('CITY/MUNICIPALITY')
+            .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
-            .not('CITY/MUNICIPALITY', 'is', null)
-            .neq('CITY/MUNICIPALITY', ''));
+            .not('"CITY/MUNICIPALITY"', 'is', null)
+            .neq('"CITY/MUNICIPALITY"', ''));
           break;
         case 'REGION 3':
           ({ data, error } = await supabase
             .from('REGION 3')
-            .select('CITY/MUNICIPALITY')
+            .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
-            .not('CITY/MUNICIPALITY', 'is', null)
-            .neq('CITY/MUNICIPALITY', ''));
+            .not('"CITY/MUNICIPALITY"', 'is', null)
+            .neq('"CITY/MUNICIPALITY"', ''));
           break;
         case 'REGION 4A':
           ({ data, error } = await supabase
             .from('REGION 4A')
-            .select('CITY/MUNICIPALITY')
+            .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
-            .not('CITY/MUNICIPALITY', 'is', null)
-            .neq('CITY/MUNICIPALITY', ''));
+            .not('"CITY/MUNICIPALITY"', 'is', null)
+            .neq('"CITY/MUNICIPALITY"', ''));
           break;
         case 'REGION 4B':
           ({ data, error } = await supabase
             .from('REGION 4B')
-            .select('CITY/MUNICIPALITY')
+            .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
-            .not('CITY/MUNICIPALITY', 'is', null)
-            .neq('CITY/MUNICIPALITY', ''));
+            .not('"CITY/MUNICIPALITY"', 'is', null)
+            .neq('"CITY/MUNICIPALITY"', ''));
           break;
         case 'REGION 5':
           ({ data, error } = await supabase
             .from('REGION 5')
-            .select('CITY/MUNICIPALITY')
+            .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
-            .not('CITY/MUNICIPALITY', 'is', null)
-            .neq('CITY/MUNICIPALITY', ''));
+            .not('"CITY/MUNICIPALITY"', 'is', null)
+            .neq('"CITY/MUNICIPALITY"', ''));
           break;
         case 'REGION 6':
           ({ data, error } = await supabase
             .from('REGION 6')
-            .select('CITY/MUNICIPALITY')
+            .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
-            .not('CITY/MUNICIPALITY', 'is', null)
-            .neq('CITY/MUNICIPALITY', ''));
+            .not('"CITY/MUNICIPALITY"', 'is', null)
+            .neq('"CITY/MUNICIPALITY"', ''));
           break;
         case 'REGION 7':
           ({ data, error } = await supabase
             .from('REGION 7')
-            .select('CITY/MUNICIPALITY')
+            .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
-            .not('CITY/MUNICIPALITY', 'is', null)
-            .neq('CITY/MUNICIPALITY', ''));
+            .not('"CITY/MUNICIPALITY"', 'is', null)
+            .neq('"CITY/MUNICIPALITY"', ''));
           break;
         case 'REGION 8':
           ({ data, error } = await supabase
             .from('REGION 8')
-            .select('CITY/MUNICIPALITY')
+            .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
-            .not('CITY/MUNICIPALITY', 'is', null)
-            .neq('CITY/MUNICIPALITY', ''));
+            .not('"CITY/MUNICIPALITY"', 'is', null)
+            .neq('"CITY/MUNICIPALITY"', ''));
           break;
         case 'REGION 9':
           ({ data, error } = await supabase
             .from('REGION 9')
-            .select('CITY/MUNICIPALITY')
+            .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
-            .not('CITY/MUNICIPALITY', 'is', null)
-            .neq('CITY/MUNICIPALITY', ''));
+            .not('"CITY/MUNICIPALITY"', 'is', null)
+            .neq('"CITY/MUNICIPALITY"', ''));
           break;
         case 'REGION 10':
           ({ data, error } = await supabase
             .from('REGION 10')
-            .select('CITY/MUNICIPALITY')
+            .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
-            .not('CITY/MUNICIPALITY', 'is', null)
-            .neq('CITY/MUNICIPALITY', ''));
+            .not('"CITY/MUNICIPALITY"', 'is', null)
+            .neq('"CITY/MUNICIPALITY"', ''));
           break;
         case 'REGION 11':
           ({ data, error } = await supabase
             .from('REGION 11')
-            .select('CITY/MUNICIPALITY')
+            .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
-            .not('CITY/MUNICIPALITY', 'is', null)
-            .neq('CITY/MUNICIPALITY', ''));
+            .not('"CITY/MUNICIPALITY"', 'is', null)
+            .neq('"CITY/MUNICIPALITY"', ''));
           break;
         case 'REGION 12':
           ({ data, error } = await supabase
             .from('REGION 12')
-            .select('CITY/MUNICIPALITY')
+            .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
-            .not('CITY/MUNICIPALITY', 'is', null)
-            .neq('CITY/MUNICIPALITY', ''));
+            .not('"CITY/MUNICIPALITY"', 'is', null)
+            .neq('"CITY/MUNICIPALITY"', ''));
           break;
         case 'REGION 13':
           ({ data, error } = await supabase
             .from('REGION 13')
-            .select('CITY/MUNICIPALITY')
+            .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
-            .not('CITY/MUNICIPALITY', 'is', null)
-            .neq('CITY/MUNICIPALITY', ''));
+            .not('"CITY/MUNICIPALITY"', 'is', null)
+            .neq('"CITY/MUNICIPALITY"', ''));
           break;
         case 'CAR':
           ({ data, error } = await supabase
             .from('CAR')
-            .select('CITY/MUNICIPALITY')
+            .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
-            .not('CITY/MUNICIPALITY', 'is', null)
-            .neq('CITY/MUNICIPALITY', ''));
+            .not('"CITY/MUNICIPALITY"', 'is', null)
+            .neq('"CITY/MUNICIPALITY"', ''));
           break;
         case 'BARMM':
           ({ data, error } = await supabase
             .from('BARMM')
-            .select('CITY/MUNICIPALITY')
+            .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
-            .not('CITY/MUNICIPALITY', 'is', null)
-            .neq('CITY/MUNICIPALITY', ''));
+            .not('"CITY/MUNICIPALITY"', 'is', null)
+            .neq('"CITY/MUNICIPALITY"', ''));
           break;
         default:
           setIsLoading(false);
           return;
       }
+      
+      console.log('Municipalities query result:', { data, error });
       
       if (error) {
         console.error('Error loading municipalities:', error);
@@ -418,7 +419,11 @@ export default function LocationSelection() {
           .filter((municipality: any) => municipality && typeof municipality === 'string' && municipality.trim() !== '');
         
         const uniqueMunicipalities = [...new Set(municipalityList)] as string[];
+        console.log('Processed municipalities:', uniqueMunicipalities.sort());
         setMunicipalities(uniqueMunicipalities.sort());
+      } else {
+        console.log('No municipality data found for region:', selectedRegion, 'province:', selectedProvince);
+        setMunicipalities([]);
       }
     } catch (error) {
       console.error('Error loading municipalities:', error);
@@ -444,7 +449,7 @@ export default function LocationSelection() {
             .from('NCR')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
-            .eq('CITY/MUNICIPALITY', selectedMunicipality)
+            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
             .neq('BARANGAY', ''));
           break;
@@ -453,7 +458,7 @@ export default function LocationSelection() {
             .from('REGION 1')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
-            .eq('CITY/MUNICIPALITY', selectedMunicipality)
+            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
             .neq('BARANGAY', ''));
           break;
@@ -462,7 +467,7 @@ export default function LocationSelection() {
             .from('REGION 2')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
-            .eq('CITY/MUNICIPALITY', selectedMunicipality)
+            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
             .neq('BARANGAY', ''));
           break;
@@ -471,7 +476,7 @@ export default function LocationSelection() {
             .from('REGION 3')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
-            .eq('CITY/MUNICIPALITY', selectedMunicipality)
+            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
             .neq('BARANGAY', ''));
           break;
@@ -480,7 +485,7 @@ export default function LocationSelection() {
             .from('REGION 4A')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
-            .eq('CITY/MUNICIPALITY', selectedMunicipality)
+            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
             .neq('BARANGAY', ''));
           break;
@@ -489,7 +494,7 @@ export default function LocationSelection() {
             .from('REGION 4B')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
-            .eq('CITY/MUNICIPALITY', selectedMunicipality)
+            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
             .neq('BARANGAY', ''));
           break;
@@ -498,7 +503,7 @@ export default function LocationSelection() {
             .from('REGION 5')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
-            .eq('CITY/MUNICIPALITY', selectedMunicipality)
+            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
             .neq('BARANGAY', ''));
           break;
@@ -507,7 +512,7 @@ export default function LocationSelection() {
             .from('REGION 6')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
-            .eq('CITY/MUNICIPALITY', selectedMunicipality)
+            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
             .neq('BARANGAY', ''));
           break;
@@ -516,7 +521,7 @@ export default function LocationSelection() {
             .from('REGION 7')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
-            .eq('CITY/MUNICIPALITY', selectedMunicipality)
+            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
             .neq('BARANGAY', ''));
           break;
@@ -525,7 +530,7 @@ export default function LocationSelection() {
             .from('REGION 8')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
-            .eq('CITY/MUNICIPALITY', selectedMunicipality)
+            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
             .neq('BARANGAY', ''));
           break;
@@ -534,7 +539,7 @@ export default function LocationSelection() {
             .from('REGION 9')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
-            .eq('CITY/MUNICIPALITY', selectedMunicipality)
+            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
             .neq('BARANGAY', ''));
           break;
@@ -543,7 +548,7 @@ export default function LocationSelection() {
             .from('REGION 10')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
-            .eq('CITY/MUNICIPALITY', selectedMunicipality)
+            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
             .neq('BARANGAY', ''));
           break;
@@ -552,7 +557,7 @@ export default function LocationSelection() {
             .from('REGION 11')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
-            .eq('CITY/MUNICIPALITY', selectedMunicipality)
+            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
             .neq('BARANGAY', ''));
           break;
@@ -561,7 +566,7 @@ export default function LocationSelection() {
             .from('REGION 12')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
-            .eq('CITY/MUNICIPALITY', selectedMunicipality)
+            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
             .neq('BARANGAY', ''));
           break;
@@ -570,7 +575,7 @@ export default function LocationSelection() {
             .from('REGION 13')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
-            .eq('CITY/MUNICIPALITY', selectedMunicipality)
+            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
             .neq('BARANGAY', ''));
           break;
@@ -579,7 +584,7 @@ export default function LocationSelection() {
             .from('CAR')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
-            .eq('CITY/MUNICIPALITY', selectedMunicipality)
+            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
             .neq('BARANGAY', ''));
           break;
@@ -588,7 +593,7 @@ export default function LocationSelection() {
             .from('BARMM')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
-            .eq('CITY/MUNICIPALITY', selectedMunicipality)
+            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
             .neq('BARANGAY', ''));
           break;
@@ -596,6 +601,8 @@ export default function LocationSelection() {
           setIsLoading(false);
           return;
       }
+      
+      console.log('Barangays query result:', { data, error });
       
       if (error) {
         console.error('Error loading barangays:', error);
@@ -608,7 +615,11 @@ export default function LocationSelection() {
           .filter((barangay: any) => barangay && typeof barangay === 'string' && barangay.trim() !== '');
         
         const uniqueBarangays = [...new Set(barangayList)] as string[];
+        console.log('Processed barangays:', uniqueBarangays.sort());
         setBarangays(uniqueBarangays.sort());
+      } else {
+        console.log('No barangay data found');
+        setBarangays([]);
       }
     } catch (error) {
       console.error('Error loading barangays:', error);
@@ -811,21 +822,29 @@ export default function LocationSelection() {
                 <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showMunicipalityDropdown ? 'rotate-180' : ''}`} />
               </div>
             </div>
-            {showMunicipalityDropdown && selectedProvince && filteredMunicipalities.length > 0 && (
+            {showMunicipalityDropdown && selectedProvince && (
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                {filteredMunicipalities.map((municipality, index) => (
-                  <button
-                    key={index}
-                    onClick={() => {
-                      setSelectedMunicipality(municipality);
-                      setMunicipalitySearch(toTitleCase(municipality));
-                      setShowMunicipalityDropdown(false);
-                    }}
-                    className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
-                  >
-                    {toTitleCase(municipality)}
-                  </button>
-                ))}
+                {isLoading ? (
+                  <div className="p-4 text-center text-gray-500">Loading municipalities...</div>
+                ) : filteredMunicipalities.length === 0 ? (
+                  <div className="p-4 text-center text-gray-500">
+                    {municipalities.length === 0 ? 'No municipalities found for this province' : 'No municipalities match your search'}
+                  </div>
+                ) : (
+                  filteredMunicipalities.map((municipality, index) => (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        setSelectedMunicipality(municipality);
+                        setMunicipalitySearch(toTitleCase(municipality));
+                        setShowMunicipalityDropdown(false);
+                      }}
+                      className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                    >
+                      {toTitleCase(municipality)}
+                    </button>
+                  ))
+                )}
               </div>
             )}
           </div>
@@ -859,21 +878,29 @@ export default function LocationSelection() {
                 <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showBarangayDropdown ? 'rotate-180' : ''}`} />
               </div>
             </div>
-            {showBarangayDropdown && selectedMunicipality && filteredBarangays.length > 0 && (
+            {showBarangayDropdown && selectedMunicipality && (
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                {filteredBarangays.map((barangay, index) => (
-                  <button
-                    key={index}
-                    onClick={() => {
-                      setSelectedBarangay(barangay);
-                      setBarangaySearch(toTitleCase(barangay));
-                      setShowBarangayDropdown(false);
-                    }}
-                    className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
-                  >
-                    <div className="font-medium text-gray-900">{toTitleCase(barangay)}</div>
-                  </button>
-                ))}
+                {isLoading ? (
+                  <div className="p-4 text-center text-gray-500">Loading barangays...</div>
+                ) : filteredBarangays.length === 0 ? (
+                  <div className="p-4 text-center text-gray-500">
+                    {barangays.length === 0 ? 'No barangays found for this municipality' : 'No barangays match your search'}
+                  </div>
+                ) : (
+                  filteredBarangays.map((barangay, index) => (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        setSelectedBarangay(barangay);
+                        setBarangaySearch(toTitleCase(barangay));
+                        setShowBarangayDropdown(false);
+                      }}
+                      className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                    >
+                      <div className="font-medium text-gray-900">{toTitleCase(barangay)}</div>
+                    </button>
+                  ))
+                )}
               </div>
             )}
           </div>
@@ -1068,7 +1095,9 @@ export default function LocationSelection() {
                   {isLoading ? (
                     <div className="p-4 text-center text-gray-500">Loading municipalities...</div>
                   ) : filteredMunicipalities.length === 0 ? (
-                    <div className="p-4 text-center text-gray-500">No municipalities found</div>
+                    <div className="p-4 text-center text-gray-500">
+                      {municipalities.length === 0 ? 'No municipalities found for this province' : 'No municipalities match your search'}
+                    </div>
                   ) : (
                     filteredMunicipalities.map((municipality, index) => (
                       <button
@@ -1122,7 +1151,9 @@ export default function LocationSelection() {
                   {isLoading ? (
                     <div className="p-4 text-center text-gray-500">Loading barangays...</div>
                   ) : filteredBarangays.length === 0 ? (
-                    <div className="p-4 text-center text-gray-500">No barangays found</div>
+                    <div className="p-4 text-center text-gray-500">
+                      {barangays.length === 0 ? 'No barangays found for this municipality' : 'No barangays match your search'}
+                    </div>
                   ) : (
                     filteredBarangays.map((barangay, index) => (
                       <button
