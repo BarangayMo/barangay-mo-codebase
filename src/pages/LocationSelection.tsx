@@ -33,6 +33,13 @@ const toTitleCase = (str: string) => {
   return str.toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase());
 };
 
+// Define types for database responses
+type RegionDataRow = {
+  PROVINCE?: string | null;
+  "CITY/MUNICIPALITY"?: string | null;
+  BARANGAY?: string | null;
+};
+
 export default function LocationSelection() {
   const [selectedRegion, setSelectedRegion] = useState("");
   const [selectedProvince, setSelectedProvince] = useState("");
@@ -93,128 +100,163 @@ export default function LocationSelection() {
     setProvinces([]);
     
     try {
-      let data, error;
+      let data: RegionDataRow[] | null = null;
+      let error: any = null;
       
       // Use specific queries for each region
       switch(selectedRegion) {
         case 'NCR':
-          ({ data, error } = await supabase
+          const ncrResult = await supabase
             .from('NCR')
             .select('PROVINCE')
             .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', ''));
+            .neq('PROVINCE', '');
+          data = ncrResult.data;
+          error = ncrResult.error;
           break;
         case 'REGION 1':
-          ({ data, error } = await supabase
+          const r1Result = await supabase
             .from('REGION 1')
             .select('PROVINCE')
             .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', ''));
+            .neq('PROVINCE', '');
+          data = r1Result.data;
+          error = r1Result.error;
           break;
         case 'REGION 2':
-          ({ data, error } = await supabase
+          const r2Result = await supabase
             .from('REGION 2')
             .select('PROVINCE')
             .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', ''));
+            .neq('PROVINCE', '');
+          data = r2Result.data;
+          error = r2Result.error;
           break;
         case 'REGION 3':
-          ({ data, error } = await supabase
+          const r3Result = await supabase
             .from('REGION 3')
             .select('PROVINCE')
             .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', ''));
+            .neq('PROVINCE', '');
+          data = r3Result.data;
+          error = r3Result.error;
           break;
         case 'REGION 4A':
-          ({ data, error } = await supabase
+          const r4aResult = await supabase
             .from('REGION 4A')
             .select('PROVINCE')
             .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', ''));
+            .neq('PROVINCE', '');
+          data = r4aResult.data;
+          error = r4aResult.error;
           break;
         case 'REGION 4B':
-          ({ data, error } = await supabase
+          const r4bResult = await supabase
             .from('REGION 4B')
             .select('PROVINCE')
             .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', ''));
+            .neq('PROVINCE', '');
+          data = r4bResult.data;
+          error = r4bResult.error;
           break;
         case 'REGION 5':
-          ({ data, error } = await supabase
+          const r5Result = await supabase
             .from('REGION 5')
             .select('PROVINCE')
             .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', ''));
+            .neq('PROVINCE', '');
+          data = r5Result.data;
+          error = r5Result.error;
           break;
         case 'REGION 6':
-          ({ data, error } = await supabase
+          const r6Result = await supabase
             .from('REGION 6')
             .select('PROVINCE')
             .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', ''));
+            .neq('PROVINCE', '');
+          data = r6Result.data;
+          error = r6Result.error;
           break;
         case 'REGION 7':
-          ({ data, error } = await supabase
+          const r7Result = await supabase
             .from('REGION 7')
             .select('PROVINCE')
             .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', ''));
+            .neq('PROVINCE', '');
+          data = r7Result.data;
+          error = r7Result.error;
           break;
         case 'REGION 8':
-          ({ data, error } = await supabase
+          const r8Result = await supabase
             .from('REGION 8')
             .select('PROVINCE')
             .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', ''));
+            .neq('PROVINCE', '');
+          data = r8Result.data;
+          error = r8Result.error;
           break;
         case 'REGION 9':
-          ({ data, error } = await supabase
+          const r9Result = await supabase
             .from('REGION 9')
             .select('PROVINCE')
             .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', ''));
+            .neq('PROVINCE', '');
+          data = r9Result.data;
+          error = r9Result.error;
           break;
         case 'REGION 10':
-          ({ data, error } = await supabase
+          const r10Result = await supabase
             .from('REGION 10')
             .select('PROVINCE')
             .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', ''));
+            .neq('PROVINCE', '');
+          data = r10Result.data;
+          error = r10Result.error;
           break;
         case 'REGION 11':
-          ({ data, error } = await supabase
+          const r11Result = await supabase
             .from('REGION 11')
             .select('PROVINCE')
             .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', ''));
+            .neq('PROVINCE', '');
+          data = r11Result.data;
+          error = r11Result.error;
           break;
         case 'REGION 12':
-          ({ data, error } = await supabase
+          const r12Result = await supabase
             .from('REGION 12')
             .select('PROVINCE')
             .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', ''));
+            .neq('PROVINCE', '');
+          data = r12Result.data;
+          error = r12Result.error;
           break;
         case 'REGION 13':
-          ({ data, error } = await supabase
+          const r13Result = await supabase
             .from('REGION 13')
             .select('PROVINCE')
             .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', ''));
+            .neq('PROVINCE', '');
+          data = r13Result.data;
+          error = r13Result.error;
           break;
         case 'CAR':
-          ({ data, error } = await supabase
+          const carResult = await supabase
             .from('CAR')
             .select('PROVINCE')
             .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', ''));
+            .neq('PROVINCE', '');
+          data = carResult.data;
+          error = carResult.error;
           break;
         case 'BARMM':
-          ({ data, error } = await supabase
+          const barmmResult = await supabase
             .from('BARMM')
             .select('PROVINCE')
             .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', ''));
+            .neq('PROVINCE', '');
+          data = barmmResult.data;
+          error = barmmResult.error;
           break;
         default:
           console.error('Unknown region:', selectedRegion);
@@ -261,145 +303,180 @@ export default function LocationSelection() {
     setMunicipalities([]);
     
     try {
-      let data, error;
+      let data: RegionDataRow[] | null = null;
+      let error: any = null;
       
       // Use specific queries for each region with properly quoted column name
       switch(selectedRegion) {
         case 'NCR':
-          ({ data, error } = await supabase
+          const ncrResult = await supabase
             .from('NCR')
             .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
             .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', ''));
+            .neq('"CITY/MUNICIPALITY"', '');
+          data = ncrResult.data;
+          error = ncrResult.error;
           break;
         case 'REGION 1':
-          ({ data, error } = await supabase
+          const r1Result = await supabase
             .from('REGION 1')
             .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
             .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', ''));
+            .neq('"CITY/MUNICIPALITY"', '');
+          data = r1Result.data;
+          error = r1Result.error;
           break;
         case 'REGION 2':
-          ({ data, error } = await supabase
+          const r2Result = await supabase
             .from('REGION 2')
             .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
             .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', ''));
+            .neq('"CITY/MUNICIPALITY"', '');
+          data = r2Result.data;
+          error = r2Result.error;
           break;
         case 'REGION 3':
-          ({ data, error } = await supabase
+          const r3Result = await supabase
             .from('REGION 3')
             .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
             .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', ''));
+            .neq('"CITY/MUNICIPALITY"', '');
+          data = r3Result.data;
+          error = r3Result.error;
           break;
         case 'REGION 4A':
-          ({ data, error } = await supabase
+          const r4aResult = await supabase
             .from('REGION 4A')
             .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
             .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', ''));
+            .neq('"CITY/MUNICIPALITY"', '');
+          data = r4aResult.data;
+          error = r4aResult.error;
           break;
         case 'REGION 4B':
-          ({ data, error } = await supabase
+          const r4bResult = await supabase
             .from('REGION 4B')
             .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
             .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', ''));
+            .neq('"CITY/MUNICIPALITY"', '');
+          data = r4bResult.data;
+          error = r4bResult.error;
           break;
         case 'REGION 5':
-          ({ data, error } = await supabase
+          const r5Result = await supabase
             .from('REGION 5')
             .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
             .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', ''));
+            .neq('"CITY/MUNICIPALITY"', '');
+          data = r5Result.data;
+          error = r5Result.error;
           break;
         case 'REGION 6':
-          ({ data, error } = await supabase
+          const r6Result = await supabase
             .from('REGION 6')
             .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
             .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', ''));
+            .neq('"CITY/MUNICIPALITY"', '');
+          data = r6Result.data;
+          error = r6Result.error;
           break;
         case 'REGION 7':
-          ({ data, error } = await supabase
+          const r7Result = await supabase
             .from('REGION 7')
             .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
             .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', ''));
+            .neq('"CITY/MUNICIPALITY"', '');
+          data = r7Result.data;
+          error = r7Result.error;
           break;
         case 'REGION 8':
-          ({ data, error } = await supabase
+          const r8Result = await supabase
             .from('REGION 8')
             .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
             .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', ''));
+            .neq('"CITY/MUNICIPALITY"', '');
+          data = r8Result.data;
+          error = r8Result.error;
           break;
         case 'REGION 9':
-          ({ data, error } = await supabase
+          const r9Result = await supabase
             .from('REGION 9')
             .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
             .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', ''));
+            .neq('"CITY/MUNICIPALITY"', '');
+          data = r9Result.data;
+          error = r9Result.error;
           break;
         case 'REGION 10':
-          ({ data, error } = await supabase
+          const r10Result = await supabase
             .from('REGION 10')
             .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
             .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', ''));
+            .neq('"CITY/MUNICIPALITY"', '');
+          data = r10Result.data;
+          error = r10Result.error;
           break;
         case 'REGION 11':
-          ({ data, error } = await supabase
+          const r11Result = await supabase
             .from('REGION 11')
             .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
             .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', ''));
+            .neq('"CITY/MUNICIPALITY"', '');
+          data = r11Result.data;
+          error = r11Result.error;
           break;
         case 'REGION 12':
-          ({ data, error } = await supabase
+          const r12Result = await supabase
             .from('REGION 12')
             .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
             .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', ''));
+            .neq('"CITY/MUNICIPALITY"', '');
+          data = r12Result.data;
+          error = r12Result.error;
           break;
         case 'REGION 13':
-          ({ data, error } = await supabase
+          const r13Result = await supabase
             .from('REGION 13')
             .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
             .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', ''));
+            .neq('"CITY/MUNICIPALITY"', '');
+          data = r13Result.data;
+          error = r13Result.error;
           break;
         case 'CAR':
-          ({ data, error } = await supabase
+          const carResult = await supabase
             .from('CAR')
             .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
             .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', ''));
+            .neq('"CITY/MUNICIPALITY"', '');
+          data = carResult.data;
+          error = carResult.error;
           break;
         case 'BARMM':
-          ({ data, error } = await supabase
+          const barmmResult = await supabase
             .from('BARMM')
             .select('"CITY/MUNICIPALITY"')
             .eq('PROVINCE', selectedProvince)
             .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', ''));
+            .neq('"CITY/MUNICIPALITY"', '');
+          data = barmmResult.data;
+          error = barmmResult.error;
           break;
         default:
           setIsLoading(false);
@@ -440,162 +517,197 @@ export default function LocationSelection() {
     setBarangays([]);
     
     try {
-      let data, error;
+      let data: RegionDataRow[] | null = null;
+      let error: any = null;
       
       // Use specific queries for each region
       switch(selectedRegion) {
         case 'NCR':
-          ({ data, error } = await supabase
+          const ncrResult = await supabase
             .from('NCR')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
             .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', ''));
+            .neq('BARANGAY', '');
+          data = ncrResult.data;
+          error = ncrResult.error;
           break;
         case 'REGION 1':
-          ({ data, error } = await supabase
+          const r1Result = await supabase
             .from('REGION 1')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
             .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', ''));
+            .neq('BARANGAY', '');
+          data = r1Result.data;
+          error = r1Result.error;
           break;
         case 'REGION 2':
-          ({ data, error } = await supabase
+          const r2Result = await supabase
             .from('REGION 2')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
             .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', ''));
+            .neq('BARANGAY', '');
+          data = r2Result.data;
+          error = r2Result.error;
           break;
         case 'REGION 3':
-          ({ data, error } = await supabase
+          const r3Result = await supabase
             .from('REGION 3')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
             .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', ''));
+            .neq('BARANGAY', '');
+          data = r3Result.data;
+          error = r3Result.error;
           break;
         case 'REGION 4A':
-          ({ data, error } = await supabase
+          const r4aResult = await supabase
             .from('REGION 4A')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
             .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', ''));
+            .neq('BARANGAY', '');
+          data = r4aResult.data;
+          error = r4aResult.error;
           break;
         case 'REGION 4B':
-          ({ data, error } = await supabase
+          const r4bResult = await supabase
             .from('REGION 4B')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
             .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', ''));
+            .neq('BARANGAY', '');
+          data = r4bResult.data;
+          error = r4bResult.error;
           break;
         case 'REGION 5':
-          ({ data, error } = await supabase
+          const r5Result = await supabase
             .from('REGION 5')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
             .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', ''));
+            .neq('BARANGAY', '');
+          data = r5Result.data;
+          error = r5Result.error;
           break;
         case 'REGION 6':
-          ({ data, error } = await supabase
+          const r6Result = await supabase
             .from('REGION 6')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
             .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', ''));
+            .neq('BARANGAY', '');
+          data = r6Result.data;
+          error = r6Result.error;
           break;
         case 'REGION 7':
-          ({ data, error } = await supabase
+          const r7Result = await supabase
             .from('REGION 7')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
             .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', ''));
+            .neq('BARANGAY', '');
+          data = r7Result.data;
+          error = r7Result.error;
           break;
         case 'REGION 8':
-          ({ data, error } = await supabase
+          const r8Result = await supabase
             .from('REGION 8')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
             .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', ''));
+            .neq('BARANGAY', '');
+          data = r8Result.data;
+          error = r8Result.error;
           break;
         case 'REGION 9':
-          ({ data, error } = await supabase
+          const r9Result = await supabase
             .from('REGION 9')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
             .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', ''));
+            .neq('BARANGAY', '');
+          data = r9Result.data;
+          error = r9Result.error;
           break;
         case 'REGION 10':
-          ({ data, error } = await supabase
+          const r10Result = await supabase
             .from('REGION 10')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
             .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', ''));
+            .neq('BARANGAY', '');
+          data = r10Result.data;
+          error = r10Result.error;
           break;
         case 'REGION 11':
-          ({ data, error } = await supabase
+          const r11Result = await supabase
             .from('REGION 11')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
             .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', ''));
+            .neq('BARANGAY', '');
+          data = r11Result.data;
+          error = r11Result.error;
           break;
         case 'REGION 12':
-          ({ data, error } = await supabase
+          const r12Result = await supabase
             .from('REGION 12')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
             .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', ''));
+            .neq('BARANGAY', '');
+          data = r12Result.data;
+          error = r12Result.error;
           break;
         case 'REGION 13':
-          ({ data, error } = await supabase
+          const r13Result = await supabase
             .from('REGION 13')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
             .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', ''));
+            .neq('BARANGAY', '');
+          data = r13Result.data;
+          error = r13Result.error;
           break;
         case 'CAR':
-          ({ data, error } = await supabase
+          const carResult = await supabase
             .from('CAR')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
             .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', ''));
+            .neq('BARANGAY', '');
+          data = carResult.data;
+          error = carResult.error;
           break;
         case 'BARMM':
-          ({ data, error } = await supabase
+          const barmmResult = await supabase
             .from('BARMM')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
             .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
             .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', ''));
+            .neq('BARANGAY', '');
+          data = barmmResult.data;
+          error = barmmResult.error;
           break;
         default:
           setIsLoading(false);
