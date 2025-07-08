@@ -1,9 +1,9 @@
-
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronLeft, Eye, EyeOff } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { RegistrationProgress } from "@/components/ui/registration-progress";
@@ -17,8 +17,6 @@ interface LocationState {
   municipality: string;
   barangay: string;
   officials?: any[];
-  phoneNumber?: string;
-  landlineNumber?: string;
   logoUrl?: string;
 }
 
@@ -43,10 +41,11 @@ export default function Register() {
     suffix: "",
     email: "",
     password: "",
-    confirmPassword: ""
+    phoneNumber: "",
+    landlineNumber: ""
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,10 +56,10 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (formData.password !== formData.confirmPassword) {
+    if (!acceptTerms) {
       toast({
-        title: "Password Mismatch",
-        description: "Passwords do not match. Please try again.",
+        title: "Terms Required",
+        description: "Please accept the terms and conditions to continue.",
         variant: "destructive",
       });
       return;
@@ -81,8 +80,8 @@ export default function Register() {
         province: locationState.province,
         municipality: locationState.municipality,
         barangay: locationState.barangay,
-        phoneNumber: locationState.phoneNumber,
-        landlineNumber: locationState.landlineNumber,
+        phoneNumber: formData.phoneNumber || null,
+        landlineNumber: formData.landlineNumber || null,
         logoUrl: locationState.logoUrl,
         officials: locationState.officials
       };
@@ -133,7 +132,9 @@ export default function Register() {
     return (
       <div className="min-h-screen bg-white flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-4 bg-red-600 text-white">
+        <div className={`flex items-center justify-between px-4 py-4 text-white ${
+          locationState.role === 'official' ? 'bg-red-600' : 'bg-blue-600'
+        }`}>
           <button 
             onClick={() => navigate(getBackLink(), { state: locationState })}
             className="text-white hover:text-gray-200"
@@ -146,7 +147,7 @@ export default function Register() {
 
         {/* Progress Bar */}
         <div className="px-6 py-4">
-          <RegistrationProgress currentStep="register" />
+          <RegistrationProgress currentStep="register" userRole={locationState.role as 'resident' | 'official'} />
         </div>
 
         {/* Content */}
@@ -161,7 +162,9 @@ export default function Register() {
               />
               <h2 className="text-xl font-bold text-gray-900 mb-2">Complete Your Registration</h2>
               <p className="text-gray-600 text-sm">
-                Registering as: <span className="font-semibold text-red-600 capitalize">{locationState.role}</span>
+                Registering as: <span className={`font-semibold capitalize ${
+                  locationState.role === 'official' ? 'text-red-600' : 'text-blue-600'
+                }`}>{locationState.role}</span>
               </p>
               <p className="text-gray-600 text-sm">
                 Barangay: <span className="font-semibold">{locationState.barangay}</span>
@@ -179,7 +182,11 @@ export default function Register() {
                     value={formData.firstName}
                     onChange={handleInputChange}
                     required
-                    className="mt-1 h-9 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500"
+                    className={`mt-1 h-9 text-sm border-gray-300 ${
+                      locationState.role === 'official' 
+                        ? 'focus:border-red-500 focus:ring-red-500' 
+                        : 'focus:border-blue-500 focus:ring-blue-500'
+                    }`}
                   />
                 </div>
                 <div>
@@ -190,7 +197,11 @@ export default function Register() {
                     value={formData.lastName}
                     onChange={handleInputChange}
                     required
-                    className="mt-1 h-9 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500"
+                    className={`mt-1 h-9 text-sm border-gray-300 ${
+                      locationState.role === 'official' 
+                        ? 'focus:border-red-500 focus:ring-red-500' 
+                        : 'focus:border-blue-500 focus:ring-blue-500'
+                    }`}
                   />
                 </div>
               </div>
@@ -203,7 +214,11 @@ export default function Register() {
                     name="middleName"
                     value={formData.middleName}
                     onChange={handleInputChange}
-                    className="mt-1 h-9 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500"
+                    className={`mt-1 h-9 text-sm border-gray-300 ${
+                      locationState.role === 'official' 
+                        ? 'focus:border-red-500 focus:ring-red-500' 
+                        : 'focus:border-blue-500 focus:ring-blue-500'
+                    }`}
                   />
                 </div>
                 <div>
@@ -214,7 +229,11 @@ export default function Register() {
                     value={formData.suffix}
                     onChange={handleInputChange}
                     placeholder="Jr., Sr., III"
-                    className="mt-1 h-9 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500"
+                    className={`mt-1 h-9 text-sm border-gray-300 ${
+                      locationState.role === 'official' 
+                        ? 'focus:border-red-500 focus:ring-red-500' 
+                        : 'focus:border-blue-500 focus:ring-blue-500'
+                    }`}
                   />
                 </div>
               </div>
@@ -228,8 +247,45 @@ export default function Register() {
                   value={formData.email}
                   onChange={handleInputChange}
                   required
-                  className="mt-1 h-9 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500"
+                  className={`mt-1 h-9 text-sm border-gray-300 ${
+                    locationState.role === 'official' 
+                      ? 'focus:border-red-500 focus:ring-red-500' 
+                      : 'focus:border-blue-500 focus:ring-blue-500'
+                  }`}
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="phoneNumber" className="text-gray-700 text-sm">Phone Number</Label>
+                  <Input
+                    id="phoneNumber"
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
+                    onChange={handleInputChange}
+                    placeholder="09XX XXX XXXX"
+                    className={`mt-1 h-9 text-sm border-gray-300 ${
+                      locationState.role === 'official' 
+                        ? 'focus:border-red-500 focus:ring-red-500' 
+                        : 'focus:border-blue-500 focus:ring-blue-500'
+                    }`}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="landlineNumber" className="text-gray-700 text-sm">Landline</Label>
+                  <Input
+                    id="landlineNumber"
+                    name="landlineNumber"
+                    value={formData.landlineNumber}
+                    onChange={handleInputChange}
+                    placeholder="(02) 8XXX XXXX"
+                    className={`mt-1 h-9 text-sm border-gray-300 ${
+                      locationState.role === 'official' 
+                        ? 'focus:border-red-500 focus:ring-red-500' 
+                        : 'focus:border-blue-500 focus:ring-blue-500'
+                    }`}
+                  />
+                </div>
               </div>
 
               <div>
@@ -242,7 +298,11 @@ export default function Register() {
                     value={formData.password}
                     onChange={handleInputChange}
                     required
-                    className="h-9 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500 pr-10"
+                    className={`h-9 text-sm border-gray-300 pr-10 ${
+                      locationState.role === 'official' 
+                        ? 'focus:border-red-500 focus:ring-red-500' 
+                        : 'focus:border-blue-500 focus:ring-blue-500'
+                    }`}
                   />
                   <button
                     type="button"
@@ -254,32 +314,33 @@ export default function Register() {
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="confirmPassword" className="text-gray-700 text-sm">Confirm Password *</Label>
-                <div className="relative mt-1">
-                  <Input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    required
-                    className="h-9 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500 pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
+              <div className="flex items-start space-x-2">
+                <Checkbox
+                  id="terms"
+                  checked={acceptTerms}
+                  onCheckedChange={setAcceptTerms}
+                  className={locationState.role === 'official' ? 'border-red-300' : 'border-blue-300'}
+                />
+                <Label htmlFor="terms" className="text-xs text-gray-600 leading-4">
+                  I agree to the{" "}
+                  <a href="/terms" className={locationState.role === 'official' ? 'text-red-600 hover:underline' : 'text-blue-600 hover:underline'}>
+                    Terms and Conditions
+                  </a>{" "}
+                  and{" "}
+                  <a href="/privacy" className={locationState.role === 'official' ? 'text-red-600 hover:underline' : 'text-blue-600 hover:underline'}>
+                    Privacy Policy
+                  </a>
+                </Label>
               </div>
 
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-red-600 hover:bg-red-700 text-white py-3 h-12 text-base font-medium"
+                className={`w-full text-white py-3 h-12 text-base font-medium ${
+                  locationState.role === 'official' 
+                    ? 'bg-red-600 hover:bg-red-700' 
+                    : 'bg-blue-600 hover:bg-blue-700'
+                }`}
               >
                 {isLoading ? "Creating Account..." : "CREATE ACCOUNT"}
               </Button>
@@ -290,13 +351,13 @@ export default function Register() {
     );
   }
 
-  // Desktop version
+  // Desktop version with same fixes applied
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-white to-orange-50 px-4 py-8">
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
         {/* Progress Bar */}
         <div className="px-8 py-6 border-b">
-          <RegistrationProgress currentStep="register" />
+          <RegistrationProgress currentStep="register" userRole={locationState.role as 'resident' | 'official'} />
         </div>
 
         <div className="p-8">
@@ -316,7 +377,9 @@ export default function Register() {
             />
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Complete Your Registration</h1>
             <p className="text-gray-600">
-              Registering as: <span className="font-semibold text-red-600 capitalize">{locationState.role}</span>
+              Registering as: <span className={`font-semibold capitalize ${
+                locationState.role === 'official' ? 'text-red-600' : 'text-blue-600'
+              }`}>{locationState.role}</span>
             </p>
             <p className="text-gray-600">
               Barangay: <span className="font-semibold">{locationState.barangay}</span>
@@ -334,7 +397,11 @@ export default function Register() {
                   value={formData.firstName}
                   onChange={handleInputChange}
                   required
-                  className="mt-1 border-gray-300 focus:border-red-500 focus:ring-red-500"
+                  className={`mt-1 border-gray-300 ${
+                    locationState.role === 'official' 
+                      ? 'focus:border-red-500 focus:ring-red-500' 
+                      : 'focus:border-blue-500 focus:ring-blue-500'
+                  }`}
                 />
               </div>
               <div>
@@ -345,7 +412,11 @@ export default function Register() {
                   value={formData.lastName}
                   onChange={handleInputChange}
                   required
-                  className="mt-1 border-gray-300 focus:border-red-500 focus:ring-red-500"
+                  className={`mt-1 border-gray-300 ${
+                    locationState.role === 'official' 
+                      ? 'focus:border-red-500 focus:ring-red-500' 
+                      : 'focus:border-blue-500 focus:ring-blue-500'
+                  }`}
                 />
               </div>
             </div>
@@ -358,7 +429,11 @@ export default function Register() {
                   name="middleName"
                   value={formData.middleName}
                   onChange={handleInputChange}
-                  className="mt-1 border-gray-300 focus:border-red-500 focus:ring-red-500"
+                  className={`mt-1 border-gray-300 ${
+                    locationState.role === 'official' 
+                      ? 'focus:border-red-500 focus:ring-red-500' 
+                      : 'focus:border-blue-500 focus:ring-blue-500'
+                  }`}
                 />
               </div>
               <div>
@@ -369,7 +444,11 @@ export default function Register() {
                   value={formData.suffix}
                   onChange={handleInputChange}
                   placeholder="Jr., Sr., III"
-                  className="mt-1 border-gray-300 focus:border-red-500 focus:ring-red-500"
+                  className={`mt-1 border-gray-300 ${
+                    locationState.role === 'official' 
+                      ? 'focus:border-red-500 focus:ring-red-500' 
+                      : 'focus:border-blue-500 focus:ring-blue-500'
+                  }`}
                 />
               </div>
             </div>
@@ -383,8 +462,45 @@ export default function Register() {
                 value={formData.email}
                 onChange={handleInputChange}
                 required
-                className="mt-1 border-gray-300 focus:border-red-500 focus:ring-red-500"
+                className={`mt-1 border-gray-300 ${
+                  locationState.role === 'official' 
+                    ? 'focus:border-red-500 focus:ring-red-500' 
+                    : 'focus:border-blue-500 focus:ring-blue-500'
+                }`}
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="phoneNumber-desktop" className="text-gray-700">Phone Number</Label>
+                <Input
+                  id="phoneNumber-desktop"
+                  name="phoneNumber"
+                  value={formData.phoneNumber}
+                  onChange={handleInputChange}
+                  placeholder="09XX XXX XXXX"
+                  className={`mt-1 border-gray-300 ${
+                    locationState.role === 'official' 
+                      ? 'focus:border-red-500 focus:ring-red-500' 
+                      : 'focus:border-blue-500 focus:ring-blue-500'
+                  }`}
+                />
+              </div>
+              <div>
+                <Label htmlFor="landlineNumber-desktop" className="text-gray-700">Landline</Label>
+                <Input
+                  id="landlineNumber-desktop"
+                  name="landlineNumber"
+                  value={formData.landlineNumber}
+                  onChange={handleInputChange}
+                  placeholder="(02) 8XXX XXXX"
+                  className={`mt-1 border-gray-300 ${
+                    locationState.role === 'official' 
+                      ? 'focus:border-red-500 focus:ring-red-500' 
+                      : 'focus:border-blue-500 focus:ring-blue-500'
+                  }`}
+                />
+              </div>
             </div>
 
             <div>
@@ -397,7 +513,11 @@ export default function Register() {
                   value={formData.password}
                   onChange={handleInputChange}
                   required
-                  className="border-gray-300 focus:border-red-500 focus:ring-red-500 pr-10"
+                  className={`border-gray-300 pr-10 ${
+                    locationState.role === 'official' 
+                      ? 'focus:border-red-500 focus:ring-red-500' 
+                      : 'focus:border-blue-500 focus:ring-blue-500'
+                  }`}
                 />
                 <button
                   type="button"
@@ -409,32 +529,33 @@ export default function Register() {
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="confirmPassword-desktop" className="text-gray-700">Confirm Password *</Label>
-              <div className="relative mt-1">
-                <Input
-                  id="confirmPassword-desktop"
-                  name="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  required
-                  className="border-gray-300 focus:border-red-500 focus:ring-red-500 pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
+            <div className="flex items-start space-x-2">
+              <Checkbox
+                id="terms-desktop"
+                checked={acceptTerms}
+                onCheckedChange={setAcceptTerms}
+                className={locationState.role === 'official' ? 'border-red-300' : 'border-blue-300'}
+              />
+              <Label htmlFor="terms-desktop" className="text-sm text-gray-600 leading-5">
+                I agree to the{" "}
+                <a href="/terms" className={locationState.role === 'official' ? 'text-red-600 hover:underline' : 'text-blue-600 hover:underline'}>
+                  Terms and Conditions
+                </a>{" "}
+                and{" "}
+                <a href="/privacy" className={locationState.role === 'official' ? 'text-red-600 hover:underline' : 'text-blue-600 hover:underline'}>
+                  Privacy Policy
+                </a>
+              </Label>
             </div>
 
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-red-600 hover:bg-red-700 text-white py-3 text-base font-medium"
+              className={`w-full text-white py-3 text-base font-medium ${
+                locationState.role === 'official' 
+                  ? 'bg-red-600 hover:bg-red-700' 
+                  : 'bg-blue-600 hover:bg-blue-700'
+              }`}
             >
               {isLoading ? "Creating Account..." : "Create Account"}
             </Button>
