@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, Users, Shield, Check } from "lucide-react";
+import { ChevronLeft, Users, Shield } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
@@ -35,7 +35,6 @@ export default function Register() {
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   const suffixOptions = [
-    { value: "", label: "Select suffix" },
     { value: "Jr.", label: "Jr." },
     { value: "Sr.", label: "Sr." },
     { value: "II", label: "II" },
@@ -182,7 +181,10 @@ export default function Register() {
                   </div>
                   <div>
                     <Label htmlFor="suffix" className="text-gray-700 text-sm">Suffix</Label>
-                    <Select value={formData.suffix} onValueChange={(value) => setFormData(prev => ({ ...prev, suffix: value }))}>
+                    <Select 
+                      value={formData.suffix} 
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, suffix: value }))}
+                    >
                       <SelectTrigger className="mt-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                         <SelectValue placeholder="None" />
                       </SelectTrigger>
@@ -378,7 +380,10 @@ export default function Register() {
                 </div>
                 <div>
                   <Label htmlFor="suffix-desktop" className="text-gray-700">Suffix</Label>
-                  <Select value={formData.suffix} onValueChange={(value) => setFormData(prev => ({ ...prev, suffix: value }))}>
+                  <Select 
+                    value={formData.suffix} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, suffix: value }))}
+                  >
                     <SelectTrigger className="mt-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                       <SelectValue placeholder="None" />
                     </SelectTrigger>
