@@ -129,19 +129,12 @@ export default function LocationSelection() {
     setProvinces([]);
     
     try {
-      let data: any = null;
-      let error: any = null;
-      
-      // Use specific queries for each region
-      const query = supabase
+      // Use type assertion to bypass TypeScript's strict table name checking
+      const { data, error } = await (supabase as any)
         .from(selectedRegion)
         .select('PROVINCE')
         .not('PROVINCE', 'is', null)
         .neq('PROVINCE', '');
-      
-      const result = await query;
-      data = result.data;
-      error = result.error;
       
       console.log('Query result:', { data, error });
       
@@ -180,16 +173,13 @@ export default function LocationSelection() {
     setMunicipalities([]);
     
     try {
-      const query = supabase
+      // Use type assertion to bypass TypeScript's strict table name checking
+      const { data, error } = await (supabase as any)
         .from(selectedRegion)
         .select('"CITY/MUNICIPALITY"')
         .eq('PROVINCE', selectedProvince)
         .not('"CITY/MUNICIPALITY"', 'is', null)
         .neq('"CITY/MUNICIPALITY"', '');
-      
-      const result = await query;
-      const data = result.data;
-      const error = result.error;
       
       console.log('Municipalities query result:', { data, error });
       
@@ -225,17 +215,14 @@ export default function LocationSelection() {
     setBarangays([]);
     
     try {
-      const query = supabase
+      // Use type assertion to bypass TypeScript's strict table name checking
+      const { data, error } = await (supabase as any)
         .from(selectedRegion)
         .select('BARANGAY')
         .eq('PROVINCE', selectedProvince)
         .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
         .not('BARANGAY', 'is', null)
         .neq('BARANGAY', '');
-      
-      const result = await query;
-      const data = result.data;
-      const error = result.error;
       
       console.log('Barangays query result:', { data, error });
       
@@ -333,6 +320,34 @@ export default function LocationSelection() {
     setShowBarangayDropdown(true);
   };
 
+  const handleRegionBlur = () => {
+    // If no region was selected and they blur, restore the previous selection
+    if (!regionSearch && selectedRegion) {
+      const selectedRegionObj = PHILIPPINE_REGIONS.find(r => r.code === selectedRegion);
+      if (selectedRegionObj) {
+        setRegionSearch(selectedRegionObj.name);
+      }
+    }
+  };
+
+  const handleProvinceBlur = () => {
+    if (!provinceSearch && selectedProvince) {
+      setProvinceSearch(toTitleCase(selectedProvince));
+    }
+  };
+
+  const handleMunicipalityBlur = () => {
+    if (!municipalitySearch && selectedMunicipality) {
+      setMunicipalitySearch(toTitleCase(selectedMunicipality));
+    }
+  };
+
+  const handleBarangayBlur = () => {
+    if (!barangaySearch && selectedBarangay) {
+      setBarangaySearch(toTitleCase(selectedBarangay));
+    }
+  };
+
   const filteredRegions = PHILIPPINE_REGIONS.filter(region =>
     region.name.toLowerCase().includes(regionSearch.toLowerCase()) ||
     region.code.toLowerCase().includes(regionSearch.toLowerCase())
@@ -360,7 +375,7 @@ export default function LocationSelection() {
           <button onClick={handleBack} className="text-white hover:text-gray-200">
             <ChevronLeft className="h-6 w-6" />
           </button>
-          <h1 className="text-lg font-bold">Address</h1>
+          <h1 className="text-lg font-bold">Location</h1>
           <div className="w-6" />
         </div>
 
@@ -386,6 +401,7 @@ export default function LocationSelection() {
                 value={regionSearch}
                 onChange={(e) => setRegionSearch(e.target.value)}
                 onFocus={handleRegionFocus}
+                onBlur={handleRegionBlur}
                 className="h-12 pr-20"
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -436,6 +452,7 @@ export default function LocationSelection() {
                 value={provinceSearch}
                 onChange={(e) => setProvinceSearch(e.target.value)}
                 onFocus={handleProvinceFocus}
+                onBlur={handleProvinceBlur}
                 disabled={!selectedRegion}
                 className={`h-12 pr-20 ${!selectedRegion ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
@@ -499,6 +516,7 @@ export default function LocationSelection() {
                 value={municipalitySearch}
                 onChange={(e) => setMunicipalitySearch(e.target.value)}
                 onFocus={handleMunicipalityFocus}
+                onBlur={handleMunicipalityBlur}
                 disabled={!selectedProvince}
                 className={`h-12 pr-20 ${!selectedProvince ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
@@ -562,6 +580,7 @@ export default function LocationSelection() {
                 value={barangaySearch}
                 onChange={(e) => setBarangaySearch(e.target.value)}
                 onFocus={handleBarangayFocus}
+                onBlur={handleBarangayBlur}
                 disabled={!selectedMunicipality}
                 className={`h-12 pr-20 ${!selectedMunicipality ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
@@ -655,7 +674,7 @@ export default function LocationSelection() {
             <div className="flex-1 h-1 bg-gray-200 rounded-full"></div>
           </div>
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900">Address</h2>
+            <h2 className="text-2xl font-bold text-gray-900">Location</h2>
           </div>
         </div>
 
@@ -674,6 +693,7 @@ export default function LocationSelection() {
                   value={regionSearch}
                   onChange={(e) => setRegionSearch(e.target.value)}
                   onFocus={handleRegionFocus}
+                  onBlur={handleRegionBlur}
                   className="h-12 pr-20"
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -728,6 +748,7 @@ export default function LocationSelection() {
                   value={provinceSearch}
                   onChange={(e) => setProvinceSearch(e.target.value)}
                   onFocus={handleProvinceFocus}
+                  onBlur={handleProvinceBlur}
                   disabled={!selectedRegion}
                   className={`h-12 pr-20 ${!selectedRegion ? 'opacity-50 cursor-not-allowed' : ''}`}
                 />
@@ -791,6 +812,7 @@ export default function LocationSelection() {
                   value={municipalitySearch}
                   onChange={(e) => setMunicipalitySearch(e.target.value)}
                   onFocus={handleMunicipalityFocus}
+                  onBlur={handleMunicipalityBlur}
                   disabled={!selectedProvince}
                   className={`h-12 pr-20 ${!selectedProvince ? 'opacity-50 cursor-not-allowed' : ''}`}
                 />
@@ -854,6 +876,7 @@ export default function LocationSelection() {
                   value={barangaySearch}
                   onChange={(e) => setBarangaySearch(e.target.value)}
                   onFocus={handleBarangayFocus}
+                  onBlur={handleBarangayBlur}
                   disabled={!selectedMunicipality}
                   className={`h-12 pr-20 ${!selectedMunicipality ? 'opacity-50 cursor-not-allowed' : ''}`}
                 />
