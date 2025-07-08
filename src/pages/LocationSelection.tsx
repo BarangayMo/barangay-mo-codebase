@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -84,85 +83,106 @@ export default function LocationSelection() {
   const loadProvinces = async () => {
     if (!selectedRegion) return;
     
+    console.log('Loading provinces for region:', selectedRegion);
     setIsLoading(true);
+    setProvinces([]);
+    
     try {
-      let query;
+      let tableName: string;
       
-      // Query the specific region table directly without additional filters
+      // Map region codes to their respective table names
       switch(selectedRegion) {
         case 'NCR':
-          query = supabase.from('Barangays').select('PROVINCE');
+          tableName = 'Barangays'; // NCR data is in the main Barangays table
           break;
         case 'REGION 1':
-          query = supabase.from('REGION 1').select('PROVINCE');
+          tableName = 'REGION 1';
           break;
         case 'REGION 2':
-          query = supabase.from('REGION 2').select('PROVINCE');
+          tableName = 'REGION 2';
           break;
         case 'REGION 3':
-          query = supabase.from('REGION 3').select('PROVINCE');
+          tableName = 'REGION 3';
           break;
         case 'REGION 4A':
-          query = supabase.from('REGION 4A').select('PROVINCE');
+          tableName = 'REGION 4A';
           break;
         case 'REGION 4B':
-          query = supabase.from('REGION 4B').select('PROVINCE');
+          tableName = 'REGION 4B';
           break;
         case 'REGION 5':
-          query = supabase.from('REGION 5').select('PROVINCE');
+          tableName = 'REGION 5';
           break;
         case 'REGION 6':
-          query = supabase.from('REGION 6').select('PROVINCE');
+          tableName = 'REGION 6';
           break;
         case 'REGION 7':
-          query = supabase.from('REGION 7').select('PROVINCE');
+          tableName = 'REGION 7';
           break;
         case 'REGION 8':
-          query = supabase.from('REGION 8').select('PROVINCE');
+          tableName = 'REGION 8';
           break;
         case 'REGION 9':
-          query = supabase.from('REGION 9').select('PROVINCE');
+          tableName = 'REGION 9';
           break;
         case 'REGION 10':
-          query = supabase.from('REGION 10').select('PROVINCE');
+          tableName = 'REGION 10';
           break;
         case 'REGION 11':
-          query = supabase.from('REGION 11').select('PROVINCE');
+          tableName = 'REGION 11';
           break;
         case 'REGION 12':
-          query = supabase.from('REGION 12').select('PROVINCE');
+          tableName = 'REGION 12';
           break;
         case 'REGION 13':
-          query = supabase.from('REGION 13').select('PROVINCE');
+          tableName = 'REGION 13';
           break;
         case 'CAR':
-          query = supabase.from('CAR').select('PROVINCE');
+          tableName = 'CAR';
           break;
         case 'BARMM':
-          query = supabase.from('BARMM').select('PROVINCE');
+          tableName = 'BARMM';
           break;
         default:
-          query = supabase.from('Barangays').select('PROVINCE');
+          console.error('Unknown region:', selectedRegion);
+          setIsLoading(false);
+          return;
       }
       
-      const { data, error } = await query
+      console.log('Querying table:', tableName);
+      
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('PROVINCE')
         .not('PROVINCE', 'is', null)
         .neq('PROVINCE', '');
+      
+      console.log('Query result:', { data, error });
       
       if (error) {
         console.error('Error loading provinces:', error);
         return;
       }
       
-      if (data) {
-        const uniqueProvinces = [...new Set(
-          data.map((item: any) => item.PROVINCE)
-            .filter((province: string) => province && province.trim() !== '')
-        )] as string[];
-        setProvinces(uniqueProvinces.sort());
+      if (data && data.length > 0) {
+        // Extract provinces and ensure they are strings
+        const provinceList = data
+          .map((item: any) => item.PROVINCE)
+          .filter((province: any) => province && typeof province === 'string' && province.trim() !== '');
+        
+        // Get unique provinces and sort alphabetically
+        const uniqueProvinces = [...new Set(provinceList)] as string[];
+        const sortedProvinces = uniqueProvinces.sort();
+        
+        console.log('Processed provinces:', sortedProvinces);
+        setProvinces(sortedProvinces);
+      } else {
+        console.log('No province data found for region:', selectedRegion);
+        setProvinces([]);
       }
     } catch (error) {
-      console.error('Error loading provinces:', error);
+      console.error('Exception while loading provinces:', error);
+      setProvinces([]);
     } finally {
       setIsLoading(false);
     }
@@ -171,67 +191,73 @@ export default function LocationSelection() {
   const loadMunicipalities = async () => {
     if (!selectedRegion || !selectedProvince) return;
     
+    console.log('Loading municipalities for region:', selectedRegion, 'province:', selectedProvince);
     setIsLoading(true);
+    setMunicipalities([]);
+    
     try {
-      let query;
+      let tableName: string;
       
       switch(selectedRegion) {
         case 'NCR':
-          query = supabase.from('Barangays').select('CITY/MUNICIPALITY');
+          tableName = 'Barangays';
           break;
         case 'REGION 1':
-          query = supabase.from('REGION 1').select('CITY/MUNICIPALITY');
+          tableName = 'REGION 1';
           break;
         case 'REGION 2':
-          query = supabase.from('REGION 2').select('CITY/MUNICIPALITY');
+          tableName = 'REGION 2';
           break;
         case 'REGION 3':
-          query = supabase.from('REGION 3').select('CITY/MUNICIPALITY');
+          tableName = 'REGION 3';
           break;
         case 'REGION 4A':
-          query = supabase.from('REGION 4A').select('CITY/MUNICIPALITY');
+          tableName = 'REGION 4A';
           break;
         case 'REGION 4B':
-          query = supabase.from('REGION 4B').select('CITY/MUNICIPALITY');
+          tableName = 'REGION 4B';
           break;
         case 'REGION 5':
-          query = supabase.from('REGION 5').select('CITY/MUNICIPALITY');
+          tableName = 'REGION 5';
           break;
         case 'REGION 6':
-          query = supabase.from('REGION 6').select('CITY/MUNICIPALITY');
+          tableName = 'REGION 6';
           break;
         case 'REGION 7':
-          query = supabase.from('REGION 7').select('CITY/MUNICIPALITY');
+          tableName = 'REGION 7';
           break;
         case 'REGION 8':
-          query = supabase.from('REGION 8').select('CITY/MUNICIPALITY');
+          tableName = 'REGION 8';
           break;
         case 'REGION 9':
-          query = supabase.from('REGION 9').select('CITY/MUNICIPALITY');
+          tableName = 'REGION 9';
           break;
         case 'REGION 10':
-          query = supabase.from('REGION 10').select('CITY/MUNICIPALITY');
+          tableName = 'REGION 10';
           break;
         case 'REGION 11':
-          query = supabase.from('REGION 11').select('CITY/MUNICIPALITY');
+          tableName = 'REGION 11';
           break;
         case 'REGION 12':
-          query = supabase.from('REGION 12').select('CITY/MUNICIPALITY');
+          tableName = 'REGION 12';
           break;
         case 'REGION 13':
-          query = supabase.from('REGION 13').select('CITY/MUNICIPALITY');
+          tableName = 'REGION 13';
           break;
         case 'CAR':
-          query = supabase.from('CAR').select('CITY/MUNICIPALITY');
+          tableName = 'CAR';
           break;
         case 'BARMM':
-          query = supabase.from('BARMM').select('CITY/MUNICIPALITY');
+          tableName = 'BARMM';
           break;
         default:
-          query = supabase.from('Barangays').select('CITY/MUNICIPALITY');
+          setIsLoading(false);
+          return;
       }
       
-      const { data, error } = await query
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('CITY/MUNICIPALITY')
         .eq('PROVINCE', selectedProvince)
         .not('CITY/MUNICIPALITY', 'is', null)
         .neq('CITY/MUNICIPALITY', '');
@@ -241,11 +267,12 @@ export default function LocationSelection() {
         return;
       }
       
-      if (data) {
-        const uniqueMunicipalities = [...new Set(
-          data.map((item: any) => item['CITY/MUNICIPALITY'])
-            .filter((municipality: string) => municipality && municipality.trim() !== '')
-        )] as string[];
+      if (data && data.length > 0) {
+        const municipalityList = data
+          .map((item: any) => item['CITY/MUNICIPALITY'])
+          .filter((municipality: any) => municipality && typeof municipality === 'string' && municipality.trim() !== '');
+        
+        const uniqueMunicipalities = [...new Set(municipalityList)] as string[];
         setMunicipalities(uniqueMunicipalities.sort());
       }
     } catch (error) {
@@ -258,67 +285,73 @@ export default function LocationSelection() {
   const loadBarangays = async () => {
     if (!selectedRegion || !selectedProvince || !selectedMunicipality) return;
     
+    console.log('Loading barangays for region:', selectedRegion, 'province:', selectedProvince, 'municipality:', selectedMunicipality);
     setIsLoading(true);
+    setBarangays([]);
+    
     try {
-      let query;
+      let tableName: string;
       
       switch(selectedRegion) {
         case 'NCR':
-          query = supabase.from('Barangays').select('BARANGAY');
+          tableName = 'Barangays';
           break;
         case 'REGION 1':
-          query = supabase.from('REGION 1').select('BARANGAY');
+          tableName = 'REGION 1';
           break;
         case 'REGION 2':
-          query = supabase.from('REGION 2').select('BARANGAY');
+          tableName = 'REGION 2';
           break;
         case 'REGION 3':
-          query = supabase.from('REGION 3').select('BARANGAY');
+          tableName = 'REGION 3';
           break;
         case 'REGION 4A':
-          query = supabase.from('REGION 4A').select('BARANGAY');
+          tableName = 'REGION 4A';
           break;
         case 'REGION 4B':
-          query = supabase.from('REGION 4B').select('BARANGAY');
+          tableName = 'REGION 4B';
           break;
         case 'REGION 5':
-          query = supabase.from('REGION 5').select('BARANGAY');
+          tableName = 'REGION 5';
           break;
         case 'REGION 6':
-          query = supabase.from('REGION 6').select('BARANGAY');
+          tableName = 'REGION 6';
           break;
         case 'REGION 7':
-          query = supabase.from('REGION 7').select('BARANGAY');
+          tableName = 'REGION 7';
           break;
         case 'REGION 8':
-          query = supabase.from('REGION 8').select('BARANGAY');
+          tableName = 'REGION 8';
           break;
         case 'REGION 9':
-          query = supabase.from('REGION 9').select('BARANGAY');
+          tableName = 'REGION 9';
           break;
         case 'REGION 10':
-          query = supabase.from('REGION 10').select('BARANGAY');
+          tableName = 'REGION 10';
           break;
         case 'REGION 11':
-          query = supabase.from('REGION 11').select('BARANGAY');
+          tableName = 'REGION 11';
           break;
         case 'REGION 12':
-          query = supabase.from('REGION 12').select('BARANGAY');
+          tableName = 'REGION 12';
           break;
         case 'REGION 13':
-          query = supabase.from('REGION 13').select('BARANGAY');
+          tableName = 'REGION 13';
           break;
         case 'CAR':
-          query = supabase.from('CAR').select('BARANGAY');
+          tableName = 'CAR';
           break;
         case 'BARMM':
-          query = supabase.from('BARMM').select('BARANGAY');
+          tableName = 'BARMM';
           break;
         default:
-          query = supabase.from('Barangays').select('BARANGAY');
+          setIsLoading(false);
+          return;
       }
       
-      const { data, error } = await query
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('BARANGAY')
         .eq('PROVINCE', selectedProvince)
         .eq('CITY/MUNICIPALITY', selectedMunicipality)
         .not('BARANGAY', 'is', null)
@@ -329,11 +362,12 @@ export default function LocationSelection() {
         return;
       }
       
-      if (data) {
-        const uniqueBarangays = [...new Set(
-          data.map((item: any) => item.BARANGAY)
-            .filter((barangay: string) => barangay && barangay.trim() !== '')
-        )] as string[];
+      if (data && data.length > 0) {
+        const barangayList = data
+          .map((item: any) => item.BARANGAY)
+          .filter((barangay: any) => barangay && typeof barangay === 'string' && barangay.trim() !== '');
+        
+        const uniqueBarangays = [...new Set(barangayList)] as string[];
         setBarangays(uniqueBarangays.sort());
       }
     } catch (error) {
@@ -481,21 +515,29 @@ export default function LocationSelection() {
                 <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showProvinceDropdown ? 'rotate-180' : ''}`} />
               </div>
             </div>
-            {showProvinceDropdown && selectedRegion && filteredProvinces.length > 0 && (
+            {showProvinceDropdown && selectedRegion && (
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                {filteredProvinces.map((province, index) => (
-                  <button
-                    key={index}
-                    onClick={() => {
-                      setSelectedProvince(province);
-                      setProvinceSearch(province);
-                      setShowProvinceDropdown(false);
-                    }}
-                    className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
-                  >
-                    {province}
-                  </button>
-                ))}
+                {isLoading ? (
+                  <div className="p-4 text-center text-gray-500">Loading provinces...</div>
+                ) : filteredProvinces.length === 0 ? (
+                  <div className="p-4 text-center text-gray-500">
+                    {provinces.length === 0 ? 'No provinces found for this region' : 'No provinces match your search'}
+                  </div>
+                ) : (
+                  filteredProvinces.map((province, index) => (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        setSelectedProvince(province);
+                        setProvinceSearch(province);
+                        setShowProvinceDropdown(false);
+                      }}
+                      className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                    >
+                      {province}
+                    </button>
+                  ))
+                )}
               </div>
             )}
           </div>
@@ -730,7 +772,9 @@ export default function LocationSelection() {
                   {isLoading ? (
                     <div className="p-4 text-center text-gray-500">Loading provinces...</div>
                   ) : filteredProvinces.length === 0 ? (
-                    <div className="p-4 text-center text-gray-500">No provinces found</div>
+                    <div className="p-4 text-center text-gray-500">
+                      {provinces.length === 0 ? 'No provinces found for this region' : 'No provinces match your search'}
+                    </div>
                   ) : (
                     filteredProvinces.map((province, index) => (
                       <button
