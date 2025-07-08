@@ -56,6 +56,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
       ...formData,
       isCompleted: true
     });
+    onClose();
   };
 
   const handleInputChange = (field: string, value: string) => {

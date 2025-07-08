@@ -1,13 +1,14 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, Edit2, Phone, User, Flag } from "lucide-react";
+import { ChevronLeft, Edit2, Phone, User } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { RegistrationProgress } from "@/components/ui/registration-progress";
 import { OfficialDetailsModal } from "@/components/officials/OfficialDetailsModal";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LocationState {
   role: string;
@@ -28,7 +29,7 @@ interface OfficialData {
 
 const STANDARD_POSITIONS = [
   "Punong Barangay",
-  "Barangay Secretary",
+  "Barangay Secretary",  
   "Barangay Treasurer",
   "Sangguniang Barangay Member",
   "Sangguniang Barangay Member",
@@ -57,6 +58,57 @@ export default function OfficialsInfo() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [landlineNumber, setLandlineNumber] = useState("");
+
+  // Load officials from database when component mounts
+  useEffect(() => {
+    const loadOfficials = async () => {
+      if (!locationState?.barangay) return;
+
+      try {
+        console.log('Loading officials for barangay:', locationState.barangay);
+        
+        // Determine which region table to query based on the selected region
+        const regionTable = locationState.region.replace(/\s+/g, ' '); // Clean region name
+        
+        const { data, error } = await supabase
+          .from(regionTable)
+          .select('*')
+          .eq('BARANGAY', locationState.barangay)
+          .eq('PROVINCE', locationState.province)
+          .eq('"CITY/MUNICIPALITY"', locationState.municipality);
+
+        if (error) {
+          console.error('Error loading officials:', error);
+          return;
+        }
+
+        console.log('Loaded officials data:', data);
+
+        if (data && data.length > 0) {
+          // Update officials with data from database
+          const updatedOfficials = officials.map(official => {
+            const dbOfficial = data.find(d => d.POSITION === official.position);
+            if (dbOfficial) {
+              return {
+                ...official,
+                firstName: dbOfficial.FIRSTNAME || '',
+                middleName: dbOfficial.MIDDLENAME || '',
+                lastName: dbOfficial.LASTNAME || '',
+                suffix: dbOfficial.SUFFIX || '',
+                isCompleted: !!(dbOfficial.FIRSTNAME && dbOfficial.LASTNAME)
+              };
+            }
+            return official;
+          });
+          setOfficials(updatedOfficials);
+        }
+      } catch (error) {
+        console.error('Error in loadOfficials:', error);
+      }
+    };
+
+    loadOfficials();
+  }, [locationState]);
 
   const handleOfficialClick = (index: number) => {
     setSelectedOfficialIndex(index);
@@ -123,8 +175,8 @@ export default function OfficialsInfo() {
             {/* Location Info */}
             <div className="text-left">
               <div className="text-sm text-gray-600 mb-1">Location</div>
-              <div className="font-medium text-gray-900">{locationState?.barangay}</div>
-              <div className="text-sm text-gray-500">
+              <div className="text-sm font-medium text-gray-900">{locationState?.barangay}</div>
+              <div className="text-xs text-gray-500">
                 {locationState?.municipality}, {locationState?.province}
               </div>
             </div>
@@ -133,7 +185,7 @@ export default function OfficialsInfo() {
             <div className="space-y-3">
               <div className="text-left">
                 <div className="text-sm text-gray-600 mb-1">Details</div>
-                <div className="font-medium text-gray-900">Please check the names of your officials</div>
+                <div className="text-sm font-medium text-gray-900">Please check the names of your officials</div>
               </div>
               
               {officials.map((official, index) => (
@@ -167,12 +219,16 @@ export default function OfficialsInfo() {
             {/* Phone Number Section */}
             <div className="space-y-4 mt-6">
               <div className="text-left">
-                <div className="text-sm text-gray-600 mb-1">Logo</div>
-                <div className="font-medium text-gray-900">Verify/Confirm your official barangay number</div>
+                <div className="text-sm text-gray-600 mb-1">Contact</div>
+                <div className="text-sm font-medium text-gray-900">Verify/Confirm your official barangay number</div>
               </div>
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                  <Flag className="h-4 w-4 text-white" />
+                <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
+                  <img 
+                    src="/lovable-uploads/d61c25bf-51d4-4bc8-a8ff-69e0b901ee3a.png" 
+                    alt="Philippines Flag" 
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <span className="text-sm text-gray-600">+63</span>
                 <Input 
@@ -186,7 +242,7 @@ export default function OfficialsInfo() {
 
             {/* Landline Section */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-gray-900">Landline</h3>
+              <h3 className="text-sm font-semibold text-gray-900">Landline</h3>
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
                   <Phone className="h-4 w-4 text-white" />
@@ -229,7 +285,7 @@ export default function OfficialsInfo() {
     );
   }
 
-  // Desktop version - similar structure with desktop styling
+  // Desktop version
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-white to-orange-50 px-4 py-8">
       <div className="max-w-2xl w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
@@ -249,13 +305,13 @@ export default function OfficialsInfo() {
             <p className="text-gray-600">Update official information for your barangay</p>
           </div>
 
-          {/* Content - similar to mobile but with desktop styling */}
+          {/* Content */}
           <div className="space-y-6">
             {/* Location Info */}
             <div className="text-left">
               <div className="text-sm text-gray-600 mb-1">Location</div>
-              <div className="font-medium text-gray-900">{locationState?.barangay}</div>
-              <div className="text-sm text-gray-500">
+              <div className="text-sm font-medium text-gray-900">{locationState?.barangay}</div>
+              <div className="text-xs text-gray-500">
                 {locationState?.municipality}, {locationState?.province}
               </div>
             </div>
@@ -264,7 +320,7 @@ export default function OfficialsInfo() {
             <div className="space-y-4">
               <div className="text-left">
                 <div className="text-sm text-gray-600 mb-1">Details</div>
-                <div className="font-medium text-gray-900">Please check the names of your officials</div>
+                <div className="text-sm font-medium text-gray-900">Please check the names of your officials</div>
               </div>
               
               {officials.map((official, index) => (
@@ -299,12 +355,16 @@ export default function OfficialsInfo() {
             <div className="space-y-6">
               <div>
                 <div className="text-left mb-3">
-                  <div className="text-sm text-gray-600 mb-1">Logo</div>
-                  <div className="font-medium text-gray-900">Verify/Confirm your official barangay number</div>
+                  <div className="text-sm text-gray-600 mb-1">Contact</div>
+                  <div className="text-sm font-medium text-gray-900">Verify/Confirm your official barangay number</div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                    <Flag className="h-4 w-4 text-white" />
+                  <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
+                    <img 
+                      src="/lovable-uploads/d61c25bf-51d4-4bc8-a8ff-69e0b901ee3a.png" 
+                      alt="Philippines Flag" 
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <span className="text-sm text-gray-600">+63</span>
                   <Input 
@@ -317,7 +377,7 @@ export default function OfficialsInfo() {
               </div>
 
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Landline</h3>
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">Landline</h3>
                 <div className="flex items-center space-x-2">
                   <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
                     <Phone className="h-4 w-4 text-white" />
