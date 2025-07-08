@@ -1,4 +1,3 @@
-
 import { Route, Routes } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import Index from "@/pages/Index";
@@ -96,11 +95,15 @@ import QRScanner from "@/pages/officials/QRScanner";
 // Import the new RBI Forms component
 import RbiForms from "@/pages/officials/RbiForms";
 
+// Import the EmailConfirmationHandler
+import { EmailConfirmationHandler } from "@/components/auth/EmailConfirmationHandler";
+
 export function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
+      {/* Registration flow routes */}
       <Route path="/register" element={<RoleSelection />} />
       <Route path="/register/role" element={<RoleSelection />} />
       <Route path="/register/location" element={<LocationSelection />} />
@@ -108,8 +111,8 @@ export function AppRoutes() {
       <Route path="/register/logo" element={<LogoUpload />} />
       <Route path="/register/details" element={<Register />} />
       <Route path="/email-verification" element={<EmailVerification />} />
-      <Route path="/email-confirmation" element={<EmailConfirmation />} />
-      <Route path="/auth/confirm" element={<EmailConfirmation />} />
+      <Route path="/email-confirmation" element={<EmailConfirmationHandler />} />
+      <Route path="/auth/confirm" element={<EmailConfirmationHandler />} />
       <Route path="/verify" element={<Verify />} />
       <Route path="/mpin" element={<MPIN />} />
       <Route path="/forgot-mpin" element={<ForgotMPIN />} />

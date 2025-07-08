@@ -1140,13 +1140,23 @@ export type Database = {
           barangay: string | null
           "Barangay Reference": string | null
           created_at: string | null
+          email: string | null
           first_name: string | null
           id: string
           invited_by: string | null
+          landline_number: string | null
           last_login: string | null
           last_name: string | null
+          logo_url: string | null
+          middle_name: string | null
+          municipality: string | null
+          officials_data: Json | null
+          phone_number: string | null
+          province: string | null
+          region: string | null
           role: Database["public"]["Enums"]["user_role"] | null
           status: string | null
+          suffix: string | null
           updated_at: string | null
         }
         Insert: {
@@ -1154,13 +1164,23 @@ export type Database = {
           barangay?: string | null
           "Barangay Reference"?: string | null
           created_at?: string | null
+          email?: string | null
           first_name?: string | null
           id: string
           invited_by?: string | null
+          landline_number?: string | null
           last_login?: string | null
           last_name?: string | null
+          logo_url?: string | null
+          middle_name?: string | null
+          municipality?: string | null
+          officials_data?: Json | null
+          phone_number?: string | null
+          province?: string | null
+          region?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           status?: string | null
+          suffix?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -1168,13 +1188,23 @@ export type Database = {
           barangay?: string | null
           "Barangay Reference"?: string | null
           created_at?: string | null
+          email?: string | null
           first_name?: string | null
           id?: string
           invited_by?: string | null
+          landline_number?: string | null
           last_login?: string | null
           last_name?: string | null
+          logo_url?: string | null
+          middle_name?: string | null
+          municipality?: string | null
+          officials_data?: Json | null
+          phone_number?: string | null
+          province?: string | null
+          region?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           status?: string | null
+          suffix?: string | null
           updated_at?: string | null
         }
         Relationships: []
