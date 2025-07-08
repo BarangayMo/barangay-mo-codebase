@@ -4,9 +4,10 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, Edit2 } from "lucide-react";
+import { ChevronLeft, Edit2, Phone, User, Flag } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { RegistrationProgress } from "@/components/ui/registration-progress";
+import { OfficialDetailsModal } from "@/components/officials/OfficialDetailsModal";
 
 interface LocationState {
   role: string;
@@ -17,10 +18,27 @@ interface LocationState {
 }
 
 interface OfficialData {
-  name: string;
   position: string;
-  isEditing: boolean;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  suffix?: string;
+  isCompleted: boolean;
 }
+
+const STANDARD_POSITIONS = [
+  "Punong Barangay",
+  "Barangay Secretary",
+  "Barangay Treasurer",
+  "Sangguniang Barangay Member",
+  "Sangguniang Barangay Member",
+  "Sangguniang Barangay Member",
+  "Sangguniang Barangay Member",
+  "Sangguniang Barangay Member",
+  "Sangguniang Barangay Member",
+  "Sangguniang Barangay Member",
+  "SK Chairperson"
+];
 
 export default function OfficialsInfo() {
   const location = useLocation();
@@ -28,29 +46,44 @@ export default function OfficialsInfo() {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const locationState = location.state as LocationState;
 
-  const [officials, setOfficials] = useState<OfficialData[]>([
-    { name: "BILLY JOEL CAPISTRANO", position: "Punong Barangay", isEditing: false },
-    { name: "LUIS CAPINPIN", position: "Sangguniang Barangay Member", isEditing: false },
-    { name: "MERCEDES CAPISTRANO", position: "Sangguniang Barangay Member", isEditing: false },
-  ]);
+  const [officials, setOfficials] = useState<OfficialData[]>(
+    STANDARD_POSITIONS.map(position => ({
+      position,
+      isCompleted: false
+    }))
+  );
 
-  const handleEditOfficial = (index: number) => {
-    const updatedOfficials = [...officials];
-    updatedOfficials[index].isEditing = !updatedOfficials[index].isEditing;
-    setOfficials(updatedOfficials);
+  const [selectedOfficialIndex, setSelectedOfficialIndex] = useState<number | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [landlineNumber, setLandlineNumber] = useState("");
+
+  const handleOfficialClick = (index: number) => {
+    setSelectedOfficialIndex(index);
+    setIsModalOpen(true);
   };
 
-  const handleOfficialNameChange = (index: number, newName: string) => {
-    const updatedOfficials = [...officials];
-    updatedOfficials[index].name = newName;
-    setOfficials(updatedOfficials);
+  const handleOfficialSave = (officialData: Partial<OfficialData>) => {
+    if (selectedOfficialIndex !== null) {
+      const updatedOfficials = [...officials];
+      updatedOfficials[selectedOfficialIndex] = {
+        ...updatedOfficials[selectedOfficialIndex],
+        ...officialData,
+        isCompleted: true
+      };
+      setOfficials(updatedOfficials);
+    }
+    setIsModalOpen(false);
+    setSelectedOfficialIndex(null);
   };
 
   const handleNext = () => {
     navigate("/register/logo", { 
       state: { 
         ...locationState,
-        officials: officials
+        officials: officials,
+        phoneNumber,
+        landlineNumber
       } 
     });
   };
@@ -59,6 +92,12 @@ export default function OfficialsInfo() {
     navigate("/register/location", { 
       state: locationState 
     });
+  };
+
+  const getOfficialDisplayName = (official: OfficialData) => {
+    if (!official.isCompleted) return official.position;
+    const nameParts = [official.firstName, official.middleName, official.lastName, official.suffix].filter(Boolean);
+    return nameParts.length > 0 ? nameParts.join(' ') : official.position;
   };
 
   if (isMobile) {
@@ -81,57 +120,67 @@ export default function OfficialsInfo() {
         {/* Content */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 space-y-4">
-            {/* Barangay Info */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-gray-900 mb-1">Your Barangay Details:</h3>
-              <h2 className="text-lg font-bold text-gray-900">{locationState?.barangay}</h2>
+            {/* Location Info */}
+            <div className="text-left">
+              <div className="text-sm text-gray-600 mb-1">Location</div>
+              <div className="font-medium text-gray-900">{locationState?.barangay}</div>
+              <div className="text-sm text-gray-500">
+                {locationState?.municipality}, {locationState?.province}
+              </div>
             </div>
 
             {/* Officials List */}
             <div className="space-y-3">
-              <h3 className="font-semibold text-gray-900">Please check the names of your officials</h3>
+              <div className="text-left">
+                <div className="text-sm text-gray-600 mb-1">Details</div>
+                <div className="font-medium text-gray-900">Please check the names of your officials</div>
+              </div>
               
               {officials.map((official, index) => (
-                <div key={index} className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between">
+                <div 
+                  key={index} 
+                  className={`rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors ${
+                    official.isCompleted 
+                      ? 'bg-white border border-gray-200' 
+                      : 'border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100'
+                  }`}
+                  onClick={() => handleOfficialClick(index)}
+                >
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                      <span className="text-gray-600 text-sm">👤</span>
+                      <User className="h-5 w-5 text-gray-600" />
                     </div>
                     <div className="flex-1">
-                      {official.isEditing ? (
-                        <Input
-                          value={official.name}
-                          onChange={(e) => handleOfficialNameChange(index, e.target.value)}
-                          className="font-medium"
-                          onBlur={() => handleEditOfficial(index)}
-                        />
-                      ) : (
-                        <div>
-                          <p className="font-medium text-gray-900">{official.name}</p>
-                          <p className="text-sm text-gray-600">{official.position}</p>
-                        </div>
+                      <p className={`font-medium ${official.isCompleted ? 'text-gray-900' : 'text-gray-500'}`}>
+                        {getOfficialDisplayName(official)}
+                      </p>
+                      {official.isCompleted && (
+                        <p className="text-sm text-gray-600">{official.position}</p>
                       )}
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleEditOfficial(index)}
-                    className="p-2 text-gray-400 hover:text-gray-600"
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </button>
+                  <Edit2 className="h-4 w-4 text-gray-400" />
                 </div>
               ))}
             </div>
 
-            {/* Verification Section */}
+            {/* Phone Number Section */}
             <div className="space-y-4 mt-6">
-              <h3 className="font-semibold text-gray-900">Verify/Confirm your official barangay number</h3>
+              <div className="text-left">
+                <div className="text-sm text-gray-600 mb-1">Logo</div>
+                <div className="font-medium text-gray-900">Verify/Confirm your official barangay number</div>
+              </div>
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm">🇵🇭</span>
+                  <Flag className="h-4 w-4 text-white" />
                 </div>
                 <span className="text-sm text-gray-600">+63</span>
-                <Input placeholder="12345" className="flex-1" />
+                <Input 
+                  placeholder="12345" 
+                  className="flex-1"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                />
               </div>
             </div>
 
@@ -140,10 +189,15 @@ export default function OfficialsInfo() {
               <h3 className="font-semibold text-gray-900">Landline</h3>
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm">📞</span>
+                  <Phone className="h-4 w-4 text-white" />
                 </div>
                 <span className="text-sm text-gray-600">02</span>
-                <Input placeholder="047-222-5173" className="flex-1" />
+                <Input 
+                  placeholder="047-222-5173" 
+                  className="flex-1"
+                  value={landlineNumber}
+                  onChange={(e) => setLandlineNumber(e.target.value)}
+                />
               </div>
             </div>
           </div>
@@ -158,11 +212,24 @@ export default function OfficialsInfo() {
             NEXT
           </Button>
         </div>
+
+        {/* Official Details Modal */}
+        {selectedOfficialIndex !== null && (
+          <OfficialDetailsModal
+            isOpen={isModalOpen}
+            onClose={() => {
+              setIsModalOpen(false);
+              setSelectedOfficialIndex(null);
+            }}
+            official={officials[selectedOfficialIndex]}
+            onSave={handleOfficialSave}
+          />
+        )}
       </div>
     );
   }
 
-  // Desktop version
+  // Desktop version - similar structure with desktop styling
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-white to-orange-50 px-4 py-8">
       <div className="max-w-2xl w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
@@ -182,60 +249,70 @@ export default function OfficialsInfo() {
             <p className="text-gray-600">Update official information for your barangay</p>
           </div>
 
-          {/* Content - similar structure to mobile but with desktop styling */}
+          {/* Content - similar to mobile but with desktop styling */}
           <div className="space-y-6">
-            {/* Barangay Info */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-gray-900 mb-1">Your Barangay Details:</h3>
-              <h2 className="text-lg font-bold text-gray-900">{locationState?.barangay}</h2>
+            {/* Location Info */}
+            <div className="text-left">
+              <div className="text-sm text-gray-600 mb-1">Location</div>
+              <div className="font-medium text-gray-900">{locationState?.barangay}</div>
+              <div className="text-sm text-gray-500">
+                {locationState?.municipality}, {locationState?.province}
+              </div>
             </div>
 
             {/* Officials List */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-gray-900">Please check the names of your officials</h3>
+              <div className="text-left">
+                <div className="text-sm text-gray-600 mb-1">Details</div>
+                <div className="font-medium text-gray-900">Please check the names of your officials</div>
+              </div>
               
               {officials.map((official, index) => (
-                <div key={index} className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between">
+                <div 
+                  key={index} 
+                  className={`rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors ${
+                    official.isCompleted 
+                      ? 'bg-white border border-gray-200 hover:bg-gray-50' 
+                      : 'border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100'
+                  }`}
+                  onClick={() => handleOfficialClick(index)}
+                >
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                      <span className="text-gray-600 text-sm">👤</span>
+                      <User className="h-5 w-5 text-gray-600" />
                     </div>
                     <div className="flex-1">
-                      {official.isEditing ? (
-                        <Input
-                          value={official.name}
-                          onChange={(e) => handleOfficialNameChange(index, e.target.value)}
-                          className="font-medium"
-                          onBlur={() => handleEditOfficial(index)}
-                        />
-                      ) : (
-                        <div>
-                          <p className="font-medium text-gray-900">{official.name}</p>
-                          <p className="text-sm text-gray-600">{official.position}</p>
-                        </div>
+                      <p className={`font-medium ${official.isCompleted ? 'text-gray-900' : 'text-gray-500'}`}>
+                        {getOfficialDisplayName(official)}
+                      </p>
+                      {official.isCompleted && (
+                        <p className="text-sm text-gray-600">{official.position}</p>
                       )}
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleEditOfficial(index)}
-                    className="p-2 text-gray-400 hover:text-gray-600"
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </button>
+                  <Edit2 className="h-4 w-4 text-gray-400" />
                 </div>
               ))}
             </div>
 
-            {/* Verification and contact sections */}
+            {/* Phone and contact sections */}
             <div className="space-y-6">
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Verify/Confirm your official barangay number</h3>
+                <div className="text-left mb-3">
+                  <div className="text-sm text-gray-600 mb-1">Logo</div>
+                  <div className="font-medium text-gray-900">Verify/Confirm your official barangay number</div>
+                </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm">🇵🇭</span>
+                    <Flag className="h-4 w-4 text-white" />
                   </div>
                   <span className="text-sm text-gray-600">+63</span>
-                  <Input placeholder="12345" className="flex-1" />
+                  <Input 
+                    placeholder="12345" 
+                    className="flex-1"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                  />
                 </div>
               </div>
 
@@ -243,10 +320,15 @@ export default function OfficialsInfo() {
                 <h3 className="font-semibold text-gray-900 mb-3">Landline</h3>
                 <div className="flex items-center space-x-2">
                   <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm">📞</span>
+                    <Phone className="h-4 w-4 text-white" />
                   </div>
                   <span className="text-sm text-gray-600">02</span>
-                  <Input placeholder="047-222-5173" className="flex-1" />
+                  <Input 
+                    placeholder="047-222-5173" 
+                    className="flex-1"
+                    value={landlineNumber}
+                    onChange={(e) => setLandlineNumber(e.target.value)}
+                  />
                 </div>
               </div>
             </div>
@@ -260,6 +342,19 @@ export default function OfficialsInfo() {
             Next
           </Button>
         </div>
+
+        {/* Official Details Modal */}
+        {selectedOfficialIndex !== null && (
+          <OfficialDetailsModal
+            isOpen={isModalOpen}
+            onClose={() => {
+              setIsModalOpen(false);
+              setSelectedOfficialIndex(null);
+            }}
+            official={officials[selectedOfficialIndex]}
+            onSave={handleOfficialSave}
+          />
+        )}
       </div>
     </div>
   );
