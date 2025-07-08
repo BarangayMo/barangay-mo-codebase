@@ -1,8 +1,12 @@
+
 import { Route, Routes } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import RoleSelection from "@/pages/RoleSelection";
+import LocationSelection from "@/pages/LocationSelection";
+import OfficialsInfo from "@/pages/OfficialsInfo";
 import EmailVerification from "@/pages/EmailVerification";
 import Verify from "@/pages/Verify";
 import MPIN from "@/pages/MPIN";
@@ -97,6 +101,10 @@ export function AppRoutes() {
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/register/role" element={<RoleSelection />} />
+      <Route path="/register/location" element={<LocationSelection />} />
+      <Route path="/register/officials" element={<OfficialsInfo />} />
+      <Route path="/register/details" element={<Register />} />
       <Route path="/email-verification" element={<EmailVerification />} />
       <Route path="/email-confirmation" element={<EmailConfirmation />} />
       <Route path="/auth/confirm" element={<EmailConfirmation />} />

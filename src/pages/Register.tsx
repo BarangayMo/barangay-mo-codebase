@@ -1,14 +1,12 @@
-
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, Users, Shield } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
@@ -18,6 +16,9 @@ import {
 } from "@/components/ui/select";
 
 export default function Register() {
+  const location = useLocation();
+  const locationState = location.state as any;
+  
   const [formData, setFormData] = useState({
     firstName: "",
     suffix: "",
@@ -25,7 +26,7 @@ export default function Register() {
     lastName: "",
     email: "",
     password: "",
-    role: "resident",
+    role: locationState?.role || "resident",
     hasNoMiddleName: false
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -56,7 +57,17 @@ export default function Register() {
           firstName: formData.firstName,
           lastName: formData.lastName,
           middleName: formData.hasNoMiddleName ? "" : formData.middleName,
-          suffix: formData.suffix
+          suffix: formData.suffix,
+          // Include location and officials data if available
+          ...(locationState?.region && {
+            region: locationState.region,
+            province: locationState.province,
+            municipality: locationState.municipality,
+            barangay: locationState.barangay,
+          }),
+          ...(locationState?.officials && {
+            officials: locationState.officials
+          })
         }
       );
 
@@ -92,17 +103,24 @@ export default function Register() {
     }));
   };
 
+  const getBackLink = () => {
+    if (locationState?.role === "official") {
+      return "/register/officials";
+    }
+    return "/register/role";
+  };
+
   if (isMobile) {
     return (
       <div className="min-h-screen bg-white flex flex-col overflow-hidden">
         {/* Progress Bar */}
         <div className="w-full bg-gray-200 h-1">
-          <div className="bg-blue-600 h-1 w-1/3"></div>
+          <div className="bg-blue-600 h-1 w-full"></div>
         </div>
 
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-2 border-b">
-          <Link to="/welcome" className="text-gray-600 hover:text-gray-800">
+          <Link to={getBackLink()} className="text-gray-600 hover:text-gray-800">
             <ChevronLeft className="h-6 w-6" />
           </Link>
           <h1 className="text-lg font-semibold text-gray-900">Register</h1>
@@ -119,52 +137,11 @@ export default function Register() {
                 alt="eGov.PH Logo" 
                 className="h-10 w-auto mx-auto mb-2" 
               />
-              <h2 className="text-lg font-bold text-gray-900 mb-1">Let's Get Started!</h2>
-              <p className="text-gray-600 text-sm">Create your account to access services</p>
+              <h2 className="text-lg font-bold text-gray-900 mb-1">Complete Registration</h2>
+              <p className="text-gray-600 text-sm">Enter your personal details</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-3">
-              {/* Role Selection - Smaller */}
-              <div className="space-y-2">
-                <Label className="text-gray-900 font-semibold text-sm">Select your role</Label>
-                <RadioGroup
-                  value={formData.role}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, role: value }))}
-                  className="grid grid-cols-2 gap-2"
-                >
-                  <div>
-                    <RadioGroupItem value="resident" id="resident-mobile" className="peer sr-only" />
-                    <Label 
-                      htmlFor="resident-mobile" 
-                      className="flex flex-col items-center justify-center h-16 p-2 border-2 rounded-lg cursor-pointer transition-all duration-200 border-blue-500 bg-blue-50"
-                    >
-                      <div className="p-1.5 rounded-full mb-1 bg-blue-600 text-white">
-                        <Users className="w-3 h-3" />
-                      </div>
-                      <div className="text-center">
-                        <div className="font-semibold text-gray-900 text-xs">Resident</div>
-                        <div className="text-xs text-gray-500">Access services</div>
-                      </div>
-                    </Label>
-                  </div>
-                  <div>
-                    <RadioGroupItem value="official" id="official-mobile" className="peer sr-only" />
-                    <Label 
-                      htmlFor="official-mobile" 
-                      className="flex flex-col items-center justify-center h-16 p-2 border-2 rounded-lg cursor-pointer transition-all duration-200 border-red-500 bg-red-50"
-                    >
-                      <div className="p-1.5 rounded-full mb-1 bg-red-600 text-white">
-                        <Shield className="w-3 h-3" />
-                      </div>
-                      <div className="text-center">
-                        <div className="font-semibold text-gray-900 text-xs">Official</div>
-                        <div className="text-xs text-gray-500">Barangay Staff</div>
-                      </div>
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
               {/* Personal Information */}
               <div className="space-y-3">
                 <div className="grid grid-cols-3 gap-2">
@@ -297,18 +274,18 @@ export default function Register() {
     );
   }
 
-  // Desktop version
+  // Desktop version - similar structure but with desktop styling
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-orange-50 px-4 py-8">
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
         {/* Progress Bar */}
         <div className="w-full bg-gray-200 h-1">
-          <div className="bg-blue-600 h-1 w-1/3"></div>
+          <div className="bg-blue-600 h-1 w-full"></div>
         </div>
 
         <div className="p-8">
-          <Link to="/" className="inline-flex items-center text-sm text-gray-500 mb-6 hover:text-gray-700">
-            <ChevronLeft className="w-4 h-4 mr-1" /> Back to home
+          <Link to={getBackLink()} className="inline-flex items-center text-sm text-gray-500 mb-6 hover:text-gray-700">
+            <ChevronLeft className="w-4 h-4 mr-1" /> Back
           </Link>
           
           {/* Logo and Title */}
@@ -318,53 +295,11 @@ export default function Register() {
               alt="eGov.PH Logo" 
               className="h-16 w-auto mx-auto mb-4" 
             />
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Let's Get Started!</h1>
-            <p className="text-gray-600">Create your account to access barangay services</p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Complete Registration</h1>
+            <p className="text-gray-600">Enter your personal details</p>
           </div>
           
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Role Selection */}
-            <div className="space-y-3">
-              <Label className="text-gray-900 font-semibold text-lg">Select your role</Label>
-              <RadioGroup
-                value={formData.role}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, role: value }))}
-                className="grid grid-cols-2 gap-4"
-              >
-                <div>
-                  <RadioGroupItem value="resident" id="resident" className="peer sr-only" />
-                  <Label 
-                    htmlFor="resident" 
-                    className="flex flex-col items-center h-28 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 font-medium border-blue-500 bg-blue-50"
-                  >
-                    <div className="p-2 rounded-full mb-2 bg-blue-600 text-white">
-                      <Users className="w-5 h-5" />
-                    </div>
-                    <div className="text-center">
-                      <div className="font-semibold text-gray-900">Resident</div>
-                      <div className="text-xs text-gray-500">Access community services</div>
-                    </div>
-                  </Label>
-                </div>
-                <div>
-                  <RadioGroupItem value="official" id="official" className="peer sr-only" />
-                  <Label 
-                    htmlFor="official" 
-                    className="flex flex-col items-center h-28 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 font-medium border-red-500 bg-red-50"
-                  >
-                    <div className="p-2 rounded-full mb-2 bg-red-600 text-white">
-                      <Shield className="w-5 h-5" />
-                    </div>
-                    <div className="text-center">
-                      <div className="font-semibold text-gray-900">Official</div>
-                      <div className="text-xs text-gray-500">For Barangay Staff</div>
-                    </div>
-                  </Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            {/* Personal Information */}
             <div className="space-y-4">
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-2">
@@ -470,7 +405,7 @@ export default function Register() {
                 I agree to the <Link to="/terms" className="text-blue-600 font-medium hover:underline">Terms of Service</Link> and <Link to="/privacy" className="text-blue-600 font-medium hover:underline">Privacy Policy</Link>
               </label>
             </div>
-
+            
             {/* Submit Button */}
             <Button
               type="submit"
