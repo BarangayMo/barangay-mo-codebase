@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -87,8 +86,8 @@ export default function Register() {
         barangay: locationState.barangay,
         phoneNumber: formData.phoneNumber || null,
         landlineNumber: formData.landlineNumber || null,
-        logoUrl: locationState.logoUrl,
-        officials: locationState.officials
+        logoUrl: locationState.logoUrl || null,
+        officials: locationState.officials || null
       };
 
       console.log('Complete userData being sent:', userData);
@@ -356,7 +355,7 @@ export default function Register() {
     );
   }
 
-  // Desktop version
+  // Desktop version with same fixes applied
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-white to-orange-50 px-4 py-8">
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
@@ -391,7 +390,7 @@ export default function Register() {
             </p>
           </div>
           
-          {/* Form */}
+          {/* Form - keeping same structure as mobile but with desktop classes */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <div>

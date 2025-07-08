@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, ReactNode, useEffect, useRef } from "react";
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -247,27 +248,31 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       console.log("Registration attempt with userData:", userData);
       
-      // Sign up the user with metadata only (not direct column values)
+      // Ensure all required metadata fields are present with correct keys
+      const metaData = {
+        first_name: userData.firstName || '',
+        last_name: userData.lastName || '',
+        middle_name: userData.middleName || '',
+        suffix: userData.suffix || '',
+        role: userData.role || 'resident',
+        region: userData.region || '',
+        province: userData.province || '',
+        municipality: userData.municipality || '',
+        barangay: userData.barangay || '',
+        phone_number: userData.phoneNumber || null,
+        landline_number: userData.landlineNumber || null,
+        logo_url: userData.logoUrl || null,
+        officials: userData.officials || null
+      };
+
+      console.log("Metadata being sent:", metaData);
+
+      // Sign up the user with metadata
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: {
-            first_name: userData.firstName,
-            last_name: userData.lastName,
-            middle_name: userData.middleName,
-            suffix: userData.suffix,
-            role: userData.role,
-            // Store location and contact info in metadata for the trigger
-            region: userData.region,
-            province: userData.province,
-            municipality: userData.municipality,
-            barangay: userData.barangay,
-            phone_number: userData.phoneNumber,
-            landline_number: userData.landlineNumber,
-            logo_url: userData.logoUrl,
-            officials: userData.officials
-          },
+          data: metaData,
           emailRedirectTo: `${window.location.origin}/email-confirmation`
         }
       });

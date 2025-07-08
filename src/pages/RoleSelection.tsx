@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -13,11 +12,8 @@ export default function RoleSelection() {
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   const handleNext = () => {
-    if (selectedRole === "official") {
-      navigate("/register/location");
-    } else {
-      navigate("/register/details", { state: { role: selectedRole } });
-    }
+    // Both resident and official go to location selection first
+    navigate("/register/location", { state: { role: selectedRole } });
   };
 
   if (isMobile) {
