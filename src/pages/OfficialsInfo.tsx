@@ -62,49 +62,137 @@ export default function OfficialsInfo() {
   // Load officials from database when component mounts
   useEffect(() => {
     const loadOfficials = async () => {
-      if (!locationState?.barangay) return;
+      if (!locationState?.barangay || !locationState?.region) return;
 
       try {
         console.log('Loading officials for barangay:', locationState.barangay);
         
-        // Determine which region table to query based on the selected region
-        const regionTable = locationState.region.replace(/\s+/g, ' '); // Clean region name
-        
-        const { data, error } = await supabase
-          .from(regionTable)
-          .select('*')
-          .eq('BARANGAY', locationState.barangay)
-          .eq('PROVINCE', locationState.province)
-          .eq('"CITY/MUNICIPALITY"', locationState.municipality);
+        // Map region names to exact table names
+        const regionTableMap: Record<string, string> = {
+          'REGION 1': 'REGION 1',
+          'REGION 2': 'REGION 2',
+          'REGION 3': 'REGION 3',
+          'REGION 4A': 'REGION 4A',
+          'REGION 4B': 'REGION 4B',
+          'REGION 5': 'REGION 5',
+          'REGION 6': 'REGION 6',
+          'REGION 7': 'REGION 7',
+          'REGION 8': 'REGION 8',
+          'REGION 9': 'REGION 9',
+          'REGION 10': 'REGION 10',
+          'REGION 11': 'REGION 11',
+          'REGION 12': 'REGION 12',
+          'REGION 13': 'REGION 13',
+          'NCR': 'NCR',
+          'CAR': 'CAR',
+          'BARMM': 'BARMM'
+        };
 
-        if (error) {
-          console.error('Error loading officials:', error);
+        const regionTable = regionTableMap[locationState.region];
+        if (!regionTable) {
+          console.error('Unknown region:', locationState.region);
           return;
         }
 
-        console.log('Loaded officials data:', data);
+        // Use raw SQL query to handle dynamic table names
+        const { data, error } = await supabase.rpc('get_officials_by_region', {
+          region_name: regionTable,
+          barangay_name: locationState.barangay,
+          province_name: locationState.province,
+          municipality_name: locationState.municipality
+        });
+
+        if (error) {
+          console.error('Error loading officials:', error);
+          // Fallback: try direct table query with proper typing
+          await loadOfficialsDirectly(regionTable);
+          return;
+        }
 
         if (data && data.length > 0) {
-          // Update officials with data from database
-          const updatedOfficials = officials.map(official => {
-            const dbOfficial = data.find(d => d.POSITION === official.position);
-            if (dbOfficial) {
-              return {
-                ...official,
-                firstName: dbOfficial.FIRSTNAME || '',
-                middleName: dbOfficial.MIDDLENAME || '',
-                lastName: dbOfficial.LASTNAME || '',
-                suffix: dbOfficial.SUFFIX || '',
-                isCompleted: !!(dbOfficial.FIRSTNAME && dbOfficial.LASTNAME)
-              };
-            }
-            return official;
-          });
-          setOfficials(updatedOfficials);
+          console.log('Loaded officials data:', data);
+          updateOfficialsWithData(data);
         }
       } catch (error) {
         console.error('Error in loadOfficials:', error);
+        // Try fallback approach
+        await loadOfficialsDirectly(locationState.region);
       }
+    };
+
+    const loadOfficialsDirectly = async (regionName: string) => {
+      try {
+        // Since we can't use dynamic table names with typed client,
+        // we'll handle each region case explicitly
+        let data: any[] = [];
+        
+        switch (regionName) {
+          case 'REGION 1':
+            const { data: region1Data } = await supabase
+              .from('REGION 1')
+              .select('*')
+              .eq('BARANGAY', locationState.barangay)
+              .eq('PROVINCE', locationState.province)
+              .eq('CITY/MUNICIPALITY', locationState.municipality);
+            data = region1Data || [];
+            break;
+          case 'REGION 2':
+            const { data: region2Data } = await supabase
+              .from('REGION 2')
+              .select('*')
+              .eq('BARANGAY', locationState.barangay)
+              .eq('PROVINCE', locationState.province)
+              .eq('CITY/MUNICIPALITY', locationState.municipality);
+            data = region2Data || [];
+            break;
+          case 'REGION 3':
+            const { data: region3Data } = await supabase
+              .from('REGION 3')
+              .select('*')
+              .eq('BARANGAY', locationState.barangay)
+              .eq('PROVINCE', locationState.province)
+              .eq('CITY/MUNICIPALITY', locationState.municipality);
+            data = region3Data || [];
+            break;
+          case 'NCR':
+            const { data: ncrData } = await supabase
+              .from('NCR')
+              .select('*')
+              .eq('BARANGAY', locationState.barangay)
+              .eq('PROVINCE', locationState.province)
+              .eq('CITY/MUNICIPALITY', locationState.municipality);
+            data = ncrData || [];
+            break;
+          // Add other regions as needed
+          default:
+            console.log('Region not handled in switch:', regionName);
+            return;
+        }
+
+        if (data && data.length > 0) {
+          updateOfficialsWithData(data);
+        }
+      } catch (error) {
+        console.error('Error in loadOfficialsDirectly:', error);
+      }
+    };
+
+    const updateOfficialsWithData = (data: any[]) => {
+      const updatedOfficials = officials.map(official => {
+        const dbOfficial = data.find((d: any) => d.POSITION === official.position);
+        if (dbOfficial) {
+          return {
+            ...official,
+            firstName: dbOfficial.FIRSTNAME || '',
+            middleName: dbOfficial.MIDDLENAME || '',
+            lastName: dbOfficial.LASTNAME || '',
+            suffix: dbOfficial.SUFFIX || '',
+            isCompleted: !!(dbOfficial.FIRSTNAME && dbOfficial.LASTNAME)
+          };
+        }
+        return official;
+      });
+      setOfficials(updatedOfficials);
     };
 
     loadOfficials();
@@ -174,7 +262,7 @@ export default function OfficialsInfo() {
           <div className="p-4 space-y-4">
             {/* Location Info */}
             <div className="text-left">
-              <div className="text-sm text-gray-600 mb-1">Location</div>
+              <div className="text-xs text-gray-600 mb-1">Location</div>
               <div className="text-sm font-medium text-gray-900">{locationState?.barangay}</div>
               <div className="text-xs text-gray-500">
                 {locationState?.municipality}, {locationState?.province}
@@ -184,7 +272,7 @@ export default function OfficialsInfo() {
             {/* Officials List */}
             <div className="space-y-3">
               <div className="text-left">
-                <div className="text-sm text-gray-600 mb-1">Details</div>
+                <div className="text-xs text-gray-600 mb-1">Details</div>
                 <div className="text-sm font-medium text-gray-900">Please check the names of your officials</div>
               </div>
               
@@ -219,7 +307,7 @@ export default function OfficialsInfo() {
             {/* Phone Number Section */}
             <div className="space-y-4 mt-6">
               <div className="text-left">
-                <div className="text-sm text-gray-600 mb-1">Contact</div>
+                <div className="text-xs text-gray-600 mb-1">Contact</div>
                 <div className="text-sm font-medium text-gray-900">Verify/Confirm your official barangay number</div>
               </div>
               <div className="flex items-center space-x-2">
@@ -242,7 +330,9 @@ export default function OfficialsInfo() {
 
             {/* Landline Section */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-900">Landline</h3>
+              <div className="text-left">
+                <div className="text-xs text-gray-600 mb-1">Landline</div>
+              </div>
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
                   <Phone className="h-4 w-4 text-white" />
@@ -309,7 +399,7 @@ export default function OfficialsInfo() {
           <div className="space-y-6">
             {/* Location Info */}
             <div className="text-left">
-              <div className="text-sm text-gray-600 mb-1">Location</div>
+              <div className="text-xs text-gray-600 mb-1">Location</div>
               <div className="text-sm font-medium text-gray-900">{locationState?.barangay}</div>
               <div className="text-xs text-gray-500">
                 {locationState?.municipality}, {locationState?.province}
@@ -319,7 +409,7 @@ export default function OfficialsInfo() {
             {/* Officials List */}
             <div className="space-y-4">
               <div className="text-left">
-                <div className="text-sm text-gray-600 mb-1">Details</div>
+                <div className="text-xs text-gray-600 mb-1">Details</div>
                 <div className="text-sm font-medium text-gray-900">Please check the names of your officials</div>
               </div>
               
@@ -355,7 +445,7 @@ export default function OfficialsInfo() {
             <div className="space-y-6">
               <div>
                 <div className="text-left mb-3">
-                  <div className="text-sm text-gray-600 mb-1">Contact</div>
+                  <div className="text-xs text-gray-600 mb-1">Contact</div>
                   <div className="text-sm font-medium text-gray-900">Verify/Confirm your official barangay number</div>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -377,7 +467,9 @@ export default function OfficialsInfo() {
               </div>
 
               <div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-3">Landline</h3>
+                <div className="text-left mb-3">
+                  <div className="text-xs text-gray-600 mb-1">Landline</div>
+                </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
                     <Phone className="h-4 w-4 text-white" />
