@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Camera } from "lucide-react";
+import { User, Camera, ChevronLeft } from "lucide-react";
 
 interface OfficialData {
   position: string;
@@ -30,6 +30,20 @@ const SUFFIX_OPTIONS = [
   "III",
   "IV",
   "V"
+];
+
+const ALL_POSITIONS = [
+  "Punong Barangay",
+  "Barangay Secretary",
+  "Barangay Treasurer",
+  "Sangguniang Barangay Member 1",
+  "Sangguniang Barangay Member 2",
+  "Sangguniang Barangay Member 3",
+  "Sangguniang Barangay Member 4",
+  "Sangguniang Barangay Member 5",
+  "Sangguniang Barangay Member 6",
+  "Sangguniang Barangay Member 7",
+  "SK Chairperson"
 ];
 
 export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: OfficialDetailsModalProps) {
@@ -68,12 +82,17 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md mx-4">
-        <DialogHeader className="bg-red-600 text-white -mx-6 -mt-6 px-6 py-4 mb-6">
-          <DialogTitle className="text-center">Edit Barangay Official</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-md mx-4 p-0 overflow-hidden">
+        {/* Red Header */}
+        <div className="bg-red-600 text-white px-6 py-4 flex items-center justify-between">
+          <button onClick={onClose} className="text-white hover:text-gray-200">
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+          <DialogTitle className="text-center text-lg font-semibold">Edit Barangay Official</DialogTitle>
+          <div className="w-6" />
+        </div>
 
-        <div className="space-y-6">
+        <div className="p-6 space-y-6">
           {/* Profile Picture Section */}
           <div className="flex flex-col items-center space-y-3">
             <div className="relative">
@@ -90,7 +109,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
           <div className="space-y-4">
             <h3 className="font-semibold text-gray-900 mb-4">Official Details</h3>
             
-            <div>
+            <div className="space-y-1">
               <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">
                 First Name
               </Label>
@@ -99,11 +118,11 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
                 value={formData.firstName}
                 onChange={(e) => handleInputChange('firstName', e.target.value)}
                 placeholder="BILLY JOEL"
-                className="mt-1"
+                className="bg-gray-50 border-gray-200"
               />
             </div>
 
-            <div>
+            <div className="space-y-1">
               <Label htmlFor="middleName" className="text-sm font-medium text-gray-700">
                 Middle Name (Optional)
               </Label>
@@ -112,11 +131,11 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
                 value={formData.middleName}
                 onChange={(e) => handleInputChange('middleName', e.target.value)}
                 placeholder="TRIMOR"
-                className="mt-1"
+                className="bg-gray-50 border-gray-200"
               />
             </div>
 
-            <div>
+            <div className="space-y-1">
               <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">
                 Last Name
               </Label>
@@ -125,16 +144,16 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
                 value={formData.lastName}
                 onChange={(e) => handleInputChange('lastName', e.target.value)}
                 placeholder="CAPISTRANO"
-                className="mt-1"
+                className="bg-gray-50 border-gray-200"
               />
             </div>
 
-            <div>
+            <div className="space-y-1">
               <Label htmlFor="suffix" className="text-sm font-medium text-gray-700">
                 Suffix (Optional)
               </Label>
               <Select value={formData.suffix} onValueChange={(value) => handleInputChange('suffix', value)}>
-                <SelectTrigger className="mt-1">
+                <SelectTrigger className="bg-gray-50 border-gray-200">
                   <SelectValue placeholder="Select..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -148,20 +167,20 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
               </Select>
             </div>
 
-            <div>
+            <div className="space-y-1">
               <Label htmlFor="position" className="text-sm font-medium text-gray-700">
                 Position
               </Label>
               <Select value={formData.position} onValueChange={(value) => handleInputChange('position', value)}>
-                <SelectTrigger className="mt-1">
+                <SelectTrigger className="bg-gray-50 border-gray-200">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Punong Barangay">Punong Barangay</SelectItem>
-                  <SelectItem value="Barangay Secretary">Barangay Secretary</SelectItem>
-                  <SelectItem value="Barangay Treasurer">Barangay Treasurer</SelectItem>
-                  <SelectItem value="Sangguniang Barangay Member">Sangguniang Barangay Member</SelectItem>
-                  <SelectItem value="SK Chairperson">SK Chairperson</SelectItem>
+                  {ALL_POSITIONS.map((position) => (
+                    <SelectItem key={position} value={position}>
+                      {position}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -172,7 +191,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
             <Button 
               variant="outline" 
               onClick={onClose}
-              className="flex-1"
+              className="flex-1 border-gray-300"
             >
               Cancel
             </Button>
