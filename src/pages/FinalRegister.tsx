@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,9 @@ import { Label } from "@/components/ui/label";
 import { ChevronLeft } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { RegistrationProgress } from "@/components/ui/registration-progress";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Select,
   SelectContent,
@@ -15,9 +18,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export default function Register() {
+interface LocationState {
+  role: string;
+  region: string;
+  province: string;
+  municipality: string;
+  barangay: string;
+  officials: any[];
+  phoneNumber: string;
+  landlineNumber: string;
+  logoUrl?: string;
+}
+
+export default function FinalRegister() {
   const location = useLocation();
-  const locationState = location.state as any;
+  const locationState = location.state as LocationState;
   
   const [formData, setFormData] = useState({
     firstName: "",
@@ -26,7 +41,6 @@ export default function Register() {
     lastName: "",
     email: "",
     password: "",
-    role: locationState?.role || "resident",
     hasNoMiddleName: false
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -44,30 +58,62 @@ export default function Register() {
     { value: "V", label: "V" }
   ];
 
+  const checkBarangayExists = async (barangay: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('barangay', barangay)
+        .eq('role', 'official')
+        .limit(1);
+
+      if (error) {
+        console.error('Error checking barangay:', error);
+        return false;
+      }
+
+      return data && data.length > 0;
+    } catch (error) {
+      console.error('Error in checkBarangayExists:', error);
+      return false;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
+      // Check if barangay is already registered
+      const barangayExists = await checkBarangayExists(locationState.barangay);
+      
+      if (barangayExists) {
+        toast({
+          variant: "destructive",
+          title: "Barangay Already Registered",
+          description: `${locationState.barangay} has already been registered by another official.`
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const { error } = await register(
         formData.email,
         formData.password,
         {
-          role: formData.role,
+          role: locationState.role,
           firstName: formData.firstName,
           lastName: formData.lastName,
           middleName: formData.hasNoMiddleName ? "" : formData.middleName,
           suffix: formData.suffix,
-          // Include location and officials data if available
-          ...(locationState?.region && {
-            region: locationState.region,
-            province: locationState.province,
-            municipality: locationState.municipality,
-            barangay: locationState.barangay,
-          }),
-          ...(locationState?.officials && {
-            officials: locationState.officials
-          })
+          region: locationState.region,
+          province: locationState.province,
+          municipality: locationState.municipality,
+          barangay: locationState.barangay,
+          phoneNumber: locationState.phoneNumber,
+          landlineNumber: locationState.landlineNumber,
+          logoUrl: locationState.logoUrl || "",
+          officials: locationState.officials
         }
       );
 
@@ -98,42 +144,34 @@ export default function Register() {
     setFormData(prev => ({ 
       ...prev, 
       [name]: type === "checkbox" ? checked : value,
-      // Clear middle name when "no middle name" is checked
       ...(name === "hasNoMiddleName" && checked ? { middleName: "" } : {})
     }));
   };
 
-  const getBackLink = () => {
-    if (locationState?.role === "official") {
-      return "/register/logo";
-    }
-    return "/register/role";
+  const handleBack = () => {
+    navigate("/register/logo", { 
+      state: locationState 
+    });
   };
-
-  // For officials, redirect to final register page
-  if (locationState?.role === "official") {
-    navigate("/register/final", { state: locationState });
-    return null;
-  }
 
   if (isMobile) {
     return (
       <div className="min-h-screen bg-white flex flex-col overflow-hidden">
-        {/* Progress Bar */}
-        <div className="w-full bg-gray-200 h-1">
-          <div className="bg-red-600 h-1 w-full"></div>
-        </div>
-
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-2 border-b">
-          <Link to={getBackLink()} className="text-gray-600 hover:text-gray-800">
+        <div className="flex items-center justify-between px-4 py-4 bg-red-600 text-white">
+          <button onClick={handleBack} className="text-white hover:text-gray-200">
             <ChevronLeft className="h-6 w-6" />
-          </Link>
-          <h1 className="text-lg font-semibold text-gray-900">Register</h1>
+          </button>
+          <h1 className="text-lg font-bold">Register</h1>
           <div className="w-6" />
         </div>
 
-        {/* Content - Scrollable container with proper height calculation */}
+        {/* Progress Bar */}
+        <div className="px-6 py-4">
+          <RegistrationProgress currentStep="register" />
+        </div>
+
+        {/* Content - Scrollable container */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 space-y-4">
             {/* Logo and Title */}
@@ -144,7 +182,7 @@ export default function Register() {
                 className="h-10 w-auto mx-auto mb-2" 
               />
               <h2 className="text-lg font-bold text-gray-900 mb-1">Complete Registration</h2>
-              <p className="text-gray-600 text-sm">Enter your personal details</p>
+              <p className="text-gray-600 text-sm">Enter secretary's details for the official account</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-3">
@@ -261,7 +299,7 @@ export default function Register() {
                 className="w-full bg-red-600 hover:bg-red-700 text-white py-2 h-10 text-sm font-medium"
                 disabled={isLoading}
               >
-                {isLoading ? "Creating Account..." : "Create new account"}
+                {isLoading ? "Creating Account..." : "Create Official Account"}
               </Button>
             </form>
 
@@ -280,19 +318,19 @@ export default function Register() {
     );
   }
 
-  // Desktop version - similar structure but with desktop styling and red colors
+  // Desktop version
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-white to-orange-50 px-4 py-8">
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
         {/* Progress Bar */}
-        <div className="w-full bg-gray-200 h-1">
-          <div className="bg-red-600 h-1 w-full"></div>
+        <div className="px-8 py-6 border-b">
+          <RegistrationProgress currentStep="register" />
         </div>
 
         <div className="p-8">
-          <Link to={getBackLink()} className="inline-flex items-center text-sm text-gray-500 mb-6 hover:text-gray-700">
+          <button onClick={handleBack} className="inline-flex items-center text-sm text-gray-500 mb-6 hover:text-gray-700">
             <ChevronLeft className="w-4 h-4 mr-1" /> Back
-          </Link>
+          </button>
           
           {/* Logo and Title */}
           <div className="text-center mb-8">
@@ -302,7 +340,7 @@ export default function Register() {
               className="h-16 w-auto mx-auto mb-4" 
             />
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Complete Registration</h1>
-            <p className="text-gray-600">Enter your personal details</p>
+            <p className="text-gray-600">Enter secretary's details for the official account</p>
           </div>
           
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -418,7 +456,7 @@ export default function Register() {
               className="w-full bg-red-600 hover:bg-red-700 text-white py-3 text-base font-medium"
               disabled={isLoading}
             >
-              {isLoading ? "Creating Account..." : "Create new account"}
+              {isLoading ? "Creating Account..." : "Create Official Account"}
             </Button>
           </form>
           
