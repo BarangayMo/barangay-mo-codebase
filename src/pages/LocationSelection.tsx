@@ -69,7 +69,10 @@ export default function LocationSelection() {
     setIsLoading(true);
     try {
       console.log("Loading regions from Supabase...");
-      const { data, error } = await supabase.from('Barangays').select('REGION');
+      const { data, error } = await supabase
+        .from('Barangays')
+        .select('REGION')
+        .not('REGION', 'is', null);
       
       if (error) {
         console.error('Error loading regions:', error);
@@ -97,10 +100,17 @@ export default function LocationSelection() {
   const loadProvinces = async () => {
     setIsLoading(true);
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('Barangays')
         .select('PROVINCE')
-        .eq('REGION', selectedRegion);
+        .eq('REGION', selectedRegion)
+        .not('PROVINCE', 'is', null);
+      
+      if (error) {
+        console.error('Error loading provinces:', error);
+        return;
+      }
+      
       const uniqueProvinces = [...new Set(data?.map(item => item.PROVINCE).filter(Boolean))];
       setProvinces(uniqueProvinces.sort());
     } catch (error) {
@@ -113,11 +123,18 @@ export default function LocationSelection() {
   const loadMunicipalities = async () => {
     setIsLoading(true);
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('Barangays')
         .select('CITY/MUNICIPALITY')
         .eq('REGION', selectedRegion)
-        .eq('PROVINCE', selectedProvince);
+        .eq('PROVINCE', selectedProvince)
+        .not('CITY/MUNICIPALITY', 'is', null);
+      
+      if (error) {
+        console.error('Error loading municipalities:', error);
+        return;
+      }
+      
       const uniqueMunicipalities = [...new Set(data?.map(item => item['CITY/MUNICIPALITY']).filter(Boolean))];
       setMunicipalities(uniqueMunicipalities.sort());
     } catch (error) {
@@ -130,12 +147,19 @@ export default function LocationSelection() {
   const loadBarangays = async () => {
     setIsLoading(true);
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('Barangays')
         .select('BARANGAY')
         .eq('REGION', selectedRegion)
         .eq('PROVINCE', selectedProvince)
-        .eq('CITY/MUNICIPALITY', selectedMunicipality);
+        .eq('CITY/MUNICIPALITY', selectedMunicipality)
+        .not('BARANGAY', 'is', null);
+      
+      if (error) {
+        console.error('Error loading barangays:', error);
+        return;
+      }
+      
       const uniqueBarangays = [...new Set(data?.map(item => item.BARANGAY).filter(Boolean))];
       setBarangays(uniqueBarangays.sort());
     } catch (error) {
@@ -185,7 +209,7 @@ export default function LocationSelection() {
     return (
       <div className="min-h-screen bg-white flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b">
+        <div className="flex items-center justify-between px-4 py-4 border-b">
           <button onClick={handleBack} className="text-gray-600 hover:text-gray-800">
             <ChevronLeft className="h-6 w-6" />
           </button>
@@ -194,33 +218,23 @@ export default function LocationSelection() {
         </div>
 
         {/* Progress Bar */}
-        <div className="px-4 py-3 border-b bg-gray-50">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center space-x-8">
-              <div className="flex items-center">
-                <div className="w-2 h-2 bg-red-600 rounded-full"></div>
-                <span className="ml-2 text-sm font-medium text-red-600">Address</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-                <span className="ml-2 text-sm text-gray-400">Details</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-                <span className="ml-2 text-sm text-gray-400">Logo</span>
-              </div>
-            </div>
+        <div className="px-4 py-6 bg-gray-50">
+          <div className="flex justify-center items-center space-x-2 mb-2">
+            <div className="w-16 h-1 bg-blue-600 rounded-full"></div>
+            <div className="w-16 h-1 bg-blue-600 rounded-full"></div>
+            <div className="w-16 h-1 bg-gray-300 rounded-full"></div>
+            <div className="w-16 h-1 bg-gray-300 rounded-full"></div>
           </div>
           <div className="text-center">
-            <p className="text-sm text-gray-600">Please Complete Your Address Details:</p>
+            <p className="text-sm text-gray-600">Please Complete Your Address Details</p>
           </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 p-4 space-y-4">
+        <div className="flex-1 p-6 space-y-6">
           {/* Region */}
           <div className="relative">
-            <Label className="text-sm font-medium text-gray-700 mb-2 block">1. Select Region</Label>
+            <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Region</Label>
             <div className="relative">
               <Input
                 placeholder="Select Region"
@@ -230,7 +244,7 @@ export default function LocationSelection() {
                   if (!selectedRegion) setShowRegionDropdown(true);
                 }}
                 onFocus={() => setShowRegionDropdown(true)}
-                className="pr-10"
+                className="h-12 text-base"
               />
               {selectedRegion && (
                 <button
@@ -247,9 +261,9 @@ export default function LocationSelection() {
             {showRegionDropdown && !selectedRegion && (
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
                 {isLoading ? (
-                  <div className="p-3 text-center text-gray-500">Loading...</div>
+                  <div className="p-4 text-center text-gray-500">Loading regions...</div>
                 ) : filteredRegions.length === 0 ? (
-                  <div className="p-3 text-center text-gray-500">No regions found</div>
+                  <div className="p-4 text-center text-gray-500">No regions found</div>
                 ) : (
                   filteredRegions.map((region, index) => (
                     <button
@@ -259,7 +273,7 @@ export default function LocationSelection() {
                         setRegionSearch("");
                         setShowRegionDropdown(false);
                       }}
-                      className="w-full text-left py-2 px-3 hover:bg-gray-50 transition-colors"
+                      className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
                     >
                       {region}
                     </button>
@@ -271,7 +285,7 @@ export default function LocationSelection() {
 
           {/* Province */}
           <div className="relative">
-            <Label className="text-sm font-medium text-gray-700 mb-2 block">2. Select Province</Label>
+            <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Province</Label>
             <div className="relative">
               <Input
                 placeholder="Select Province"
@@ -282,7 +296,7 @@ export default function LocationSelection() {
                 }}
                 onFocus={() => selectedRegion && setShowProvinceDropdown(true)}
                 disabled={!selectedRegion}
-                className="pr-10"
+                className="h-12 text-base"
               />
               {selectedProvince && (
                 <button
@@ -299,9 +313,9 @@ export default function LocationSelection() {
             {showProvinceDropdown && !selectedProvince && selectedRegion && (
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
                 {isLoading ? (
-                  <div className="p-3 text-center text-gray-500">Loading...</div>
+                  <div className="p-4 text-center text-gray-500">Loading provinces...</div>
                 ) : filteredProvinces.length === 0 ? (
-                  <div className="p-3 text-center text-gray-500">No provinces found</div>
+                  <div className="p-4 text-center text-gray-500">No provinces found</div>
                 ) : (
                   filteredProvinces.map((province, index) => (
                     <button
@@ -311,7 +325,7 @@ export default function LocationSelection() {
                         setProvinceSearch("");
                         setShowProvinceDropdown(false);
                       }}
-                      className="w-full text-left py-2 px-3 hover:bg-gray-50 transition-colors"
+                      className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
                     >
                       {province}
                     </button>
@@ -323,7 +337,7 @@ export default function LocationSelection() {
 
           {/* Municipality */}
           <div className="relative">
-            <Label className="text-sm font-medium text-gray-700 mb-2 block">3. Select City/Municipality</Label>
+            <Label className="text-sm font-medium text-gray-700 mb-3 block">Select City/Municipality</Label>
             <div className="relative">
               <Input
                 placeholder="Select City/Municipality"
@@ -334,7 +348,7 @@ export default function LocationSelection() {
                 }}
                 onFocus={() => selectedProvince && setShowMunicipalityDropdown(true)}
                 disabled={!selectedProvince}
-                className="pr-10"
+                className="h-12 text-base"
               />
               {selectedMunicipality && (
                 <button
@@ -351,9 +365,9 @@ export default function LocationSelection() {
             {showMunicipalityDropdown && !selectedMunicipality && selectedProvince && (
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
                 {isLoading ? (
-                  <div className="p-3 text-center text-gray-500">Loading...</div>
+                  <div className="p-4 text-center text-gray-500">Loading municipalities...</div>
                 ) : filteredMunicipalities.length === 0 ? (
-                  <div className="p-3 text-center text-gray-500">No municipalities found</div>
+                  <div className="p-4 text-center text-gray-500">No municipalities found</div>
                 ) : (
                   filteredMunicipalities.map((municipality, index) => (
                     <button
@@ -363,7 +377,7 @@ export default function LocationSelection() {
                         setMunicipalitySearch("");
                         setShowMunicipalityDropdown(false);
                       }}
-                      className="w-full text-left py-2 px-3 hover:bg-gray-50 transition-colors"
+                      className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
                     >
                       {municipality}
                     </button>
@@ -375,10 +389,10 @@ export default function LocationSelection() {
 
           {/* Barangay */}
           <div className="relative">
-            <Label className="text-sm font-medium text-gray-700 mb-2 block">4. Select Barangay</Label>
+            <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Barangay</Label>
             <div className="relative">
               <Input
-                placeholder="Type barangay name..."
+                placeholder="Select Barangay"
                 value={selectedBarangay || barangaySearch}
                 onChange={(e) => {
                   setBarangaySearch(e.target.value);
@@ -386,7 +400,7 @@ export default function LocationSelection() {
                 }}
                 onFocus={() => selectedMunicipality && setShowBarangayDropdown(true)}
                 disabled={!selectedMunicipality}
-                className="pr-10"
+                className="h-12 text-base"
               />
               {selectedBarangay && (
                 <button
@@ -403,9 +417,9 @@ export default function LocationSelection() {
             {showBarangayDropdown && !selectedBarangay && selectedMunicipality && (
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
                 {isLoading ? (
-                  <div className="p-3 text-center text-gray-500">Loading...</div>
+                  <div className="p-4 text-center text-gray-500">Loading barangays...</div>
                 ) : filteredBarangays.length === 0 ? (
-                  <div className="p-3 text-center text-gray-500">No barangays found</div>
+                  <div className="p-4 text-center text-gray-500">No barangays found</div>
                 ) : (
                   filteredBarangays.map((barangay, index) => (
                     <button
@@ -415,7 +429,7 @@ export default function LocationSelection() {
                         setBarangaySearch("");
                         setShowBarangayDropdown(false);
                       }}
-                      className="w-full text-left py-2 px-3 hover:bg-gray-50 transition-colors"
+                      className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
                     >
                       <div className="font-medium text-gray-900">{barangay}</div>
                     </button>
@@ -427,23 +441,23 @@ export default function LocationSelection() {
 
           {/* Selected Barangay Display */}
           {selectedBarangay && (
-            <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
+            <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
               <div className="text-center">
-                <div className="font-semibold text-gray-900 text-lg">{selectedBarangay}</div>
-                <div className="text-sm text-gray-500">Unregistered Barangay</div>
+                <div className="font-semibold text-green-900 text-lg">{selectedBarangay}</div>
+                <div className="text-sm text-green-600">Barangay Selected</div>
               </div>
             </div>
           )}
         </div>
 
         {/* Next Button */}
-        <div className="p-4 border-t">
+        <div className="p-6 bg-white border-t">
           <Button
             onClick={handleNext}
             disabled={!isFormValid}
-            className="w-full bg-red-600 hover:bg-red-700 text-white py-3 h-12 text-base font-medium"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 h-12 text-base font-medium rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed"
           >
-            NEXT
+            Next
           </Button>
         </div>
       </div>
@@ -455,22 +469,15 @@ export default function LocationSelection() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-orange-50 px-4 py-8">
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
         {/* Progress Bar */}
-        <div className="px-6 py-4 border-b">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-8">
-              <div className="flex items-center">
-                <div className="w-2 h-2 bg-red-600 rounded-full"></div>
-                <span className="ml-2 text-sm font-medium text-red-600">Address</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-                <span className="ml-2 text-sm text-gray-400">Details</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-                <span className="ml-2 text-sm text-gray-400">Logo</span>
-              </div>
-            </div>
+        <div className="px-6 py-6 border-b bg-gray-50">
+          <div className="flex justify-center items-center space-x-2 mb-4">
+            <div className="w-16 h-1 bg-blue-600 rounded-full"></div>
+            <div className="w-16 h-1 bg-blue-600 rounded-full"></div>
+            <div className="w-16 h-1 bg-gray-300 rounded-full"></div>
+            <div className="w-16 h-1 bg-gray-300 rounded-full"></div>
+          </div>
+          <div className="text-center">
+            <p className="text-sm text-gray-600">Please Complete Your Address Details</p>
           </div>
         </div>
 
@@ -480,15 +487,15 @@ export default function LocationSelection() {
           </button>
           
           {/* Header */}
-          <div className="text-center mb-6">
+          <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Complete Address Details</h1>
-            <p className="text-gray-600">Please Complete Your Address Details:</p>
+            <p className="text-gray-600">Please select your location information</p>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             {/* Region */}
             <div className="relative">
-              <Label className="text-sm font-medium text-gray-700 mb-2 block">1. Select Region</Label>
+              <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Region</Label>
               <div className="relative">
                 <Input
                   placeholder="Select Region"
@@ -498,7 +505,7 @@ export default function LocationSelection() {
                     if (!selectedRegion) setShowRegionDropdown(true);
                   }}
                   onFocus={() => setShowRegionDropdown(true)}
-                  className="pr-10"
+                  className="h-12 text-base"
                 />
                 {selectedRegion && (
                   <button
@@ -513,27 +520,33 @@ export default function LocationSelection() {
                 )}
               </div>
               {showRegionDropdown && !selectedRegion && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
-                  {filteredRegions.map((region, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        setSelectedRegion(region);
-                        setRegionSearch("");
-                        setShowRegionDropdown(false);
-                      }}
-                      className="w-full text-left py-2 px-3 hover:bg-gray-50 transition-colors"
-                    >
-                      {region}
-                    </button>
-                  ))}
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                  {isLoading ? (
+                    <div className="p-4 text-center text-gray-500">Loading regions...</div>
+                  ) : filteredRegions.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500">No regions found</div>
+                  ) : (
+                    filteredRegions.map((region, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          setSelectedRegion(region);
+                          setRegionSearch("");
+                          setShowRegionDropdown(false);
+                        }}
+                        className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                      >
+                        {region}
+                      </button>
+                    ))
+                  )}
                 </div>
               )}
             </div>
 
             {/* Province */}
             <div className="relative">
-              <Label className="text-sm font-medium text-gray-700 mb-2 block">2. Select Province</Label>
+              <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Province</Label>
               <div className="relative">
                 <Input
                   placeholder="Select Province"
@@ -544,7 +557,7 @@ export default function LocationSelection() {
                   }}
                   onFocus={() => selectedRegion && setShowProvinceDropdown(true)}
                   disabled={!selectedRegion}
-                  className="pr-10"
+                  className="h-12 text-base"
                 />
                 {selectedProvince && (
                   <button
@@ -559,27 +572,33 @@ export default function LocationSelection() {
                 )}
               </div>
               {showProvinceDropdown && !selectedProvince && selectedRegion && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
-                  {filteredProvinces.map((province, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        setSelectedProvince(province);
-                        setProvinceSearch("");
-                        setShowProvinceDropdown(false);
-                      }}
-                      className="w-full text-left py-2 px-3 hover:bg-gray-50 transition-colors"
-                    >
-                      {province}
-                    </button>
-                  ))}
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                  {isLoading ? (
+                    <div className="p-4 text-center text-gray-500">Loading provinces...</div>
+                  ) : filteredProvinces.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500">No provinces found</div>
+                  ) : (
+                    filteredProvinces.map((province, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          setSelectedProvince(province);
+                          setProvinceSearch("");
+                          setShowProvinceDropdown(false);
+                        }}
+                        className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                      >
+                        {province}
+                      </button>
+                    ))
+                  )}
                 </div>
               )}
             </div>
 
             {/* Municipality */}
             <div className="relative">
-              <Label className="text-sm font-medium text-gray-700 mb-2 block">3. Select City/Municipality</Label>
+              <Label className="text-sm font-medium text-gray-700 mb-3 block">Select City/Municipality</Label>
               <div className="relative">
                 <Input
                   placeholder="Select City/Municipality"
@@ -590,7 +609,7 @@ export default function LocationSelection() {
                   }}
                   onFocus={() => selectedProvince && setShowMunicipalityDropdown(true)}
                   disabled={!selectedProvince}
-                  className="pr-10"
+                  className="h-12 text-base"
                 />
                 {selectedMunicipality && (
                   <button
@@ -605,30 +624,36 @@ export default function LocationSelection() {
                 )}
               </div>
               {showMunicipalityDropdown && !selectedMunicipality && selectedProvince && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
-                  {filteredMunicipalities.map((municipality, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        setSelectedMunicipality(municipality);
-                        setMunicipalitySearch("");
-                        setShowMunicipalityDropdown(false);
-                      }}
-                      className="w-full text-left py-2 px-3 hover:bg-gray-50 transition-colors"
-                    >
-                      {municipality}
-                    </button>
-                  ))}
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                  {isLoading ? (
+                    <div className="p-4 text-center text-gray-500">Loading municipalities...</div>
+                  ) : filteredMunicipalities.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500">No municipalities found</div>
+                  ) : (
+                    filteredMunicipalities.map((municipality, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          setSelectedMunicipality(municipality);
+                          setMunicipalitySearch("");
+                          setShowMunicipalityDropdown(false);
+                        }}
+                        className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                      >
+                        {municipality}
+                      </button>
+                    ))
+                  )}
                 </div>
               )}
             </div>
 
             {/* Barangay */}
             <div className="relative">
-              <Label className="text-sm font-medium text-gray-700 mb-2 block">4. Select Barangay</Label>
+              <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Barangay</Label>
               <div className="relative">
                 <Input
-                  placeholder="Type barangay name..."
+                  placeholder="Select Barangay"
                   value={selectedBarangay || barangaySearch}
                   onChange={(e) => {
                     setBarangaySearch(e.target.value);
@@ -636,7 +661,7 @@ export default function LocationSelection() {
                   }}
                   onFocus={() => selectedMunicipality && setShowBarangayDropdown(true)}
                   disabled={!selectedMunicipality}
-                  className="pr-10"
+                  className="h-12 text-base"
                 />
                 {selectedBarangay && (
                   <button
@@ -651,30 +676,36 @@ export default function LocationSelection() {
                 )}
               </div>
               {showBarangayDropdown && !selectedBarangay && selectedMunicipality && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
-                  {filteredBarangays.map((barangay, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        setSelectedBarangay(barangay);
-                        setBarangaySearch("");
-                        setShowBarangayDropdown(false);
-                      }}
-                      className="w-full text-left py-2 px-3 hover:bg-gray-50 transition-colors"
-                    >
-                      {barangay}
-                    </button>
-                  ))}
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                  {isLoading ? (
+                    <div className="p-4 text-center text-gray-500">Loading barangays...</div>
+                  ) : filteredBarangays.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500">No barangays found</div>
+                  ) : (
+                    filteredBarangays.map((barangay, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          setSelectedBarangay(barangay);
+                          setBarangaySearch("");
+                          setShowBarangayDropdown(false);
+                        }}
+                        className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                      >
+                        <div className="font-medium text-gray-900">{barangay}</div>
+                      </button>
+                    ))
+                  )}
                 </div>
               )}
             </div>
 
             {/* Selected Barangay Display */}
             {selectedBarangay && (
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
+              <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
                 <div className="text-center">
-                  <div className="font-semibold text-gray-900 text-lg">{selectedBarangay}</div>
-                  <div className="text-sm text-gray-500">Unregistered Barangay</div>
+                  <div className="font-semibold text-green-900 text-lg">{selectedBarangay}</div>
+                  <div className="text-sm text-green-600">Barangay Selected</div>
                 </div>
               </div>
             )}
@@ -684,7 +715,7 @@ export default function LocationSelection() {
           <Button
             onClick={handleNext}
             disabled={!isFormValid}
-            className="w-full bg-red-600 hover:bg-red-700 text-white py-3 text-base font-medium mt-6"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 h-12 text-base font-medium rounded-lg mt-8 disabled:bg-gray-300 disabled:cursor-not-allowed"
           >
             Next
           </Button>
