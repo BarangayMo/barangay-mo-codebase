@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,24 +47,26 @@ const ALL_POSITIONS = [
 
 export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: OfficialDetailsModalProps) {
   const [formData, setFormData] = useState({
-    firstName: official.firstName || "",
-    middleName: official.middleName || "",
-    lastName: official.lastName || "",
-    suffix: official.suffix || "none",
-    position: official.position
+    firstName: official?.firstName || "",
+    middleName: official?.middleName || "",
+    lastName: official?.lastName || "",
+    suffix: official?.suffix || "none",
+    position: official?.position || ""
   });
 
   console.log('OfficialDetailsModal render:', { isOpen, official, formData });
 
   useEffect(() => {
-    console.log('OfficialDetailsModal useEffect:', official);
-    setFormData({
-      firstName: official.firstName || "",
-      middleName: official.middleName || "",
-      lastName: official.lastName || "",
-      suffix: official.suffix || "none",
-      position: official.position
-    });
+    if (official) {
+      console.log('OfficialDetailsModal useEffect:', official);
+      setFormData({
+        firstName: official.firstName || "",
+        middleName: official.middleName || "",
+        lastName: official.lastName || "",
+        suffix: official.suffix || "none",
+        position: official.position || ""
+      });
+    }
   }, [official]);
 
   const handleSave = () => {
@@ -92,129 +93,149 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md mx-4 p-0 overflow-hidden">
-        {/* Red Header */}
-        <div className="bg-red-600 text-white px-6 py-4 flex items-center justify-between">
-          <button onClick={onClose} className="text-white hover:text-gray-200">
-            <ChevronLeft className="h-6 w-6" />
-          </button>
-          <DialogTitle className="text-center text-lg font-semibold">Edit Barangay Official</DialogTitle>
-          <div className="w-6" />
-        </div>
+    <>
+      {/* Backdrop */}
+      <div 
+        className={`fixed inset-0 bg-black/50 z-50 transition-opacity duration-300 ${
+          isOpen ? 'opacity-100' : 'opacity-0'
+        }`}
+        onClick={onClose}
+      />
+      
+      {/* Full Screen Modal */}
+      <div 
+        className={`fixed inset-0 z-50 flex items-end transition-transform duration-500 ease-out ${
+          isOpen ? 'translate-y-0' : 'translate-y-full'
+        }`}
+      >
+        <div className="w-full h-full bg-white flex flex-col animate-in slide-in-from-bottom duration-500">
+          {/* Red Header */}
+          <div className="bg-red-600 text-white px-6 py-4 flex items-center justify-between shrink-0">
+            <button onClick={onClose} className="text-white hover:text-gray-200 transition-colors">
+              <ChevronLeft className="h-6 w-6" />
+            </button>
+            <h1 className="text-center text-lg font-semibold">Edit Barangay Official</h1>
+            <div className="w-6" />
+          </div>
 
-        <div className="p-6 space-y-6">
-          {/* Profile Picture Section */}
-          <div className="flex flex-col items-center space-y-3">
-            <div className="relative">
-              <div className="w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center">
-                <User className="h-10 w-10 text-gray-600" />
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-6 space-y-6 max-w-md mx-auto">
+              {/* Profile Picture Section */}
+              <div className="flex flex-col items-center space-y-3">
+                <div className="relative">
+                  <div className="w-24 h-24 bg-gray-300 rounded-full flex items-center justify-center">
+                    <User className="h-12 w-12 text-gray-600" />
+                  </div>
+                  <button className="absolute -bottom-1 -right-1 w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center hover:bg-gray-700 transition-colors">
+                    <Camera className="h-4 w-4 text-white" />
+                  </button>
+                </div>
               </div>
-              <button className="absolute -bottom-1 -right-1 w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center">
-                <Camera className="h-3 w-3 text-white" />
-              </button>
+
+              {/* Official Details Form */}
+              <div className="space-y-6">
+                <h3 className="font-semibold text-gray-900 text-lg mb-4">Official Details</h3>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">
+                    First Name *
+                  </Label>
+                  <Input
+                    id="firstName"
+                    value={formData.firstName}
+                    onChange={(e) => handleInputChange('firstName', e.target.value)}
+                    placeholder="Enter first name"
+                    className="bg-gray-50 border-gray-200 h-12"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="middleName" className="text-sm font-medium text-gray-700">
+                    Middle Name (Optional)
+                  </Label>
+                  <Input
+                    id="middleName"
+                    value={formData.middleName}
+                    onChange={(e) => handleInputChange('middleName', e.target.value)}
+                    placeholder="Enter middle name"
+                    className="bg-gray-50 border-gray-200 h-12"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">
+                    Last Name *
+                  </Label>
+                  <Input
+                    id="lastName"
+                    value={formData.lastName}
+                    onChange={(e) => handleInputChange('lastName', e.target.value)}
+                    placeholder="Enter last name"
+                    className="bg-gray-50 border-gray-200 h-12"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="suffix" className="text-sm font-medium text-gray-700">
+                    Suffix (Optional)
+                  </Label>
+                  <Select value={formData.suffix} onValueChange={(value) => handleInputChange('suffix', value)}>
+                    <SelectTrigger className="bg-gray-50 border-gray-200 h-12">
+                      <SelectValue placeholder="Select suffix..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {SUFFIX_OPTIONS.map((suffix) => (
+                        <SelectItem key={suffix} value={suffix}>
+                          {suffix}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="position" className="text-sm font-medium text-gray-700">
+                    Position *
+                  </Label>
+                  <Select value={formData.position} onValueChange={(value) => handleInputChange('position', value)}>
+                    <SelectTrigger className="bg-gray-50 border-gray-200 h-12">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ALL_POSITIONS.map((position) => (
+                        <SelectItem key={position} value={position}>
+                          {position}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Official Details Form */}
-          <div className="space-y-4">
-            <h3 className="font-semibold text-gray-900 mb-4">Official Details</h3>
-            
-            <div className="space-y-1">
-              <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">
-                First Name
-              </Label>
-              <Input
-                id="firstName"
-                value={formData.firstName}
-                onChange={(e) => handleInputChange('firstName', e.target.value)}
-                placeholder="BILLY JOEL"
-                className="bg-gray-50 border-gray-200"
-              />
+          {/* Fixed Bottom Action Buttons */}
+          <div className="p-6 border-t bg-white shrink-0">
+            <div className="flex space-x-3 max-w-md mx-auto">
+              <Button 
+                variant="outline" 
+                onClick={onClose}
+                className="flex-1 border-gray-300 h-12"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSave}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white h-12"
+              >
+                Save Changes
+              </Button>
             </div>
-
-            <div className="space-y-1">
-              <Label htmlFor="middleName" className="text-sm font-medium text-gray-700">
-                Middle Name (Optional)
-              </Label>
-              <Input
-                id="middleName"
-                value={formData.middleName}
-                onChange={(e) => handleInputChange('middleName', e.target.value)}
-                placeholder="TRIMOR"
-                className="bg-gray-50 border-gray-200"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">
-                Last Name
-              </Label>
-              <Input
-                id="lastName"
-                value={formData.lastName}
-                onChange={(e) => handleInputChange('lastName', e.target.value)}
-                placeholder="CAPISTRANO"
-                className="bg-gray-50 border-gray-200"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label htmlFor="suffix" className="text-sm font-medium text-gray-700">
-                Suffix (Optional)
-              </Label>
-              <Select value={formData.suffix} onValueChange={(value) => handleInputChange('suffix', value)}>
-                <SelectTrigger className="bg-gray-50 border-gray-200">
-                  <SelectValue placeholder="Select..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {SUFFIX_OPTIONS.map((suffix) => (
-                    <SelectItem key={suffix} value={suffix}>
-                      {suffix}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-1">
-              <Label htmlFor="position" className="text-sm font-medium text-gray-700">
-                Position
-              </Label>
-              <Select value={formData.position} onValueChange={(value) => handleInputChange('position', value)}>
-                <SelectTrigger className="bg-gray-50 border-gray-200">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {ALL_POSITIONS.map((position) => (
-                    <SelectItem key={position} value={position}>
-                      {position}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex space-x-3 pt-4">
-            <Button 
-              variant="outline" 
-              onClick={onClose}
-              className="flex-1 border-gray-300"
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleSave}
-              className="flex-1 bg-red-600 hover:bg-red-700 text-white"
-            >
-              Save
-            </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </>
   );
 }

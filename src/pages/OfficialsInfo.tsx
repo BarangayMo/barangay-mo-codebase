@@ -165,9 +165,11 @@ export default function OfficialsInfo() {
   };
 
   const getOfficialDisplayName = (official: OfficialData) => {
-    if (!official.isCompleted) return official.position;
+    if (!official.isCompleted || (!official.firstName && !official.lastName)) {
+      return null; // Return null when no name is available
+    }
     const nameParts = [official.firstName, official.middleName, official.lastName, official.suffix].filter(Boolean);
-    return nameParts.length > 0 ? nameParts.join(' ') : official.position;
+    return nameParts.length > 0 ? nameParts.join(' ') : null;
   };
 
   const getOfficialsByCategory = () => {
@@ -183,30 +185,43 @@ export default function OfficialsInfo() {
       <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">{title}</h3>
       {officialsList.map((official, index) => {
         const actualIndex = officials.findIndex(o => o.position === official.position);
+        const displayName = getOfficialDisplayName(official);
+        const hasData = official.isCompleted && displayName;
+        
         return (
           <div 
             key={official.position} 
-            className={`rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors ${
-              official.isCompleted 
-                ? 'bg-white border border-gray-200' 
-                : 'border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100'
+            className={`rounded-lg p-4 flex items-center justify-between cursor-pointer transition-all duration-200 ${
+              hasData
+                ? 'bg-white border border-gray-200 shadow-sm hover:shadow-md' 
+                : 'border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400'
             }`}
             onClick={() => handleOfficialClick(actualIndex)}
           >
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                <User className="h-5 w-5 text-gray-600" />
+            <div className="flex items-center space-x-3 flex-1">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                hasData ? 'bg-red-100' : 'bg-gray-300'
+              }`}>
+                <User className={`h-5 w-5 ${hasData ? 'text-red-600' : 'text-gray-600'}`} />
               </div>
-              <div className="flex-1">
-                <p className={`font-medium ${official.isCompleted ? 'text-gray-900' : 'text-gray-500'}`}>
-                  {getOfficialDisplayName(official)}
+              <div className="flex-1 min-w-0">
+                <p className={`font-medium truncate ${
+                  hasData ? 'text-gray-900' : 'text-gray-500'
+                }`}>
+                  {official.position}
                 </p>
-                {official.isCompleted && (
-                  <p className="text-sm text-gray-600">{official.position}</p>
+                {hasData ? (
+                  <p className="text-sm text-gray-600 truncate mt-1">
+                    {displayName}
+                  </p>
+                ) : (
+                  <p className="text-xs text-gray-400 mt-1">
+                    Tap to add official details
+                  </p>
                 )}
               </div>
             </div>
-            <Edit2 className="h-4 w-4 text-gray-400" />
+            <Edit2 className={`h-4 w-4 ${hasData ? 'text-gray-400' : 'text-gray-300'}`} />
           </div>
         );
       })}
