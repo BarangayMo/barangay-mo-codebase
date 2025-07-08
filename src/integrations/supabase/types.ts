@@ -829,6 +829,48 @@ export type Database = {
         }
         Relationships: []
       }
+      NCR: {
+        Row: {
+          BARANGAY: string | null
+          "BARANGAY HALL TELNO": string | null
+          "CITY/MUNICIPALITY": string | null
+          FIRSTNAME: string | null
+          LASTNAME: string | null
+          MIDDLENAME: string | null
+          POSITION: string | null
+          PROVINCE: string | null
+          REGION: string | null
+          SUFFIX: string | null
+          TERM: string | null
+        }
+        Insert: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Update: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           category: string
@@ -871,48 +913,6 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string
-        }
-        Relationships: []
-      }
-      NQR: {
-        Row: {
-          BARANGAY: string | null
-          "BARANGAY HALL TELNO": string | null
-          "CITY/MUNICIPALITY": string | null
-          FIRSTNAME: string | null
-          LASTNAME: string | null
-          MIDDLENAME: string | null
-          POSITION: string | null
-          PROVINCE: string | null
-          REGION: string | null
-          SUFFIX: string | null
-          TERM: string | null
-        }
-        Insert: {
-          BARANGAY?: string | null
-          "BARANGAY HALL TELNO"?: string | null
-          "CITY/MUNICIPALITY"?: string | null
-          FIRSTNAME?: string | null
-          LASTNAME?: string | null
-          MIDDLENAME?: string | null
-          POSITION?: string | null
-          PROVINCE?: string | null
-          REGION?: string | null
-          SUFFIX?: string | null
-          TERM?: string | null
-        }
-        Update: {
-          BARANGAY?: string | null
-          "BARANGAY HALL TELNO"?: string | null
-          "CITY/MUNICIPALITY"?: string | null
-          FIRSTNAME?: string | null
-          LASTNAME?: string | null
-          MIDDLENAME?: string | null
-          POSITION?: string | null
-          PROVINCE?: string | null
-          REGION?: string | null
-          SUFFIX?: string | null
-          TERM?: string | null
         }
         Relationships: []
       }

@@ -90,11 +90,11 @@ export default function LocationSelection() {
     try {
       let data, error;
       
-      // Use specific queries for each region to avoid TypeScript issues
+      // Use specific queries for each region
       switch(selectedRegion) {
         case 'NCR':
           ({ data, error } = await supabase
-            .from('Barangays')
+            .from('NCR')
             .select('PROVINCE')
             .not('PROVINCE', 'is', null)
             .neq('PROVINCE', ''));
@@ -258,11 +258,11 @@ export default function LocationSelection() {
     try {
       let data, error;
       
-      // Use specific queries for each region to avoid TypeScript issues
+      // Use specific queries for each region
       switch(selectedRegion) {
         case 'NCR':
           ({ data, error } = await supabase
-            .from('Barangays')
+            .from('NCR')
             .select('CITY/MUNICIPALITY')
             .eq('PROVINCE', selectedProvince)
             .not('CITY/MUNICIPALITY', 'is', null)
@@ -431,11 +431,11 @@ export default function LocationSelection() {
     try {
       let data, error;
       
-      // Use specific queries for each region to avoid TypeScript issues
+      // Use specific queries for each region
       switch(selectedRegion) {
         case 'NCR':
           ({ data, error } = await supabase
-            .from('Barangays')
+            .from('NCR')
             .select('BARANGAY')
             .eq('PROVINCE', selectedProvince)
             .eq('CITY/MUNICIPALITY', selectedMunicipality)
