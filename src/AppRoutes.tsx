@@ -7,6 +7,7 @@ import Register from "@/pages/Register";
 import RoleSelection from "@/pages/RoleSelection";
 import LocationSelection from "@/pages/LocationSelection";
 import OfficialsInfo from "@/pages/OfficialsInfo";
+import LogoUpload from "@/pages/LogoUpload";
 import EmailVerification from "@/pages/EmailVerification";
 import Verify from "@/pages/Verify";
 import MPIN from "@/pages/MPIN";
@@ -100,10 +101,11 @@ export function AppRoutes() {
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+      <Route path="/register" element={<RoleSelection />} />
       <Route path="/register/role" element={<RoleSelection />} />
       <Route path="/register/location" element={<LocationSelection />} />
       <Route path="/register/officials" element={<OfficialsInfo />} />
+      <Route path="/register/logo" element={<LogoUpload />} />
       <Route path="/register/details" element={<Register />} />
       <Route path="/email-verification" element={<EmailVerification />} />
       <Route path="/email-confirmation" element={<EmailConfirmation />} />

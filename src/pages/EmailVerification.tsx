@@ -1,165 +1,207 @@
 
 import { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { ChevronLeft, Mail } from "lucide-react";
-import { motion } from "framer-motion";
-import { useToast } from "@/components/ui/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ChevronLeft, Mail } from "lucide-react";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export default function EmailVerification() {
-  const [isResending, setIsResending] = useState(false);
-  const [email, setEmail] = useState("");
-  const navigate = useNavigate();
   const location = useLocation();
+  const navigate = useNavigate();
+  const isMobile = useMediaQuery("(max-width: 768px)");
   const { toast } = useToast();
-  const { user } = useAuth();
+  
+  const locationState = location.state as any;
+  const [email, setEmail] = useState(locationState?.email || "");
+  const [isResending, setIsResending] = useState(false);
+  const [canResend, setCanResend] = useState(false);
+  const [countdown, setCountdown] = useState(30);
 
   useEffect(() => {
-    // Get email from location state or user data
-    const emailFromState = location.state?.email;
-    const userEmail = user?.email;
-    
-    if (emailFromState) {
-      setEmail(emailFromState);
-    } else if (userEmail) {
-      setEmail(userEmail);
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    } else {
+      setCanResend(true);
     }
+  }, [countdown]);
 
-    // Listen for auth state changes to detect email confirmation
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
-          // Email confirmed, redirect to phone page
-          navigate("/phone", { state: { phoneNumber: "" } });
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, [location.state, user, navigate]);
-
-  const handleResendEmail = async () => {
+  const handleResend = async () => {
     if (!email) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "No email address found. Please try registering again."
+        title: "Email required",
+        description: "Please enter your email address to resend verification"
       });
       return;
     }
 
     setIsResending(true);
-    
     try {
       const { error } = await supabase.auth.resend({
         type: 'signup',
-        email: email
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/email-confirmation`
+        }
       });
 
       if (error) {
-        throw error;
+        toast({
+          variant: "destructive",
+          title: "Resend failed",
+          description: error.message
+        });
+      } else {
+        toast({
+          title: "Email sent",
+          description: "Verification email has been resent. Please check your inbox."
+        });
+        setCanResend(false);
+        setCountdown(30);
       }
-
-      toast({
-        title: "Email Sent",
-        description: "A new verification email has been sent to your inbox."
-      });
     } catch (error) {
-      console.error("Error resending email:", error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to resend verification email. Please try again."
+        title: "Resend failed",
+        description: "An unexpected error occurred"
       });
     } finally {
       setIsResending(false);
     }
   };
 
-  const handleOpenEmailApp = () => {
-    // Try to open default email app
-    window.location.href = "mailto:";
+  const getBackLink = () => {
+    // Determine back link based on role and registration flow
+    if (locationState?.role === "official") {
+      return "/register/details";
+    }
+    return "/register/details";
   };
 
-  return (
-    <div className="min-h-screen bg-white flex flex-col p-6">
-      <Link to="/register" className="flex items-center gap-2 text-gray-600 mb-6 hover:text-gray-800 transition-colors">
-        <ChevronLeft className="h-5 w-5" />
-        Back
-      </Link>
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b">
+          <Link to={getBackLink()} className="text-gray-600 hover:text-gray-800">
+            <ChevronLeft className="h-6 w-6" />
+          </Link>
+          <h1 className="text-lg font-semibold text-gray-900">Verify Email</h1>
+          <div className="w-6" />
+        </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center max-w-md mx-auto w-full">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          <h1 className="text-3xl font-bold text-center mb-2 text-gray-900">Check your inbox</h1>
-        </motion.div>
-        
-        <motion.div 
-          className="flex justify-center mb-8"
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <div className="bg-white rounded-full p-8 shadow-lg">
-            <div className="relative">
-              <Mail className="w-24 h-24 text-blue-500" />
-              <div className="absolute -top-2 -right-2 bg-green-500 rounded-full p-2">
-                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
+        {/* Content */}
+        <div className="flex-1 flex flex-col justify-center px-4 py-8">
+          <div className="text-center space-y-6">
+            {/* Icon */}
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+              <Mail className="w-8 h-8 text-red-600" />
+            </div>
+
+            {/* Title and Description */}
+            <div className="space-y-2">
+              <h2 className="text-xl font-bold text-gray-900">Check your email</h2>
+              <p className="text-gray-600 text-sm">
+                We've sent a verification link to
+              </p>
+              <p className="font-medium text-gray-900 text-sm">{email}</p>
+            </div>
+
+            {/* Email Input for Resend */}
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="email" className="text-gray-700 text-sm">Email Address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="mt-1 h-9 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500"
+                  placeholder="Enter your email"
+                />
               </div>
+
+              {/* Resend Button */}
+              <Button
+                onClick={handleResend}
+                disabled={!canResend || isResending}
+                variant="outline"
+                className="w-full border-red-600 text-red-600 hover:bg-red-50"
+              >
+                {isResending ? "Sending..." : canResend ? "Resend verification email" : `Resend in ${countdown}s`}
+              </Button>
+            </div>
+
+            {/* Help Text */}
+            <div className="text-center text-xs text-gray-500">
+              <p>Didn't receive the email? Check your spam folder or try resending.</p>
             </div>
           </div>
-        </motion.div>
+        </div>
+      </div>
+    );
+  }
 
-        <motion.div 
-          className="text-center mb-8"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4, delay: 0.4 }}
-        >
-          <p className="text-lg text-gray-700 mb-2">
-            We sent a verification email to
-          </p>
-          <p className="text-gray-900 font-semibold text-lg mb-4">
-            {email || "your email address"}
-          </p>
-          <p className="text-gray-600">
-            Click the link in the email to get started!
-          </p>
-        </motion.div>
+  // Desktop version
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-white to-orange-50 px-4 py-8">
+      <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
+        <div className="p-8">
+          <Link to={getBackLink()} className="inline-flex items-center text-sm text-gray-500 mb-6 hover:text-gray-700">
+            <ChevronLeft className="w-4 h-4 mr-1" /> Back
+          </Link>
 
-        <motion.div 
-          className="w-full space-y-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-        >
-          <Button 
-            onClick={handleOpenEmailApp}
-            className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
-          >
-            Open Email App
-          </Button>
+          <div className="text-center space-y-6">
+            {/* Icon */}
+            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+              <Mail className="w-10 h-10 text-red-600" />
+            </div>
 
-          <div className="text-center">
-            <p className="text-sm text-gray-500 mb-2">
-              Didn't get the email?
-            </p>
-            <button 
-              onClick={handleResendEmail}
-              disabled={isResending}
-              className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isResending ? "Sending..." : "Send again"}
-            </button>
+            {/* Title and Description */}
+            <div className="space-y-3">
+              <h1 className="text-2xl font-bold text-gray-900">Check your email</h1>
+              <p className="text-gray-600">
+                We've sent a verification link to
+              </p>
+              <p className="font-medium text-gray-900">{email}</p>
+            </div>
+
+            {/* Email Input for Resend */}
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="email-desktop" className="text-gray-700">Email Address</Label>
+                <Input
+                  id="email-desktop"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="mt-1 border-gray-300 focus:border-red-500 focus:ring-red-500"
+                  placeholder="Enter your email"
+                />
+              </div>
+
+              {/* Resend Button */}
+              <Button
+                onClick={handleResend}
+                disabled={!canResend || isResending}
+                variant="outline"
+                className="w-full border-red-600 text-red-600 hover:bg-red-50"
+              >
+                {isResending ? "Sending..." : canResend ? "Resend verification email" : `Resend in ${countdown}s`}
+              </Button>
+            </div>
+
+            {/* Help Text */}
+            <div className="text-center text-sm text-gray-500">
+              <p>Didn't receive the email? Check your spam folder or try resending.</p>
+            </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );
