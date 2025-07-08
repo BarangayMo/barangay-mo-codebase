@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, ReactNode, useEffect, useRef } from "react";
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,7 +58,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       console.log('Fetching user profile for:', userId);
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('barangay, created_at')
+        .select('barangay, created_at, role, first_name, last_name')
         .eq('id', userId)
         .maybeSingle();
       
@@ -69,7 +70,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       console.log('Profile fetched successfully:', profile);
       return {
         barangay: profile?.barangay,
-        createdAt: profile?.created_at
+        createdAt: profile?.created_at,
+        role: profile?.role,
+        firstName: profile?.first_name,
+        lastName: profile?.last_name
       };
     } catch (error) {
       console.warn('Error fetching user profile (continuing anyway):', error);
@@ -78,20 +82,24 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   // Function to determine user role and redirect path
-  const getUserRoleAndRedirect = (email: string) => {
-    let role: UserRole = "resident";
+  const getUserRoleAndRedirect = (role: string | null, email: string) => {
+    let userRole: UserRole = "resident";
     let redirectPath = "/resident-home";
     
-    if (email.includes('official')) {
-      role = 'official';
+    // First check the role from registration data or profile
+    if (role === "official") {
+      userRole = 'official';
       redirectPath = '/official-dashboard';
-    } else if (email.includes('admin')) {
-      role = 'superadmin';
+    } else if (role === "superadmin" || email.includes('admin')) {
+      userRole = 'superadmin';
       redirectPath = '/admin';
+    } else if (email.includes('official')) {
+      userRole = 'official';
+      redirectPath = '/official-dashboard';
     }
     
-    console.log('User role determined:', { email, role, redirectPath });
-    return { role, redirectPath };
+    console.log('User role determined:', { email, role, userRole, redirectPath });
+    return { role: userRole, redirectPath };
   };
 
   // Handle auth state changes
@@ -110,14 +118,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           setTimeout(async () => {
             try {
               const profileData = await fetchUserProfile(session.user.id);
-              const { role, redirectPath } = getUserRoleAndRedirect(session.user.email || '');
+              const registrationRole = session.user.user_metadata?.role;
+              
+              const { role, redirectPath } = getUserRoleAndRedirect(
+                profileData.role || registrationRole, 
+                session.user.email || ''
+              );
               
               const userData = {
                 id: session.user.id,
                 name: session.user.email || '',
                 email: session.user.email,
-                firstName: session.user.user_metadata?.first_name,
-                lastName: session.user.user_metadata?.last_name,
+                firstName: profileData.firstName || session.user.user_metadata?.first_name,
+                lastName: profileData.lastName || session.user.user_metadata?.last_name,
                 role,
                 barangay: profileData.barangay,
                 createdAt: profileData.createdAt
@@ -126,10 +139,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               setUser(userData);
               setUserRole(role);
               
-              // Handle redirects after successful login
-              if (event === 'SIGNED_IN' && !redirectInProgress.current && isInitialized) {
-                if (currentPath === '/login' || currentPath === '/register' || currentPath === '/email-confirmation') {
-                  console.log("Redirecting to:", redirectPath, "after login");
+              // Handle redirects after successful login or signup
+              if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && !redirectInProgress.current && isInitialized) {
+                if (currentPath === '/login' || currentPath === '/register' || currentPath === '/email-confirmation' || currentPath === '/mpin') {
+                  console.log("Redirecting to:", redirectPath, "after", event);
                   redirectInProgress.current = true;
                   navigate(redirectPath, { replace: true });
                   setTimeout(() => { redirectInProgress.current = false; }, 1000);
@@ -169,14 +182,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setTimeout(async () => {
           try {
             const profileData = await fetchUserProfile(session.user.id);
-            const { role, redirectPath } = getUserRoleAndRedirect(session.user.email || '');
+            const registrationRole = session.user.user_metadata?.role;
+            
+            const { role, redirectPath } = getUserRoleAndRedirect(
+              profileData.role || registrationRole, 
+              session.user.email || ''
+            );
             
             const userData = {
               id: session.user.id,
               name: session.user.email || '',
               email: session.user.email,
-              firstName: session.user.user_metadata?.first_name,
-              lastName: session.user.user_metadata?.last_name,
+              firstName: profileData.firstName || session.user.user_metadata?.first_name,
+              lastName: profileData.lastName || session.user.user_metadata?.last_name,
               role,
               barangay: profileData.barangay,
               createdAt: profileData.createdAt
@@ -228,25 +246,75 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const register = async (email: string, password: string, userData: any) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      console.log("Registration attempt with userData:", userData);
+      
+      // Sign up the user with all metadata
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             first_name: userData.firstName,
             last_name: userData.lastName,
+            middle_name: userData.middleName,
+            suffix: userData.suffix,
             role: userData.role,
+            // Include all the registration flow data
+            region: userData.region,
+            province: userData.province,
+            municipality: userData.municipality,
+            barangay: userData.barangay,
+            phone_number: userData.phoneNumber,
+            landline_number: userData.landlineNumber,
+            logo_url: userData.logoUrl,
+            officials: userData.officials
           },
           emailRedirectTo: `${window.location.origin}/email-confirmation`
         }
       });
 
-      if (!error) {
-        navigate("/email-verification", { state: { email } });
+      if (signUpError) {
+        console.error("Signup error:", signUpError);
+        return { error: signUpError };
       }
 
-      return { error };
+      // If user is created and confirmed, also create/update profile
+      if (authData.user) {
+        console.log("User created successfully, creating profile...");
+        
+        // Create or update profile with all the data
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: authData.user.id,
+            first_name: userData.firstName,
+            last_name: userData.lastName,
+            middle_name: userData.middleName || null,
+            suffix: userData.suffix || null,
+            role: userData.role,
+            barangay: userData.barangay,
+            region: userData.region,
+            province: userData.province,
+            municipality: userData.municipality,
+            phone_number: userData.phoneNumber,
+            landline_number: userData.landlineNumber,
+            logo_url: userData.logoUrl,
+            officials_data: userData.officials ? JSON.stringify(userData.officials) : null,
+            email: email
+          })
+          .select();
+
+        if (profileError) {
+          console.error("Profile creation error:", profileError);
+          // Don't return error here as signup was successful
+        } else {
+          console.log("Profile created successfully");
+        }
+      }
+
+      return { error: null };
     } catch (error) {
+      console.error("Unexpected registration error:", error);
       return { error: error as Error };
     }
   };

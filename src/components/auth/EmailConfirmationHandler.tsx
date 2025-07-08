@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,18 +16,18 @@ export const EmailConfirmationHandler = () => {
   const [message, setMessage] = useState('');
   const [userEmail, setUserEmail] = useState('');
 
-  // Check if user has completed RBI registration
-  const checkRbiFormStatus = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('rbi_forms')
-        .select('id')
-        .eq('user_id', userId)
-        .single();
-        
-      return !!data && !error;
-    } catch (error) {
-      return false;
+  // Function to determine redirect path based on user role
+  const getRedirectPath = (userMetadata: any, email: string) => {
+    const role = userMetadata?.role;
+    
+    if (role === 'official') {
+      return '/official-dashboard';
+    } else if (role === 'superadmin' || email.includes('admin')) {
+      return '/admin';
+    } else if (email.includes('official')) {
+      return '/official-dashboard';
+    } else {
+      return '/resident-home';
     }
   };
 
@@ -99,26 +98,46 @@ export const EmailConfirmationHandler = () => {
             console.log('User confirmed successfully:', data.session.user.email);
             setUserEmail(data.session.user.email || '');
             
-            // Check if user has completed RBI registration
-            const hasCompletedRbi = await checkRbiFormStatus(data.session.user.id);
+            // Get the redirect path based on user role
+            const redirectPath = getRedirectPath(data.session.user.user_metadata, data.session.user.email || '');
             
-            if (hasCompletedRbi) {
-              // User has completed everything, go to dashboard
-              setStatus('success');
-              setMessage('Email confirmed successfully! Redirecting to your dashboard...');
-              
-              setTimeout(() => {
-                navigate('/resident-home', { replace: true });
-              }, 2000);
-            } else {
-              // New user needs to complete signup flow
-              setStatus('success');
-              setMessage('Email confirmed successfully! Continue with phone verification...');
-              
-              setTimeout(() => {
-                navigate('/phone', { replace: true });
-              }, 2000);
+            // Create/update profile with registration data
+            const userData = data.session.user.user_metadata;
+            if (userData) {
+              const { error: profileError } = await supabase
+                .from('profiles')
+                .upsert({
+                  id: data.session.user.id,
+                  first_name: userData.first_name,
+                  last_name: userData.last_name,
+                  middle_name: userData.middle_name,
+                  suffix: userData.suffix,
+                  role: userData.role,
+                  barangay: userData.barangay,
+                  region: userData.region,
+                  province: userData.province,
+                  municipality: userData.municipality,
+                  phone_number: userData.phone_number,
+                  landline_number: userData.landline_number,
+                  logo_url: userData.logo_url,
+                  officials_data: userData.officials ? JSON.stringify(userData.officials) : null,
+                  email: data.session.user.email
+                })
+                .select();
+
+              if (profileError) {
+                console.error('Profile update error:', profileError);
+              } else {
+                console.log('Profile updated successfully');
+              }
             }
+            
+            setStatus('success');
+            setMessage('Email confirmed successfully! Redirecting to your dashboard...');
+            
+            setTimeout(() => {
+              navigate(redirectPath, { replace: true });
+            }, 2000);
           } else {
             setStatus('error');
             setMessage('Authentication failed. Please try registering again.');
@@ -140,24 +159,15 @@ export const EmailConfirmationHandler = () => {
           console.log('User already authenticated:', sessionData.session.user.email);
           setUserEmail(sessionData.session.user.email || '');
           
-          // Check if user has completed RBI registration
-          const hasCompletedRbi = await checkRbiFormStatus(sessionData.session.user.id);
+          // Get the redirect path based on user role
+          const redirectPath = getRedirectPath(sessionData.session.user.user_metadata, sessionData.session.user.email || '');
           
-          if (hasCompletedRbi) {
-            setStatus('success');
-            setMessage('You are already signed in! Redirecting to your dashboard...');
-            
-            setTimeout(() => {
-              navigate('/resident-home', { replace: true });
-            }, 1000);
-          } else {
-            setStatus('success');
-            setMessage('Continue with your registration process...');
-            
-            setTimeout(() => {
-              navigate('/phone', { replace: true });
-            }, 1000);
-          }
+          setStatus('success');
+          setMessage('You are already signed in! Redirecting to your dashboard...');
+          
+          setTimeout(() => {
+            navigate(redirectPath, { replace: true });
+          }, 1000);
           return;
         }
 
@@ -236,7 +246,7 @@ export const EmailConfirmationHandler = () => {
           <div className="mb-6">
             {status === 'loading' && (
               <div className="flex flex-col items-center gap-4">
-                <Loader2 className="h-12 w-12 text-blue-600 animate-spin" />
+                <Loader2 className="h-12 w-12 text-red-600 animate-spin" />
                 <h2 className="text-xl font-semibold text-gray-900">Confirming your email...</h2>
                 <p className="text-gray-600">Please wait while we verify your email address.</p>
               </div>
@@ -260,7 +270,7 @@ export const EmailConfirmationHandler = () => {
                 <h2 className="text-xl font-semibold text-gray-900">Already Confirmed</h2>
                 <p className="text-gray-600">{message}</p>
                 <div className="flex gap-3 mt-4">
-                  <Button onClick={handleGoToLogin} className="bg-blue-600 hover:bg-blue-700">
+                  <Button onClick={handleGoToLogin} className="bg-red-600 hover:bg-red-700">
                     Sign In
                   </Button>
                   <Button onClick={handleGoHome} variant="outline">
@@ -276,7 +286,7 @@ export const EmailConfirmationHandler = () => {
                 <h2 className="text-xl font-semibold text-gray-900">Email Confirmed</h2>
                 <p className="text-gray-600">{message}</p>
                 <div className="flex gap-3 mt-4">
-                  <Button onClick={handleGoToLogin} className="bg-blue-600 hover:bg-blue-700">
+                  <Button onClick={handleGoToLogin} className="bg-red-600 hover:bg-red-700">
                     Sign In Now
                   </Button>
                   <Button onClick={handleGoHome} variant="outline">
@@ -309,7 +319,7 @@ export const EmailConfirmationHandler = () => {
                 <h2 className="text-xl font-semibold text-gray-900">Confirmation Failed</h2>
                 <p className="text-gray-600">{message}</p>
                 <div className="flex gap-3 mt-4">
-                  <Button onClick={handleGoToLogin} className="bg-blue-600 hover:bg-blue-700">
+                  <Button onClick={handleGoToLogin} className="bg-red-600 hover:bg-red-700">
                     Sign In
                   </Button>
                   <Button onClick={handleGoHome} variant="outline">
