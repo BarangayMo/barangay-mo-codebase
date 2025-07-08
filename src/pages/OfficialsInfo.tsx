@@ -67,36 +67,9 @@ export default function OfficialsInfo() {
       try {
         console.log('Loading officials for barangay:', locationState.barangay);
         
-        // Map region names to exact table names
-        const regionTableMap: Record<string, string> = {
-          'REGION 1': 'REGION 1',
-          'REGION 2': 'REGION 2',
-          'REGION 3': 'REGION 3',
-          'REGION 4A': 'REGION 4A',
-          'REGION 4B': 'REGION 4B',
-          'REGION 5': 'REGION 5',
-          'REGION 6': 'REGION 6',
-          'REGION 7': 'REGION 7',
-          'REGION 8': 'REGION 8',
-          'REGION 9': 'REGION 9',
-          'REGION 10': 'REGION 10',
-          'REGION 11': 'REGION 11',
-          'REGION 12': 'REGION 12',
-          'REGION 13': 'REGION 13',
-          'NCR': 'NCR',
-          'CAR': 'CAR',
-          'BARMM': 'BARMM'
-        };
-
-        const regionTable = regionTableMap[locationState.region];
-        if (!regionTable) {
-          console.error('Unknown region:', locationState.region);
-          return;
-        }
-
-        // Use raw SQL query to handle dynamic table names
+        // Use the database function to get officials
         const { data, error } = await supabase.rpc('get_officials_by_region', {
-          region_name: regionTable,
+          region_name: locationState.region,
           barangay_name: locationState.barangay,
           province_name: locationState.province,
           municipality_name: locationState.municipality
@@ -104,8 +77,6 @@ export default function OfficialsInfo() {
 
         if (error) {
           console.error('Error loading officials:', error);
-          // Fallback: try direct table query with proper typing
-          await loadOfficialsDirectly(regionTable);
           return;
         }
 
@@ -115,79 +86,20 @@ export default function OfficialsInfo() {
         }
       } catch (error) {
         console.error('Error in loadOfficials:', error);
-        // Try fallback approach
-        await loadOfficialsDirectly(locationState.region);
-      }
-    };
-
-    const loadOfficialsDirectly = async (regionName: string) => {
-      try {
-        // Since we can't use dynamic table names with typed client,
-        // we'll handle each region case explicitly
-        let data: any[] = [];
-        
-        switch (regionName) {
-          case 'REGION 1':
-            const { data: region1Data } = await supabase
-              .from('REGION 1')
-              .select('*')
-              .eq('BARANGAY', locationState.barangay)
-              .eq('PROVINCE', locationState.province)
-              .eq('CITY/MUNICIPALITY', locationState.municipality);
-            data = region1Data || [];
-            break;
-          case 'REGION 2':
-            const { data: region2Data } = await supabase
-              .from('REGION 2')
-              .select('*')
-              .eq('BARANGAY', locationState.barangay)
-              .eq('PROVINCE', locationState.province)
-              .eq('CITY/MUNICIPALITY', locationState.municipality);
-            data = region2Data || [];
-            break;
-          case 'REGION 3':
-            const { data: region3Data } = await supabase
-              .from('REGION 3')
-              .select('*')
-              .eq('BARANGAY', locationState.barangay)
-              .eq('PROVINCE', locationState.province)
-              .eq('CITY/MUNICIPALITY', locationState.municipality);
-            data = region3Data || [];
-            break;
-          case 'NCR':
-            const { data: ncrData } = await supabase
-              .from('NCR')
-              .select('*')
-              .eq('BARANGAY', locationState.barangay)
-              .eq('PROVINCE', locationState.province)
-              .eq('CITY/MUNICIPALITY', locationState.municipality);
-            data = ncrData || [];
-            break;
-          // Add other regions as needed
-          default:
-            console.log('Region not handled in switch:', regionName);
-            return;
-        }
-
-        if (data && data.length > 0) {
-          updateOfficialsWithData(data);
-        }
-      } catch (error) {
-        console.error('Error in loadOfficialsDirectly:', error);
       }
     };
 
     const updateOfficialsWithData = (data: any[]) => {
       const updatedOfficials = officials.map(official => {
-        const dbOfficial = data.find((d: any) => d.POSITION === official.position);
+        const dbOfficial = data.find((d: any) => d.position === official.position);
         if (dbOfficial) {
           return {
             ...official,
-            firstName: dbOfficial.FIRSTNAME || '',
-            middleName: dbOfficial.MIDDLENAME || '',
-            lastName: dbOfficial.LASTNAME || '',
-            suffix: dbOfficial.SUFFIX || '',
-            isCompleted: !!(dbOfficial.FIRSTNAME && dbOfficial.LASTNAME)
+            firstName: dbOfficial.firstname || '',
+            middleName: dbOfficial.middlename || '',
+            lastName: dbOfficial.lastname || '',
+            suffix: dbOfficial.suffix || '',
+            isCompleted: !!(dbOfficial.firstname && dbOfficial.lastname)
           };
         }
         return official;
