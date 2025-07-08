@@ -221,27 +221,20 @@ export default function LocationSelection() {
           <div className="w-6" />
         </div>
 
-        {/* Simple Progress Bar */}
-        <div className="px-6 py-8 bg-gray-50">
-          <div className="flex justify-center items-center space-x-8 mb-6">
-            <div className="flex items-center">
-              <div className="h-1 w-16 bg-red-500 rounded-full"></div>
-            </div>
-            <div className="flex items-center">
-              <div className="h-1 w-16 bg-gray-300 rounded-full"></div>
-            </div>
-            <div className="flex items-center">
-              <div className="h-1 w-16 bg-gray-300 rounded-full"></div>
-            </div>
+        {/* Clean Progress Bar */}
+        <div className="px-6 py-6">
+          <div className="flex justify-between items-center mb-8">
+            <div className="flex-1 h-1 bg-red-500 rounded-full"></div>
+            <div className="flex-1 h-1 bg-gray-200 rounded-full mx-2"></div>
+            <div className="flex-1 h-1 bg-gray-200 rounded-full"></div>
           </div>
           <div className="text-center">
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Address</h2>
-            <p className="text-sm text-gray-600">Please Complete Your Address Details</p>
+            <h2 className="text-2xl font-bold text-gray-900">Address</h2>
           </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 p-6 space-y-8">
+        <div className="flex-1 p-6 space-y-6">
           {/* Region Dropdown */}
           <div className="relative">
             <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Region</Label>
@@ -253,20 +246,22 @@ export default function LocationSelection() {
                 <span className={selectedRegion ? "text-gray-900" : "text-gray-400"}>
                   {selectedRegion || "Select Region"}
                 </span>
-                <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showRegionDropdown ? 'rotate-180' : ''}`} />
+                <div className="flex items-center gap-2">
+                  {selectedRegion && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedRegion("");
+                        setRegionSearch("");
+                      }}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showRegionDropdown ? 'rotate-180' : ''}`} />
+                </div>
               </div>
-              {selectedRegion && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedRegion("");
-                    setRegionSearch("");
-                  }}
-                  className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
             </div>
             {showRegionDropdown && (
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -312,20 +307,22 @@ export default function LocationSelection() {
                 <span className={selectedProvince ? "text-gray-900" : "text-gray-400"}>
                   {selectedProvince || "Select Province"}
                 </span>
-                <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showProvinceDropdown ? 'rotate-180' : ''}`} />
+                <div className="flex items-center gap-2">
+                  {selectedProvince && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedProvince("");
+                        setProvinceSearch("");
+                      }}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showProvinceDropdown ? 'rotate-180' : ''}`} />
+                </div>
               </div>
-              {selectedProvince && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedProvince("");
-                    setProvinceSearch("");
-                  }}
-                  className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
             </div>
             {showProvinceDropdown && selectedRegion && (
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -371,20 +368,22 @@ export default function LocationSelection() {
                 <span className={selectedMunicipality ? "text-gray-900" : "text-gray-400"}>
                   {selectedMunicipality || "Select City/Municipality"}
                 </span>
-                <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showMunicipalityDropdown ? 'rotate-180' : ''}`} />
+                <div className="flex items-center gap-2">
+                  {selectedMunicipality && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedMunicipality("");
+                        setMunicipalitySearch("");
+                      }}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showMunicipalityDropdown ? 'rotate-180' : ''}`} />
+                </div>
               </div>
-              {selectedMunicipality && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedMunicipality("");
-                    setMunicipalitySearch("");
-                  }}
-                  className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
             </div>
             {showMunicipalityDropdown && selectedProvince && (
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -430,20 +429,22 @@ export default function LocationSelection() {
                 <span className={selectedBarangay ? "text-gray-900" : "text-gray-400"}>
                   {selectedBarangay || "Select Barangay"}
                 </span>
-                <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showBarangayDropdown ? 'rotate-180' : ''}`} />
+                <div className="flex items-center gap-2">
+                  {selectedBarangay && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedBarangay("");
+                        setBarangaySearch("");
+                      }}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showBarangayDropdown ? 'rotate-180' : ''}`} />
+                </div>
               </div>
-              {selectedBarangay && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedBarangay("");
-                    setBarangaySearch("");
-                  }}
-                  className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
             </div>
             {showBarangayDropdown && selectedMunicipality && (
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -507,22 +508,15 @@ export default function LocationSelection() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-white to-orange-50 px-4 py-8">
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
-        {/* Simple Progress Bar */}
-        <div className="px-6 py-8 border-b bg-gray-50">
-          <div className="flex justify-center items-center space-x-8 mb-6">
-            <div className="flex items-center">
-              <div className="h-1 w-16 bg-red-500 rounded-full"></div>
-            </div>
-            <div className="flex items-center">
-              <div className="h-1 w-16 bg-gray-300 rounded-full"></div>
-            </div>
-            <div className="flex items-center">
-              <div className="h-1 w-16 bg-gray-300 rounded-full"></div>
-            </div>
+        {/* Clean Progress Bar */}
+        <div className="px-8 py-6 border-b">
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex-1 h-1 bg-red-500 rounded-full"></div>
+            <div className="flex-1 h-1 bg-gray-200 rounded-full mx-2"></div>
+            <div className="flex-1 h-1 bg-gray-200 rounded-full"></div>
           </div>
           <div className="text-center">
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Address</h2>
-            <p className="text-sm text-gray-600">Please Complete Your Address Details</p>
+            <h2 className="text-2xl font-bold text-gray-900">Address</h2>
           </div>
         </div>
 
@@ -531,13 +525,7 @@ export default function LocationSelection() {
             <ChevronLeft className="w-4 h-4 mr-1" /> Back
           </button>
           
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Complete Address Details</h1>
-            <p className="text-gray-600">Please select your location information</p>
-          </div>
-
-          <div className="space-y-8">
+          <div className="space-y-6">
             {/* Region Dropdown */}
             <div className="relative">
               <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Region</Label>
@@ -549,20 +537,22 @@ export default function LocationSelection() {
                   <span className={selectedRegion ? "text-gray-900" : "text-gray-400"}>
                     {selectedRegion || "Select Region"}
                   </span>
-                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showRegionDropdown ? 'rotate-180' : ''}`} />
+                  <div className="flex items-center gap-2">
+                    {selectedRegion && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedRegion("");
+                          setRegionSearch("");
+                        }}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                    <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showRegionDropdown ? 'rotate-180' : ''}`} />
+                  </div>
                 </div>
-                {selectedRegion && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedRegion("");
-                      setRegionSearch("");
-                    }}
-                    className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
               </div>
               {showRegionDropdown && (
                 <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
@@ -608,20 +598,22 @@ export default function LocationSelection() {
                   <span className={selectedProvince ? "text-gray-900" : "text-gray-400"}>
                     {selectedProvince || "Select Province"}
                   </span>
-                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showProvinceDropdown ? 'rotate-180' : ''}`} />
+                  <div className="flex items-center gap-2">
+                    {selectedProvince && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedProvince("");
+                          setProvinceSearch("");
+                        }}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                    <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showProvinceDropdown ? 'rotate-180' : ''}`} />
+                  </div>
                 </div>
-                {selectedProvince && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedProvince("");
-                      setProvinceSearch("");
-                    }}
-                    className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
               </div>
               {showProvinceDropdown && selectedRegion && (
                 <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
@@ -667,20 +659,22 @@ export default function LocationSelection() {
                   <span className={selectedMunicipality ? "text-gray-900" : "text-gray-400"}>
                     {selectedMunicipality || "Select City/Municipality"}
                   </span>
-                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showMunicipalityDropdown ? 'rotate-180' : ''}`} />
+                  <div className="flex items-center gap-2">
+                    {selectedMunicipality && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedMunicipality("");
+                          setMunicipalitySearch("");
+                        }}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                    <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showMunicipalityDropdown ? 'rotate-180' : ''}`} />
+                  </div>
                 </div>
-                {selectedMunicipality && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedMunicipality("");
-                      setMunicipalitySearch("");
-                    }}
-                    className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
               </div>
               {showMunicipalityDropdown && selectedProvince && (
                 <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
@@ -726,20 +720,22 @@ export default function LocationSelection() {
                   <span className={selectedBarangay ? "text-gray-900" : "text-gray-400"}>
                     {selectedBarangay || "Select Barangay"}
                   </span>
-                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showBarangayDropdown ? 'rotate-180' : ''}`} />
+                  <div className="flex items-center gap-2">
+                    {selectedBarangay && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedBarangay("");
+                          setBarangaySearch("");
+                        }}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                    <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showBarangayDropdown ? 'rotate-180' : ''}`} />
+                  </div>
                 </div>
-                {selectedBarangay && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedBarangay("");
-                      setBarangaySearch("");
-                    }}
-                    className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
               </div>
               {showBarangayDropdown && selectedMunicipality && (
                 <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
