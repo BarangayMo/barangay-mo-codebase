@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -7,13 +8,33 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 
+// Hardcoded Philippine regions with their full names
+const PHILIPPINE_REGIONS = [
+  { code: "REGION 1", name: "Ilocos Region (Region I)" },
+  { code: "REGION 2", name: "Cagayan Valley (Region II)" },
+  { code: "REGION 3", name: "Central Luzon (Region III)" },
+  { code: "REGION 4A", name: "CALABARZON (Region IV-A)" },
+  { code: "REGION 4B", name: "MIMAROPA (Region IV-B)" },
+  { code: "REGION 5", name: "Bicol Region (Region V)" },
+  { code: "REGION 6", name: "Western Visayas (Region VI)" },
+  { code: "REGION 7", name: "Central Visayas (Region VII)" },
+  { code: "REGION 8", name: "Eastern Visayas (Region VIII)" },
+  { code: "REGION 9", name: "Zamboanga Peninsula (Region IX)" },
+  { code: "REGION 10", name: "Northern Mindanao (Region X)" },
+  { code: "REGION 11", name: "Davao Region (Region XI)" },
+  { code: "REGION 12", name: "SOCCSKSARGEN (Region XII)" },
+  { code: "REGION 13", name: "Caraga (Region XIII)" },
+  { code: "NCR", name: "National Capital Region (NCR)" },
+  { code: "CAR", name: "Cordillera Administrative Region (CAR)" },
+  { code: "BARMM", name: "Bangsamoro Autonomous Region in Muslim Mindanao (BARMM)" }
+];
+
 export default function LocationSelection() {
   const [selectedRegion, setSelectedRegion] = useState("");
   const [selectedProvince, setSelectedProvince] = useState("");
   const [selectedMunicipality, setSelectedMunicipality] = useState("");
   const [selectedBarangay, setSelectedBarangay] = useState("");
   
-  const [regions, setRegions] = useState<string[]>([]);
   const [provinces, setProvinces] = useState<string[]>([]);
   const [municipalities, setMunicipalities] = useState<string[]>([]);
   const [barangays, setBarangays] = useState<string[]>([]);
@@ -32,11 +53,6 @@ export default function LocationSelection() {
   
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 768px)");
-
-  // Load regions on component mount
-  useEffect(() => {
-    loadRegions();
-  }, []);
 
   // Load provinces when region is selected
   useEffect(() => {
@@ -65,44 +81,42 @@ export default function LocationSelection() {
     }
   }, [selectedMunicipality]);
 
-  const loadRegions = async () => {
-    setIsLoading(true);
-    try {
-      console.log("Loading regions from Supabase...");
-      const { data, error } = await supabase
-        .from('Barangays')
-        .select('REGION')
-        .not('REGION', 'is', null)
-        .neq('REGION', '');
-      
-      if (error) {
-        console.error('Error loading regions:', error);
-        return;
-      }
-      
-      console.log("Raw region data:", data);
-      
-      if (data && data.length > 0) {
-        const uniqueRegions = [...new Set(data.map(item => item.REGION).filter(region => region && region.trim() !== ''))];
-        console.log("Unique regions:", uniqueRegions);
-        setRegions(uniqueRegions.sort());
-      } else {
-        console.log("No region data found");
-        setRegions([]);
-      }
-    } catch (error) {
-      console.error('Error loading regions:', error);
-      setRegions([]);
-    } finally {
-      setIsLoading(false);
-    }
+  const getTableNameForRegion = (regionCode: string) => {
+    // Map region codes to their corresponding table names
+    const tableMap: { [key: string]: string } = {
+      'NCR': 'Barangays', // NCR data is in the main Barangays table
+      'REGION 1': 'REGION 1',
+      'REGION 2': 'REGION 2',
+      'REGION 3': 'REGION 3',
+      'REGION 4A': 'REGION 4A',
+      'REGION 4B': 'REGION 4B',
+      'REGION 5': 'REGION 5',
+      'REGION 6': 'REGION 6',
+      'REGION 7': 'REGION 7',
+      'REGION 8': 'REGION 8',
+      'REGION 9': 'REGION 9',
+      'REGION 10': 'REGION 10',
+      'REGION 11': 'REGION 11',
+      'REGION 12': 'REGION 12',
+      'REGION 13': 'REGION 13',
+      'CAR': 'CAR',
+      'BARMM': 'BARMM'
+    };
+    
+    return tableMap[regionCode] || 'Barangays';
   };
 
   const loadProvinces = async () => {
+    if (!selectedRegion) return;
+    
     setIsLoading(true);
     try {
+      const tableName = getTableNameForRegion(selectedRegion);
+      
+      console.log(`Loading provinces from table: ${tableName} for region: ${selectedRegion}`);
+      
       const { data, error } = await supabase
-        .from('Barangays')
+        .from(tableName)
         .select('PROVINCE')
         .eq('REGION', selectedRegion)
         .not('PROVINCE', 'is', null)
@@ -123,10 +137,16 @@ export default function LocationSelection() {
   };
 
   const loadMunicipalities = async () => {
+    if (!selectedRegion || !selectedProvince) return;
+    
     setIsLoading(true);
     try {
+      const tableName = getTableNameForRegion(selectedRegion);
+      
+      console.log(`Loading municipalities from table: ${tableName}`);
+      
       const { data, error } = await supabase
-        .from('Barangays')
+        .from(tableName)
         .select('CITY/MUNICIPALITY')
         .eq('REGION', selectedRegion)
         .eq('PROVINCE', selectedProvince)
@@ -148,10 +168,16 @@ export default function LocationSelection() {
   };
 
   const loadBarangays = async () => {
+    if (!selectedRegion || !selectedProvince || !selectedMunicipality) return;
+    
     setIsLoading(true);
     try {
+      const tableName = getTableNameForRegion(selectedRegion);
+      
+      console.log(`Loading barangays from table: ${tableName}`);
+      
       const { data, error } = await supabase
-        .from('Barangays')
+        .from(tableName)
         .select('BARANGAY')
         .eq('REGION', selectedRegion)
         .eq('PROVINCE', selectedProvince)
@@ -191,8 +217,9 @@ export default function LocationSelection() {
     navigate("/register/role");
   };
 
-  const filteredRegions = regions.filter(region =>
-    region.toLowerCase().includes(regionSearch.toLowerCase())
+  const filteredRegions = PHILIPPINE_REGIONS.filter(region =>
+    region.name.toLowerCase().includes(regionSearch.toLowerCase()) ||
+    region.code.toLowerCase().includes(regionSearch.toLowerCase())
   );
 
   const filteredProvinces = provinces.filter(province =>
@@ -267,13 +294,13 @@ export default function LocationSelection() {
                   <button
                     key={index}
                     onClick={() => {
-                      setSelectedRegion(region);
-                      setRegionSearch(region);
+                      setSelectedRegion(region.code);
+                      setRegionSearch(region.name);
                       setShowRegionDropdown(false);
                     }}
                     className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
                   >
-                    {region}
+                    {region.name}
                   </button>
                 ))}
               </div>
@@ -505,30 +532,20 @@ export default function LocationSelection() {
               </div>
               {showRegionDropdown && (
                 <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                  <div className="p-2 border-b">
-                    <Input
-                      placeholder="Search regions..."
-                      value={regionSearch}
-                      onChange={(e) => setRegionSearch(e.target.value)}
-                      className="h-8"
-                    />
-                  </div>
-                  {isLoading ? (
-                    <div className="p-4 text-center text-gray-500">Loading regions...</div>
-                  ) : filteredRegions.length === 0 ? (
+                  {filteredRegions.length === 0 ? (
                     <div className="p-4 text-center text-gray-500">No regions found</div>
                   ) : (
                     filteredRegions.map((region, index) => (
                       <button
                         key={index}
                         onClick={() => {
-                          setSelectedRegion(region);
-                          setRegionSearch("");
+                          setSelectedRegion(region.code);
+                          setRegionSearch(region.name);
                           setShowRegionDropdown(false);
                         }}
                         className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
                       >
-                        {region}
+                        {region.name}
                       </button>
                     ))
                   )}
@@ -568,14 +585,6 @@ export default function LocationSelection() {
               </div>
               {showProvinceDropdown && selectedRegion && (
                 <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                  <div className="p-2 border-b">
-                    <Input
-                      placeholder="Search provinces..."
-                      value={provinceSearch}
-                      onChange={(e) => setProvinceSearch(e.target.value)}
-                      className="h-8"
-                    />
-                  </div>
                   {isLoading ? (
                     <div className="p-4 text-center text-gray-500">Loading provinces...</div>
                   ) : filteredProvinces.length === 0 ? (
@@ -586,7 +595,7 @@ export default function LocationSelection() {
                         key={index}
                         onClick={() => {
                           setSelectedProvince(province);
-                          setProvinceSearch("");
+                          setProvinceSearch(province);
                           setShowProvinceDropdown(false);
                         }}
                         className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
@@ -631,14 +640,6 @@ export default function LocationSelection() {
               </div>
               {showMunicipalityDropdown && selectedProvince && (
                 <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                  <div className="p-2 border-b">
-                    <Input
-                      placeholder="Search municipalities..."
-                      value={municipalitySearch}
-                      onChange={(e) => setMunicipalitySearch(e.target.value)}
-                      className="h-8"
-                    />
-                  </div>
                   {isLoading ? (
                     <div className="p-4 text-center text-gray-500">Loading municipalities...</div>
                   ) : filteredMunicipalities.length === 0 ? (
@@ -649,7 +650,7 @@ export default function LocationSelection() {
                         key={index}
                         onClick={() => {
                           setSelectedMunicipality(municipality);
-                          setMunicipalitySearch("");
+                          setMunicipalitySearch(municipality);
                           setShowMunicipalityDropdown(false);
                         }}
                         className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
@@ -694,14 +695,6 @@ export default function LocationSelection() {
               </div>
               {showBarangayDropdown && selectedMunicipality && (
                 <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                  <div className="p-2 border-b">
-                    <Input
-                      placeholder="Search barangays..."
-                      value={barangaySearch}
-                      onChange={(e) => setBarangaySearch(e.target.value)}
-                      className="h-8"
-                    />
-                  </div>
                   {isLoading ? (
                     <div className="p-4 text-center text-gray-500">Loading barangays...</div>
                   ) : filteredBarangays.length === 0 ? (
@@ -712,7 +705,7 @@ export default function LocationSelection() {
                         key={index}
                         onClick={() => {
                           setSelectedBarangay(barangay);
-                          setBarangaySearch("");
+                          setBarangaySearch(barangay);
                           setShowBarangayDropdown(false);
                         }}
                         className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
