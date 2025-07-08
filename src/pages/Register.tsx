@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,10 @@ export default function Register() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleTermsChange = (checked: boolean | "indeterminate") => {
+    setAcceptTerms(checked === true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -318,7 +323,7 @@ export default function Register() {
                 <Checkbox
                   id="terms"
                   checked={acceptTerms}
-                  onCheckedChange={setAcceptTerms}
+                  onCheckedChange={handleTermsChange}
                   className={locationState.role === 'official' ? 'border-red-300' : 'border-blue-300'}
                 />
                 <Label htmlFor="terms" className="text-xs text-gray-600 leading-4">
@@ -351,7 +356,7 @@ export default function Register() {
     );
   }
 
-  // Desktop version with same fixes applied
+  // Desktop version
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-white to-orange-50 px-4 py-8">
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
@@ -533,7 +538,7 @@ export default function Register() {
               <Checkbox
                 id="terms-desktop"
                 checked={acceptTerms}
-                onCheckedChange={setAcceptTerms}
+                onCheckedChange={handleTermsChange}
                 className={locationState.role === 'official' ? 'border-red-300' : 'border-blue-300'}
               />
               <Label htmlFor="terms-desktop" className="text-sm text-gray-600 leading-5">
