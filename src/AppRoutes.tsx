@@ -1,7 +1,8 @@
+
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Welcome from "@/pages/Welcome";
 import Login from "@/pages/Login";
-import MPin from "@/pages/MPin";
+import MPIN from "@/pages/MPIN";
 import Register from "@/pages/Register";
 import RoleSelection from "@/pages/RoleSelection";
 import LocationSelection from "@/pages/LocationSelection";
@@ -25,7 +26,7 @@ function AppRoutes() {
           <Route path="/" element={<Welcome />} />
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/mpin" element={<MPin />} />
+          <Route path="/mpin" element={<MPIN />} />
           <Route path="/register/role" element={<RoleSelection />} />
           <Route path="/register/location" element={<LocationSelection />} />
           <Route path="/register/officials" element={<OfficialsInfo />} />
