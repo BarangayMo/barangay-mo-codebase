@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -60,8 +61,8 @@ export default function OfficialsInfo() {
 
   const [selectedOfficialIndex, setSelectedOfficialIndex] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [landlineNumber, setLandlineNumber] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("9171234567");
+  const [landlineNumber, setLandlineNumber] = useState("047-222-5173");
 
   // Load officials from database when component mounts
   useEffect(() => {
@@ -228,6 +229,12 @@ export default function OfficialsInfo() {
     return nameParts.length > 0 ? nameParts.join(' ') : null;
   };
 
+  // Helper function to truncate long names for mobile
+  const truncateName = (name: string, maxLength: number = 25) => {
+    if (name.length <= maxLength) return name;
+    return name.substring(0, maxLength) + '...';
+  };
+
   const getOfficialsByCategory = () => {
     const executive = officials.filter(o => EXECUTIVE_POSITIONS.includes(o.position));
     const sangguniang = officials.filter(o => o.position.startsWith('Sangguniang Barangay Member'));
@@ -254,24 +261,28 @@ export default function OfficialsInfo() {
             }`}
             onClick={() => handleOfficialClick(actualIndex)}
           >
-            <div className="flex items-center space-x-3 flex-1">
+            <div className="flex items-center space-x-3 flex-1 min-w-0">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                 hasData ? 'bg-green-100' : 'bg-gray-300'
               }`}>
                 <User className={`h-5 w-5 ${hasData ? 'text-green-600' : 'text-gray-600'}`} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className={`font-medium truncate ${
+                <p className={`font-medium ${
                   hasData ? 'text-gray-900' : 'text-gray-500'
-                }`}>
-                  {official.position}
+                } ${isMobile ? 'text-sm' : ''}`}>
+                  {isMobile ? truncateName(official.position, 20) : official.position}
                 </p>
                 {hasData ? (
-                  <p className="text-sm text-green-700 truncate mt-1 font-medium">
-                    {displayName}
+                  <p className={`text-green-700 font-medium mt-1 truncate ${
+                    isMobile ? 'text-xs' : 'text-sm'
+                  }`}>
+                    {isMobile ? truncateName(displayName, 30) : displayName}
                   </p>
                 ) : (
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className={`text-gray-400 mt-1 ${
+                    isMobile ? 'text-xs' : 'text-xs'
+                  }`}>
                     Tap to add official details
                   </p>
                 )}
@@ -348,7 +359,7 @@ export default function OfficialsInfo() {
                 </div>
                 <span className="text-sm text-gray-600">+63</span>
                 <Input 
-                  placeholder="12345" 
+                  placeholder="9171234567" 
                   className="flex-1"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
@@ -466,7 +477,7 @@ export default function OfficialsInfo() {
                   </div>
                   <span className="text-sm text-gray-600">+63</span>
                   <Input 
-                    placeholder="12345" 
+                    placeholder="9171234567" 
                     className="flex-1"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}

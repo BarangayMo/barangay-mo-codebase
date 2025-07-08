@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Users, Shield } from "lucide-react";
+import { ChevronLeft, Users, Shield, Check } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -61,16 +61,27 @@ export default function RoleSelection() {
                 <RadioGroupItem value="resident" id="resident" className="peer sr-only" />
                 <Label 
                   htmlFor="resident" 
-                  className="flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-blue-500 peer-checked:bg-blue-50"
+                  className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                    selectedRole === "resident" 
+                      ? "border-blue-500 bg-blue-50 ring-2 ring-blue-200" 
+                      : "border-gray-200 hover:border-blue-300"
+                  }`}
                 >
                   <div className="flex items-center space-x-4 w-full">
-                    <div className="p-3 rounded-full bg-blue-100 text-blue-600">
+                    <div className={`p-3 rounded-full ${
+                      selectedRole === "resident" ? "bg-blue-200 text-blue-700" : "bg-blue-100 text-blue-600"
+                    }`}>
                       <Users className="w-6 h-6" />
                     </div>
                     <div className="flex-1">
                       <div className="font-semibold text-gray-900">Resident</div>
                       <div className="text-sm text-gray-500">Access community services</div>
                     </div>
+                    {selectedRole === "resident" && (
+                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                        <Check className="w-4 h-4 text-white" />
+                      </div>
+                    )}
                   </div>
                 </Label>
               </div>
@@ -79,16 +90,27 @@ export default function RoleSelection() {
                 <RadioGroupItem value="official" id="official" className="peer sr-only" />
                 <Label 
                   htmlFor="official" 
-                  className="flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-red-500 peer-checked:bg-red-50"
+                  className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                    selectedRole === "official" 
+                      ? "border-red-500 bg-red-50 ring-2 ring-red-200" 
+                      : "border-gray-200 hover:border-red-300"
+                  }`}
                 >
                   <div className="flex items-center space-x-4 w-full">
-                    <div className="p-3 rounded-full bg-red-100 text-red-600">
+                    <div className={`p-3 rounded-full ${
+                      selectedRole === "official" ? "bg-red-200 text-red-700" : "bg-red-100 text-red-600"
+                    }`}>
                       <Shield className="w-6 h-6" />
                     </div>
                     <div className="flex-1">
                       <div className="font-semibold text-gray-900">Barangay Official</div>
                       <div className="text-sm text-gray-500">Manage barangay services</div>
                     </div>
+                    {selectedRole === "official" && (
+                      <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                        <Check className="w-4 h-4 text-white" />
+                      </div>
+                    )}
                   </div>
                 </Label>
               </div>
@@ -143,16 +165,27 @@ export default function RoleSelection() {
               <RadioGroupItem value="resident" id="resident-desktop" className="peer sr-only" />
               <Label 
                 htmlFor="resident-desktop" 
-                className="flex items-center p-6 border-2 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-blue-500 peer-checked:bg-blue-50"
+                className={`flex items-center p-6 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                  selectedRole === "resident" 
+                    ? "border-blue-500 bg-blue-50 ring-2 ring-blue-200" 
+                    : "border-gray-200 hover:border-blue-300"
+                }`}
               >
                 <div className="flex items-center space-x-4 w-full">
-                  <div className="p-3 rounded-full bg-blue-100 text-blue-600">
+                  <div className={`p-3 rounded-full ${
+                    selectedRole === "resident" ? "bg-blue-200 text-blue-700" : "bg-blue-100 text-blue-600"
+                  }`}>
                     <Users className="w-6 h-6" />
                   </div>
                   <div className="flex-1">
                     <div className="font-semibold text-gray-900">Resident</div>
                     <div className="text-sm text-gray-500">Access community services</div>
                   </div>
+                  {selectedRole === "resident" && (
+                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                      <Check className="w-4 h-4 text-white" />
+                    </div>
+                  )}
                 </div>
               </Label>
             </div>
@@ -161,16 +194,27 @@ export default function RoleSelection() {
               <RadioGroupItem value="official" id="official-desktop" className="peer sr-only" />
               <Label 
                 htmlFor="official-desktop" 
-                className="flex items-center p-6 border-2 rounded-xl cursor-pointer transition-all duration-200 peer-checked:border-red-500 peer-checked:bg-red-50"
+                className={`flex items-center p-6 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                  selectedRole === "official" 
+                    ? "border-red-500 bg-red-50 ring-2 ring-red-200" 
+                    : "border-gray-200 hover:border-red-300"
+                }`}
               >
                 <div className="flex items-center space-x-4 w-full">
-                  <div className="p-3 rounded-full bg-red-100 text-red-600">
+                  <div className={`p-3 rounded-full ${
+                    selectedRole === "official" ? "bg-red-200 text-red-700" : "bg-red-100 text-red-600"
+                  }`}>
                     <Shield className="w-6 h-6" />
                   </div>
                   <div className="flex-1">
                     <div className="font-semibold text-gray-900">Barangay Official</div>
                     <div className="text-sm text-gray-500">Manage barangay services</div>
                   </div>
+                  {selectedRole === "official" && (
+                    <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                      <Check className="w-4 h-4 text-white" />
+                    </div>
+                  )}
                 </div>
               </Label>
             </div>
