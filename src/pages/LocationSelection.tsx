@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronDown, X } from "lucide-react";
+import { ChevronLeft, ChevronDown, X, Check } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,13 +34,6 @@ const toTitleCase = (str: string) => {
   return str.toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase());
 };
 
-// Define types for database responses
-type RegionDataRow = {
-  PROVINCE?: string | null;
-  "CITY/MUNICIPALITY"?: string | null;
-  BARANGAY?: string | null;
-};
-
 export default function LocationSelection() {
   const [selectedRegion, setSelectedRegion] = useState("");
   const [selectedProvince, setSelectedProvince] = useState("");
@@ -62,6 +56,12 @@ export default function LocationSelection() {
   
   const [isLoading, setIsLoading] = useState(false);
   
+  // Refs for blur detection
+  const regionRef = useRef<HTMLDivElement>(null);
+  const provinceRef = useRef<HTMLDivElement>(null);
+  const municipalityRef = useRef<HTMLDivElement>(null);
+  const barangayRef = useRef<HTMLDivElement>(null);
+  
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 768px)");
 
@@ -72,6 +72,9 @@ export default function LocationSelection() {
       setSelectedProvince("");
       setSelectedMunicipality("");
       setSelectedBarangay("");
+      setProvinceSearch("");
+      setMunicipalitySearch("");
+      setBarangaySearch("");
     }
   }, [selectedRegion]);
 
@@ -81,6 +84,8 @@ export default function LocationSelection() {
       loadMunicipalities();
       setSelectedMunicipality("");
       setSelectedBarangay("");
+      setMunicipalitySearch("");
+      setBarangaySearch("");
     }
   }, [selectedProvince]);
 
@@ -89,8 +94,32 @@ export default function LocationSelection() {
     if (selectedMunicipality) {
       loadBarangays();
       setSelectedBarangay("");
+      setBarangaySearch("");
     }
   }, [selectedMunicipality]);
+
+  // Blur detection for dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (regionRef.current && !regionRef.current.contains(event.target as Node)) {
+        setShowRegionDropdown(false);
+      }
+      if (provinceRef.current && !provinceRef.current.contains(event.target as Node)) {
+        setShowProvinceDropdown(false);
+      }
+      if (municipalityRef.current && !municipalityRef.current.contains(event.target as Node)) {
+        setShowMunicipalityDropdown(false);
+      }
+      if (barangayRef.current && !barangayRef.current.contains(event.target as Node)) {
+        setShowBarangayDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const loadProvinces = async () => {
     if (!selectedRegion) return;
@@ -100,169 +129,19 @@ export default function LocationSelection() {
     setProvinces([]);
     
     try {
-      let data: RegionDataRow[] | null = null;
+      let data: any = null;
       let error: any = null;
       
       // Use specific queries for each region
-      switch(selectedRegion) {
-        case 'NCR':
-          const ncrResult = await supabase
-            .from('NCR')
-            .select('PROVINCE')
-            .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', '');
-          data = ncrResult.data;
-          error = ncrResult.error;
-          break;
-        case 'REGION 1':
-          const r1Result = await supabase
-            .from('REGION 1')
-            .select('PROVINCE')
-            .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', '');
-          data = r1Result.data;
-          error = r1Result.error;
-          break;
-        case 'REGION 2':
-          const r2Result = await supabase
-            .from('REGION 2')
-            .select('PROVINCE')
-            .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', '');
-          data = r2Result.data;
-          error = r2Result.error;
-          break;
-        case 'REGION 3':
-          const r3Result = await supabase
-            .from('REGION 3')
-            .select('PROVINCE')
-            .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', '');
-          data = r3Result.data;
-          error = r3Result.error;
-          break;
-        case 'REGION 4A':
-          const r4aResult = await supabase
-            .from('REGION 4A')
-            .select('PROVINCE')
-            .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', '');
-          data = r4aResult.data;
-          error = r4aResult.error;
-          break;
-        case 'REGION 4B':
-          const r4bResult = await supabase
-            .from('REGION 4B')
-            .select('PROVINCE')
-            .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', '');
-          data = r4bResult.data;
-          error = r4bResult.error;
-          break;
-        case 'REGION 5':
-          const r5Result = await supabase
-            .from('REGION 5')
-            .select('PROVINCE')
-            .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', '');
-          data = r5Result.data;
-          error = r5Result.error;
-          break;
-        case 'REGION 6':
-          const r6Result = await supabase
-            .from('REGION 6')
-            .select('PROVINCE')
-            .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', '');
-          data = r6Result.data;
-          error = r6Result.error;
-          break;
-        case 'REGION 7':
-          const r7Result = await supabase
-            .from('REGION 7')
-            .select('PROVINCE')
-            .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', '');
-          data = r7Result.data;
-          error = r7Result.error;
-          break;
-        case 'REGION 8':
-          const r8Result = await supabase
-            .from('REGION 8')
-            .select('PROVINCE')
-            .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', '');
-          data = r8Result.data;
-          error = r8Result.error;
-          break;
-        case 'REGION 9':
-          const r9Result = await supabase
-            .from('REGION 9')
-            .select('PROVINCE')
-            .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', '');
-          data = r9Result.data;
-          error = r9Result.error;
-          break;
-        case 'REGION 10':
-          const r10Result = await supabase
-            .from('REGION 10')
-            .select('PROVINCE')
-            .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', '');
-          data = r10Result.data;
-          error = r10Result.error;
-          break;
-        case 'REGION 11':
-          const r11Result = await supabase
-            .from('REGION 11')
-            .select('PROVINCE')
-            .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', '');
-          data = r11Result.data;
-          error = r11Result.error;
-          break;
-        case 'REGION 12':
-          const r12Result = await supabase
-            .from('REGION 12')
-            .select('PROVINCE')
-            .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', '');
-          data = r12Result.data;
-          error = r12Result.error;
-          break;
-        case 'REGION 13':
-          const r13Result = await supabase
-            .from('REGION 13')
-            .select('PROVINCE')
-            .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', '');
-          data = r13Result.data;
-          error = r13Result.error;
-          break;
-        case 'CAR':
-          const carResult = await supabase
-            .from('CAR')
-            .select('PROVINCE')
-            .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', '');
-          data = carResult.data;
-          error = carResult.error;
-          break;
-        case 'BARMM':
-          const barmmResult = await supabase
-            .from('BARMM')
-            .select('PROVINCE')
-            .not('PROVINCE', 'is', null)
-            .neq('PROVINCE', '');
-          data = barmmResult.data;
-          error = barmmResult.error;
-          break;
-        default:
-          console.error('Unknown region:', selectedRegion);
-          setIsLoading(false);
-          return;
-      }
+      const query = supabase
+        .from(selectedRegion)
+        .select('PROVINCE')
+        .not('PROVINCE', 'is', null)
+        .neq('PROVINCE', '');
+      
+      const result = await query;
+      data = result.data;
+      error = result.error;
       
       console.log('Query result:', { data, error });
       
@@ -272,12 +151,10 @@ export default function LocationSelection() {
       }
       
       if (data && data.length > 0) {
-        // Extract provinces and ensure they are strings
         const provinceList = data
           .map((item: any) => item.PROVINCE)
           .filter((province: any) => province && typeof province === 'string' && province.trim() !== '');
         
-        // Get unique provinces and sort alphabetically
         const uniqueProvinces = [...new Set(provinceList)] as string[];
         const sortedProvinces = uniqueProvinces.sort();
         
@@ -303,185 +180,16 @@ export default function LocationSelection() {
     setMunicipalities([]);
     
     try {
-      let data: RegionDataRow[] | null = null;
-      let error: any = null;
+      const query = supabase
+        .from(selectedRegion)
+        .select('"CITY/MUNICIPALITY"')
+        .eq('PROVINCE', selectedProvince)
+        .not('"CITY/MUNICIPALITY"', 'is', null)
+        .neq('"CITY/MUNICIPALITY"', '');
       
-      // Use specific queries for each region with properly quoted column name
-      switch(selectedRegion) {
-        case 'NCR':
-          const ncrResult = await supabase
-            .from('NCR')
-            .select('"CITY/MUNICIPALITY"')
-            .eq('PROVINCE', selectedProvince)
-            .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', '');
-          data = ncrResult.data;
-          error = ncrResult.error;
-          break;
-        case 'REGION 1':
-          const r1Result = await supabase
-            .from('REGION 1')
-            .select('"CITY/MUNICIPALITY"')
-            .eq('PROVINCE', selectedProvince)
-            .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', '');
-          data = r1Result.data;
-          error = r1Result.error;
-          break;
-        case 'REGION 2':
-          const r2Result = await supabase
-            .from('REGION 2')
-            .select('"CITY/MUNICIPALITY"')
-            .eq('PROVINCE', selectedProvince)
-            .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', '');
-          data = r2Result.data;
-          error = r2Result.error;
-          break;
-        case 'REGION 3':
-          const r3Result = await supabase
-            .from('REGION 3')
-            .select('"CITY/MUNICIPALITY"')
-            .eq('PROVINCE', selectedProvince)
-            .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', '');
-          data = r3Result.data;
-          error = r3Result.error;
-          break;
-        case 'REGION 4A':
-          const r4aResult = await supabase
-            .from('REGION 4A')
-            .select('"CITY/MUNICIPALITY"')
-            .eq('PROVINCE', selectedProvince)
-            .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', '');
-          data = r4aResult.data;
-          error = r4aResult.error;
-          break;
-        case 'REGION 4B':
-          const r4bResult = await supabase
-            .from('REGION 4B')
-            .select('"CITY/MUNICIPALITY"')
-            .eq('PROVINCE', selectedProvince)
-            .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', '');
-          data = r4bResult.data;
-          error = r4bResult.error;
-          break;
-        case 'REGION 5':
-          const r5Result = await supabase
-            .from('REGION 5')
-            .select('"CITY/MUNICIPALITY"')
-            .eq('PROVINCE', selectedProvince)
-            .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', '');
-          data = r5Result.data;
-          error = r5Result.error;
-          break;
-        case 'REGION 6':
-          const r6Result = await supabase
-            .from('REGION 6')
-            .select('"CITY/MUNICIPALITY"')
-            .eq('PROVINCE', selectedProvince)
-            .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', '');
-          data = r6Result.data;
-          error = r6Result.error;
-          break;
-        case 'REGION 7':
-          const r7Result = await supabase
-            .from('REGION 7')
-            .select('"CITY/MUNICIPALITY"')
-            .eq('PROVINCE', selectedProvince)
-            .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', '');
-          data = r7Result.data;
-          error = r7Result.error;
-          break;
-        case 'REGION 8':
-          const r8Result = await supabase
-            .from('REGION 8')
-            .select('"CITY/MUNICIPALITY"')
-            .eq('PROVINCE', selectedProvince)
-            .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', '');
-          data = r8Result.data;
-          error = r8Result.error;
-          break;
-        case 'REGION 9':
-          const r9Result = await supabase
-            .from('REGION 9')
-            .select('"CITY/MUNICIPALITY"')
-            .eq('PROVINCE', selectedProvince)
-            .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', '');
-          data = r9Result.data;
-          error = r9Result.error;
-          break;
-        case 'REGION 10':
-          const r10Result = await supabase
-            .from('REGION 10')
-            .select('"CITY/MUNICIPALITY"')
-            .eq('PROVINCE', selectedProvince)
-            .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', '');
-          data = r10Result.data;
-          error = r10Result.error;
-          break;
-        case 'REGION 11':
-          const r11Result = await supabase
-            .from('REGION 11')
-            .select('"CITY/MUNICIPALITY"')
-            .eq('PROVINCE', selectedProvince)
-            .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', '');
-          data = r11Result.data;
-          error = r11Result.error;
-          break;
-        case 'REGION 12':
-          const r12Result = await supabase
-            .from('REGION 12')
-            .select('"CITY/MUNICIPALITY"')
-            .eq('PROVINCE', selectedProvince)
-            .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', '');
-          data = r12Result.data;
-          error = r12Result.error;
-          break;
-        case 'REGION 13':
-          const r13Result = await supabase
-            .from('REGION 13')
-            .select('"CITY/MUNICIPALITY"')
-            .eq('PROVINCE', selectedProvince)
-            .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', '');
-          data = r13Result.data;
-          error = r13Result.error;
-          break;
-        case 'CAR':
-          const carResult = await supabase
-            .from('CAR')
-            .select('"CITY/MUNICIPALITY"')
-            .eq('PROVINCE', selectedProvince)
-            .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', '');
-          data = carResult.data;
-          error = carResult.error;
-          break;
-        case 'BARMM':
-          const barmmResult = await supabase
-            .from('BARMM')
-            .select('"CITY/MUNICIPALITY"')
-            .eq('PROVINCE', selectedProvince)
-            .not('"CITY/MUNICIPALITY"', 'is', null)
-            .neq('"CITY/MUNICIPALITY"', '');
-          data = barmmResult.data;
-          error = barmmResult.error;
-          break;
-        default:
-          setIsLoading(false);
-          return;
-      }
+      const result = await query;
+      const data = result.data;
+      const error = result.error;
       
       console.log('Municipalities query result:', { data, error });
       
@@ -517,202 +225,17 @@ export default function LocationSelection() {
     setBarangays([]);
     
     try {
-      let data: RegionDataRow[] | null = null;
-      let error: any = null;
+      const query = supabase
+        .from(selectedRegion)
+        .select('BARANGAY')
+        .eq('PROVINCE', selectedProvince)
+        .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
+        .not('BARANGAY', 'is', null)
+        .neq('BARANGAY', '');
       
-      // Use specific queries for each region
-      switch(selectedRegion) {
-        case 'NCR':
-          const ncrResult = await supabase
-            .from('NCR')
-            .select('BARANGAY')
-            .eq('PROVINCE', selectedProvince)
-            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
-            .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', '');
-          data = ncrResult.data;
-          error = ncrResult.error;
-          break;
-        case 'REGION 1':
-          const r1Result = await supabase
-            .from('REGION 1')
-            .select('BARANGAY')
-            .eq('PROVINCE', selectedProvince)
-            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
-            .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', '');
-          data = r1Result.data;
-          error = r1Result.error;
-          break;
-        case 'REGION 2':
-          const r2Result = await supabase
-            .from('REGION 2')
-            .select('BARANGAY')
-            .eq('PROVINCE', selectedProvince)
-            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
-            .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', '');
-          data = r2Result.data;
-          error = r2Result.error;
-          break;
-        case 'REGION 3':
-          const r3Result = await supabase
-            .from('REGION 3')
-            .select('BARANGAY')
-            .eq('PROVINCE', selectedProvince)
-            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
-            .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', '');
-          data = r3Result.data;
-          error = r3Result.error;
-          break;
-        case 'REGION 4A':
-          const r4aResult = await supabase
-            .from('REGION 4A')
-            .select('BARANGAY')
-            .eq('PROVINCE', selectedProvince)
-            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
-            .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', '');
-          data = r4aResult.data;
-          error = r4aResult.error;
-          break;
-        case 'REGION 4B':
-          const r4bResult = await supabase
-            .from('REGION 4B')
-            .select('BARANGAY')
-            .eq('PROVINCE', selectedProvince)
-            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
-            .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', '');
-          data = r4bResult.data;
-          error = r4bResult.error;
-          break;
-        case 'REGION 5':
-          const r5Result = await supabase
-            .from('REGION 5')
-            .select('BARANGAY')
-            .eq('PROVINCE', selectedProvince)
-            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
-            .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', '');
-          data = r5Result.data;
-          error = r5Result.error;
-          break;
-        case 'REGION 6':
-          const r6Result = await supabase
-            .from('REGION 6')
-            .select('BARANGAY')
-            .eq('PROVINCE', selectedProvince)
-            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
-            .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', '');
-          data = r6Result.data;
-          error = r6Result.error;
-          break;
-        case 'REGION 7':
-          const r7Result = await supabase
-            .from('REGION 7')
-            .select('BARANGAY')
-            .eq('PROVINCE', selectedProvince)
-            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
-            .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', '');
-          data = r7Result.data;
-          error = r7Result.error;
-          break;
-        case 'REGION 8':
-          const r8Result = await supabase
-            .from('REGION 8')
-            .select('BARANGAY')
-            .eq('PROVINCE', selectedProvince)
-            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
-            .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', '');
-          data = r8Result.data;
-          error = r8Result.error;
-          break;
-        case 'REGION 9':
-          const r9Result = await supabase
-            .from('REGION 9')
-            .select('BARANGAY')
-            .eq('PROVINCE', selectedProvince)
-            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
-            .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', '');
-          data = r9Result.data;
-          error = r9Result.error;
-          break;
-        case 'REGION 10':
-          const r10Result = await supabase
-            .from('REGION 10')
-            .select('BARANGAY')
-            .eq('PROVINCE', selectedProvince)
-            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
-            .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', '');
-          data = r10Result.data;
-          error = r10Result.error;
-          break;
-        case 'REGION 11':
-          const r11Result = await supabase
-            .from('REGION 11')
-            .select('BARANGAY')
-            .eq('PROVINCE', selectedProvince)
-            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
-            .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', '');
-          data = r11Result.data;
-          error = r11Result.error;
-          break;
-        case 'REGION 12':
-          const r12Result = await supabase
-            .from('REGION 12')
-            .select('BARANGAY')
-            .eq('PROVINCE', selectedProvince)
-            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
-            .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', '');
-          data = r12Result.data;
-          error = r12Result.error;
-          break;
-        case 'REGION 13':
-          const r13Result = await supabase
-            .from('REGION 13')
-            .select('BARANGAY')
-            .eq('PROVINCE', selectedProvince)
-            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
-            .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', '');
-          data = r13Result.data;
-          error = r13Result.error;
-          break;
-        case 'CAR':
-          const carResult = await supabase
-            .from('CAR')
-            .select('BARANGAY')
-            .eq('PROVINCE', selectedProvince)
-            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
-            .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', '');
-          data = carResult.data;
-          error = carResult.error;
-          break;
-        case 'BARMM':
-          const barmmResult = await supabase
-            .from('BARMM')
-            .select('BARANGAY')
-            .eq('PROVINCE', selectedProvince)
-            .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
-            .not('BARANGAY', 'is', null)
-            .neq('BARANGAY', '');
-          data = barmmResult.data;
-          error = barmmResult.error;
-          break;
-        default:
-          setIsLoading(false);
-          return;
-      }
+      const result = await query;
+      const data = result.data;
+      const error = result.error;
       
       console.log('Barangays query result:', { data, error });
       
@@ -758,6 +281,58 @@ export default function LocationSelection() {
     navigate("/register/role");
   };
 
+  const handleRegionSelect = (region: { code: string; name: string }) => {
+    setSelectedRegion(region.code);
+    setRegionSearch(region.name);
+    setShowRegionDropdown(false);
+  };
+
+  const handleProvinceSelect = (province: string) => {
+    setSelectedProvince(province);
+    setProvinceSearch(toTitleCase(province));
+    setShowProvinceDropdown(false);
+  };
+
+  const handleMunicipalitySelect = (municipality: string) => {
+    setSelectedMunicipality(municipality);
+    setMunicipalitySearch(toTitleCase(municipality));
+    setShowMunicipalityDropdown(false);
+  };
+
+  const handleBarangaySelect = (barangay: string) => {
+    setSelectedBarangay(barangay);
+    setBarangaySearch(toTitleCase(barangay));
+    setShowBarangayDropdown(false);
+  };
+
+  const handleRegionFocus = () => {
+    if (selectedRegion) {
+      setRegionSearch("");
+    }
+    setShowRegionDropdown(true);
+  };
+
+  const handleProvinceFocus = () => {
+    if (selectedProvince) {
+      setProvinceSearch("");
+    }
+    setShowProvinceDropdown(true);
+  };
+
+  const handleMunicipalityFocus = () => {
+    if (selectedMunicipality) {
+      setMunicipalitySearch("");
+    }
+    setShowMunicipalityDropdown(true);
+  };
+
+  const handleBarangayFocus = () => {
+    if (selectedBarangay) {
+      setBarangaySearch("");
+    }
+    setShowBarangayDropdown(true);
+  };
+
   const filteredRegions = PHILIPPINE_REGIONS.filter(region =>
     region.name.toLowerCase().includes(regionSearch.toLowerCase()) ||
     region.code.toLowerCase().includes(regionSearch.toLowerCase())
@@ -789,9 +364,11 @@ export default function LocationSelection() {
           <div className="w-6" />
         </div>
 
-        {/* Clean Progress Bar */}
+        {/* Page indicator and Progress Bar */}
         <div className="px-6 py-4">
+          <p className="text-sm text-gray-600 mb-2">Step 2 of 4: Location</p>
           <div className="flex items-center gap-2 mb-4">
+            <div className="flex-1 h-1 bg-red-500 rounded-full"></div>
             <div className="flex-1 h-1 bg-red-500 rounded-full"></div>
             <div className="flex-1 h-1 bg-gray-200 rounded-full"></div>
             <div className="flex-1 h-1 bg-gray-200 rounded-full"></div>
@@ -801,17 +378,14 @@ export default function LocationSelection() {
         {/* Content */}
         <div className="flex-1 p-6 space-y-6">
           {/* Region Searchable Dropdown */}
-          <div className="relative">
+          <div className="relative" ref={regionRef}>
             <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Region</Label>
             <div className="relative">
               <Input
                 placeholder="Search and select region..."
                 value={regionSearch}
-                onChange={(e) => {
-                  setRegionSearch(e.target.value);
-                  setShowRegionDropdown(true);
-                }}
-                onFocus={() => setShowRegionDropdown(true)}
+                onChange={(e) => setRegionSearch(e.target.value)}
+                onFocus={handleRegionFocus}
                 className="h-12 pr-20"
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -829,16 +403,21 @@ export default function LocationSelection() {
                 <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showRegionDropdown ? 'rotate-180' : ''}`} />
               </div>
             </div>
-            {showRegionDropdown && filteredRegions.length > 0 && (
+            {showRegionDropdown && (
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                {filteredRegions.map((region, index) => (
+                {selectedRegion && (
+                  <button
+                    onClick={() => handleRegionSelect(PHILIPPINE_REGIONS.find(r => r.code === selectedRegion)!)}
+                    className="w-full text-left py-3 px-4 bg-blue-50 border-b border-gray-100 flex items-center gap-2"
+                  >
+                    <Check className="h-4 w-4 text-blue-600" />
+                    {PHILIPPINE_REGIONS.find(r => r.code === selectedRegion)?.name}
+                  </button>
+                )}
+                {filteredRegions.filter(r => r.code !== selectedRegion).map((region, index) => (
                   <button
                     key={index}
-                    onClick={() => {
-                      setSelectedRegion(region.code);
-                      setRegionSearch(region.name);
-                      setShowRegionDropdown(false);
-                    }}
+                    onClick={() => handleRegionSelect(region)}
                     className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
                   >
                     {region.name}
@@ -849,17 +428,14 @@ export default function LocationSelection() {
           </div>
 
           {/* Province Searchable Dropdown */}
-          <div className="relative">
+          <div className="relative" ref={provinceRef}>
             <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Province</Label>
             <div className="relative">
               <Input
                 placeholder="Search and select province..."
                 value={provinceSearch}
-                onChange={(e) => {
-                  setProvinceSearch(e.target.value);
-                  setShowProvinceDropdown(true);
-                }}
-                onFocus={() => selectedRegion && setShowProvinceDropdown(true)}
+                onChange={(e) => setProvinceSearch(e.target.value)}
+                onFocus={handleProvinceFocus}
                 disabled={!selectedRegion}
                 className={`h-12 pr-20 ${!selectedRegion ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
@@ -882,40 +458,47 @@ export default function LocationSelection() {
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                 {isLoading ? (
                   <div className="p-4 text-center text-gray-500">Loading provinces...</div>
-                ) : filteredProvinces.length === 0 ? (
-                  <div className="p-4 text-center text-gray-500">
-                    {provinces.length === 0 ? 'No provinces found for this region' : 'No provinces match your search'}
-                  </div>
                 ) : (
-                  filteredProvinces.map((province, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        setSelectedProvince(province);
-                        setProvinceSearch(toTitleCase(province));
-                        setShowProvinceDropdown(false);
-                      }}
-                      className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
-                    >
-                      {toTitleCase(province)}
-                    </button>
-                  ))
+                  <>
+                    {selectedProvince && (
+                      <button
+                        onClick={() => handleProvinceSelect(selectedProvince)}
+                        className="w-full text-left py-3 px-4 bg-blue-50 border-b border-gray-100 flex items-center gap-2"
+                      >
+                        <Check className="h-4 w-4 text-blue-600" />
+                        {toTitleCase(selectedProvince)}
+                      </button>
+                    )}
+                    {filteredProvinces.filter(p => p !== selectedProvince).length === 0 && provinces.length === 0 ? (
+                      <div className="p-4 text-center text-gray-500">No provinces found for this region</div>
+                    ) : filteredProvinces.filter(p => p !== selectedProvince).length === 0 ? (
+                      <div className="p-4 text-center text-gray-500">No provinces match your search</div>
+                    ) : (
+                      filteredProvinces.filter(p => p !== selectedProvince).map((province, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleProvinceSelect(province)}
+                          className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                        >
+                          {toTitleCase(province)}
+                        </button>
+                      ))
+                    )}
+                  </>
                 )}
               </div>
             )}
           </div>
 
-          <div className="relative">
+          {/* Municipality Dropdown */}
+          <div className="relative" ref={municipalityRef}>
             <Label className="text-sm font-medium text-gray-700 mb-3 block">Select City/Municipality</Label>
             <div className="relative">
               <Input
                 placeholder="Search and select city/municipality..."
                 value={municipalitySearch}
-                onChange={(e) => {
-                  setMunicipalitySearch(e.target.value);
-                  setShowMunicipalityDropdown(true);
-                }}
-                onFocus={() => selectedProvince && setShowMunicipalityDropdown(true)}
+                onChange={(e) => setMunicipalitySearch(e.target.value)}
+                onFocus={handleMunicipalityFocus}
                 disabled={!selectedProvince}
                 className={`h-12 pr-20 ${!selectedProvince ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
@@ -938,40 +521,47 @@ export default function LocationSelection() {
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                 {isLoading ? (
                   <div className="p-4 text-center text-gray-500">Loading municipalities...</div>
-                ) : filteredMunicipalities.length === 0 ? (
-                  <div className="p-4 text-center text-gray-500">
-                    {municipalities.length === 0 ? 'No municipalities found for this province' : 'No municipalities match your search'}
-                  </div>
                 ) : (
-                  filteredMunicipalities.map((municipality, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        setSelectedMunicipality(municipality);
-                        setMunicipalitySearch(toTitleCase(municipality));
-                        setShowMunicipalityDropdown(false);
-                      }}
-                      className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
-                    >
-                      {toTitleCase(municipality)}
-                    </button>
-                  ))
+                  <>
+                    {selectedMunicipality && (
+                      <button
+                        onClick={() => handleMunicipalitySelect(selectedMunicipality)}
+                        className="w-full text-left py-3 px-4 bg-blue-50 border-b border-gray-100 flex items-center gap-2"
+                      >
+                        <Check className="h-4 w-4 text-blue-600" />
+                        {toTitleCase(selectedMunicipality)}
+                      </button>
+                    )}
+                    {filteredMunicipalities.filter(m => m !== selectedMunicipality).length === 0 && municipalities.length === 0 ? (
+                      <div className="p-4 text-center text-gray-500">No municipalities found for this province</div>
+                    ) : filteredMunicipalities.filter(m => m !== selectedMunicipality).length === 0 ? (
+                      <div className="p-4 text-center text-gray-500">No municipalities match your search</div>
+                    ) : (
+                      filteredMunicipalities.filter(m => m !== selectedMunicipality).map((municipality, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleMunicipalitySelect(municipality)}
+                          className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                        >
+                          {toTitleCase(municipality)}
+                        </button>
+                      ))
+                    )}
+                  </>
                 )}
               </div>
             )}
           </div>
 
-          <div className="relative">
+          {/* Barangay Dropdown */}
+          <div className="relative" ref={barangayRef}>
             <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Barangay</Label>
             <div className="relative">
               <Input
                 placeholder="Search and select barangay..."
                 value={barangaySearch}
-                onChange={(e) => {
-                  setBarangaySearch(e.target.value);
-                  setShowBarangayDropdown(true);
-                }}
-                onFocus={() => selectedMunicipality && setShowBarangayDropdown(true)}
+                onChange={(e) => setBarangaySearch(e.target.value)}
+                onFocus={handleBarangayFocus}
                 disabled={!selectedMunicipality}
                 className={`h-12 pr-20 ${!selectedMunicipality ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
@@ -994,24 +584,33 @@ export default function LocationSelection() {
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                 {isLoading ? (
                   <div className="p-4 text-center text-gray-500">Loading barangays...</div>
-                ) : filteredBarangays.length === 0 ? (
-                  <div className="p-4 text-center text-gray-500">
-                    {barangays.length === 0 ? 'No barangays found for this municipality' : 'No barangays match your search'}
-                  </div>
                 ) : (
-                  filteredBarangays.map((barangay, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        setSelectedBarangay(barangay);
-                        setBarangaySearch(toTitleCase(barangay));
-                        setShowBarangayDropdown(false);
-                      }}
-                      className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
-                    >
-                      <div className="font-medium text-gray-900">{toTitleCase(barangay)}</div>
-                    </button>
-                  ))
+                  <>
+                    {selectedBarangay && (
+                      <button
+                        onClick={() => handleBarangaySelect(selectedBarangay)}
+                        className="w-full text-left py-3 px-4 bg-blue-50 border-b border-gray-100 flex items-center gap-2"
+                      >
+                        <Check className="h-4 w-4 text-blue-600" />
+                        {toTitleCase(selectedBarangay)}
+                      </button>
+                    )}
+                    {filteredBarangays.filter(b => b !== selectedBarangay).length === 0 && barangays.length === 0 ? (
+                      <div className="p-4 text-center text-gray-500">No barangays found for this municipality</div>
+                    ) : filteredBarangays.filter(b => b !== selectedBarangay).length === 0 ? (
+                      <div className="p-4 text-center text-gray-500">No barangays match your search</div>
+                    ) : (
+                      filteredBarangays.filter(b => b !== selectedBarangay).map((barangay, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleBarangaySelect(barangay)}
+                          className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                        >
+                          <div className="font-medium text-gray-900">{toTitleCase(barangay)}</div>
+                        </button>
+                      ))
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -1046,10 +645,12 @@ export default function LocationSelection() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-white to-orange-50 px-4 py-8">
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
-        {/* Clean Progress Bar */}
+        {/* Page indicator and Progress Bar */}
         <div className="px-8 py-6 border-b">
+          <p className="text-sm text-gray-600 mb-2 text-center">Step 2 of 4: Location</p>
           <div className="flex justify-between items-center mb-6">
             <div className="flex-1 h-1 bg-red-500 rounded-full"></div>
+            <div className="flex-1 h-1 bg-red-500 rounded-full mx-2"></div>
             <div className="flex-1 h-1 bg-gray-200 rounded-full mx-2"></div>
             <div className="flex-1 h-1 bg-gray-200 rounded-full"></div>
           </div>
@@ -1064,18 +665,15 @@ export default function LocationSelection() {
           </button>
           
           <div className="space-y-6">
-            {/* Desktop version with same searchable dropdowns */}
-            <div className="relative">
+            {/* Desktop version with same searchable dropdowns but updated refs and handlers */}
+            <div className="relative" ref={regionRef}>
               <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Region</Label>
               <div className="relative">
                 <Input
                   placeholder="Search and select region..."
                   value={regionSearch}
-                  onChange={(e) => {
-                    setRegionSearch(e.target.value);
-                    setShowRegionDropdown(true);
-                  }}
-                  onFocus={() => setShowRegionDropdown(true)}
+                  onChange={(e) => setRegionSearch(e.target.value)}
+                  onFocus={handleRegionFocus}
                   className="h-12 pr-20"
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -1095,17 +693,22 @@ export default function LocationSelection() {
               </div>
               {showRegionDropdown && (
                 <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                  {filteredRegions.length === 0 ? (
+                  {selectedRegion && (
+                    <button
+                      onClick={() => handleRegionSelect(PHILIPPINE_REGIONS.find(r => r.code === selectedRegion)!)}
+                      className="w-full text-left py-3 px-4 bg-blue-50 border-b border-gray-100 flex items-center gap-2"
+                    >
+                      <Check className="h-4 w-4 text-blue-600" />
+                      {PHILIPPINE_REGIONS.find(r => r.code === selectedRegion)?.name}
+                    </button>
+                  )}
+                  {filteredRegions.filter(r => r.code !== selectedRegion).length === 0 ? (
                     <div className="p-4 text-center text-gray-500">No regions found</div>
                   ) : (
-                    filteredRegions.map((region, index) => (
+                    filteredRegions.filter(r => r.code !== selectedRegion).map((region, index) => (
                       <button
                         key={index}
-                        onClick={() => {
-                          setSelectedRegion(region.code);
-                          setRegionSearch(region.name);
-                          setShowRegionDropdown(false);
-                        }}
+                        onClick={() => handleRegionSelect(region)}
                         className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
                       >
                         {region.name}
@@ -1116,18 +719,15 @@ export default function LocationSelection() {
               )}
             </div>
 
-            {/* Province Dropdown */}
-            <div className="relative">
+            {/* Province Dropdown - desktop version with same updates */}
+            <div className="relative" ref={provinceRef}>
               <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Province</Label>
               <div className="relative">
                 <Input
                   placeholder="Search and select province..."
                   value={provinceSearch}
-                  onChange={(e) => {
-                    setProvinceSearch(e.target.value);
-                    setShowProvinceDropdown(true);
-                  }}
-                  onFocus={() => selectedRegion && setShowProvinceDropdown(true)}
+                  onChange={(e) => setProvinceSearch(e.target.value)}
+                  onFocus={handleProvinceFocus}
                   disabled={!selectedRegion}
                   className={`h-12 pr-20 ${!selectedRegion ? 'opacity-50 cursor-not-allowed' : ''}`}
                 />
@@ -1150,40 +750,47 @@ export default function LocationSelection() {
                 <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                   {isLoading ? (
                     <div className="p-4 text-center text-gray-500">Loading provinces...</div>
-                  ) : filteredProvinces.length === 0 ? (
-                    <div className="p-4 text-center text-gray-500">
-                      {provinces.length === 0 ? 'No provinces found for this region' : 'No provinces match your search'}
-                    </div>
                   ) : (
-                    filteredProvinces.map((province, index) => (
-                      <button
-                        key={index}
-                        onClick={() => {
-                          setSelectedProvince(province);
-                          setProvinceSearch(toTitleCase(province));
-                          setShowProvinceDropdown(false);
-                        }}
-                        className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
-                      >
-                        {toTitleCase(province)}
-                      </button>
-                    ))
+                    <>
+                      {selectedProvince && (
+                        <button
+                          onClick={() => handleProvinceSelect(selectedProvince)}
+                          className="w-full text-left py-3 px-4 bg-blue-50 border-b border-gray-100 flex items-center gap-2"
+                        >
+                          <Check className="h-4 w-4 text-blue-600" />
+                          {toTitleCase(selectedProvince)}
+                        </button>
+                      )}
+                      {filteredProvinces.filter(p => p !== selectedProvince).length === 0 && provinces.length === 0 ? (
+                        <div className="p-4 text-center text-gray-500">No provinces found for this region</div>
+                      ) : filteredProvinces.filter(p => p !== selectedProvince).length === 0 ? (
+                        <div className="p-4 text-center text-gray-500">No provinces match your search</div>
+                      ) : (
+                        filteredProvinces.filter(p => p !== selectedProvince).map((province, index) => (
+                          <button
+                            key={index}
+                            onClick={() => handleProvinceSelect(province)}
+                            className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                          >
+                            {toTitleCase(province)}
+                          </button>
+                        ))
+                      )}
+                    </>
                   )}
                 </div>
               )}
             </div>
 
-            <div className="relative">
+            {/* Municipality dropdown - desktop version */}
+            <div className="relative" ref={municipalityRef}>
               <Label className="text-sm font-medium text-gray-700 mb-3 block">Select City/Municipality</Label>
               <div className="relative">
                 <Input
                   placeholder="Search and select city/municipality..."
                   value={municipalitySearch}
-                  onChange={(e) => {
-                    setMunicipalitySearch(e.target.value);
-                    setShowMunicipalityDropdown(true);
-                  }}
-                  onFocus={() => selectedProvince && setShowMunicipalityDropdown(true)}
+                  onChange={(e) => setMunicipalitySearch(e.target.value)}
+                  onFocus={handleMunicipalityFocus}
                   disabled={!selectedProvince}
                   className={`h-12 pr-20 ${!selectedProvince ? 'opacity-50 cursor-not-allowed' : ''}`}
                 />
@@ -1206,40 +813,47 @@ export default function LocationSelection() {
                 <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                   {isLoading ? (
                     <div className="p-4 text-center text-gray-500">Loading municipalities...</div>
-                  ) : filteredMunicipalities.length === 0 ? (
-                    <div className="p-4 text-center text-gray-500">
-                      {municipalities.length === 0 ? 'No municipalities found for this province' : 'No municipalities match your search'}
-                    </div>
                   ) : (
-                    filteredMunicipalities.map((municipality, index) => (
-                      <button
-                        key={index}
-                        onClick={() => {
-                          setSelectedMunicipality(municipality);
-                          setMunicipalitySearch(toTitleCase(municipality));
-                          setShowMunicipalityDropdown(false);
-                        }}
-                        className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
-                      >
-                        {toTitleCase(municipality)}
-                      </button>
-                    ))
+                    <>
+                      {selectedMunicipality && (
+                        <button
+                          onClick={() => handleMunicipalitySelect(selectedMunicipality)}
+                          className="w-full text-left py-3 px-4 bg-blue-50 border-b border-gray-100 flex items-center gap-2"
+                        >
+                          <Check className="h-4 w-4 text-blue-600" />
+                          {toTitleCase(selectedMunicipality)}
+                        </button>
+                      )}
+                      {filteredMunicipalities.filter(m => m !== selectedMunicipality).length === 0 && municipalities.length === 0 ? (
+                        <div className="p-4 text-center text-gray-500">No municipalities found for this province</div>
+                      ) : filteredMunicipalities.filter(m => m !== selectedMunicipality).length === 0 ? (
+                        <div className="p-4 text-center text-gray-500">No municipalities match your search</div>
+                      ) : (
+                        filteredMunicipalities.filter(m => m !== selectedMunicipality).map((municipality, index) => (
+                          <button
+                            key={index}
+                            onClick={() => handleMunicipalitySelect(municipality)}
+                            className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                          >
+                            {toTitleCase(municipality)}
+                          </button>
+                        ))
+                      )}
+                    </>
                   )}
                 </div>
               )}
             </div>
 
-            <div className="relative">
+            {/* Barangay dropdown - desktop version */}
+            <div className="relative" ref={barangayRef}>
               <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Barangay</Label>
               <div className="relative">
                 <Input
                   placeholder="Search and select barangay..."
                   value={barangaySearch}
-                  onChange={(e) => {
-                    setBarangaySearch(e.target.value);
-                    setShowBarangayDropdown(true);
-                  }}
-                  onFocus={() => selectedMunicipality && setShowBarangayDropdown(true)}
+                  onChange={(e) => setBarangaySearch(e.target.value)}
+                  onFocus={handleBarangayFocus}
                   disabled={!selectedMunicipality}
                   className={`h-12 pr-20 ${!selectedMunicipality ? 'opacity-50 cursor-not-allowed' : ''}`}
                 />
@@ -1262,24 +876,33 @@ export default function LocationSelection() {
                 <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                   {isLoading ? (
                     <div className="p-4 text-center text-gray-500">Loading barangays...</div>
-                  ) : filteredBarangays.length === 0 ? (
-                    <div className="p-4 text-center text-gray-500">
-                      {barangays.length === 0 ? 'No barangays found for this municipality' : 'No barangays match your search'}
-                    </div>
                   ) : (
-                    filteredBarangays.map((barangay, index) => (
-                      <button
-                        key={index}
-                        onClick={() => {
-                          setSelectedBarangay(barangay);
-                          setBarangaySearch(toTitleCase(barangay));
-                          setShowBarangayDropdown(false);
-                        }}
-                        className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
-                      >
-                        <div className="font-medium text-gray-900">{toTitleCase(barangay)}</div>
-                      </button>
-                    ))
+                    <>
+                      {selectedBarangay && (
+                        <button
+                          onClick={() => handleBarangaySelect(selectedBarangay)}
+                          className="w-full text-left py-3 px-4 bg-blue-50 border-b border-gray-100 flex items-center gap-2"
+                        >
+                          <Check className="h-4 w-4 text-blue-600" />
+                          {toTitleCase(selectedBarangay)}
+                        </button>
+                      )}
+                      {filteredBarangays.filter(b => b !== selectedBarangay).length === 0 && barangays.length === 0 ? (
+                        <div className="p-4 text-center text-gray-500">No barangays found for this municipality</div>
+                      ) : filteredBarangays.filter(b => b !== selectedBarangay).length === 0 ? (
+                        <div className="p-4 text-center text-gray-500">No barangays match your search</div>
+                      ) : (
+                        filteredBarangays.filter(b => b !== selectedBarangay).map((barangay, index) => (
+                          <button
+                            key={index}
+                            onClick={() => handleBarangaySelect(barangay)}
+                            className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                          >
+                            <div className="font-medium text-gray-900">{toTitleCase(barangay)}</div>
+                          </button>
+                        ))
+                      )}
+                    </>
                   )}
                 </div>
               )}
