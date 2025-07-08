@@ -87,6 +87,8 @@ export default function LocationSelection() {
     setIsLoading(true);
     try {
       let query;
+      
+      // Query the specific region table directly without additional filters
       switch(selectedRegion) {
         case 'NCR':
           query = supabase.from('Barangays').select('PROVINCE');
@@ -144,7 +146,6 @@ export default function LocationSelection() {
       }
       
       const { data, error } = await query
-        .eq('REGION', selectedRegion)
         .not('PROVINCE', 'is', null)
         .neq('PROVINCE', '');
       
@@ -154,7 +155,10 @@ export default function LocationSelection() {
       }
       
       if (data) {
-        const uniqueProvinces = [...new Set(data.map((item: any) => item.PROVINCE).filter(Boolean))] as string[];
+        const uniqueProvinces = [...new Set(
+          data.map((item: any) => item.PROVINCE)
+            .filter((province: string) => province && province.trim() !== '')
+        )] as string[];
         setProvinces(uniqueProvinces.sort());
       }
     } catch (error) {
@@ -170,6 +174,7 @@ export default function LocationSelection() {
     setIsLoading(true);
     try {
       let query;
+      
       switch(selectedRegion) {
         case 'NCR':
           query = supabase.from('Barangays').select('CITY/MUNICIPALITY');
@@ -227,7 +232,6 @@ export default function LocationSelection() {
       }
       
       const { data, error } = await query
-        .eq('REGION', selectedRegion)
         .eq('PROVINCE', selectedProvince)
         .not('CITY/MUNICIPALITY', 'is', null)
         .neq('CITY/MUNICIPALITY', '');
@@ -238,7 +242,10 @@ export default function LocationSelection() {
       }
       
       if (data) {
-        const uniqueMunicipalities = [...new Set(data.map((item: any) => item['CITY/MUNICIPALITY']).filter(Boolean))] as string[];
+        const uniqueMunicipalities = [...new Set(
+          data.map((item: any) => item['CITY/MUNICIPALITY'])
+            .filter((municipality: string) => municipality && municipality.trim() !== '')
+        )] as string[];
         setMunicipalities(uniqueMunicipalities.sort());
       }
     } catch (error) {
@@ -254,6 +261,7 @@ export default function LocationSelection() {
     setIsLoading(true);
     try {
       let query;
+      
       switch(selectedRegion) {
         case 'NCR':
           query = supabase.from('Barangays').select('BARANGAY');
@@ -311,7 +319,6 @@ export default function LocationSelection() {
       }
       
       const { data, error } = await query
-        .eq('REGION', selectedRegion)
         .eq('PROVINCE', selectedProvince)
         .eq('CITY/MUNICIPALITY', selectedMunicipality)
         .not('BARANGAY', 'is', null)
@@ -323,7 +330,10 @@ export default function LocationSelection() {
       }
       
       if (data) {
-        const uniqueBarangays = [...new Set(data.map((item: any) => item.BARANGAY).filter(Boolean))] as string[];
+        const uniqueBarangays = [...new Set(
+          data.map((item: any) => item.BARANGAY)
+            .filter((barangay: string) => barangay && barangay.trim() !== '')
+        )] as string[];
         setBarangays(uniqueBarangays.sort());
       }
     } catch (error) {
@@ -490,7 +500,6 @@ export default function LocationSelection() {
             )}
           </div>
 
-          {/* Municipality Searchable Dropdown */}
           <div className="relative">
             <Label className="text-sm font-medium text-gray-700 mb-3 block">Select City/Municipality</Label>
             <div className="relative">
@@ -539,7 +548,6 @@ export default function LocationSelection() {
             )}
           </div>
 
-          {/* Barangay Searchable Dropdown */}
           <div className="relative">
             <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Barangay</Label>
             <div className="relative">
@@ -742,7 +750,6 @@ export default function LocationSelection() {
               )}
             </div>
 
-            {/* Municipality Dropdown */}
             <div className="relative">
               <Label className="text-sm font-medium text-gray-700 mb-3 block">Select City/Municipality</Label>
               <div className="relative">
@@ -797,7 +804,6 @@ export default function LocationSelection() {
               )}
             </div>
 
-            {/* Barangay Dropdown */}
             <div className="relative">
               <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Barangay</Label>
               <div className="relative">
