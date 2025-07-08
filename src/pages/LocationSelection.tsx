@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -381,9 +380,8 @@ export default function LocationSelection() {
 
         {/* Page indicator and Progress Bar */}
         <div className="px-6 py-4">
-          <p className="text-sm text-gray-600 mb-2">Step 2 of 4: Location</p>
+          <p className="text-xl font-bold text-gray-900 mb-2">Location</p>
           <div className="flex items-center gap-2 mb-4">
-            <div className="flex-1 h-1 bg-red-500 rounded-full"></div>
             <div className="flex-1 h-1 bg-red-500 rounded-full"></div>
             <div className="flex-1 h-1 bg-gray-200 rounded-full"></div>
             <div className="flex-1 h-1 bg-gray-200 rounded-full"></div>
@@ -666,10 +664,9 @@ export default function LocationSelection() {
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
         {/* Page indicator and Progress Bar */}
         <div className="px-8 py-6 border-b">
-          <p className="text-sm text-gray-600 mb-2 text-center">Step 2 of 4: Location</p>
+          <p className="text-xl font-bold text-gray-900 mb-2 text-center">Location</p>
           <div className="flex justify-between items-center mb-6">
             <div className="flex-1 h-1 bg-red-500 rounded-full"></div>
-            <div className="flex-1 h-1 bg-red-500 rounded-full mx-2"></div>
             <div className="flex-1 h-1 bg-gray-200 rounded-full mx-2"></div>
             <div className="flex-1 h-1 bg-gray-200 rounded-full"></div>
           </div>
