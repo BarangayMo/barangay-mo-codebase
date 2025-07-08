@@ -57,7 +57,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       console.log('Fetching user profile for:', userId);
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('barangay, created_at')
+        .select('barangay, created_at, role')
         .eq('id', userId)
         .maybeSingle();
       
@@ -69,7 +69,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       console.log('Profile fetched successfully:', profile);
       return {
         barangay: profile?.barangay,
-        createdAt: profile?.created_at
+        createdAt: profile?.created_at,
+        role: profile?.role
       };
     } catch (error) {
       console.warn('Error fetching user profile (continuing anyway):', error);
@@ -78,16 +79,26 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   // Function to determine user role and redirect path
-  const getUserRoleAndRedirect = (email: string) => {
-    let role: UserRole = "resident";
+  const getUserRoleAndRedirect = (email: string, profileRole?: UserRole) => {
+    // Use profile role if available, otherwise determine from email
+    let role: UserRole = profileRole || "resident";
     let redirectPath = "/resident-home";
     
-    if (email.includes('official')) {
+    if (profileRole) {
+      role = profileRole;
+    } else if (email.includes('official')) {
       role = 'official';
-      redirectPath = '/official-dashboard';
     } else if (email.includes('admin')) {
       role = 'superadmin';
-      redirectPath = '/admin';
+    }
+    
+    // Set redirect path based on role
+    if (role === 'official') {
+      redirectPath = '/official-dashboard';
+    } else if (role === 'superadmin') {
+      redirectPath = '/admin-dashboard';
+    } else {
+      redirectPath = '/resident-home';
     }
     
     console.log('User role determined:', { email, role, redirectPath });
@@ -110,7 +121,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           setTimeout(async () => {
             try {
               const profileData = await fetchUserProfile(session.user.id);
-              const { role, redirectPath } = getUserRoleAndRedirect(session.user.email || '');
+              const { role, redirectPath } = getUserRoleAndRedirect(session.user.email || '', profileData.role);
               
               const userData = {
                 id: session.user.id,
@@ -169,7 +180,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setTimeout(async () => {
           try {
             const profileData = await fetchUserProfile(session.user.id);
-            const { role, redirectPath } = getUserRoleAndRedirect(session.user.email || '');
+            const { role, redirectPath } = getUserRoleAndRedirect(session.user.email || '', profileData.role);
             
             const userData = {
               id: session.user.id,
@@ -236,12 +247,31 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             first_name: userData.firstName,
             last_name: userData.lastName,
             role: userData.role,
+            barangay: userData.barangay,
+            region: userData.region,
+            province: userData.province,
+            municipality: userData.municipality,
           },
           emailRedirectTo: `${window.location.origin}/email-confirmation`
         }
       });
 
       if (!error) {
+        // Create profile entry with correct role and barangay
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: userData.id || email, // Fallback if no user ID available yet
+            first_name: userData.firstName,
+            last_name: userData.lastName,
+            role: userData.role,
+            barangay: userData.barangay,
+          });
+        
+        if (profileError) {
+          console.warn('Profile creation warning:', profileError);
+        }
+        
         navigate("/email-verification", { state: { email } });
       }
 

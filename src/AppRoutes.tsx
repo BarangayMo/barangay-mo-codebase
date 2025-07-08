@@ -21,6 +21,7 @@ import FinalRegister from "@/pages/FinalRegister";
 import OfficialsDashboard from "@/pages/OfficialsDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
 import PunongBarangayDashboard from "@/pages/officials/PunongBarangayDashboard";
+import ResidentHome from "@/pages/ResidentHome";
 
 function AppRoutes() {
   return (
@@ -41,6 +42,7 @@ function AppRoutes() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/resident-home" element={<ResidentHome />} />
       <Route path="/admin-dashboard" element={<AdminDashboard />} />
       <Route path="/official-dashboard" element={<OfficialsDashboard />} />
       <Route path="/officials/punong-barangay-dashboard" element={<PunongBarangayDashboard />} />
