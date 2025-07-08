@@ -18,6 +18,9 @@ import Officials from "@/pages/Officials";
 import Settings from "@/pages/Settings";
 import LogoUpload from "@/pages/LogoUpload";
 import FinalRegister from "@/pages/FinalRegister";
+import OfficialsDashboard from "@/pages/OfficialsDashboard";
+import AdminDashboard from "@/pages/AdminDashboard";
+import PunongBarangayDashboard from "@/pages/officials/PunongBarangayDashboard";
 
 function AppRoutes() {
   return (
@@ -38,6 +41,9 @@ function AppRoutes() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/admin-dashboard" element={<AdminDashboard />} />
+      <Route path="/official-dashboard" element={<OfficialsDashboard />} />
+      <Route path="/officials/punong-barangay-dashboard" element={<PunongBarangayDashboard />} />
       <Route path="/users" element={<Users />} />
       <Route path="/officials" element={<Officials />} />
       <Route path="/settings" element={<Settings />} />
