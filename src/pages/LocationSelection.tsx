@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,11 @@ const PHILIPPINE_REGIONS = [
   { code: "CAR", name: "Cordillera Administrative Region (CAR)" },
   { code: "BARMM", name: "Bangsamoro Autonomous Region in Muslim Mindanao (BARMM)" }
 ];
+
+// Helper function to convert text to title case
+const toTitleCase = (str: string) => {
+  return str.toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase());
+};
 
 export default function LocationSelection() {
   const [selectedRegion, setSelectedRegion] = useState("");
@@ -763,12 +769,12 @@ export default function LocationSelection() {
                       key={index}
                       onClick={() => {
                         setSelectedProvince(province);
-                        setProvinceSearch(province);
+                        setProvinceSearch(toTitleCase(province));
                         setShowProvinceDropdown(false);
                       }}
                       className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
                     >
-                      {province}
+                      {toTitleCase(province)}
                     </button>
                   ))
                 )}
@@ -812,12 +818,12 @@ export default function LocationSelection() {
                     key={index}
                     onClick={() => {
                       setSelectedMunicipality(municipality);
-                      setMunicipalitySearch(municipality);
+                      setMunicipalitySearch(toTitleCase(municipality));
                       setShowMunicipalityDropdown(false);
                     }}
                     className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
                   >
-                    {municipality}
+                    {toTitleCase(municipality)}
                   </button>
                 ))}
               </div>
@@ -860,12 +866,12 @@ export default function LocationSelection() {
                     key={index}
                     onClick={() => {
                       setSelectedBarangay(barangay);
-                      setBarangaySearch(barangay);
+                      setBarangaySearch(toTitleCase(barangay));
                       setShowBarangayDropdown(false);
                     }}
                     className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
                   >
-                    <div className="font-medium text-gray-900">{barangay}</div>
+                    <div className="font-medium text-gray-900">{toTitleCase(barangay)}</div>
                   </button>
                 ))}
               </div>
@@ -876,7 +882,7 @@ export default function LocationSelection() {
           {selectedBarangay && (
             <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
               <div className="text-center">
-                <div className="font-semibold text-green-900 text-lg">{selectedBarangay}</div>
+                <div className="font-semibold text-green-900 text-lg">{toTitleCase(selectedBarangay)}</div>
                 <div className="text-sm text-green-600">Barangay Selected</div>
               </div>
             </div>
@@ -1015,12 +1021,12 @@ export default function LocationSelection() {
                         key={index}
                         onClick={() => {
                           setSelectedProvince(province);
-                          setProvinceSearch(province);
+                          setProvinceSearch(toTitleCase(province));
                           setShowProvinceDropdown(false);
                         }}
                         className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
                       >
-                        {province}
+                        {toTitleCase(province)}
                       </button>
                     ))
                   )}
@@ -1069,12 +1075,12 @@ export default function LocationSelection() {
                         key={index}
                         onClick={() => {
                           setSelectedMunicipality(municipality);
-                          setMunicipalitySearch(municipality);
+                          setMunicipalitySearch(toTitleCase(municipality));
                           setShowMunicipalityDropdown(false);
                         }}
                         className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
                       >
-                        {municipality}
+                        {toTitleCase(municipality)}
                       </button>
                     ))
                   )}
@@ -1123,12 +1129,12 @@ export default function LocationSelection() {
                         key={index}
                         onClick={() => {
                           setSelectedBarangay(barangay);
-                          setBarangaySearch(barangay);
+                          setBarangaySearch(toTitleCase(barangay));
                           setShowBarangayDropdown(false);
                         }}
                         className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
                       >
-                        <div className="font-medium text-gray-900">{barangay}</div>
+                        <div className="font-medium text-gray-900">{toTitleCase(barangay)}</div>
                       </button>
                     ))
                   )}
@@ -1140,7 +1146,7 @@ export default function LocationSelection() {
             {selectedBarangay && (
               <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
                 <div className="text-center">
-                  <div className="font-semibold text-green-900 text-lg">{selectedBarangay}</div>
+                  <div className="font-semibold text-green-900 text-lg">{toTitleCase(selectedBarangay)}</div>
                   <div className="text-sm text-green-600">Barangay Selected</div>
                 </div>
               </div>
