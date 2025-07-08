@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -101,19 +102,35 @@ export default function OfficialsInfo() {
           // Update officials with database data
           setOfficials(prevOfficials => {
             return prevOfficials.map(official => {
-              // For numbered positions like "Sangguniang Barangay Member 1"
               let matchingDbOfficial;
               
-              if (official.position.startsWith('Sangguniang Barangay Member')) {
-                // Find any Sangguniang Barangay Member from DB
-                matchingDbOfficial = data.find((d: any) => 
+              // Direct position mapping
+              const positionMappings = {
+                'Punong Barangay': 'Punong Barangay',
+                'Barangay Secretary': 'Barangay Secretary',
+                'Barangay Treasurer': 'Barangay Treasurer',
+                'SK Chairperson': 'SK Chairperson'
+              };
+
+              // Check for direct match first
+              matchingDbOfficial = data.find((d: any) => 
+                d.POSITION === positionMappings[official.position as keyof typeof positionMappings] ||
+                d.POSITION === official.position
+              );
+
+              // For Sangguniang Barangay Members, find any available member
+              if (!matchingDbOfficial && official.position.startsWith('Sangguniang Barangay Member')) {
+                const sangguniangMembers = data.filter((d: any) => 
                   d.POSITION === 'Sangguniang Barangay Member'
                 );
-              } else {
-                // Direct match for other positions
-                matchingDbOfficial = data.find((d: any) => 
-                  d.POSITION === official.position
-                );
+                
+                // Get the member number from the position (e.g., "Member 1" -> 1)
+                const memberNumber = parseInt(official.position.split(' ').pop() || '1');
+                
+                // Try to assign members in order
+                if (sangguniangMembers[memberNumber - 1]) {
+                  matchingDbOfficial = sangguniangMembers[memberNumber - 1];
+                }
               }
 
               if (matchingDbOfficial) {
@@ -191,7 +208,13 @@ export default function OfficialsInfo() {
     if (!official.firstName && !official.lastName) {
       return null;
     }
-    const nameParts = [official.firstName, official.middleName, official.lastName, official.suffix].filter(Boolean);
+    const nameParts = [
+      official.firstName,
+      official.middleName,
+      official.lastName,
+      official.suffix
+    ].filter(part => part && part.trim());
+    
     return nameParts.length > 0 ? nameParts.join(' ') : null;
   };
 

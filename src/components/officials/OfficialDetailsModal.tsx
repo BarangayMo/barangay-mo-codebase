@@ -60,8 +60,10 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
   console.log('OfficialDetailsModal render:', { isOpen, official, formData });
 
   useEffect(() => {
-    if (official) {
-      console.log('OfficialDetailsModal useEffect:', official);
+    if (official && isOpen) {
+      console.log('OfficialDetailsModal useEffect - official data:', official);
+      
+      // Set form data with the official's data, ensuring we handle undefined/null values
       setFormData({
         firstName: official.firstName || "",
         middleName: official.middleName || "",
@@ -69,8 +71,16 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
         suffix: official.suffix || "none",
         position: official.position || ""
       });
+      
+      console.log('Form data set to:', {
+        firstName: official.firstName || "",
+        middleName: official.middleName || "",
+        lastName: official.lastName || "",
+        suffix: official.suffix || "none",
+        position: official.position || ""
+      });
     }
-  }, [official]);
+  }, [official, isOpen]);
 
   const handleSave = async () => {
     console.log('Saving official data:', formData);
@@ -91,6 +101,8 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
         suffix: formData.suffix === "none" ? "" : formData.suffix,
         isCompleted: true
       };
+
+      console.log('Data to save:', dataToSave);
 
       // Call the parent's onSave function
       onSave(dataToSave);
