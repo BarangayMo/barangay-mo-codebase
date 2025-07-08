@@ -51,34 +51,45 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
     firstName: official.firstName || "",
     middleName: official.middleName || "",
     lastName: official.lastName || "",
-    suffix: official.suffix || "",
+    suffix: official.suffix || "none",
     position: official.position
   });
 
+  console.log('OfficialDetailsModal render:', { isOpen, official, formData });
+
   useEffect(() => {
+    console.log('OfficialDetailsModal useEffect:', official);
     setFormData({
       firstName: official.firstName || "",
       middleName: official.middleName || "",
       lastName: official.lastName || "",
-      suffix: official.suffix || "",
+      suffix: official.suffix || "none",
       position: official.position
     });
   }, [official]);
 
   const handleSave = () => {
-    onSave({
+    console.log('Saving official data:', formData);
+    const dataToSave = {
       ...formData,
+      suffix: formData.suffix === "none" ? "" : formData.suffix,
       isCompleted: true
-    });
+    };
+    onSave(dataToSave);
     onClose();
   };
 
   const handleInputChange = (field: string, value: string) => {
+    console.log('Input change:', field, value);
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
   };
+
+  if (!isOpen) {
+    return null;
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -157,7 +168,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
                   <SelectValue placeholder="Select..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {SUFFIX_OPTIONS.map((suffix) => (
                     <SelectItem key={suffix} value={suffix}>
                       {suffix}

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -29,13 +28,13 @@ interface OfficialData {
 
 const EXECUTIVE_POSITIONS = [
   "Punong Barangay",
-  "Barangay Secretary",
+  "Barangay Secretary", 
   "Barangay Treasurer"
 ];
 
 const SANGGUNIANG_POSITIONS = [
   "Sangguniang Barangay Member 1",
-  "Sangguniang Barangay Member 2", 
+  "Sangguniang Barangay Member 2",
   "Sangguniang Barangay Member 3",
   "Sangguniang Barangay Member 4",
   "Sangguniang Barangay Member 5",
@@ -67,12 +66,15 @@ export default function OfficialsInfo() {
   // Load officials from database when component mounts
   useEffect(() => {
     const loadOfficials = async () => {
-      if (!locationState?.barangay || !locationState?.region) return;
+      if (!locationState?.barangay || !locationState?.region) {
+        console.log('Missing location data, skipping officials load');
+        return;
+      }
 
       try {
         console.log('Loading officials for barangay:', locationState.barangay);
         
-        // Use the database function to get officials with proper parameter object
+        // Try to call the database function with proper error handling
         const { data, error } = await supabase.rpc('get_officials_by_region' as any, {
           region_name: locationState.region,
           barangay_name: locationState.barangay,
@@ -82,6 +84,7 @@ export default function OfficialsInfo() {
 
         if (error) {
           console.error('Error loading officials:', error);
+          // Continue with empty officials list if function doesn't exist
           return;
         }
 
@@ -91,6 +94,7 @@ export default function OfficialsInfo() {
         }
       } catch (error) {
         console.error('Error in loadOfficials:', error);
+        // Continue with empty officials list
       }
     };
 
@@ -122,11 +126,13 @@ export default function OfficialsInfo() {
   }, [locationState]);
 
   const handleOfficialClick = (index: number) => {
+    console.log('Official clicked:', index, officials[index]);
     setSelectedOfficialIndex(index);
     setIsModalOpen(true);
   };
 
   const handleOfficialSave = (officialData: Partial<OfficialData>) => {
+    console.log('Saving official data:', officialData, 'at index:', selectedOfficialIndex);
     if (selectedOfficialIndex !== null) {
       const updatedOfficials = [...officials];
       updatedOfficials[selectedOfficialIndex] = {
@@ -135,6 +141,7 @@ export default function OfficialsInfo() {
         isCompleted: true
       };
       setOfficials(updatedOfficials);
+      console.log('Updated officials:', updatedOfficials);
     }
     setIsModalOpen(false);
     setSelectedOfficialIndex(null);
@@ -309,6 +316,7 @@ export default function OfficialsInfo() {
           <OfficialDetailsModal
             isOpen={isModalOpen}
             onClose={() => {
+              console.log('Closing modal');
               setIsModalOpen(false);
               setSelectedOfficialIndex(null);
             }}
@@ -424,6 +432,7 @@ export default function OfficialsInfo() {
           <OfficialDetailsModal
             isOpen={isModalOpen}
             onClose={() => {
+              console.log('Closing modal');
               setIsModalOpen(false);
               setSelectedOfficialIndex(null);
             }}
