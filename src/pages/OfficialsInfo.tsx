@@ -1,10 +1,12 @@
+
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, AlertTriangle } from "lucide-react";
+import { ChevronLeft, Edit2 } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { RegistrationProgress } from "@/components/ui/registration-progress";
 
 interface LocationState {
   role: string;
@@ -14,228 +16,134 @@ interface LocationState {
   barangay: string;
 }
 
+interface OfficialData {
+  name: string;
+  position: string;
+  isEditing: boolean;
+}
+
 export default function OfficialsInfo() {
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const locationState = location.state as LocationState;
 
-  const [formData, setFormData] = useState({
-    // Barangay Captain
-    captain: "",
-    
-    // 7 Councilors (arranged by ranking)
-    councilor1: "",
-    councilor2: "",
-    councilor3: "",
-    councilor4: "",
-    councilor5: "",
-    councilor6: "",
-    councilor7: "",
-    
-    // SK Chairman
-    skChairman: "",
-    
-    // 7 SK Councilors
-    skCouncilor1: "",
-    skCouncilor2: "",
-    skCouncilor3: "",
-    skCouncilor4: "",
-    skCouncilor5: "",
-    skCouncilor6: "",
-    skCouncilor7: "",
-    
-    // Barangay Secretary
-    secretary: "",
-    
-    // Optional fields
-    treasurer: "",
-    indigenousPeople: ""
-  });
+  const [officials, setOfficials] = useState<OfficialData[]>([
+    { name: "BILLY JOEL CAPISTRANO", position: "Punong Barangay", isEditing: false },
+    { name: "LUIS CAPINPIN", position: "Sangguniang Barangay Member", isEditing: false },
+    { name: "MERCEDES CAPISTRANO", position: "Sangguniang Barangay Member", isEditing: false },
+  ]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const handleEditOfficial = (index: number) => {
+    const updatedOfficials = [...officials];
+    updatedOfficials[index].isEditing = !updatedOfficials[index].isEditing;
+    setOfficials(updatedOfficials);
   };
 
-  const isFormValid = () => {
-    return formData.captain && 
-           formData.councilor1 && 
-           formData.skChairman && 
-           formData.skCouncilor1 && 
-           formData.secretary;
+  const handleOfficialNameChange = (index: number, newName: string) => {
+    const updatedOfficials = [...officials];
+    updatedOfficials[index].name = newName;
+    setOfficials(updatedOfficials);
   };
 
   const handleNext = () => {
-    if (isFormValid()) {
-      navigate("/register/details", { 
-        state: { 
-          ...locationState,
-          officials: formData
-        } 
-      });
-    }
+    navigate("/register/logo", { 
+      state: { 
+        ...locationState,
+        officials: officials
+      } 
+    });
+  };
+
+  const handleBack = () => {
+    navigate("/register/location", { 
+      state: locationState 
+    });
   };
 
   if (isMobile) {
     return (
       <div className="min-h-screen bg-white flex flex-col">
-        {/* Progress Bar */}
-        <div className="w-full bg-gray-200 h-1">
-          <div className="bg-blue-600 h-1 w-3/4"></div>
-        </div>
-
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b">
-          <Link to="/register/location" className="text-gray-600 hover:text-gray-800">
+        <div className="flex items-center justify-between px-4 py-4 bg-red-600 text-white">
+          <button onClick={handleBack} className="text-white hover:text-gray-200">
             <ChevronLeft className="h-6 w-6" />
-          </Link>
-          <h1 className="text-lg font-semibold text-gray-900">Officials Info</h1>
+          </button>
+          <h1 className="text-lg font-bold">Edit Barangay Official</h1>
           <div className="w-6" />
         </div>
 
-        {/* Already Registered Alert */}
-        <div className="mx-4 mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-          <div className="flex items-start space-x-2">
-            <AlertTriangle className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="text-sm font-medium text-orange-800">Already Registered</p>
-              <p className="text-xs text-orange-700 mt-1">
-                The barangay is already a Registered Smart Barangay. Please respect your barangay.
-              </p>
-            </div>
-          </div>
+        {/* Progress Bar */}
+        <div className="px-6 py-4">
+          <RegistrationProgress currentStep="details" />
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto">
-          <div className="p-4 space-y-6">
-            {/* Selected Location */}
+          <div className="p-4 space-y-4">
+            {/* Barangay Info */}
             <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-gray-900 mb-2">{locationState?.barangay}</h3>
-              <p className="text-sm text-gray-600">Registered Smart Barangay</p>
+              <h3 className="font-semibold text-gray-900 mb-1">Your Barangay Details:</h3>
+              <h2 className="text-lg font-bold text-gray-900">{locationState?.barangay}</h2>
             </div>
 
-            {/* Barangay Officials */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-gray-900">Barangay Officials</h3>
+            {/* Officials List */}
+            <div className="space-y-3">
+              <h3 className="font-semibold text-gray-900">Please check the names of your officials</h3>
               
-              {/* Barangay Captain */}
-              <div>
-                <Label htmlFor="captain" className="text-sm font-medium text-gray-700">
-                  Barangay Captain *
-                </Label>
-                <Input
-                  id="captain"
-                  name="captain"
-                  value={formData.captain}
-                  onChange={handleInputChange}
-                  placeholder="Enter full name"
-                  className="mt-1"
-                  required
-                />
-              </div>
-
-              {/* Councilors */}
-              <div className="space-y-3">
-                <Label className="text-sm font-medium text-gray-700">Barangay Councilors (by ranking)</Label>
-                {[1, 2, 3, 4, 5, 6, 7].map((num) => (
-                  <Input
-                    key={num}
-                    name={`councilor${num}`}
-                    value={formData[`councilor${num}` as keyof typeof formData]}
-                    onChange={handleInputChange}
-                    placeholder={`Councilor ${num}${num === 1 ? ' *' : ''}`}
-                    required={num === 1}
-                  />
-                ))}
-              </div>
+              {officials.map((official, index) => (
+                <div key={index} className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                      <span className="text-gray-600 text-sm">👤</span>
+                    </div>
+                    <div className="flex-1">
+                      {official.isEditing ? (
+                        <Input
+                          value={official.name}
+                          onChange={(e) => handleOfficialNameChange(index, e.target.value)}
+                          className="font-medium"
+                          onBlur={() => handleEditOfficial(index)}
+                        />
+                      ) : (
+                        <div>
+                          <p className="font-medium text-gray-900">{official.name}</p>
+                          <p className="text-sm text-gray-600">{official.position}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleEditOfficial(index)}
+                    className="p-2 text-gray-400 hover:text-gray-600"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
             </div>
 
-            {/* SK Officials */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-gray-900">Sangguniang Kabataan Officials</h3>
-              
-              {/* SK Chairman */}
-              <div>
-                <Label htmlFor="skChairman" className="text-sm font-medium text-gray-700">
-                  SK Chairman *
-                </Label>
-                <Input
-                  id="skChairman"
-                  name="skChairman"
-                  value={formData.skChairman}
-                  onChange={handleInputChange}
-                  placeholder="Enter full name"
-                  className="mt-1"
-                  required
-                />
-              </div>
-
-              {/* SK Councilors */}
-              <div className="space-y-3">
-                <Label className="text-sm font-medium text-gray-700">SK Councilors</Label>
-                {[1, 2, 3, 4, 5, 6, 7].map((num) => (
-                  <Input
-                    key={num}
-                    name={`skCouncilor${num}`}
-                    value={formData[`skCouncilor${num}` as keyof typeof formData]}
-                    onChange={handleInputChange}
-                    placeholder={`SK Councilor ${num}${num === 1 ? ' *' : ''}`}
-                    required={num === 1}
-                  />
-                ))}
+            {/* Verification Section */}
+            <div className="space-y-4 mt-6">
+              <h3 className="font-semibold text-gray-900">Verify/Confirm your official barangay number</h3>
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-sm">🇵🇭</span>
+                </div>
+                <span className="text-sm text-gray-600">+63</span>
+                <Input placeholder="12345" className="flex-1" />
               </div>
             </div>
 
-            {/* Other Officials */}
+            {/* Landline Section */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-gray-900">Other Officials</h3>
-              
-              {/* Secretary */}
-              <div>
-                <Label htmlFor="secretary" className="text-sm font-medium text-gray-700">
-                  Barangay Secretary *
-                </Label>
-                <Input
-                  id="secretary"
-                  name="secretary"
-                  value={formData.secretary}
-                  onChange={handleInputChange}
-                  placeholder="Enter full name"
-                  className="mt-1"
-                  required
-                />
-              </div>
-
-              {/* Treasurer (Optional) */}
-              <div>
-                <Label htmlFor="treasurer" className="text-sm font-medium text-gray-700">
-                  Treasurer (Optional)
-                </Label>
-                <Input
-                  id="treasurer"
-                  name="treasurer"
-                  value={formData.treasurer}
-                  onChange={handleInputChange}
-                  placeholder="Enter full name"
-                  className="mt-1"
-                />
-              </div>
-
-              {/* Indigenous People (Optional) */}
-              <div>
-                <Label htmlFor="indigenousPeople" className="text-sm font-medium text-gray-700">
-                  Indigenous People Representative (Optional)
-                </Label>
-                <Input
-                  id="indigenousPeople"
-                  name="indigenousPeople"
-                  value={formData.indigenousPeople}
-                  onChange={handleInputChange}
-                  placeholder="Enter full name"
-                  className="mt-1"
-                />
+              <h3 className="font-semibold text-gray-900">Landline</h3>
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-sm">📞</span>
+                </div>
+                <span className="text-sm text-gray-600">02</span>
+                <Input placeholder="047-222-5173" className="flex-1" />
               </div>
             </div>
           </div>
@@ -245,7 +153,6 @@ export default function OfficialsInfo() {
         <div className="p-4 border-t">
           <Button
             onClick={handleNext}
-            disabled={!isFormValid()}
             className="w-full bg-red-600 hover:bg-red-700 text-white py-3 h-12 text-base font-medium"
           >
             NEXT
@@ -255,154 +162,92 @@ export default function OfficialsInfo() {
     );
   }
 
-  // Desktop version - similar structure but with desktop styling
+  // Desktop version
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-orange-50 px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-white to-orange-50 px-4 py-8">
       <div className="max-w-2xl w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
         {/* Progress Bar */}
-        <div className="w-full bg-gray-200 h-1">
-          <div className="bg-blue-600 h-1 w-3/4"></div>
+        <div className="px-8 py-6 border-b">
+          <RegistrationProgress currentStep="details" />
         </div>
 
         <div className="p-8 max-h-[80vh] overflow-y-auto">
-          <Link to="/register/location" className="inline-flex items-center text-sm text-gray-500 mb-6 hover:text-gray-700">
+          <button onClick={handleBack} className="inline-flex items-center text-sm text-gray-500 mb-6 hover:text-gray-700">
             <ChevronLeft className="w-4 h-4 mr-1" /> Back
-          </Link>
+          </button>
           
           {/* Header */}
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Barangay Officials Information</h1>
-            <p className="text-gray-600">Please provide the names of current barangay officials</p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Edit Barangay Official</h1>
+            <p className="text-gray-600">Update official information for your barangay</p>
           </div>
 
-          {/* Content - similar to mobile but with desktop styling */}
+          {/* Content - similar structure to mobile but with desktop styling */}
           <div className="space-y-6">
-            {/* Selected Location */}
+            {/* Barangay Info */}
             <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-gray-900 mb-2">{locationState?.barangay}</h3>
-              <p className="text-sm text-gray-600">Registered Smart Barangay</p>
+              <h3 className="font-semibold text-gray-900 mb-1">Your Barangay Details:</h3>
+              <h2 className="text-lg font-bold text-gray-900">{locationState?.barangay}</h2>
             </div>
 
-            {/* Barangay Officials */}
+            {/* Officials List */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-gray-900">Barangay Officials</h3>
+              <h3 className="font-semibold text-gray-900">Please check the names of your officials</h3>
               
-              {/* Barangay Captain */}
-              <div>
-                <Label htmlFor="captain-desktop" className="text-sm font-medium text-gray-700">
-                  Barangay Captain *
-                </Label>
-                <Input
-                  id="captain-desktop"
-                  name="captain"
-                  value={formData.captain}
-                  onChange={handleInputChange}
-                  placeholder="Enter full name"
-                  className="mt-1"
-                  required
-                />
-              </div>
-
-              {/* Councilors */}
-              <div className="space-y-3">
-                <Label className="text-sm font-medium text-gray-700">Barangay Councilors (by ranking)</Label>
-                {[1, 2, 3, 4, 5, 6, 7].map((num) => (
-                  <Input
-                    key={num}
-                    name={`councilor${num}`}
-                    value={formData[`councilor${num}` as keyof typeof formData]}
-                    onChange={handleInputChange}
-                    placeholder={`Councilor ${num}${num === 1 ? ' *' : ''}`}
-                    required={num === 1}
-                  />
-                ))}
-              </div>
+              {officials.map((official, index) => (
+                <div key={index} className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                      <span className="text-gray-600 text-sm">👤</span>
+                    </div>
+                    <div className="flex-1">
+                      {official.isEditing ? (
+                        <Input
+                          value={official.name}
+                          onChange={(e) => handleOfficialNameChange(index, e.target.value)}
+                          className="font-medium"
+                          onBlur={() => handleEditOfficial(index)}
+                        />
+                      ) : (
+                        <div>
+                          <p className="font-medium text-gray-900">{official.name}</p>
+                          <p className="text-sm text-gray-600">{official.position}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleEditOfficial(index)}
+                    className="p-2 text-gray-400 hover:text-gray-600"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
             </div>
 
-            {/* SK Officials */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-gray-900">Sangguniang Kabataan Officials</h3>
-              
-              {/* SK Chairman */}
+            {/* Verification and contact sections */}
+            <div className="space-y-6">
               <div>
-                <Label htmlFor="skChairman-desktop" className="text-sm font-medium text-gray-700">
-                  SK Chairman *
-                </Label>
-                <Input
-                  id="skChairman-desktop"
-                  name="skChairman"
-                  value={formData.skChairman}
-                  onChange={handleInputChange}
-                  placeholder="Enter full name"
-                  className="mt-1"
-                  required
-                />
+                <h3 className="font-semibold text-gray-900 mb-3">Verify/Confirm your official barangay number</h3>
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm">🇵🇭</span>
+                  </div>
+                  <span className="text-sm text-gray-600">+63</span>
+                  <Input placeholder="12345" className="flex-1" />
+                </div>
               </div>
 
-              {/* SK Councilors */}
-              <div className="space-y-3">
-                <Label className="text-sm font-medium text-gray-700">SK Councilors</Label>
-                {[1, 2, 3, 4, 5, 6, 7].map((num) => (
-                  <Input
-                    key={num}
-                    name={`skCouncilor${num}`}
-                    value={formData[`skCouncilor${num}` as keyof typeof formData]}
-                    onChange={handleInputChange}
-                    placeholder={`SK Councilor ${num}${num === 1 ? ' *' : ''}`}
-                    required={num === 1}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Other Officials */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-gray-900">Other Officials</h3>
-              
-              {/* Secretary */}
               <div>
-                <Label htmlFor="secretary-desktop" className="text-sm font-medium text-gray-700">
-                  Barangay Secretary *
-                </Label>
-                <Input
-                  id="secretary-desktop"
-                  name="secretary"
-                  value={formData.secretary}
-                  onChange={handleInputChange}
-                  placeholder="Enter full name"
-                  className="mt-1"
-                  required
-                />
-              </div>
-
-              {/* Treasurer (Optional) */}
-              <div>
-                <Label htmlFor="treasurer-desktop" className="text-sm font-medium text-gray-700">
-                  Treasurer (Optional)
-                </Label>
-                <Input
-                  id="treasurer-desktop"
-                  name="treasurer"
-                  value={formData.treasurer}
-                  onChange={handleInputChange}
-                  placeholder="Enter full name"
-                  className="mt-1"
-                />
-              </div>
-
-              {/* Indigenous People (Optional) */}
-              <div>
-                <Label htmlFor="indigenousPeople-desktop" className="text-sm font-medium text-gray-700">
-                  Indigenous People Representative (Optional)
-                </Label>
-                <Input
-                  id="indigenousPeople-desktop"
-                  name="indigenousPeople"
-                  value={formData.indigenousPeople}
-                  onChange={handleInputChange}
-                  placeholder="Enter full name"
-                  className="mt-1"
-                />
+                <h3 className="font-semibold text-gray-900 mb-3">Landline</h3>
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm">📞</span>
+                  </div>
+                  <span className="text-sm text-gray-600">02</span>
+                  <Input placeholder="047-222-5173" className="flex-1" />
+                </div>
               </div>
             </div>
           </div>
@@ -410,7 +255,6 @@ export default function OfficialsInfo() {
           {/* Next Button */}
           <Button
             onClick={handleNext}
-            disabled={!isFormValid()}
             className="w-full bg-red-600 hover:bg-red-700 text-white py-3 text-base font-medium mt-8"
           >
             Next

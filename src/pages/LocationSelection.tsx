@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronDown, X, Check } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import { RegistrationProgress } from "@/components/ui/registration-progress";
 
 // Hardcoded Philippine regions with their full names
 const PHILIPPINE_REGIONS = [
@@ -34,19 +35,31 @@ const toTitleCase = (str: string) => {
 };
 
 export default function LocationSelection() {
-  const [selectedRegion, setSelectedRegion] = useState("");
-  const [selectedProvince, setSelectedProvince] = useState("");
-  const [selectedMunicipality, setSelectedMunicipality] = useState("");
-  const [selectedBarangay, setSelectedBarangay] = useState("");
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isMobile = useMediaQuery("(max-width: 768px)");
+
+  // Initialize state from location state if available
+  const [selectedRegion, setSelectedRegion] = useState(location.state?.region || "");
+  const [selectedProvince, setSelectedProvince] = useState(location.state?.province || "");
+  const [selectedMunicipality, setSelectedMunicipality] = useState(location.state?.municipality || "");
+  const [selectedBarangay, setSelectedBarangay] = useState(location.state?.barangay || "");
   
   const [provinces, setProvinces] = useState<string[]>([]);
   const [municipalities, setMunicipalities] = useState<string[]>([]);
   const [barangays, setBarangays] = useState<string[]>([]);
   
-  const [regionSearch, setRegionSearch] = useState("");
-  const [provinceSearch, setProvinceSearch] = useState("");
-  const [municipalitySearch, setMunicipalitySearch] = useState("");
-  const [barangaySearch, setBarangaySearch] = useState("");
+  // Initialize search states with display values if data exists
+  const [regionSearch, setRegionSearch] = useState(() => {
+    if (location.state?.region) {
+      const regionObj = PHILIPPINE_REGIONS.find(r => r.code === location.state.region);
+      return regionObj?.name || "";
+    }
+    return "";
+  });
+  const [provinceSearch, setProvinceSearch] = useState(location.state?.province ? toTitleCase(location.state.province) : "");
+  const [municipalitySearch, setMunicipalitySearch] = useState(location.state?.municipality ? toTitleCase(location.state.municipality) : "");
+  const [barangaySearch, setBarangaySearch] = useState(location.state?.barangay ? toTitleCase(location.state.barangay) : "");
   
   const [showRegionDropdown, setShowRegionDropdown] = useState(false);
   const [showProvinceDropdown, setShowProvinceDropdown] = useState(false);
@@ -61,9 +74,6 @@ export default function LocationSelection() {
   const municipalityRef = useRef<HTMLDivElement>(null);
   const barangayRef = useRef<HTMLDivElement>(null);
   
-  const navigate = useNavigate();
-  const isMobile = useMediaQuery("(max-width: 768px)");
-
   // Load provinces when region is selected
   useEffect(() => {
     if (selectedRegion) {
@@ -378,14 +388,9 @@ export default function LocationSelection() {
           <div className="w-6" />
         </div>
 
-        {/* Page indicator and Progress Bar */}
+        {/* Progress Bar */}
         <div className="px-6 py-4">
-          <p className="text-xl font-bold text-gray-900 mb-2">Location</p>
-          <div className="flex items-center gap-2 mb-4">
-            <div className="flex-1 h-1 bg-red-500 rounded-full"></div>
-            <div className="flex-1 h-1 bg-gray-200 rounded-full"></div>
-            <div className="flex-1 h-1 bg-gray-200 rounded-full"></div>
-          </div>
+          <RegistrationProgress currentStep="location" />
         </div>
 
         {/* Content */}
@@ -658,19 +663,14 @@ export default function LocationSelection() {
     );
   }
 
-  // Desktop version with similar changes
+  // Desktop version
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-white to-orange-50 px-4 py-8">
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
-        {/* Page indicator and Progress Bar */}
+        {/* Progress Bar */}
         <div className="px-8 py-6 border-b">
-          <p className="text-xl font-bold text-gray-900 mb-2 text-center">Location</p>
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex-1 h-1 bg-red-500 rounded-full"></div>
-            <div className="flex-1 h-1 bg-gray-200 rounded-full mx-2"></div>
-            <div className="flex-1 h-1 bg-gray-200 rounded-full"></div>
-          </div>
-          <div className="text-center">
+          <RegistrationProgress currentStep="location" />
+          <div className="text-center mt-4">
             <h2 className="text-2xl font-bold text-gray-900">Location</h2>
           </div>
         </div>
@@ -681,7 +681,7 @@ export default function LocationSelection() {
           </button>
           
           <div className="space-y-6">
-            {/* Desktop version with same searchable dropdowns but updated refs and handlers */}
+            {/* Region Searchable Dropdown */}
             <div className="relative" ref={regionRef}>
               <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Region</Label>
               <div className="relative">
@@ -709,7 +709,7 @@ export default function LocationSelection() {
                 </div>
               </div>
               {showRegionDropdown && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                   {selectedRegion && (
                     <button
                       onClick={() => handleRegionSelect(PHILIPPINE_REGIONS.find(r => r.code === selectedRegion)!)}
@@ -719,24 +719,20 @@ export default function LocationSelection() {
                       {PHILIPPINE_REGIONS.find(r => r.code === selectedRegion)?.name}
                     </button>
                   )}
-                  {filteredRegions.filter(r => r.code !== selectedRegion).length === 0 ? (
-                    <div className="p-4 text-center text-gray-500">No regions found</div>
-                  ) : (
-                    filteredRegions.filter(r => r.code !== selectedRegion).map((region, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleRegionSelect(region)}
-                        className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
-                      >
-                        {region.name}
-                      </button>
-                    ))
-                  )}
+                  {filteredRegions.filter(r => r.code !== selectedRegion).map((region, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleRegionSelect(region)}
+                      className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                    >
+                      {region.name}
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
 
-            {/* Province Dropdown - desktop version with same updates */}
+            {/* Province Searchable Dropdown */}
             <div className="relative" ref={provinceRef}>
               <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Province</Label>
               <div className="relative">
@@ -765,7 +761,7 @@ export default function LocationSelection() {
                 </div>
               </div>
               {showProvinceDropdown && selectedRegion && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                   {isLoading ? (
                     <div className="p-4 text-center text-gray-500">Loading provinces...</div>
                   ) : (
@@ -800,7 +796,7 @@ export default function LocationSelection() {
               )}
             </div>
 
-            {/* Municipality dropdown - desktop version */}
+            {/* Municipality Dropdown */}
             <div className="relative" ref={municipalityRef}>
               <Label className="text-sm font-medium text-gray-700 mb-3 block">Select City/Municipality</Label>
               <div className="relative">
@@ -829,7 +825,7 @@ export default function LocationSelection() {
                 </div>
               </div>
               {showMunicipalityDropdown && selectedProvince && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                   {isLoading ? (
                     <div className="p-4 text-center text-gray-500">Loading municipalities...</div>
                   ) : (
@@ -864,7 +860,7 @@ export default function LocationSelection() {
               )}
             </div>
 
-            {/* Barangay dropdown - desktop version */}
+            {/* Barangay Dropdown */}
             <div className="relative" ref={barangayRef}>
               <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Barangay</Label>
               <div className="relative">
@@ -893,7 +889,7 @@ export default function LocationSelection() {
                 </div>
               </div>
               {showBarangayDropdown && selectedMunicipality && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                   {isLoading ? (
                     <div className="p-4 text-center text-gray-500">Loading barangays...</div>
                   ) : (
@@ -940,13 +936,15 @@ export default function LocationSelection() {
           </div>
 
           {/* Next Button */}
-          <Button
-            onClick={handleNext}
-            disabled={!isFormValid}
-            className="w-full bg-red-600 hover:bg-red-700 text-white py-4 h-12 text-base font-medium rounded-lg mt-8 disabled:bg-gray-300 disabled:cursor-not-allowed"
-          >
-            Next
-          </Button>
+          <div className="p-6 bg-white border-t">
+            <Button
+              onClick={handleNext}
+              disabled={!isFormValid}
+              className="w-full bg-red-600 hover:bg-red-700 text-white py-4 h-12 text-base font-medium rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed"
+            >
+              Next
+            </Button>
+          </div>
         </div>
       </div>
     </div>

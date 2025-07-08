@@ -17,10 +17,20 @@ export function RegistrationProgress({ currentStep, className }: RegistrationPro
 
   return (
     <div className={cn("space-y-4", className)}>
-      {/* Page Title */}
-      <p className="text-xl font-bold text-gray-900 text-center">
-        {steps[currentStepIndex]?.label}
-      </p>
+      {/* Page Names */}
+      <div className="flex justify-between text-sm text-gray-600">
+        {steps.map((step, index) => (
+          <span 
+            key={step.key}
+            className={cn(
+              "font-medium",
+              index === currentStepIndex ? "text-gray-900 font-bold" : "text-gray-500"
+            )}
+          >
+            {step.label}
+          </span>
+        ))}
+      </div>
       
       {/* Progress Bar */}
       <div className="flex items-center gap-2">
