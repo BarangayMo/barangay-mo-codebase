@@ -150,12 +150,12 @@ export default function Register() {
         </div>
 
         {/* Progress Bar */}
-        <div className="px-6 py-4">
+        <div className="px-6 py-4 bg-white">
           <RegistrationProgress currentStep="register" userRole={locationState.role as 'resident' | 'official'} />
         </div>
 
         {/* Content */}
-        <div className="flex-1 flex flex-col justify-between p-4">
+        <div className="flex-1 flex flex-col justify-between p-4 bg-white">
           <div className="space-y-6">
             {/* Logo and Title */}
             <div className="text-center">
@@ -357,14 +357,14 @@ export default function Register() {
 
   // Desktop version with same fixes applied
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-white to-orange-50 px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
         {/* Progress Bar */}
-        <div className="px-8 py-6 border-b">
+        <div className="px-8 py-6 border-b bg-white">
           <RegistrationProgress currentStep="register" userRole={locationState.role as 'resident' | 'official'} />
         </div>
 
-        <div className="p-8">
+        <div className="p-8 bg-white">
           <button 
             onClick={() => navigate(getBackLink(), { state: locationState })}
             className="inline-flex items-center text-sm text-gray-500 mb-6 hover:text-gray-700"

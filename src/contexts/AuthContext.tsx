@@ -248,7 +248,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       console.log("Registration attempt with userData:", userData);
       
-      // Ensure all required metadata fields are present with correct keys
+      // Create clean metadata object with all required fields
       const metaData = {
         first_name: userData.firstName || '',
         last_name: userData.lastName || '',
@@ -259,15 +259,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         province: userData.province || '',
         municipality: userData.municipality || '',
         barangay: userData.barangay || '',
-        phone_number: userData.phoneNumber || null,
-        landline_number: userData.landlineNumber || null,
-        logo_url: userData.logoUrl || null,
-        officials: userData.officials || null
+        phone_number: userData.phoneNumber || '',
+        landline_number: userData.landlineNumber || '',
+        logo_url: userData.logoUrl || '',
+        officials: userData.officials ? JSON.stringify(userData.officials) : ''
       };
 
-      console.log("Metadata being sent:", metaData);
+      console.log("Clean metadata being sent:", metaData);
 
-      // Sign up the user with metadata
+      // Sign up the user with clean metadata
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,

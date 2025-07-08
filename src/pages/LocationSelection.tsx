@@ -38,6 +38,13 @@ export default function LocationSelection() {
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 768px)");
+  const locationState = location.state;
+
+  // If no role selected, redirect to role selection
+  if (!locationState?.role) {
+    navigate('/register/role');
+    return null;
+  }
 
   // Initialize state from location state if available
   const [selectedRegion, setSelectedRegion] = useState(location.state?.region || "");
@@ -261,15 +268,20 @@ export default function LocationSelection() {
 
   const handleNext = () => {
     if (selectedRegion && selectedProvince && selectedMunicipality && selectedBarangay) {
-      navigate("/register/officials", { 
-        state: { 
-          role: "official",
-          region: selectedRegion,
-          province: selectedProvince,
-          municipality: selectedMunicipality,
-          barangay: selectedBarangay
-        } 
-      });
+      const nextState = {
+        role: locationState.role,
+        region: selectedRegion,
+        province: selectedProvince,
+        municipality: selectedMunicipality,
+        barangay: selectedBarangay
+      };
+
+      if (locationState.role === "official") {
+        navigate("/register/officials", { state: nextState });
+      } else {
+        // Resident goes directly to register
+        navigate("/register", { state: nextState });
+      }
     }
   };
 
@@ -379,8 +391,10 @@ export default function LocationSelection() {
   if (isMobile) {
     return (
       <div className="min-h-screen bg-white flex flex-col">
-        {/* Header with red background */}
-        <div className="flex items-center justify-between px-4 py-4 bg-red-600 text-white">
+        {/* Header with role-based color */}
+        <div className={`flex items-center justify-between px-4 py-4 text-white ${
+          locationState.role === 'official' ? 'bg-red-600' : 'bg-blue-600'
+        }`}>
           <button onClick={handleBack} className="text-white hover:text-gray-200">
             <ChevronLeft className="h-6 w-6" />
           </button>
@@ -389,12 +403,15 @@ export default function LocationSelection() {
         </div>
 
         {/* Progress Bar */}
-        <div className="px-6 py-4">
-          <RegistrationProgress currentStep="location" />
+        <div className="px-6 py-4 bg-white">
+          <RegistrationProgress 
+            currentStep="location" 
+            userRole={locationState.role as 'resident' | 'official'} 
+          />
         </div>
 
         {/* Content */}
-        <div className="flex-1 p-6 space-y-6">
+        <div className="flex-1 p-6 space-y-6 bg-white">
           {/* Region Searchable Dropdown */}
           <div className="relative" ref={regionRef}>
             <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Region</Label>
@@ -654,7 +671,11 @@ export default function LocationSelection() {
           <Button
             onClick={handleNext}
             disabled={!isFormValid}
-            className="w-full bg-red-600 hover:bg-red-700 text-white py-4 h-12 text-base font-medium rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed"
+            className={`w-full text-white py-4 h-12 text-base font-medium rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed ${
+              locationState.role === 'official' 
+                ? 'bg-red-600 hover:bg-red-700' 
+                : 'bg-blue-600 hover:bg-blue-700'
+            }`}
           >
             Next
           </Button>
@@ -665,17 +686,20 @@ export default function LocationSelection() {
 
   // Desktop version
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-white to-orange-50 px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
         {/* Progress Bar */}
-        <div className="px-8 py-6 border-b">
-          <RegistrationProgress currentStep="location" />
+        <div className="px-8 py-6 border-b bg-white">
+          <RegistrationProgress 
+            currentStep="location" 
+            userRole={locationState.role as 'resident' | 'official'} 
+          />
           <div className="text-center mt-4">
             <h2 className="text-2xl font-bold text-gray-900">Location</h2>
           </div>
         </div>
 
-        <div className="p-8">
+        <div className="p-8 bg-white">
           <button onClick={handleBack} className="inline-flex items-center text-sm text-gray-500 mb-6 hover:text-gray-700">
             <ChevronLeft className="w-4 h-4 mr-1" /> Back
           </button>
@@ -936,11 +960,15 @@ export default function LocationSelection() {
           </div>
 
           {/* Next Button */}
-          <div className="p-6 bg-white border-t">
+          <div className="mt-8">
             <Button
               onClick={handleNext}
               disabled={!isFormValid}
-              className="w-full bg-red-600 hover:bg-red-700 text-white py-4 h-12 text-base font-medium rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed"
+              className={`w-full text-white py-4 h-12 text-base font-medium rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed ${
+                locationState.role === 'official' 
+                  ? 'bg-red-600 hover:bg-red-700' 
+                  : 'bg-blue-600 hover:bg-blue-700'
+              }`}
             >
               Next
             </Button>

@@ -21,11 +21,11 @@ export default function RoleSelection() {
       <div className="min-h-screen bg-white flex flex-col">
         {/* Progress Bar */}
         <div className="w-full bg-gray-200 h-1">
-          <div className="bg-blue-600 h-1 w-1/4"></div>
+          <div className={`h-1 w-1/4 ${selectedRole === 'official' ? 'bg-red-600' : 'bg-blue-600'}`}></div>
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b">
+        <div className="flex items-center justify-between px-4 py-3 border-b bg-white">
           <Link to="/welcome" className="text-gray-600 hover:text-gray-800">
             <ChevronLeft className="h-6 w-6" />
           </Link>
@@ -34,7 +34,7 @@ export default function RoleSelection() {
         </div>
 
         {/* Content */}
-        <div className="flex-1 flex flex-col justify-between p-4">
+        <div className="flex-1 flex flex-col justify-between p-4 bg-white">
           <div className="space-y-6">
             {/* Logo and Title */}
             <div className="text-center">
@@ -117,7 +117,9 @@ export default function RoleSelection() {
           <Button
             onClick={handleNext}
             disabled={!selectedRole}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 h-12 text-base font-medium"
+            className={`w-full text-white py-3 h-12 text-base font-medium ${
+              selectedRole === 'official' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'
+            }`}
           >
             Next
           </Button>
@@ -128,14 +130,14 @@ export default function RoleSelection() {
 
   // Desktop version
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-orange-50 px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
         {/* Progress Bar */}
         <div className="w-full bg-gray-200 h-1">
-          <div className="bg-blue-600 h-1 w-1/4"></div>
+          <div className={`h-1 w-1/4 ${selectedRole === 'official' ? 'bg-red-600' : 'bg-blue-600'}`}></div>
         </div>
 
-        <div className="p-8">
+        <div className="p-8 bg-white">
           <Link to="/welcome" className="inline-flex items-center text-sm text-gray-500 mb-6 hover:text-gray-700">
             <ChevronLeft className="w-4 h-4 mr-1" /> Back
           </Link>
@@ -220,7 +222,9 @@ export default function RoleSelection() {
           <Button
             onClick={handleNext}
             disabled={!selectedRole}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-base font-medium"
+            className={`w-full text-white py-3 text-base font-medium ${
+              selectedRole === 'official' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'
+            }`}
           >
             Next
           </Button>
