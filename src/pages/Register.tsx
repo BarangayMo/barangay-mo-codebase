@@ -105,23 +105,17 @@ export default function Register() {
 
   const getBackLink = () => {
     if (locationState?.role === "official") {
-      return "/register/logo";
+      return "/register/officials";
     }
     return "/register/role";
   };
-
-  // For officials, redirect to final register page
-  if (locationState?.role === "official") {
-    navigate("/register/final", { state: locationState });
-    return null;
-  }
 
   if (isMobile) {
     return (
       <div className="min-h-screen bg-white flex flex-col overflow-hidden">
         {/* Progress Bar */}
         <div className="w-full bg-gray-200 h-1">
-          <div className="bg-red-600 h-1 w-full"></div>
+          <div className="bg-blue-600 h-1 w-full"></div>
         </div>
 
         {/* Header */}
@@ -158,7 +152,7 @@ export default function Register() {
                       name="firstName"
                       value={formData.firstName}
                       onChange={handleInputChange}
-                      className="mt-1 h-9 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500"
+                      className="mt-1 h-9 text-sm border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                       required
                     />
                   </div>
@@ -168,7 +162,7 @@ export default function Register() {
                       value={formData.suffix} 
                       onValueChange={(value) => setFormData(prev => ({ ...prev, suffix: value }))}
                     >
-                      <SelectTrigger className="mt-1 h-9 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500">
+                      <SelectTrigger className="mt-1 h-9 text-sm border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                         <SelectValue placeholder="None" />
                       </SelectTrigger>
                       <SelectContent>
@@ -190,7 +184,7 @@ export default function Register() {
                     value={formData.middleName}
                     onChange={handleInputChange}
                     disabled={formData.hasNoMiddleName}
-                    className="mt-1 h-9 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500 disabled:bg-gray-100"
+                    className="mt-1 h-9 text-sm border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-100"
                   />
                   <div className="flex items-center mt-1">
                     <input
@@ -199,7 +193,7 @@ export default function Register() {
                       name="hasNoMiddleName"
                       checked={formData.hasNoMiddleName}
                       onChange={handleInputChange}
-                      className="rounded border-gray-300 text-red-600 focus:ring-red-500 w-3 h-3"
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-3 h-3"
                     />
                     <label htmlFor="hasNoMiddleName" className="ml-2 text-xs text-gray-600">
                       I have no middle name
@@ -214,7 +208,7 @@ export default function Register() {
                     name="lastName"
                     value={formData.lastName}
                     onChange={handleInputChange}
-                    className="mt-1 h-9 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500"
+                    className="mt-1 h-9 text-sm border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                     required
                   />
                 </div>
@@ -227,7 +221,7 @@ export default function Register() {
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="mt-1 h-9 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500"
+                    className="mt-1 h-9 text-sm border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                     required
                   />
                 </div>
@@ -240,7 +234,7 @@ export default function Register() {
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    className="mt-1 h-9 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500"
+                    className="mt-1 h-9 text-sm border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                     required
                   />
                   <p className="text-xs text-gray-500 mt-1">Must be at least 8 characters</p>
@@ -249,16 +243,16 @@ export default function Register() {
 
               {/* Terms */}
               <div className="flex items-start space-x-2 pt-1">
-                <input type="checkbox" id="terms" className="rounded border-gray-300 text-red-600 focus:ring-red-500 mt-0.5 w-3 h-3" required />
+                <input type="checkbox" id="terms" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mt-0.5 w-3 h-3" required />
                 <label htmlFor="terms" className="text-xs text-gray-600">
-                  I agree to the <Link to="/terms" className="text-red-600 font-medium hover:underline">Terms of Service</Link> and <Link to="/privacy" className="text-red-600 font-medium hover:underline">Privacy Policy</Link>
+                  I agree to the <Link to="/terms" className="text-blue-600 font-medium hover:underline">Terms of Service</Link> and <Link to="/privacy" className="text-blue-600 font-medium hover:underline">Privacy Policy</Link>
                 </label>
               </div>
 
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="w-full bg-red-600 hover:bg-red-700 text-white py-2 h-10 text-sm font-medium"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 h-10 text-sm font-medium"
                 disabled={isLoading}
               >
                 {isLoading ? "Creating Account..." : "Create new account"}
@@ -269,7 +263,7 @@ export default function Register() {
             <div className="text-center pb-4">
               <p className="text-gray-500 text-sm">
                 Already have an account?{" "}
-                <Link to="/mpin" className="font-medium text-red-600 hover:text-red-700 hover:underline">
+                <Link to="/mpin" className="font-medium text-blue-600 hover:text-blue-700 hover:underline">
                   Login here
                 </Link>
               </p>
@@ -280,13 +274,13 @@ export default function Register() {
     );
   }
 
-  // Desktop version - similar structure but with desktop styling and red colors
+  // Desktop version - similar structure but with desktop styling
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-white to-orange-50 px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-orange-50 px-4 py-8">
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
         {/* Progress Bar */}
         <div className="w-full bg-gray-200 h-1">
-          <div className="bg-red-600 h-1 w-full"></div>
+          <div className="bg-blue-600 h-1 w-full"></div>
         </div>
 
         <div className="p-8">
@@ -315,7 +309,7 @@ export default function Register() {
                     name="firstName"
                     value={formData.firstName}
                     onChange={handleInputChange}
-                    className="mt-1 border-gray-300 focus:border-red-500 focus:ring-red-500"
+                    className="mt-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                     required
                   />
                 </div>
@@ -325,7 +319,7 @@ export default function Register() {
                     value={formData.suffix} 
                     onValueChange={(value) => setFormData(prev => ({ ...prev, suffix: value }))}
                   >
-                    <SelectTrigger className="mt-1 border-gray-300 focus:border-red-500 focus:ring-red-500">
+                    <SelectTrigger className="mt-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                       <SelectValue placeholder="None" />
                     </SelectTrigger>
                     <SelectContent>
@@ -347,7 +341,7 @@ export default function Register() {
                   value={formData.middleName}
                   onChange={handleInputChange}
                   disabled={formData.hasNoMiddleName}
-                  className="mt-1 border-gray-300 focus:border-red-500 focus:ring-red-500 disabled:bg-gray-100"
+                  className="mt-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-100"
                 />
                 <div className="flex items-center mt-2">
                   <input
@@ -356,7 +350,7 @@ export default function Register() {
                     name="hasNoMiddleName"
                     checked={formData.hasNoMiddleName}
                     onChange={handleInputChange}
-                    className="rounded border-gray-300 text-red-600 focus:ring-red-500"
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                   <label htmlFor="hasNoMiddleName-desktop" className="ml-2 text-sm text-gray-600">
                     I have no middle name
@@ -371,7 +365,7 @@ export default function Register() {
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleInputChange}
-                  className="mt-1 border-gray-300 focus:border-red-500 focus:ring-red-500"
+                  className="mt-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                   required
                 />
               </div>
@@ -384,7 +378,7 @@ export default function Register() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="mt-1 border-gray-300 focus:border-red-500 focus:ring-red-500"
+                  className="mt-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                   required
                 />
               </div>
@@ -397,7 +391,7 @@ export default function Register() {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="mt-1 border-gray-300 focus:border-red-500 focus:ring-red-500"
+                  className="mt-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                   required
                 />
                 <p className="text-xs text-gray-500 mt-1">Must be at least 8 characters</p>
@@ -406,16 +400,16 @@ export default function Register() {
 
             {/* Terms */}
             <div className="flex items-start space-x-2 pt-2">
-              <input type="checkbox" id="terms-desktop" className="rounded border-gray-300 text-red-600 focus:ring-red-500 mt-0.5" required />
+              <input type="checkbox" id="terms-desktop" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mt-0.5" required />
               <label htmlFor="terms-desktop" className="text-sm text-gray-600">
-                I agree to the <Link to="/terms" className="text-red-600 font-medium hover:underline">Terms of Service</Link> and <Link to="/privacy" className="text-red-600 font-medium hover:underline">Privacy Policy</Link>
+                I agree to the <Link to="/terms" className="text-blue-600 font-medium hover:underline">Terms of Service</Link> and <Link to="/privacy" className="text-blue-600 font-medium hover:underline">Privacy Policy</Link>
               </label>
             </div>
             
             {/* Submit Button */}
             <Button
               type="submit"
-              className="w-full bg-red-600 hover:bg-red-700 text-white py-3 text-base font-medium"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-base font-medium"
               disabled={isLoading}
             >
               {isLoading ? "Creating Account..." : "Create new account"}
@@ -426,7 +420,7 @@ export default function Register() {
           <div className="mt-6 text-center">
             <p className="text-gray-500 text-sm">
               Already have an account?{" "}
-              <Link to="/login" className="font-medium text-red-600 hover:text-red-700 hover:underline">
+              <Link to="/login" className="font-medium text-blue-600 hover:text-blue-700 hover:underline">
                 Login here
               </Link>
             </p>

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,6 @@ import { ChevronLeft, Edit2, Phone, User } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { RegistrationProgress } from "@/components/ui/registration-progress";
 import { OfficialDetailsModal } from "@/components/officials/OfficialDetailsModal";
-import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 
 interface LocationState {
@@ -61,16 +61,14 @@ export default function OfficialsInfo() {
 
   const [selectedOfficialIndex, setSelectedOfficialIndex] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState("09171234567");
+  const [phoneNumber, setPhoneNumber] = useState("9171234567");
   const [landlineNumber, setLandlineNumber] = useState("047-222-5173");
-  const [isLoading, setIsLoading] = useState(true);
 
   // Load officials from database when component mounts
   useEffect(() => {
     const loadOfficials = async () => {
       if (!locationState?.barangay || !locationState?.region) {
         console.log('Missing location data, skipping officials load. LocationState:', locationState);
-        setIsLoading(false);
         return;
       }
 
@@ -95,7 +93,6 @@ export default function OfficialsInfo() {
 
         if (error) {
           console.error('Error loading officials:', error);
-          setIsLoading(false);
           return;
         }
 
@@ -167,8 +164,6 @@ export default function OfficialsInfo() {
         }
       } catch (error) {
         console.error('Error in loadOfficials:', error);
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -248,84 +243,62 @@ export default function OfficialsInfo() {
     return { executive, sangguniang, youth };
   };
 
-  const renderOfficialSection = (title: string, officialsList: OfficialData[], startIndex: number) => {
-    if (isLoading) {
-      return (
-        <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">{title}</h3>
-          {Array.from({ length: officialsList.length }).map((_, index) => (
-            <div key={index} className="rounded-lg p-4 border border-gray-200">
-              <div className="flex items-center space-x-3">
-                <Skeleton className="w-10 h-10 rounded-full" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-3 w-24" />
-                </div>
-                <Skeleton className="w-4 h-4" />
+  const renderOfficialSection = (title: string, officialsList: OfficialData[], startIndex: number) => (
+    <div className="space-y-3">
+      <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">{title}</h3>
+      {officialsList.map((official, index) => {
+        const actualIndex = officials.findIndex(o => o.position === official.position);
+        const displayName = getOfficialDisplayName(official);
+        const hasData = displayName !== null;
+        
+        return (
+          <div 
+            key={official.position} 
+            className={`rounded-lg p-4 flex items-center justify-between cursor-pointer transition-all duration-200 ${
+              hasData
+                ? 'bg-white border border-green-200 shadow-sm hover:shadow-md hover:border-green-300' 
+                : 'border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400'
+            }`}
+            onClick={() => handleOfficialClick(actualIndex)}
+          >
+            <div className="flex items-center space-x-3 flex-1 min-w-0">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                hasData ? 'bg-green-100' : 'bg-gray-300'
+              }`}>
+                <User className={`h-5 w-5 ${hasData ? 'text-green-600' : 'text-gray-600'}`} />
               </div>
-            </div>
-          ))}
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">{title}</h3>
-        {officialsList.map((official, index) => {
-          const actualIndex = officials.findIndex(o => o.position === official.position);
-          const displayName = getOfficialDisplayName(official);
-          const hasData = displayName !== null;
-          
-          return (
-            <div 
-              key={official.position} 
-              className={`rounded-lg p-4 flex items-center justify-between cursor-pointer transition-all duration-200 ${
-                hasData
-                  ? 'bg-white border border-red-200 shadow-sm hover:shadow-md hover:border-red-300' 
-                  : 'border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400'
-              }`}
-              onClick={() => handleOfficialClick(actualIndex)}
-            >
-              <div className="flex items-center space-x-3 flex-1 min-w-0">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  hasData ? 'bg-red-100' : 'bg-gray-300'
-                }`}>
-                  <User className={`h-5 w-5 ${hasData ? 'text-red-600' : 'text-gray-600'}`} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className={`font-medium ${
-                    hasData ? 'text-gray-900' : 'text-gray-500'
-                  } ${isMobile ? 'text-sm' : ''}`}>
-                    {isMobile ? truncateName(official.position, 20) : official.position}
+              <div className="flex-1 min-w-0">
+                <p className={`font-medium ${
+                  hasData ? 'text-gray-900' : 'text-gray-500'
+                } ${isMobile ? 'text-sm' : ''}`}>
+                  {isMobile ? truncateName(official.position, 20) : official.position}
+                </p>
+                {hasData ? (
+                  <p className={`text-green-700 font-medium mt-1 truncate ${
+                    isMobile ? 'text-xs' : 'text-sm'
+                  }`}>
+                    {isMobile ? truncateName(displayName, 30) : displayName}
                   </p>
-                  {hasData ? (
-                    <p className={`text-red-700 font-medium mt-1 truncate ${
-                      isMobile ? 'text-xs' : 'text-sm'
-                    }`}>
-                      {isMobile ? truncateName(displayName, 30) : displayName}
-                    </p>
-                  ) : (
-                    <p className={`text-gray-400 mt-1 ${
-                      isMobile ? 'text-xs' : 'text-xs'
-                    }`}>
-                      Tap to add official details
-                    </p>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {hasData && (
-                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                ) : (
+                  <p className={`text-gray-400 mt-1 ${
+                    isMobile ? 'text-xs' : 'text-xs'
+                  }`}>
+                    Tap to add official details
+                  </p>
                 )}
-                <Edit2 className={`h-4 w-4 ${hasData ? 'text-gray-400' : 'text-gray-300'}`} />
               </div>
             </div>
-          );
-        })}
-      </div>
-    );
-  };
+            <div className="flex items-center gap-2">
+              {hasData && (
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              )}
+              <Edit2 className={`h-4 w-4 ${hasData ? 'text-gray-400' : 'text-gray-300'}`} />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
 
   if (isMobile) {
     const { executive, sangguniang, youth } = getOfficialsByCategory();
@@ -386,7 +359,7 @@ export default function OfficialsInfo() {
                 </div>
                 <span className="text-sm text-gray-600">+63</span>
                 <Input 
-                  placeholder="09171234567" 
+                  placeholder="9171234567" 
                   className="flex-1"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
@@ -504,7 +477,7 @@ export default function OfficialsInfo() {
                   </div>
                   <span className="text-sm text-gray-600">+63</span>
                   <Input 
-                    placeholder="09171234567" 
+                    placeholder="9171234567" 
                     className="flex-1"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
