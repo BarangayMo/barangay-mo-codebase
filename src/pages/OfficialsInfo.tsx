@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -67,8 +66,8 @@ export default function OfficialsInfo() {
       try {
         console.log('Loading officials for barangay:', locationState.barangay);
         
-        // Use the database function to get officials
-        const { data, error } = await supabase.rpc('get_officials_by_region', {
+        // Use the database function to get officials with proper parameter object
+        const { data, error } = await supabase.rpc('get_officials_by_region' as any, {
           region_name: locationState.region,
           barangay_name: locationState.barangay,
           province_name: locationState.province,
