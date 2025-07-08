@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -68,10 +67,10 @@ export default function LogoUpload() {
         throw error;
       }
 
-      // Get public URL
+      // Get public URL - Fixed method name from getPublicURL to getPublicUrl
       const { data: { publicUrl } } = supabase.storage
         .from('companylogo')
-        .getPublicURL(filePath);
+        .getPublicUrl(filePath);
 
       setLogoUrl(publicUrl);
       
