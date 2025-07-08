@@ -2,7 +2,7 @@
 import { AuthProvider } from "./contexts/AuthContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { ThemeProvider } from "./components/theme-provider";
-import { AppRoutes } from "./AppRoutes"; 
+import AppRoutes from "./AppRoutes"; 
 import FaviconManager from "./components/FaviconManager"; 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster as ShadcnToaster } from "@/components/ui/toaster";
