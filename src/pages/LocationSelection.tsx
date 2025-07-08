@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -80,139 +81,84 @@ export default function LocationSelection() {
     }
   }, [selectedMunicipality]);
 
-  const getTableNameForRegion = (regionCode: string) => {
-    // Map region codes to their corresponding table names
-    const tableMap: { [key: string]: string } = {
-      'NCR': 'Barangays', // NCR data is in the main Barangays table
-      'REGION 1': 'REGION 1',
-      'REGION 2': 'REGION 2',
-      'REGION 3': 'REGION 3',
-      'REGION 4A': 'REGION 4A',
-      'REGION 4B': 'REGION 4B',
-      'REGION 5': 'REGION 5',
-      'REGION 6': 'REGION 6',
-      'REGION 7': 'REGION 7',
-      'REGION 8': 'REGION 8',
-      'REGION 9': 'REGION 9',
-      'REGION 10': 'REGION 10',
-      'REGION 11': 'REGION 11',
-      'REGION 12': 'REGION 12',
-      'REGION 13': 'REGION 13',
-      'CAR': 'CAR',
-      'BARMM': 'BARMM'
-    };
-    
-    return tableMap[regionCode] || 'Barangays';
-  };
-
   const loadProvinces = async () => {
     if (!selectedRegion) return;
     
     setIsLoading(true);
     try {
-      const tableName = getTableNameForRegion(selectedRegion);
+      let query;
+      switch(selectedRegion) {
+        case 'NCR':
+          query = supabase.from('Barangays').select('PROVINCE');
+          break;
+        case 'REGION 1':
+          query = supabase.from('REGION 1').select('PROVINCE');
+          break;
+        case 'REGION 2':
+          query = supabase.from('REGION 2').select('PROVINCE');
+          break;
+        case 'REGION 3':
+          query = supabase.from('REGION 3').select('PROVINCE');
+          break;
+        case 'REGION 4A':
+          query = supabase.from('REGION 4A').select('PROVINCE');
+          break;
+        case 'REGION 4B':
+          query = supabase.from('REGION 4B').select('PROVINCE');
+          break;
+        case 'REGION 5':
+          query = supabase.from('REGION 5').select('PROVINCE');
+          break;
+        case 'REGION 6':
+          query = supabase.from('REGION 6').select('PROVINCE');
+          break;
+        case 'REGION 7':
+          query = supabase.from('REGION 7').select('PROVINCE');
+          break;
+        case 'REGION 8':
+          query = supabase.from('REGION 8').select('PROVINCE');
+          break;
+        case 'REGION 9':
+          query = supabase.from('REGION 9').select('PROVINCE');
+          break;
+        case 'REGION 10':
+          query = supabase.from('REGION 10').select('PROVINCE');
+          break;
+        case 'REGION 11':
+          query = supabase.from('REGION 11').select('PROVINCE');
+          break;
+        case 'REGION 12':
+          query = supabase.from('REGION 12').select('PROVINCE');
+          break;
+        case 'REGION 13':
+          query = supabase.from('REGION 13').select('PROVINCE');
+          break;
+        case 'CAR':
+          query = supabase.from('CAR').select('PROVINCE');
+          break;
+        case 'BARMM':
+          query = supabase.from('BARMM').select('PROVINCE');
+          break;
+        default:
+          query = supabase.from('Barangays').select('PROVINCE');
+      }
       
-      console.log(`Loading provinces from table: ${tableName} for region: ${selectedRegion}`);
-      
-      // Use rpc or raw query to handle dynamic table names
-      const { data, error } = await supabase.rpc('get_provinces_for_region', {
-        table_name: tableName,
-        region_code: selectedRegion
-      });
+      const { data, error } = await query
+        .eq('REGION', selectedRegion)
+        .not('PROVINCE', 'is', null)
+        .neq('PROVINCE', '');
       
       if (error) {
         console.error('Error loading provinces:', error);
-        // Fallback to direct query with type assertion
-        const fallbackQuery = await supabase
-          .from(tableName as any)
-          .select('PROVINCE')
-          .eq('REGION', selectedRegion)
-          .not('PROVINCE', 'is', null)
-          .neq('PROVINCE', '');
-        
-        if (fallbackQuery.data && !fallbackQuery.error) {
-          const uniqueProvinces = [...new Set(fallbackQuery.data?.map((item: any) => item.PROVINCE).filter(Boolean))];
-          setProvinces(uniqueProvinces.sort());
-        }
         return;
       }
       
       if (data) {
-        setProvinces(data.sort());
+        const uniqueProvinces = [...new Set(data.map((item: any) => item.PROVINCE).filter(Boolean))] as string[];
+        setProvinces(uniqueProvinces.sort());
       }
     } catch (error) {
       console.error('Error loading provinces:', error);
-      // Manual fallback for different region tables
-      try {
-        let query;
-        switch(selectedRegion) {
-          case 'NCR':
-            query = supabase.from('Barangays').select('PROVINCE');
-            break;
-          case 'REGION 1':
-            query = supabase.from('REGION 1').select('PROVINCE');
-            break;
-          case 'REGION 2':
-            query = supabase.from('REGION 2').select('PROVINCE');
-            break;
-          case 'REGION 3':
-            query = supabase.from('REGION 3').select('PROVINCE');
-            break;
-          case 'REGION 4A':
-            query = supabase.from('REGION 4A').select('PROVINCE');
-            break;
-          case 'REGION 4B':
-            query = supabase.from('REGION 4B').select('PROVINCE');
-            break;
-          case 'REGION 5':
-            query = supabase.from('REGION 5').select('PROVINCE');
-            break;
-          case 'REGION 6':
-            query = supabase.from('REGION 6').select('PROVINCE');
-            break;
-          case 'REGION 7':
-            query = supabase.from('REGION 7').select('PROVINCE');
-            break;
-          case 'REGION 8':
-            query = supabase.from('REGION 8').select('PROVINCE');
-            break;
-          case 'REGION 9':
-            query = supabase.from('REGION 9').select('PROVINCE');
-            break;
-          case 'REGION 10':
-            query = supabase.from('REGION 10').select('PROVINCE');
-            break;
-          case 'REGION 11':
-            query = supabase.from('REGION 11').select('PROVINCE');
-            break;
-          case 'REGION 12':
-            query = supabase.from('REGION 12').select('PROVINCE');
-            break;
-          case 'REGION 13':
-            query = supabase.from('REGION 13').select('PROVINCE');
-            break;
-          case 'CAR':
-            query = supabase.from('CAR').select('PROVINCE');
-            break;
-          case 'BARMM':
-            query = supabase.from('BARMM').select('PROVINCE');
-            break;
-          default:
-            query = supabase.from('Barangays').select('PROVINCE');
-        }
-        
-        const { data: fallbackData } = await query
-          .eq('REGION', selectedRegion)
-          .not('PROVINCE', 'is', null)
-          .neq('PROVINCE', '');
-        
-        if (fallbackData) {
-          const uniqueProvinces = [...new Set(fallbackData?.map((item: any) => item.PROVINCE).filter(Boolean))];
-          setProvinces(uniqueProvinces.sort());
-        }
-      } catch (fallbackError) {
-        console.error('Fallback error:', fallbackError);
-      }
     } finally {
       setIsLoading(false);
     }
@@ -291,8 +237,10 @@ export default function LocationSelection() {
         return;
       }
       
-      const uniqueMunicipalities = [...new Set(data?.map((item: any) => item['CITY/MUNICIPALITY']).filter(Boolean))];
-      setMunicipalities(uniqueMunicipalities.sort());
+      if (data) {
+        const uniqueMunicipalities = [...new Set(data.map((item: any) => item['CITY/MUNICIPALITY']).filter(Boolean))] as string[];
+        setMunicipalities(uniqueMunicipalities.sort());
+      }
     } catch (error) {
       console.error('Error loading municipalities:', error);
     } finally {
@@ -374,8 +322,10 @@ export default function LocationSelection() {
         return;
       }
       
-      const uniqueBarangays = [...new Set(data?.map((item: any) => item.BARANGAY).filter(Boolean))];
-      setBarangays(uniqueBarangays.sort());
+      if (data) {
+        const uniqueBarangays = [...new Set(data.map((item: any) => item.BARANGAY).filter(Boolean))] as string[];
+        setBarangays(uniqueBarangays.sort());
+      }
     } catch (error) {
       console.error('Error loading barangays:', error);
     } finally {
