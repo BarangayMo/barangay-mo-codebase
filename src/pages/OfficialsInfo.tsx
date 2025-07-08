@@ -72,54 +72,71 @@ export default function OfficialsInfo() {
       }
 
       try {
-        console.log('Loading officials for barangay:', locationState.barangay);
-        
-        // Try to call the database function with proper error handling
-        const { data, error } = await supabase.rpc('get_officials_by_region' as any, {
-          region_name: locationState.region,
-          barangay_name: locationState.barangay,
-          province_name: locationState.province,
-          municipality_name: locationState.municipality
+        console.log('Loading officials for:', {
+          region: locationState.region,
+          barangay: locationState.barangay,
+          municipality: locationState.municipality,
+          province: locationState.province
         });
+
+        // Query the region table directly
+        const regionTableName = locationState.region;
+        console.log('Querying table:', regionTableName);
+
+        const { data, error } = await supabase
+          .from(regionTableName as any)
+          .select('POSITION, FIRSTNAME, MIDDLENAME, LASTNAME, SUFFIX')
+          .eq('BARANGAY', locationState.barangay)
+          .eq('PROVINCE', locationState.province)
+          .eq('CITY/MUNICIPALITY', locationState.municipality);
 
         if (error) {
           console.error('Error loading officials:', error);
-          // Continue with empty officials list if function doesn't exist
           return;
         }
 
+        console.log('Raw officials data from DB:', data);
+
         if (data && data.length > 0) {
-          console.log('Loaded officials data:', data);
-          updateOfficialsWithData(data);
+          // Update officials with database data
+          setOfficials(prevOfficials => {
+            return prevOfficials.map(official => {
+              // For numbered positions like "Sangguniang Barangay Member 1"
+              let matchingDbOfficial;
+              
+              if (official.position.startsWith('Sangguniang Barangay Member')) {
+                // Find any Sangguniang Barangay Member from DB
+                matchingDbOfficial = data.find((d: any) => 
+                  d.POSITION === 'Sangguniang Barangay Member'
+                );
+              } else {
+                // Direct match for other positions
+                matchingDbOfficial = data.find((d: any) => 
+                  d.POSITION === official.position
+                );
+              }
+
+              if (matchingDbOfficial) {
+                const hasNames = matchingDbOfficial.FIRSTNAME || matchingDbOfficial.LASTNAME;
+                console.log(`Found data for ${official.position}:`, matchingDbOfficial);
+                
+                return {
+                  ...official,
+                  firstName: matchingDbOfficial.FIRSTNAME || '',
+                  middleName: matchingDbOfficial.MIDDLENAME || '',
+                  lastName: matchingDbOfficial.LASTNAME || '',
+                  suffix: matchingDbOfficial.SUFFIX || '',
+                  isCompleted: hasNames
+                };
+              }
+              
+              return official;
+            });
+          });
         }
       } catch (error) {
         console.error('Error in loadOfficials:', error);
-        // Continue with empty officials list
       }
-    };
-
-    const updateOfficialsWithData = (data: any[]) => {
-      const updatedOfficials = officials.map(official => {
-        // Handle numbered Sangguniang Barangay Members
-        let positionToMatch = official.position;
-        if (official.position.startsWith('Sangguniang Barangay Member')) {
-          positionToMatch = 'Sangguniang Barangay Member';
-        }
-
-        const dbOfficial = data.find((d: any) => d.position === positionToMatch);
-        if (dbOfficial) {
-          return {
-            ...official,
-            firstName: dbOfficial.firstname || '',
-            middleName: dbOfficial.middlename || '',
-            lastName: dbOfficial.lastname || '',
-            suffix: dbOfficial.suffix || '',
-            isCompleted: !!(dbOfficial.firstname && dbOfficial.lastname)
-          };
-        }
-        return official;
-      });
-      setOfficials(updatedOfficials);
     };
 
     loadOfficials();
@@ -131,9 +148,11 @@ export default function OfficialsInfo() {
     setIsModalOpen(true);
   };
 
-  const handleOfficialSave = (officialData: Partial<OfficialData>) => {
+  const handleOfficialSave = async (officialData: Partial<OfficialData>) => {
     console.log('Saving official data:', officialData, 'at index:', selectedOfficialIndex);
+    
     if (selectedOfficialIndex !== null) {
+      // Update local state
       const updatedOfficials = [...officials];
       updatedOfficials[selectedOfficialIndex] = {
         ...updatedOfficials[selectedOfficialIndex],
@@ -142,7 +161,11 @@ export default function OfficialsInfo() {
       };
       setOfficials(updatedOfficials);
       console.log('Updated officials:', updatedOfficials);
+
+      // TODO: Save to Supabase database
+      // This would require creating/updating records in the region table
     }
+    
     setIsModalOpen(false);
     setSelectedOfficialIndex(null);
   };
@@ -165,8 +188,8 @@ export default function OfficialsInfo() {
   };
 
   const getOfficialDisplayName = (official: OfficialData) => {
-    if (!official.isCompleted || (!official.firstName && !official.lastName)) {
-      return null; // Return null when no name is available
+    if (!official.firstName && !official.lastName) {
+      return null;
     }
     const nameParts = [official.firstName, official.middleName, official.lastName, official.suffix].filter(Boolean);
     return nameParts.length > 0 ? nameParts.join(' ') : null;
@@ -186,23 +209,23 @@ export default function OfficialsInfo() {
       {officialsList.map((official, index) => {
         const actualIndex = officials.findIndex(o => o.position === official.position);
         const displayName = getOfficialDisplayName(official);
-        const hasData = official.isCompleted && displayName;
+        const hasData = displayName !== null;
         
         return (
           <div 
             key={official.position} 
             className={`rounded-lg p-4 flex items-center justify-between cursor-pointer transition-all duration-200 ${
               hasData
-                ? 'bg-white border border-gray-200 shadow-sm hover:shadow-md' 
+                ? 'bg-white border border-green-200 shadow-sm hover:shadow-md hover:border-green-300' 
                 : 'border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400'
             }`}
             onClick={() => handleOfficialClick(actualIndex)}
           >
             <div className="flex items-center space-x-3 flex-1">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                hasData ? 'bg-red-100' : 'bg-gray-300'
+                hasData ? 'bg-green-100' : 'bg-gray-300'
               }`}>
-                <User className={`h-5 w-5 ${hasData ? 'text-red-600' : 'text-gray-600'}`} />
+                <User className={`h-5 w-5 ${hasData ? 'text-green-600' : 'text-gray-600'}`} />
               </div>
               <div className="flex-1 min-w-0">
                 <p className={`font-medium truncate ${
@@ -211,7 +234,7 @@ export default function OfficialsInfo() {
                   {official.position}
                 </p>
                 {hasData ? (
-                  <p className="text-sm text-gray-600 truncate mt-1">
+                  <p className="text-sm text-green-700 truncate mt-1 font-medium">
                     {displayName}
                   </p>
                 ) : (
@@ -221,7 +244,12 @@ export default function OfficialsInfo() {
                 )}
               </div>
             </div>
-            <Edit2 className={`h-4 w-4 ${hasData ? 'text-gray-400' : 'text-gray-300'}`} />
+            <div className="flex items-center gap-2">
+              {hasData && (
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              )}
+              <Edit2 className={`h-4 w-4 ${hasData ? 'text-gray-400' : 'text-gray-300'}`} />
+            </div>
           </div>
         );
       })}

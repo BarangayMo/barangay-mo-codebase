@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { User, Camera, ChevronLeft } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface OfficialData {
   position: string;
@@ -46,12 +48,13 @@ const ALL_POSITIONS = [
 ];
 
 export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: OfficialDetailsModalProps) {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
-    firstName: official?.firstName || "",
-    middleName: official?.middleName || "",
-    lastName: official?.lastName || "",
-    suffix: official?.suffix || "none",
-    position: official?.position || ""
+    firstName: "",
+    middleName: "",
+    lastName: "",
+    suffix: "none",
+    position: ""
   });
 
   console.log('OfficialDetailsModal render:', { isOpen, official, formData });
@@ -69,15 +72,43 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
     }
   }, [official]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     console.log('Saving official data:', formData);
-    const dataToSave = {
-      ...formData,
-      suffix: formData.suffix === "none" ? "" : formData.suffix,
-      isCompleted: true
-    };
-    onSave(dataToSave);
-    onClose();
+    
+    // Validate required fields
+    if (!formData.firstName.trim() || !formData.lastName.trim()) {
+      toast({
+        title: "Error",
+        description: "First name and last name are required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const dataToSave = {
+        ...formData,
+        suffix: formData.suffix === "none" ? "" : formData.suffix,
+        isCompleted: true
+      };
+
+      // Call the parent's onSave function
+      onSave(dataToSave);
+      
+      toast({
+        title: "Success",
+        description: "Official details saved successfully",
+      });
+      
+      onClose();
+    } catch (error) {
+      console.error('Error saving official:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save official details",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -229,6 +260,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
               <Button 
                 onClick={handleSave}
                 className="flex-1 bg-red-600 hover:bg-red-700 text-white h-12"
+                disabled={!formData.firstName.trim() || !formData.lastName.trim()}
               >
                 Save Changes
               </Button>
