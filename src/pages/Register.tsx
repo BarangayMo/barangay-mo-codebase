@@ -94,14 +94,14 @@ export default function Register() {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-white flex flex-col">
+      <div className="min-h-screen bg-white flex flex-col overflow-hidden">
         {/* Progress Bar */}
         <div className="w-full bg-gray-200 h-1">
           <div className="bg-blue-600 h-1 w-1/3"></div>
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b">
+        <div className="flex items-center justify-between px-4 py-2 border-b">
           <Link to="/welcome" className="text-gray-600 hover:text-gray-800">
             <ChevronLeft className="h-6 w-6" />
           </Link>
@@ -111,35 +111,35 @@ export default function Register() {
 
         {/* Content - Scrollable container with proper height calculation */}
         <div className="flex-1 overflow-y-auto">
-          <div className="p-6 pb-24">
+          <div className="p-4 space-y-4">
             {/* Logo and Title */}
-            <div className="text-center mb-6">
+            <div className="text-center mb-4">
               <img 
                 src="/lovable-uploads/6960369f-3a6b-4d57-ab0f-f7db77f16152.png" 
                 alt="eGov.PH Logo" 
-                className="h-12 w-auto mx-auto mb-3" 
+                className="h-10 w-auto mx-auto mb-2" 
               />
-              <h2 className="text-xl font-bold text-gray-900 mb-1">Let's Get Started!</h2>
+              <h2 className="text-lg font-bold text-gray-900 mb-1">Let's Get Started!</h2>
               <p className="text-gray-600 text-sm">Create your account to access services</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Role Selection */}
-              <div className="space-y-3 mb-6">
-                <Label className="text-gray-900 font-semibold">Select your role</Label>
+            <form onSubmit={handleSubmit} className="space-y-3">
+              {/* Role Selection - Smaller */}
+              <div className="space-y-2">
+                <Label className="text-gray-900 font-semibold text-sm">Select your role</Label>
                 <RadioGroup
                   value={formData.role}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, role: value }))}
-                  className="grid grid-cols-2 gap-3"
+                  className="grid grid-cols-2 gap-2"
                 >
                   <div>
                     <RadioGroupItem value="resident" id="resident-mobile" className="peer sr-only" />
                     <Label 
                       htmlFor="resident-mobile" 
-                      className="flex flex-col items-center justify-center h-24 p-3 border-2 rounded-xl cursor-pointer transition-all duration-200 font-medium border-blue-500 bg-blue-50"
+                      className="flex flex-col items-center justify-center h-16 p-2 border-2 rounded-lg cursor-pointer transition-all duration-200 border-blue-500 bg-blue-50"
                     >
-                      <div className="p-2 rounded-full mb-1 bg-blue-600 text-white">
-                        <Users className="w-4 h-4" />
+                      <div className="p-1.5 rounded-full mb-1 bg-blue-600 text-white">
+                        <Users className="w-3 h-3" />
                       </div>
                       <div className="text-center">
                         <div className="font-semibold text-gray-900 text-xs">Resident</div>
@@ -151,10 +151,10 @@ export default function Register() {
                     <RadioGroupItem value="official" id="official-mobile" className="peer sr-only" />
                     <Label 
                       htmlFor="official-mobile" 
-                      className="flex flex-col items-center justify-center h-24 p-3 border-2 rounded-xl cursor-pointer transition-all duration-200 font-medium border-red-500 bg-red-50"
+                      className="flex flex-col items-center justify-center h-16 p-2 border-2 rounded-lg cursor-pointer transition-all duration-200 border-red-500 bg-red-50"
                     >
-                      <div className="p-2 rounded-full mb-1 bg-red-600 text-white">
-                        <Shield className="w-4 h-4" />
+                      <div className="p-1.5 rounded-full mb-1 bg-red-600 text-white">
+                        <Shield className="w-3 h-3" />
                       </div>
                       <div className="text-center">
                         <div className="font-semibold text-gray-900 text-xs">Official</div>
@@ -166,8 +166,8 @@ export default function Register() {
               </div>
 
               {/* Personal Information */}
-              <div className="space-y-4">
-                <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-3">
+                <div className="grid grid-cols-3 gap-2">
                   <div className="col-span-2">
                     <Label htmlFor="firstName" className="text-gray-700 text-sm">First Name *</Label>
                     <Input
@@ -175,7 +175,7 @@ export default function Register() {
                       name="firstName"
                       value={formData.firstName}
                       onChange={handleInputChange}
-                      className="mt-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      className="mt-1 h-9 text-sm border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                       required
                     />
                   </div>
@@ -185,7 +185,7 @@ export default function Register() {
                       value={formData.suffix} 
                       onValueChange={(value) => setFormData(prev => ({ ...prev, suffix: value }))}
                     >
-                      <SelectTrigger className="mt-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                      <SelectTrigger className="mt-1 h-9 text-sm border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                         <SelectValue placeholder="None" />
                       </SelectTrigger>
                       <SelectContent>
@@ -207,18 +207,18 @@ export default function Register() {
                     value={formData.middleName}
                     onChange={handleInputChange}
                     disabled={formData.hasNoMiddleName}
-                    className="mt-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-100"
+                    className="mt-1 h-9 text-sm border-gray-300 focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-100"
                   />
-                  <div className="flex items-center mt-2">
+                  <div className="flex items-center mt-1">
                     <input
                       type="checkbox"
                       id="hasNoMiddleName"
                       name="hasNoMiddleName"
                       checked={formData.hasNoMiddleName}
                       onChange={handleInputChange}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-3 h-3"
                     />
-                    <label htmlFor="hasNoMiddleName" className="ml-2 text-sm text-gray-600">
+                    <label htmlFor="hasNoMiddleName" className="ml-2 text-xs text-gray-600">
                       I have no middle name
                     </label>
                   </div>
@@ -231,7 +231,7 @@ export default function Register() {
                     name="lastName"
                     value={formData.lastName}
                     onChange={handleInputChange}
-                    className="mt-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    className="mt-1 h-9 text-sm border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                     required
                   />
                 </div>
@@ -244,7 +244,7 @@ export default function Register() {
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="mt-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    className="mt-1 h-9 text-sm border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                     required
                   />
                 </div>
@@ -257,7 +257,7 @@ export default function Register() {
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    className="mt-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    className="mt-1 h-9 text-sm border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                     required
                   />
                   <p className="text-xs text-gray-500 mt-1">Must be at least 8 characters</p>
@@ -265,8 +265,8 @@ export default function Register() {
               </div>
 
               {/* Terms */}
-              <div className="flex items-start space-x-2 pt-2">
-                <input type="checkbox" id="terms" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mt-0.5" required />
+              <div className="flex items-start space-x-2 pt-1">
+                <input type="checkbox" id="terms" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mt-0.5 w-3 h-3" required />
                 <label htmlFor="terms" className="text-xs text-gray-600">
                   I agree to the <Link to="/terms" className="text-blue-600 font-medium hover:underline">Terms of Service</Link> and <Link to="/privacy" className="text-blue-600 font-medium hover:underline">Privacy Policy</Link>
                 </label>
@@ -275,7 +275,7 @@ export default function Register() {
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-base font-medium"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 h-10 text-sm font-medium"
                 disabled={isLoading}
               >
                 {isLoading ? "Creating Account..." : "Create new account"}
@@ -283,7 +283,7 @@ export default function Register() {
             </form>
 
             {/* Login Link */}
-            <div className="mt-6 text-center">
+            <div className="text-center pb-4">
               <p className="text-gray-500 text-sm">
                 Already have an account?{" "}
                 <Link to="/mpin" className="font-medium text-blue-600 hover:text-blue-700 hover:underline">
