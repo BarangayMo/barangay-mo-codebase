@@ -6,6 +6,7 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import { RegistrationProgress } from "@/components/ui/registration-progress";
 
 // Hardcoded Philippine regions with their full names
 const PHILIPPINE_REGIONS = [
@@ -390,18 +391,23 @@ export default function LocationSelection() {
   if (isMobile) {
     return (
       <div className="min-h-screen bg-white flex flex-col">
-        {/* Progress Bar - exactly like role page */}
-        <div className="w-full bg-gray-200 h-1">
-          <div className={`h-1 w-2/4 ${locationState.role === 'official' ? 'bg-red-600' : 'bg-blue-600'}`}></div>
-        </div>
-
-        {/* Header - exactly like role page */}
-        <div className="flex items-center justify-between px-4 py-3 border-b bg-white">
-          <button onClick={handleBack} className="text-gray-600 hover:text-gray-800">
+        {/* Header with role-based color */}
+        <div className={`flex items-center justify-between px-4 py-4 text-white ${
+          locationState.role === 'official' ? 'bg-red-600' : 'bg-blue-600'
+        }`}>
+          <button onClick={handleBack} className="text-white hover:text-gray-200">
             <ChevronLeft className="h-6 w-6" />
           </button>
-          <h1 className="text-lg font-semibold text-gray-900">Location</h1>
+          <h1 className="text-lg font-bold">Location</h1>
           <div className="w-6" />
+        </div>
+
+        {/* Progress Bar */}
+        <div className="px-6 py-4 bg-white">
+          <RegistrationProgress 
+            currentStep="location" 
+            userRole={locationState.role as 'resident' | 'official'} 
+          />
         </div>
 
         {/* Content */}
@@ -682,21 +688,22 @@ export default function LocationSelection() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
-        {/* Progress Bar - exactly like role page */}
-        <div className="w-full bg-gray-200 h-1">
-          <div className={`h-1 w-2/4 ${locationState.role === 'official' ? 'bg-red-600' : 'bg-blue-600'}`}></div>
+        {/* Progress Bar */}
+        <div className="px-8 py-6 border-b bg-white">
+          <RegistrationProgress 
+            currentStep="location" 
+            userRole={locationState.role as 'resident' | 'official'} 
+          />
+          <div className="text-center mt-4">
+            <h2 className="text-2xl font-bold text-gray-900">Location</h2>
+          </div>
         </div>
 
-        {/* Header - exactly like role page */}
         <div className="p-8 bg-white">
-          <button onClick={handleBack} className="inline-flex items-center text-sm text-gray-500 mb-4 hover:text-gray-700">
+          <button onClick={handleBack} className="inline-flex items-center text-sm text-gray-500 mb-6 hover:text-gray-700">
             <ChevronLeft className="w-4 h-4 mr-1" /> Back
           </button>
           
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-900">Location</h2>
-          </div>
-
           <div className="space-y-6">
             {/* Region Searchable Dropdown */}
             <div className="relative" ref={regionRef}>
