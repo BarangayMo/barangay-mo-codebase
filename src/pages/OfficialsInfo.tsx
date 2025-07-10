@@ -332,12 +332,12 @@ export default function OfficialsInfo() {
 
     return (
       <div className="min-h-screen bg-white flex flex-col">
-        {/* Progress Bar - at very top */}
+        {/* Progress Bar */}
         <div className="w-full bg-gray-200 h-1">
           <div className="h-1 w-3/5 bg-red-600"></div>
         </div>
 
-        {/* Header - white background */}
+        {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b bg-white">
           <button onClick={handleBack} className="text-gray-600 hover:text-gray-800">
             <ChevronLeft className="h-6 w-6" />
@@ -449,7 +449,7 @@ export default function OfficialsInfo() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
       <div className="max-w-2xl w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
-        {/* Progress Bar - at very top */}
+        {/* Progress Bar */}
         <div className="w-full bg-gray-200 h-1">
           <div className="h-1 w-3/5 bg-red-600"></div>
         </div>

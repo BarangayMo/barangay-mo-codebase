@@ -135,12 +135,12 @@ export default function Register() {
   if (isMobile) {
     return (
       <div className="min-h-screen bg-white flex flex-col">
-        {/* Progress Bar - at very top */}
+        {/* Progress Bar */}
         <div className="w-full bg-gray-200 h-1">
           <div className={`h-1 w-full ${locationState.role === 'official' ? 'bg-red-600' : 'bg-blue-600'}`}></div>
         </div>
 
-        {/* Header - white background */}
+        {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b bg-white">
           <button 
             onClick={() => navigate(getBackLink(), { state: locationState })}
@@ -357,7 +357,7 @@ export default function Register() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
-        {/* Progress Bar - at very top */}
+        {/* Progress Bar */}
         <div className="w-full bg-gray-200 h-1">
           <div className={`h-1 w-full ${locationState.role === 'official' ? 'bg-red-600' : 'bg-blue-600'}`}></div>
         </div>
