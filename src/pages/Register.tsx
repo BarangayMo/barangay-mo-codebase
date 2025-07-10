@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,7 @@ interface RegistrationData {
 export default function Register() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { signUp } = useAuth();
+  const { register } = useAuth();
   const { toast } = useToast();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const registrationData = location.state as RegistrationData;
@@ -58,25 +59,21 @@ export default function Register() {
     setIsLoading(true);
 
     try {
-      const { error } = await signUp({
-        email: email,
-        password: password,
-        options: {
-          data: {
-            role: registrationData?.role,
-            first_name: firstName,
-            last_name: lastName,
-            region: registrationData?.region,
-            province: registrationData?.province,
-            municipality: registrationData?.municipality,
-            barangay: registrationData?.barangay,
-            officials: registrationData?.officials,
-            logoUrl: registrationData?.logoUrl,
-            phone_number: registrationData?.phoneNumber,
-            landline_number: registrationData?.landlineNumber,
-          },
-        },
-      });
+      const userData = {
+        firstName,
+        lastName,
+        role: registrationData?.role || 'resident',
+        region: registrationData?.region,
+        province: registrationData?.province,
+        municipality: registrationData?.municipality,
+        barangay: registrationData?.barangay,
+        officials: registrationData?.officials,
+        logoUrl: registrationData?.logoUrl,
+        phoneNumber: registrationData?.phoneNumber,
+        landlineNumber: registrationData?.landlineNumber,
+      };
+
+      const { error } = await register(email, password, userData);
 
       if (error) {
         throw error;
@@ -86,7 +83,7 @@ export default function Register() {
         title: "Success",
         description: "Account created successfully! Check your email to verify your account.",
       });
-      navigate("/login");
+      navigate("/email-confirmation");
     } catch (error: any) {
       console.error("Registration failed:", error);
       toast({
