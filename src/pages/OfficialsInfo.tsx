@@ -1,51 +1,34 @@
-import { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { ChevronLeft, Plus, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, Edit2, Phone, User } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { RegistrationProgress } from "@/components/ui/registration-progress";
-import { OfficialDetailsModal } from "@/components/officials/OfficialDetailsModal";
-import { Skeleton } from "@/components/ui/skeleton";
-import { supabase } from "@/integrations/supabase/client";
 
 interface LocationState {
   role: string;
   region: string;
-  province: string;  
+  province: string;
   municipality: string;
   barangay: string;
 }
 
-interface OfficialData {
+interface Official {
+  name: string;
   position: string;
-  firstName?: string;
-  middleName?: string;
-  lastName?: string;
-  suffix?: string;
-  isCompleted: boolean;
 }
 
-const EXECUTIVE_POSITIONS = [
-  "Punong Barangay",
-  "Barangay Secretary", 
-  "Barangay Treasurer"
-];
+const isValidName = (name: string) => {
+  // Allows letters, spaces, periods, hyphens, and apostrophes
+  return /^[a-zA-Z\s.'-]+$/.test(name);
+};
 
-const SANGGUNIANG_POSITIONS = [
-  "Sangguniang Barangay Member 1",
-  "Sangguniang Barangay Member 2",
-  "Sangguniang Barangay Member 3",
-  "Sangguniang Barangay Member 4",
-  "Sangguniang Barangay Member 5",
-  "Sangguniang Barangay Member 6",
-  "Sangguniang Barangay Member 7"
-];
-
-const YOUTH_POSITIONS = [
-  "SK Chairperson"
-];
+const isValidPosition = (position: string) => {
+  // Allows letters, spaces, periods, and hyphens
+  return /^[a-zA-Z\s.-]+$/.test(position);
+};
 
 export default function OfficialsInfo() {
   const location = useLocation();
@@ -53,163 +36,38 @@ export default function OfficialsInfo() {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const locationState = location.state as LocationState;
 
-  const [officials, setOfficials] = useState<OfficialData[]>([
-    ...EXECUTIVE_POSITIONS.map(position => ({ position, isCompleted: false })),
-    ...SANGGUNIANG_POSITIONS.map(position => ({ position, isCompleted: false })),
-    ...YOUTH_POSITIONS.map(position => ({ position, isCompleted: false }))
-  ]);
+  const [officials, setOfficials] = useState<Official[]>([]);
+  const [newOfficialName, setNewOfficialName] = useState("");
+  const [newOfficialPosition, setNewOfficialPosition] = useState("");
 
-  const [selectedOfficialIndex, setSelectedOfficialIndex] = useState<number | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState("9171234567");
-  const [landlineNumber, setLandlineNumber] = useState("047-222-5173");
-  const [isLoading, setIsLoading] = useState(true);
+  const handleAddOfficial = () => {
+    if (!isValidName(newOfficialName)) {
+      alert("Please enter a valid name for the official.");
+      return;
+    }
 
-  // Load officials from database when component mounts
-  useEffect(() => {
-    const loadOfficials = async () => {
-      if (!locationState?.barangay || !locationState?.region) {
-        console.log('Missing location data, skipping officials load. LocationState:', locationState);
-        setIsLoading(false);
-        return;
-      }
+    if (!isValidPosition(newOfficialPosition)) {
+      alert("Please enter a valid position for the official.");
+      return;
+    }
 
-      try {
-        console.log('Loading officials for:', {
-          region: locationState.region,
-          barangay: locationState.barangay,
-          municipality: locationState.municipality,
-          province: locationState.province
-        });
-
-        // Query the region table directly with properly quoted column names
-        const regionTableName = locationState.region;
-        console.log('Querying table:', regionTableName);
-
-        const { data, error } = await supabase
-          .from(regionTableName as any)
-          .select('"POSITION", "FIRSTNAME", "MIDDLENAME", "LASTNAME", "SUFFIX"')
-          .eq('"BARANGAY"', locationState.barangay)
-          .eq('"PROVINCE"', locationState.province)
-          .eq('"CITY/MUNICIPALITY"', locationState.municipality);
-
-        if (error) {
-          console.error('Error loading officials:', error);
-          setIsLoading(false);
-          return;
-        }
-
-        console.log('Raw officials data from DB:', data);
-
-        if (data && data.length > 0) {
-          console.log('Processing officials data...');
-          
-          // Update officials with database data
-          setOfficials(prevOfficials => {
-            const updatedOfficials = prevOfficials.map(official => {
-              let matchingDbOfficial;
-              
-              // Direct position mapping for exact matches
-              const positionMappings = {
-                'Punong Barangay': 'Punong Barangay',
-                'Barangay Secretary': 'Barangay Secretary',
-                'Barangay Treasurer': 'Barangay Treasurer',
-                'SK Chairperson': 'SK Chairperson'
-              };
-
-              // Check for direct match first
-              matchingDbOfficial = data.find((d: any) => 
-                d.POSITION === positionMappings[official.position as keyof typeof positionMappings] ||
-                d.POSITION === official.position
-              );
-
-              // For Sangguniang Barangay Members, find any available member
-              if (!matchingDbOfficial && official.position.startsWith('Sangguniang Barangay Member')) {
-                const sangguniangMembers = data.filter((d: any) => 
-                  d.POSITION === 'Sangguniang Barangay Member'
-                );
-                
-                console.log('Found Sangguniang members:', sangguniangMembers.length);
-                
-                // Get the member number from the position (e.g., "Member 1" -> 1)
-                const memberNumber = parseInt(official.position.split(' ').pop() || '1');
-                
-                // Try to assign members in order
-                if (sangguniangMembers[memberNumber - 1]) {
-                  matchingDbOfficial = sangguniangMembers[memberNumber - 1];
-                  console.log(`Assigned ${official.position} to:`, matchingDbOfficial);
-                }
-              }
-
-              if (matchingDbOfficial) {
-                const hasNames = matchingDbOfficial.FIRSTNAME || matchingDbOfficial.LASTNAME;
-                console.log(`Found data for ${official.position}:`, matchingDbOfficial);
-                
-                return {
-                  ...official,
-                  firstName: matchingDbOfficial.FIRSTNAME || '',
-                  middleName: matchingDbOfficial.MIDDLENAME || '',
-                  lastName: matchingDbOfficial.LASTNAME || '',
-                  suffix: matchingDbOfficial.SUFFIX || '',
-                  isCompleted: hasNames
-                };
-              }
-              
-              console.log(`No data found for ${official.position}`);
-              return official;
-            });
-            
-            console.log('Updated officials:', updatedOfficials);
-            return updatedOfficials;
-          });
-        } else {
-          console.log('No officials data found in database');
-        }
-      } catch (error) {
-        console.error('Error in loadOfficials:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadOfficials();
-  }, [locationState]);
-
-  const handleOfficialClick = (index: number) => {
-    console.log('Official clicked:', index, officials[index]);
-    setSelectedOfficialIndex(index);
-    setIsModalOpen(true);
+    const newOfficial = { name: newOfficialName, position: newOfficialPosition };
+    setOfficials([...officials, newOfficial]);
+    setNewOfficialName("");
+    setNewOfficialPosition("");
   };
 
-  const handleOfficialSave = async (officialData: Partial<OfficialData>) => {
-    console.log('Saving official data:', officialData, 'at index:', selectedOfficialIndex);
-    
-    if (selectedOfficialIndex !== null) {
-      // Update local state
-      const updatedOfficials = [...officials];
-      updatedOfficials[selectedOfficialIndex] = {
-        ...updatedOfficials[selectedOfficialIndex],
-        ...officialData,
-        isCompleted: true
-      };
-      setOfficials(updatedOfficials);
-      console.log('Updated officials:', updatedOfficials);
-
-      // TODO: Save to Supabase database
-      // This would require creating/updating records in the region table
-    }
-    
-    setIsModalOpen(false);
-    setSelectedOfficialIndex(null);
+  const handleRemoveOfficial = (index: number) => {
+    const updatedOfficials = [...officials];
+    updatedOfficials.splice(index, 1);
+    setOfficials(updatedOfficials);
   };
 
   const handleNext = () => {
     navigate("/register/logo", { 
       state: { 
         ...locationState,
-        officials: officials,
-        phoneNumber,
-        landlineNumber
+        officials
       } 
     });
   };
@@ -220,342 +78,167 @@ export default function OfficialsInfo() {
     });
   };
 
-  const getOfficialDisplayName = (official: OfficialData) => {
-    if (!official.firstName && !official.lastName) {
-      return null;
-    }
-    const nameParts = [
-      official.firstName,
-      official.middleName,
-      official.lastName,
-      official.suffix
-    ].filter(part => part && part.trim());
-    
-    return nameParts.length > 0 ? nameParts.join(' ') : null;
-  };
-
-  // Helper function to truncate long names for mobile
-  const truncateName = (name: string, maxLength: number = 25) => {
-    if (name.length <= maxLength) return name;
-    return name.substring(0, maxLength) + '...';
-  };
-
-  const getOfficialsByCategory = () => {
-    const executive = officials.filter(o => EXECUTIVE_POSITIONS.includes(o.position));
-    const sangguniang = officials.filter(o => o.position.startsWith('Sangguniang Barangay Member'));
-    const youth = officials.filter(o => YOUTH_POSITIONS.includes(o.position));
-    
-    return { executive, sangguniang, youth };
-  };
-
-  const renderOfficialSection = (title: string, officialsList: OfficialData[], startIndex: number) => {
-    if (isLoading) {
-      return (
-        <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">{title}</h3>
-          {Array.from({ length: officialsList.length }).map((_, index) => (
-            <div key={index} className="rounded-lg p-4 border">
-              <div className="flex items-center space-x-3">
-                <Skeleton className="w-10 h-10 rounded-full" />
-                <div className="flex-1">
-                  <Skeleton className="h-4 w-3/4 mb-2" />
-                  <Skeleton className="h-3 w-1/2" />
-                </div>
-                <Skeleton className="w-4 h-4" />
-              </div>
-            </div>
-          ))}
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">{title}</h3>
-        {officialsList.map((official, index) => {
-          const actualIndex = officials.findIndex(o => o.position === official.position);
-          const displayName = getOfficialDisplayName(official);
-          const hasData = displayName !== null;
-          
-          return (
-            <div 
-              key={official.position} 
-              className={`rounded-lg p-4 flex items-center justify-between cursor-pointer transition-all duration-200 ${
-                hasData
-                  ? 'bg-white border border-red-200 shadow-sm hover:shadow-md hover:border-red-300' 
-                  : 'border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400'
-              }`}
-              onClick={() => handleOfficialClick(actualIndex)}
-            >
-              <div className="flex items-center space-x-3 flex-1 min-w-0">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  hasData ? 'bg-red-100' : 'bg-gray-300'
-                }`}>
-                  <User className={`h-5 w-5 ${hasData ? 'text-red-600' : 'text-gray-600'}`} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className={`font-medium ${
-                    hasData ? 'text-gray-900' : 'text-gray-500'
-                  } ${isMobile ? 'text-sm' : ''}`}>
-                    {isMobile ? truncateName(official.position, 20) : official.position}
-                  </p>
-                  {hasData ? (
-                    <p className={`text-red-700 font-medium mt-1 truncate ${
-                      isMobile ? 'text-xs' : 'text-sm'
-                    }`}>
-                      {isMobile ? truncateName(displayName, 30) : displayName}
-                    </p>
-                  ) : (
-                    <p className={`text-gray-400 mt-1 ${
-                      isMobile ? 'text-xs' : 'text-xs'
-                    }`}>
-                      Tap to add official details
-                    </p>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {hasData && (
-                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                )}
-                <Edit2 className={`h-4 w-4 ${hasData ? 'text-gray-400' : 'text-gray-300'}`} />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-
   if (isMobile) {
-    const { executive, sangguniang, youth } = getOfficialsByCategory();
-
     return (
       <div className="min-h-screen bg-white flex flex-col">
         {/* Progress Bar */}
         <div className="w-full bg-gray-200 h-1">
-          <div className="h-1 w-3/5 bg-red-600"></div>
+          <div className="bg-red-600 h-1 transition-all duration-300" style={{ width: '60%' }}></div>
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b bg-white">
+        <div className="flex items-center justify-between px-4 py-4 bg-white border-b">
           <button onClick={handleBack} className="text-gray-600 hover:text-gray-800">
             <ChevronLeft className="h-6 w-6" />
           </button>
-          <h1 className="text-lg font-semibold text-gray-900">Edit Barangay Official</h1>
+          <h1 className="text-lg font-semibold text-gray-900">Barangay Officials</h1>
           <div className="w-6" />
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-4 space-y-6">
-            {/* Location Info */}
-            <div className="text-left">
-              <div className="text-xs text-gray-600 mb-1">Location</div>
-              <div className="text-sm font-medium text-gray-900">{locationState?.barangay}</div>
-              <div className="text-xs text-gray-500">
-                {locationState?.municipality}, {locationState?.province}
-              </div>
-            </div>
-
-            {/* Officials List by Category */}
-            <div className="space-y-6">
-              <div className="text-left">
-                <div className="text-xs text-gray-600 mb-1">Details</div>
-                <div className="text-sm font-medium text-gray-900">Please check the names of your officials</div>
-              </div>
-              
-              {renderOfficialSection("Executive Officials", executive, 0)}
-              {renderOfficialSection("Sangguniang Barangay", sangguniang, executive.length)}
-              {renderOfficialSection("Youth Council", youth, executive.length + sangguniang.length)}
-            </div>
-
-            {/* Phone Number Section */}
-            <div className="space-y-4 mt-6">
-              <div className="text-left">
-                <div className="text-xs text-gray-600 mb-1">Contact</div>
-                <div className="text-sm font-medium text-gray-900">Verify/Confirm your official barangay number</div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
-                  <img 
-                    src="/lovable-uploads/d61c25bf-51d4-4bc8-a8ff-69e0b901ee3a.png" 
-                    alt="Philippines Flag" 
-                    className="w-full h-full object-cover"
-                  />
+        <div className="flex-1 flex flex-col justify-between p-4">
+          {/* Officials List */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold text-gray-900">List of Officials</h2>
+            {officials.map((official, index) => (
+              <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <div className="font-semibold text-gray-900">{official.name}</div>
+                  <div className="text-sm text-gray-600">{official.position}</div>
                 </div>
-                <span className="text-sm text-gray-600">+63</span>
-                <Input 
-                  placeholder="9171234567" 
-                  className="flex-1"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                />
+                <button onClick={() => handleRemoveOfficial(index)} className="text-red-600 hover:text-red-800">
+                  <X className="h-5 w-5" />
+                </button>
               </div>
-            </div>
+            ))}
+          </div>
 
-            {/* Landline Section */}
-            <div className="space-y-4">
-              <div className="text-left">
-                <div className="text-xs text-gray-600 mb-1">Landline</div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                  <Phone className="h-4 w-4 text-white" />
-                </div>
-                <span className="text-sm text-gray-600">02</span>
-                <Input 
-                  placeholder="047-222-5173" 
-                  className="flex-1"
-                  value={landlineNumber}
-                  onChange={(e) => setLandlineNumber(e.target.value)}
-                />
-              </div>
+          {/* Add Official Form */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold text-gray-900">Add New Official</h2>
+            <div>
+              <Label htmlFor="official-name" className="block text-sm font-medium text-gray-700">
+                Name
+              </Label>
+              <Input
+                type="text"
+                id="official-name"
+                value={newOfficialName}
+                onChange={(e) => setNewOfficialName(e.target.value)}
+                className="mt-1"
+              />
             </div>
+            <div>
+              <Label htmlFor="official-position" className="block text-sm font-medium text-gray-700">
+                Position
+              </Label>
+              <Input
+                type="text"
+                id="official-position"
+                value={newOfficialPosition}
+                onChange={(e) => setNewOfficialPosition(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            <Button onClick={handleAddOfficial} className="w-full bg-green-600 hover:bg-green-700 text-white">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Official
+            </Button>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="space-y-3">
+            <Button
+              onClick={handleNext}
+              className="w-full bg-red-600 hover:bg-red-700 text-white py-3 h-12 text-base font-medium"
+            >
+              NEXT
+            </Button>
           </div>
         </div>
-
-        {/* Next Button */}
-        <div className="p-4 border-t">
-          <Button
-            onClick={handleNext}
-            className="w-full bg-red-600 hover:bg-red-700 text-white py-3 h-12 text-base font-medium"
-            disabled={isLoading}
-          >
-            NEXT
-          </Button>
-        </div>
-
-        {/* Official Details Modal */}
-        {selectedOfficialIndex !== null && (
-          <OfficialDetailsModal
-            isOpen={isModalOpen}
-            onClose={() => {
-              console.log('Closing modal');
-              setIsModalOpen(false);
-              setSelectedOfficialIndex(null);
-            }}
-            official={officials[selectedOfficialIndex]}
-            onSave={handleOfficialSave}
-          />
-        )}
       </div>
     );
   }
 
   // Desktop version
-  const { executive, sangguniang, youth } = getOfficialsByCategory();
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
-      <div className="max-w-2xl w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
+      <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
         {/* Progress Bar */}
         <div className="w-full bg-gray-200 h-1">
-          <div className="h-1 w-3/5 bg-red-600"></div>
+          <div className="bg-red-600 h-1 transition-all duration-300" style={{ width: '60%' }}></div>
         </div>
 
-        <div className="p-8 max-h-[80vh] overflow-y-auto">
-          <button onClick={handleBack} className="inline-flex items-center text-sm text-gray-500 mb-6 hover:text-gray-700">
+        {/* Header */}
+        <div className="px-8 py-6 border-b bg-white">
+          <button onClick={handleBack} className="inline-flex items-center text-sm text-gray-500 mb-4 hover:text-gray-700">
             <ChevronLeft className="w-4 h-4 mr-1" /> Back
           </button>
-          
-          {/* Header */}
-          <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Edit Barangay Official</h1>
-            <p className="text-gray-600">Update official information for your barangay</p>
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gray-900">Barangay Officials</h2>
           </div>
-
-          {/* Content */}
-          <div className="space-y-6">
-            {/* Location Info */}
-            <div className="text-left">
-              <div className="text-xs text-gray-600 mb-1">Location</div>
-              <div className="text-sm font-medium text-gray-900">{locationState?.barangay}</div>
-              <div className="text-xs text-gray-500">
-                {locationState?.municipality}, {locationState?.province}
-              </div>
-            </div>
-
-            {/* Officials List by Category */}
-            <div className="space-y-6">
-              <div className="text-left">
-                <div className="text-xs text-gray-600 mb-1">Details</div>
-                <div className="text-sm font-medium text-gray-900">Please check the names of your officials</div>
-              </div>
-              
-              {renderOfficialSection("Executive Officials", executive, 0)}
-              {renderOfficialSection("Sangguniang Barangay", sangguniang, executive.length)}
-              {renderOfficialSection("Youth Council", youth, executive.length + sangguniang.length)}
-            </div>
-
-            {/* Phone and contact sections */}
-            <div className="space-y-6">
-              <div>
-                <div className="text-left mb-3">
-                  <div className="text-xs text-gray-600 mb-1">Contact</div>
-                  <div className="text-sm font-medium text-gray-900">Verify/Confirm your official barangay number</div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
-                    <img 
-                      src="/lovable-uploads/d61c25bf-51d4-4bc8-a8ff-69e0b901ee3a.png" 
-                      alt="Philippines Flag" 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <span className="text-sm text-gray-600">+63</span>
-                  <Input 
-                    placeholder="9171234567" 
-                    className="flex-1"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <div className="text-left mb-3">
-                  <div className="text-xs text-gray-600 mb-1">Landline</div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                    <Phone className="h-4 w-4 text-white" />
-                  </div>
-                  <span className="text-sm text-gray-600">02</span>
-                  <Input 
-                    placeholder="047-222-5173" 
-                    className="flex-1"
-                    value={landlineNumber}
-                    onChange={(e) => setLandlineNumber(e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Next Button */}
-          <Button
-            onClick={handleNext}
-            className="w-full bg-red-600 hover:bg-red-700 text-white py-3 text-base font-medium mt-8"
-            disabled={isLoading}
-          >
-            Next
-          </Button>
         </div>
 
-        {/* Official Details Modal */}
-        {selectedOfficialIndex !== null && (
-          <OfficialDetailsModal
-            isOpen={isModalOpen}
-            onClose={() => {
-              console.log('Closing modal');
-              setIsModalOpen(false);
-              setSelectedOfficialIndex(null);
-            }}
-            official={officials[selectedOfficialIndex]}
-            onSave={handleOfficialSave}
-          />
-        )}
+        <div className="p-8">
+          {/* Officials List */}
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">List of Officials</h2>
+            {officials.map((official, index) => (
+              <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-2">
+                <div>
+                  <div className="font-semibold text-gray-900">{official.name}</div>
+                  <div className="text-sm text-gray-600">{official.position}</div>
+                </div>
+                <button onClick={() => handleRemoveOfficial(index)} className="text-red-600 hover:text-red-800">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Add Official Form */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold text-gray-900">Add New Official</h2>
+            <div>
+              <Label htmlFor="official-name-desktop" className="block text-sm font-medium text-gray-700">
+                Name
+              </Label>
+              <Input
+                type="text"
+                id="official-name-desktop"
+                value={newOfficialName}
+                onChange={(e) => setNewOfficialName(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="official-position-desktop" className="block text-sm font-medium text-gray-700">
+                Position
+              </Label>
+              <Input
+                type="text"
+                id="official-position-desktop"
+                value={newOfficialPosition}
+                onChange={(e) => setNewOfficialPosition(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            <Button onClick={handleAddOfficial} className="w-full bg-green-600 hover:bg-green-700 text-white">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Official
+            </Button>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="mt-8">
+            <Button
+              onClick={handleNext}
+              className="w-full bg-red-600 hover:bg-red-700 text-white py-3 text-base font-medium"
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

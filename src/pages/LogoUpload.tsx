@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -120,11 +119,11 @@ export default function LogoUpload() {
       <div className="min-h-screen bg-white flex flex-col">
         {/* Progress Bar */}
         <div className="w-full bg-gray-200 h-1">
-          <div className="h-1 w-4/5 bg-red-600"></div>
+          <div className="bg-red-600 h-1 transition-all duration-300" style={{ width: '80%' }}></div>
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b bg-white">
+        <div className="flex items-center justify-between px-4 py-4 bg-white border-b">
           <button onClick={handleBack} className="text-gray-600 hover:text-gray-800">
             <ChevronLeft className="h-6 w-6" />
           </button>
@@ -219,16 +218,22 @@ export default function LogoUpload() {
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
         {/* Progress Bar */}
         <div className="w-full bg-gray-200 h-1">
-          <div className="h-1 w-4/5 bg-red-600"></div>
+          <div className="bg-red-600 h-1 transition-all duration-300" style={{ width: '80%' }}></div>
+        </div>
+
+        {/* Header */}
+        <div className="px-8 py-6 border-b bg-white">
+          <button onClick={handleBack} className="inline-flex items-center text-sm text-gray-500 mb-4 hover:text-gray-700">
+            <ChevronLeft className="w-4 h-4 mr-1" /> Back
+          </button>
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gray-900">Upload Logo</h2>
+          </div>
         </div>
 
         <div className="p-8">
-          <button onClick={handleBack} className="inline-flex items-center text-sm text-gray-500 mb-6 hover:text-gray-700">
-            <ChevronLeft className="w-4 h-4 mr-1" /> Back
-          </button>
-          
-          {/* Header */}
-          <div className="text-center mb-8">
+          {/* Logo and Title */}
+          <div className="text-center">
             <img 
               src="/lovable-uploads/6960369f-3a6b-4d57-ab0f-f7db77f16152.png" 
               alt="eGov.PH Logo" 
@@ -237,7 +242,7 @@ export default function LogoUpload() {
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Upload Barangay Logo</h1>
             <p className="text-gray-600">Add your official barangay logo (optional)</p>
           </div>
-          
+
           {/* Upload Area */}
           <div className="space-y-6 mb-8">
             {logoUrl ? (
