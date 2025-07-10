@@ -117,18 +117,18 @@ export default function LogoUpload() {
   if (isMobile) {
     return (
       <div className="min-h-screen bg-white flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-4 bg-red-600 text-white">
-          <button onClick={handleBack} className="text-white hover:text-gray-200">
-            <ChevronLeft className="h-6 w-6" />
-          </button>
-          <h1 className="text-lg font-bold">Upload Logo</h1>
-          <div className="w-6" />
+        {/* Progress Bar - at very top */}
+        <div className="w-full bg-gray-200 h-1">
+          <div className="h-1 w-4/5 bg-red-600"></div>
         </div>
 
-        {/* Progress Bar */}
-        <div className="px-6 py-4">
-          <RegistrationProgress currentStep="logo" />
+        {/* Header - white background */}
+        <div className="flex items-center justify-between px-4 py-3 border-b bg-white">
+          <button onClick={handleBack} className="text-gray-600 hover:text-gray-800">
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+          <h1 className="text-lg font-semibold text-gray-900">Upload Logo</h1>
+          <div className="w-6" />
         </div>
 
         {/* Content */}
@@ -214,11 +214,11 @@ export default function LogoUpload() {
 
   // Desktop version
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-white to-orange-50 px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
-        {/* Progress Bar */}
-        <div className="px-8 py-6 border-b">
-          <RegistrationProgress currentStep="logo" />
+        {/* Progress Bar - at very top */}
+        <div className="w-full bg-gray-200 h-1">
+          <div className="h-1 w-4/5 bg-red-600"></div>
         </div>
 
         <div className="p-8">
