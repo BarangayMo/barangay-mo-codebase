@@ -135,23 +135,21 @@ export default function Register() {
   if (isMobile) {
     return (
       <div className="min-h-screen bg-white flex flex-col">
-        {/* Header */}
-        <div className={`flex items-center justify-between px-4 py-4 text-white ${
-          locationState.role === 'official' ? 'bg-red-600' : 'bg-blue-600'
-        }`}>
+        {/* Progress Bar at the very top */}
+        <div className="w-full">
+          <RegistrationProgress currentStep="register" userRole={locationState.role as 'resident' | 'official'} />
+        </div>
+
+        {/* White Header */}
+        <div className="flex items-center justify-between px-4 py-4 bg-white border-b">
           <button 
             onClick={() => navigate(getBackLink(), { state: locationState })}
-            className="text-white hover:text-gray-200"
+            className="text-gray-600 hover:text-gray-800"
           >
             <ChevronLeft className="h-6 w-6" />
           </button>
-          <h1 className="text-lg font-bold">Complete Registration</h1>
+          <h1 className="text-lg font-bold text-gray-900">Complete Registration</h1>
           <div className="w-6" />
-        </div>
-
-        {/* Progress Bar */}
-        <div className="px-6 py-4 bg-white">
-          <RegistrationProgress currentStep="register" userRole={locationState.role as 'resident' | 'official'} />
         </div>
 
         {/* Content */}
@@ -355,31 +353,25 @@ export default function Register() {
     );
   }
 
-  // Desktop version with same fixes applied
+  // Desktop version
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
-        {/* Progress Bar */}
-        <div className="px-8 py-6 border-b bg-white">
+        {/* Progress Bar at the very top */}
+        <div className="w-full">
           <RegistrationProgress currentStep="register" userRole={locationState.role as 'resident' | 'official'} />
         </div>
 
-        <div className="p-8 bg-white">
+        {/* White Header */}
+        <div className="px-8 py-6 border-b bg-white">
           <button 
             onClick={() => navigate(getBackLink(), { state: locationState })}
-            className="inline-flex items-center text-sm text-gray-500 mb-6 hover:text-gray-700"
+            className="inline-flex items-center text-sm text-gray-500 mb-4 hover:text-gray-700"
           >
             <ChevronLeft className="w-4 h-4 mr-1" /> Back
           </button>
-          
-          {/* Header */}
-          <div className="text-center mb-8">
-            <img 
-              src="/lovable-uploads/6960369f-3a6b-4d57-ab0f-f7db77f16152.png" 
-              alt="eGov.PH Logo" 
-              className="h-16 w-auto mx-auto mb-4" 
-            />
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Complete Your Registration</h1>
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900">Complete Your Registration</h1>
             <p className="text-gray-600">
               Registering as: <span className={`font-semibold capitalize ${
                 locationState.role === 'official' ? 'text-red-600' : 'text-blue-600'
@@ -389,8 +381,9 @@ export default function Register() {
               Barangay: <span className="font-semibold">{locationState.barangay}</span>
             </p>
           </div>
-          
-          {/* Form - keeping same structure as mobile but with desktop classes */}
+        </div>
+
+        <div className="p-8 bg-white">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <div>

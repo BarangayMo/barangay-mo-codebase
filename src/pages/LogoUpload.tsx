@@ -117,18 +117,18 @@ export default function LogoUpload() {
   if (isMobile) {
     return (
       <div className="min-h-screen bg-white flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-4 bg-red-600 text-white">
-          <button onClick={handleBack} className="text-white hover:text-gray-200">
-            <ChevronLeft className="h-6 w-6" />
-          </button>
-          <h1 className="text-lg font-bold">Upload Logo</h1>
-          <div className="w-6" />
+        {/* Progress Bar at the very top */}
+        <div className="w-full">
+          <RegistrationProgress currentStep="logo" userRole="official" />
         </div>
 
-        {/* Progress Bar */}
-        <div className="px-6 py-4">
-          <RegistrationProgress currentStep="logo" />
+        {/* White Header */}
+        <div className="flex items-center justify-between px-4 py-4 bg-white border-b">
+          <button onClick={handleBack} className="text-gray-600 hover:text-gray-800">
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+          <h1 className="text-lg font-bold text-gray-900">Upload Logo</h1>
+          <div className="w-6" />
         </div>
 
         {/* Content */}
@@ -216,16 +216,23 @@ export default function LogoUpload() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-white to-orange-50 px-4 py-8">
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
-        {/* Progress Bar */}
-        <div className="px-8 py-6 border-b">
-          <RegistrationProgress currentStep="logo" />
+        {/* Progress Bar at the very top */}
+        <div className="w-full">
+          <RegistrationProgress currentStep="logo" userRole="official" />
+        </div>
+
+        {/* White Header */}
+        <div className="px-8 py-6 border-b bg-white">
+          <button onClick={handleBack} className="inline-flex items-center text-sm text-gray-500 mb-4 hover:text-gray-700">
+            <ChevronLeft className="w-4 h-4 mr-1" /> Back
+          </button>
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900">Upload Barangay Logo</h1>
+            <p className="text-gray-600">Add your official barangay logo (optional)</p>
+          </div>
         </div>
 
         <div className="p-8">
-          <button onClick={handleBack} className="inline-flex items-center text-sm text-gray-500 mb-6 hover:text-gray-700">
-            <ChevronLeft className="w-4 h-4 mr-1" /> Back
-          </button>
-          
           {/* Header */}
           <div className="text-center mb-8">
             <img 
