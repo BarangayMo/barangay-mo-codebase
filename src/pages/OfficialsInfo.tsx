@@ -1,179 +1,154 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { ChevronLeft } from "lucide-react";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, Plus, Trash2 } from "lucide-react";
-import { useMediaQuery } from "@/hooks/use-media-query";
-import { RegistrationProgress } from "@/components/ui/registration-progress";
-
-interface LocationState {
-  role: string;
-  region: string;
-  province: string;
-  municipality: string;
-  barangay: string;
-}
-
-interface Official {
-  position: string;
-  name: string;
-  contact: string;
-}
-
-const officialPositions = [
-  "Barangay Captain",
-  "Kagawad (Councilor) - Peace and Order",
-  "Kagawad (Councilor) - Health",
-  "Kagawad (Councilor) - Agriculture",
-  "Kagawad (Councilor) - Education",
-  "Kagawad (Councilor) - Infrastructure",
-  "Kagawad (Councilor) - Women and Family",
-  "Barangay Secretary",
-  "Barangay Treasurer"
-];
+import { Textarea } from "@/components/ui/textarea";
 
 export default function OfficialsInfo() {
-  const location = useLocation();
   const navigate = useNavigate();
+  const location = useLocation();
   const isMobile = useMediaQuery("(max-width: 768px)");
-  const locationState = location.state as LocationState;
+  const locationState = location.state;
 
-  // If no location state, redirect to role selection
-  if (!locationState?.role) {
-    navigate('/register/role');
-    return null;
-  }
-
-  const [officials, setOfficials] = useState<Official[]>([]);
-
-  const addOfficial = () => {
-    setOfficials([...officials, { position: "", name: "", contact: "" }]);
-  };
-
-  const updateOfficial = (index: number, field: string, value: string) => {
-    const updatedOfficials = [...officials];
-    updatedOfficials[index][field] = value;
-    setOfficials(updatedOfficials);
-  };
-
-  const removeOfficial = (index: number) => {
-    const updatedOfficials = officials.filter((_, i) => i !== index);
-    setOfficials(updatedOfficials);
-  };
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [position, setPosition] = useState("");
+  const [contactNumber, setContactNumber] = useState("");
+  const [email, setEmail] = useState("");
 
   const handleNext = () => {
-    const nextState = {
-      role: locationState.role,
-      region: locationState.region,
-      province: locationState.province,
-      municipality: locationState.municipality,
-      barangay: locationState.barangay,
-      officials: officials
-    };
-    navigate("/register/logo", { state: nextState });
+    // Validate if required fields are filled
+    if (firstName && lastName && position && contactNumber && email) {
+      // Navigate to the next step (Logo Upload) and pass the data
+      navigate("/register/logo", {
+        state: {
+          ...locationState,
+          firstName,
+          lastName,
+          position,
+          contactNumber,
+          email,
+        },
+      });
+    } else {
+      // Optionally, show an error message if fields are missing
+      alert("Please fill in all required fields.");
+    }
   };
 
   const handleBack = () => {
-     navigate("/register/location", { state: locationState });
+    navigate("/register/location");
   };
+
+  const isFormValid = firstName && lastName && position && contactNumber && email;
 
   if (isMobile) {
     return (
       <div className="min-h-screen bg-white flex flex-col">
-        {/* Progress Bar at the very top */}
-        <div className="w-full">
-          <RegistrationProgress currentStep="details" userRole="official" />
+        {/* Progress Bar - exactly like role page */}
+        <div className="w-full bg-gray-200 h-1">
+          <div className="h-1 w-3/5 bg-red-600"></div>
         </div>
 
-        {/* White Header */}
-        <div className="flex items-center justify-between px-4 py-4 bg-white border-b">
+        {/* Header - exactly like role page */}
+        <div className="flex items-center justify-between px-4 py-3 border-b bg-white">
           <button onClick={handleBack} className="text-gray-600 hover:text-gray-800">
             <ChevronLeft className="h-6 w-6" />
           </button>
-          <h1 className="text-lg font-bold text-gray-900">Barangay Officials</h1>
+          <h1 className="text-lg font-semibold text-gray-900">Official Details</h1>
           <div className="w-6" />
         </div>
 
         {/* Content */}
-        <div className="flex-1 flex flex-col justify-between p-4 bg-white">
-          <div className="space-y-4">
-            <div className="text-center">
-              <img
-                src="/lovable-uploads/6960369f-3a6b-4d57-ab0f-f7db77f16152.png"
-                alt="eGov.PH Logo"
-                className="h-12 w-auto mx-auto mb-4"
-              />
-              <h2 className="text-xl font-bold text-gray-900">Barangay Officials Information</h2>
-              <p className="text-gray-600 text-sm">Add the contact information for your barangay officials</p>
-            </div>
-
-            {officials.map((official, index) => (
-              <div key={index} className="border rounded-md p-4">
-                <div className="mb-2">
-                  <Label htmlFor={`position-${index}`} className="block text-sm font-medium text-gray-700">
-                    Position
-                  </Label>
-                  <select
-                    id={`position-${index}`}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
-                    value={official.position}
-                    onChange={(e) => updateOfficial(index, "position", e.target.value)}
-                  >
-                    <option value="">Select Position</option>
-                    {officialPositions.map((position) => (
-                      <option key={position} value={position}>
-                        {position}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="mb-2">
-                  <Label htmlFor={`name-${index}`} className="block text-sm font-medium text-gray-700">
-                    Name
-                  </Label>
-                  <Input
-                    type="text"
-                    id={`name-${index}`}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
-                    value={official.name}
-                    onChange={(e) => updateOfficial(index, "name", e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor={`contact-${index}`} className="block text-sm font-medium text-gray-700">
-                    Contact Number
-                  </Label>
-                  <Input
-                    type="text"
-                    id={`contact-${index}`}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
-                    value={official.contact}
-                    onChange={(e) => updateOfficial(index, "contact", e.target.value)}
-                  />
-                </div>
-                <button
-                  type="button"
-                  className="mt-2 text-red-600 hover:text-red-800 text-sm"
-                  onClick={() => removeOfficial(index)}
-                >
-                  <Trash2 className="h-4 w-4 inline-block mr-1 align-text-top" />
-                  Remove
-                </button>
-              </div>
-            ))}
-
-            <Button variant="outline" className="w-full justify-center" onClick={addOfficial}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Official
-            </Button>
+        <div className="flex-1 p-6 space-y-6 bg-white">
+          {/* First Name */}
+          <div>
+            <Label htmlFor="firstName" className="text-sm font-medium text-gray-700 block mb-2">
+              First Name
+            </Label>
+            <Input
+              type="text"
+              id="firstName"
+              placeholder="Enter first name"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="w-full h-12 rounded-lg"
+            />
           </div>
 
-          <div className="space-y-3">
-            <Button onClick={handleNext} className="w-full bg-red-600 hover:bg-red-700 text-white">
-              Next
-            </Button>
+          {/* Last Name */}
+          <div>
+            <Label htmlFor="lastName" className="text-sm font-medium text-gray-700 block mb-2">
+              Last Name
+            </Label>
+            <Input
+              type="text"
+              id="lastName"
+              placeholder="Enter last name"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              className="w-full h-12 rounded-lg"
+            />
           </div>
+
+          {/* Position */}
+          <div>
+            <Label htmlFor="position" className="text-sm font-medium text-gray-700 block mb-2">
+              Position
+            </Label>
+            <Input
+              type="text"
+              id="position"
+              placeholder="Enter position"
+              value={position}
+              onChange={(e) => setPosition(e.target.value)}
+              className="w-full h-12 rounded-lg"
+            />
+          </div>
+
+          {/* Contact Number */}
+          <div>
+            <Label htmlFor="contactNumber" className="text-sm font-medium text-gray-700 block mb-2">
+              Contact Number
+            </Label>
+            <Input
+              type="tel"
+              id="contactNumber"
+              placeholder="Enter contact number"
+              value={contactNumber}
+              onChange={(e) => setContactNumber(e.target.value)}
+              className="w-full h-12 rounded-lg"
+            />
+          </div>
+
+          {/* Email */}
+          <div>
+            <Label htmlFor="email" className="text-sm font-medium text-gray-700 block mb-2">
+              Email Address
+            </Label>
+            <Input
+              type="email"
+              id="email"
+              placeholder="Enter email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full h-12 rounded-lg"
+            />
+          </div>
+        </div>
+
+        {/* Next Button */}
+        <div className="p-6 bg-white border-t">
+          <Button
+            onClick={handleNext}
+            disabled={!isFormValid}
+            className="w-full bg-red-600 hover:bg-red-700 text-white py-4 h-12 text-base font-medium rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            Next
+          </Button>
         </div>
       </div>
     );
@@ -182,96 +157,106 @@ export default function OfficialsInfo() {
   // Desktop version
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
-      <div className="max-w-2xl w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
-        {/* Progress Bar at the very top */}
-        <div className="w-full">
-          <RegistrationProgress currentStep="details" userRole="official" />
+      <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
+        {/* Progress Bar - exactly like role page */}
+        <div className="w-full bg-gray-200 h-1">
+          <div className="h-1 w-3/5 bg-red-600"></div>
         </div>
 
-        {/* White Header */}
-        <div className="px-8 py-6 border-b bg-white">
-          <button onClick={handleBack} className="inline-flex items-center text-sm text-gray-500 mb-4 hover:text-gray-700">
+        {/* Header - exactly like role page */}
+        <div className="p-8 bg-white">
+          <button onClick={handleBack} className="inline-flex items-center text-sm text-gray-500 mb-6 hover:text-gray-700">
             <ChevronLeft className="w-4 h-4 mr-1" /> Back
           </button>
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900">Barangay Officials Information</h1>
-            <p className="text-gray-600 mt-2">Add the contact information for your barangay officials</p>
+          
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-900">Official Details</h2>
           </div>
-        </div>
 
-        <div className="p-8 bg-white max-h-[70vh] overflow-y-auto">
-          <div className="space-y-4">
-            <div className="text-center">
-              <img
-                src="/lovable-uploads/6960369f-3a6b-4d57-ab0f-f7db77f16152.png"
-                alt="eGov.PH Logo"
-                className="h-16 w-auto mx-auto mb-4"
+          <div className="space-y-6">
+            {/* First Name */}
+            <div>
+              <Label htmlFor="firstName-desktop" className="text-sm font-medium text-gray-700 block mb-2">
+                First Name
+              </Label>
+              <Input
+                type="text"
+                id="firstName-desktop"
+                placeholder="Enter first name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="w-full h-12 rounded-lg"
               />
             </div>
 
-            {officials.map((official, index) => (
-              <div key={index} className="border rounded-md p-4">
-                <div className="mb-2">
-                  <Label htmlFor={`position-${index}-desktop`} className="block text-sm font-medium text-gray-700">
-                    Position
-                  </Label>
-                  <select
-                    id={`position-${index}-desktop`}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
-                    value={official.position}
-                    onChange={(e) => updateOfficial(index, "position", e.target.value)}
-                  >
-                    <option value="">Select Position</option>
-                    {officialPositions.map((position) => (
-                      <option key={position} value={position}>
-                        {position}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="mb-2">
-                  <Label htmlFor={`name-${index}-desktop`} className="block text-sm font-medium text-gray-700">
-                    Name
-                  </Label>
-                  <Input
-                    type="text"
-                    id={`name-${index}-desktop`}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
-                    value={official.name}
-                    onChange={(e) => updateOfficial(index, "name", e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor={`contact-${index}-desktop`} className="block text-sm font-medium text-gray-700">
-                    Contact Number
-                  </Label>
-                  <Input
-                    type="text"
-                    id={`contact-${index}-desktop`}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
-                    value={official.contact}
-                    onChange={(e) => updateOfficial(index, "contact", e.target.value)}
-                  />
-                </div>
-                <button
-                  type="button"
-                  className="mt-2 text-red-600 hover:text-red-800 text-sm"
-                  onClick={() => removeOfficial(index)}
-                >
-                  <Trash2 className="h-4 w-4 inline-block mr-1 align-text-top" />
-                  Remove
-                </button>
-              </div>
-            ))}
+            {/* Last Name */}
+            <div>
+              <Label htmlFor="lastName-desktop" className="text-sm font-medium text-gray-700 block mb-2">
+                Last Name
+              </Label>
+              <Input
+                type="text"
+                id="lastName-desktop"
+                placeholder="Enter last name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className="w-full h-12 rounded-lg"
+              />
+            </div>
 
-            <Button variant="outline" className="w-full justify-center" onClick={addOfficial}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Official
-            </Button>
+            {/* Position */}
+            <div>
+              <Label htmlFor="position-desktop" className="text-sm font-medium text-gray-700 block mb-2">
+                Position
+              </Label>
+              <Input
+                type="text"
+                id="position-desktop"
+                placeholder="Enter position"
+                value={position}
+                onChange={(e) => setPosition(e.target.value)}
+                className="w-full h-12 rounded-lg"
+              />
+            </div>
+
+            {/* Contact Number */}
+            <div>
+              <Label htmlFor="contactNumber-desktop" className="text-sm font-medium text-gray-700 block mb-2">
+                Contact Number
+              </Label>
+              <Input
+                type="tel"
+                id="contactNumber-desktop"
+                placeholder="Enter contact number"
+                value={contactNumber}
+                onChange={(e) => setContactNumber(e.target.value)}
+                className="w-full h-12 rounded-lg"
+              />
+            </div>
+
+            {/* Email */}
+            <div>
+              <Label htmlFor="email-desktop" className="text-sm font-medium text-gray-700 block mb-2">
+                Email Address
+              </Label>
+              <Input
+                type="email"
+                id="email-desktop"
+                placeholder="Enter email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full h-12 rounded-lg"
+              />
+            </div>
           </div>
 
+          {/* Next Button */}
           <div className="mt-8">
-            <Button onClick={handleNext} className="w-full bg-red-600 hover:bg-red-700 text-white">
+            <Button
+              onClick={handleNext}
+              disabled={!isFormValid}
+              className="w-full bg-red-600 hover:bg-red-700 text-white py-4 h-12 text-base font-medium rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed"
+            >
               Next
             </Button>
           </div>
