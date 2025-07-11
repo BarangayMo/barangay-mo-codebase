@@ -1,7 +1,7 @@
-
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { AdminLayout } from "@/components/layout/AdminLayout";
+import { Layout } from "@/components/layout/Layout";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useAuth } from "@/contexts/AuthContext";
 import { CheckCircle, Archive, Loader2, Search, Filter, Bell, AlertTriangle, Info, Clock, Calendar, User, Eye, MoreHorizontal, UserCheck, FileText, MessageSquare, Users, X, ArchiveRestore } from "lucide-react";
@@ -444,223 +444,248 @@ export default function Notifications() {
   };
 
   if (isLoading) {
-    return (
+    const LoadingComponent = userRole === 'superadmin' ? (
       <AdminLayout title="Notifications">
         <div className="w-full min-h-screen flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
       </AdminLayout>
+    ) : (
+      <Layout>
+        <div className="w-full min-h-screen flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      </Layout>
     );
+    
+    return LoadingComponent;
   }
 
-  return (
-    <AdminLayout title="Notifications">
-      <div className="w-full">
-        {/* Enhanced Header with proper mobile background */}
-        <div className={cn(
-          "mb-6 p-4 -mx-4 sm:mx-0 sm:p-0",
-          isMobile && "bg-white border-b border-gray-200"
-        )}>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Notifications
-            {userRole === 'superadmin' && ' - Admin Dashboard'}
-            {userRole === 'official' && ' - Official Dashboard'}
-            {userRole === 'resident' && ' - Resident Dashboard'}
-          </h1>
-          <p className="text-gray-600">
-            Manage your {userRole === 'superadmin' ? 'administrative' : userRole === 'official' ? 'barangay' : 'personal'} notifications and stay updated
-          </p>
-        </div>
+  // Main content component
+  const NotificationsContent = () => (
+    <div className="w-full">
+      {/* Enhanced Header with proper mobile background */}
+      <div className={cn(
+        "mb-6 p-4 -mx-4 sm:mx-0 sm:p-0",
+        isMobile && "bg-white border-b border-gray-200"
+      )}>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          Notifications
+          {userRole === 'superadmin' && ' - Admin Dashboard'}
+          {userRole === 'official' && ' - Official Dashboard'}
+          {userRole === 'resident' && ' - Resident Dashboard'}
+        </h1>
+        <p className="text-gray-600">
+          Manage your {userRole === 'superadmin' ? 'administrative' : userRole === 'official' ? 'barangay' : 'personal'} notifications and stay updated
+        </p>
+      </div>
 
-        {/* Compact Stats for Mobile with Role Colors */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 px-1">
-            <div className={cn(
-              "flex items-center gap-2 px-3 py-2 rounded-full whitespace-nowrap flex-shrink-0",
-              roleColors.stats
-            )}>
-              <Bell className="h-4 w-4" />
-              <span className="text-sm font-medium">{filteredNotifications.length}</span>
-              <span className="text-xs hidden sm:inline">Total</span>
-            </div>
-            <div className="flex items-center gap-2 bg-orange-50 text-orange-700 px-3 py-2 rounded-full whitespace-nowrap flex-shrink-0">
-              <Clock className="h-4 w-4" />
-              <span className="text-sm font-medium">{unreadNotifications.length}</span>
-              <span className="text-xs hidden sm:inline">Unread</span>
-            </div>
-            <div className="flex items-center gap-2 bg-red-50 text-red-700 px-3 py-2 rounded-full whitespace-nowrap flex-shrink-0">
-              <AlertTriangle className="h-4 w-4" />
-              <span className="text-sm font-medium">{urgentNotifications.length}</span>
-              <span className="text-xs hidden sm:inline">Urgent</span>
-            </div>
-          </div>
-        </div>
-
-        <div className={cn(
-          "grid gap-6",
-          isMobile ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-5",
-          isMobile ? "h-auto" : "h-[calc(100vh-20rem)]"
-        )}>
-          {/* Notifications List */}
+      {/* Compact Stats for Mobile with Role Colors */}
+      <div className="mb-6">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 px-1">
           <div className={cn(
-            isMobile ? "order-1" : "lg:col-span-2"
+            "flex items-center gap-2 px-3 py-2 rounded-full whitespace-nowrap flex-shrink-0",
+            roleColors.stats
           )}>
-            <Card className={cn(
-              "flex flex-col",
-              isMobile ? "h-auto" : "h-full"
-            )}>
-              <CardHeader className="pb-4 sticky top-0 bg-white z-10 border-b">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant={activeTab === 'active' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setActiveTab('active')}
-                      className={activeTab === 'active' ? roleColors.primary.split('hover:')[0] : roleColors.secondary}
-                    >
-                      Active
-                    </Button>
-                    <Button
-                      variant={activeTab === 'unread' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setActiveTab('unread')}
-                      className={activeTab === 'unread' ? roleColors.primary.split('hover:')[0] : roleColors.secondary}
-                    >
-                      Unread ({unreadNotifications.length})
-                    </Button>
-                    <Button
-                      variant={activeTab === 'archived' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setActiveTab('archived')}
-                      className={activeTab === 'archived' ? roleColors.primary.split('hover:')[0] : roleColors.secondary}
-                    >
-                      <Archive className="h-4 w-4 mr-1" />
-                      <span className="hidden sm:inline">Archived</span>
-                    </Button>
-                  </div>
-                  {unreadCount > 0 && activeTab === 'active' && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => markAllAsRead()}
-                      disabled={isMarkingAllAsRead}
-                      className={roleColors.secondary}
-                    >
-                      {isMarkingAllAsRead ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      ) : (
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                      )}
-                      <span className="hidden sm:inline">Mark all read</span>
-                    </Button>
-                  )}
-                </div>
-                
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder="Search notifications..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className={`pl-9 ${roleColors.secondary.includes('border-') ? roleColors.secondary.split('hover:')[0] : 'border-blue-200 focus:border-blue-500'}`}
-                  />
-                </div>
-
-                {activeTab === 'archived' && (
-                  <div className="text-xs text-gray-500 bg-yellow-50 p-2 rounded border border-yellow-200">
-                    Archived notifications will be automatically deleted after 30 days.
-                  </div>
-                )}
-              </CardHeader>
-
-              <ScrollArea className={cn(
-                "flex-1",
-                isMobile && "max-h-96"
-              )}>
-                {filteredNotifications.length > 0 ? (
-                  filteredNotifications.map((notification) => (
-                    <NotificationListItem
-                      key={notification.id}
-                      notification={notification}
-                      onMarkAsRead={markAsRead}
-                      onArchive={archiveNotification}
-                      onUnarchive={unarchiveNotification}
-                      isSelected={selectedNotification?.id === notification.id}
-                      onSelect={handleNotificationSelect}
-                      isArchived={activeTab === 'archived'}
-                      userRole={userRole || 'resident'}
-                    />
-                  ))
-                ) : (
-                  <div className="text-center py-12">
-                    {activeTab === 'archived' ? (
-                      <>
-                        <Archive className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">No archived notifications</h3>
-                        <p className="text-gray-500">Archived notifications will appear here.</p>
-                      </>
-                    ) : activeTab === 'unread' ? (
-                      <>
-                        <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">No unread notifications</h3>
-                        <p className="text-gray-500">All caught up! You have no unread notifications.</p>
-                      </>
-                    ) : (
-                      <>
-                        <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">No notifications</h3>
-                        <p className="text-gray-500">You're all caught up! Check back later for new updates.</p>
-                      </>
-                    )}
-                  </div>
-                )}
-              </ScrollArea>
-            </Card>
+            <Bell className="h-4 w-4" />
+            <span className="text-sm font-medium">{filteredNotifications.length}</span>
+            <span className="text-xs hidden sm:inline">Total</span>
           </div>
+          <div className="flex items-center gap-2 bg-orange-50 text-orange-700 px-3 py-2 rounded-full whitespace-nowrap flex-shrink-0">
+            <Clock className="h-4 w-4" />
+            <span className="text-sm font-medium">{unreadNotifications.length}</span>
+            <span className="text-xs hidden sm:inline">Unread</span>
+          </div>
+          <div className="flex items-center gap-2 bg-red-50 text-red-700 px-3 py-2 rounded-full whitespace-nowrap flex-shrink-0">
+            <AlertTriangle className="h-4 w-4" />
+            <span className="text-sm font-medium">{urgentNotifications.length}</span>
+            <span className="text-xs hidden sm:inline">Urgent</span>
+          </div>
+        </div>
+      </div>
 
-          {/* Notification Details */}
-          {!isMobile && (
-            <div className="lg:col-span-3">
-              <Card className="h-full">
-                {selectedNotification ? (
-                  <NotificationDetails
-                    notification={selectedNotification}
+      <div className={cn(
+        "grid gap-6",
+        isMobile ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-5",
+        isMobile ? "h-auto" : "h-[calc(100vh-20rem)]"
+      )}>
+        {/* Notifications List */}
+        <div className={cn(
+          isMobile ? "order-1" : "lg:col-span-2"
+        )}>
+          <Card className={cn(
+            "flex flex-col",
+            isMobile ? "h-auto" : "h-full"
+          )}>
+            <CardHeader className="pb-4 sticky top-0 bg-white z-10 border-b">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant={activeTab === 'active' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setActiveTab('active')}
+                    className={activeTab === 'active' ? roleColors.primary.split('hover:')[0] : roleColors.secondary}
+                  >
+                    Active
+                  </Button>
+                  <Button
+                    variant={activeTab === 'unread' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setActiveTab('unread')}
+                    className={activeTab === 'unread' ? roleColors.primary.split('hover:')[0] : roleColors.secondary}
+                  >
+                    Unread ({unreadNotifications.length})
+                  </Button>
+                  <Button
+                    variant={activeTab === 'archived' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setActiveTab('archived')}
+                    className={activeTab === 'archived' ? roleColors.primary.split('hover:')[0] : roleColors.secondary}
+                  >
+                    <Archive className="h-4 w-4 mr-1" />
+                    <span className="hidden sm:inline">Archived</span>
+                  </Button>
+                </div>
+                {unreadCount > 0 && activeTab === 'active' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => markAllAsRead()}
+                    disabled={isMarkingAllAsRead}
+                    className={roleColors.secondary}
+                  >
+                    {isMarkingAllAsRead ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                    )}
+                    <span className="hidden sm:inline">Mark all read</span>
+                  </Button>
+                )}
+              </div>
+              
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Search notifications..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className={`pl-9 ${roleColors.secondary.includes('border-') ? roleColors.secondary.split('hover:')[0] : 'border-blue-200 focus:border-blue-500'}`}
+                />
+              </div>
+
+              {activeTab === 'archived' && (
+                <div className="text-xs text-gray-500 bg-yellow-50 p-2 rounded border border-yellow-200">
+                  Archived notifications will be automatically deleted after 30 days.
+                </div>
+              )}
+            </CardHeader>
+
+            <ScrollArea className={cn(
+              "flex-1",
+              isMobile && "max-h-96"
+            )}>
+              {filteredNotifications.length > 0 ? (
+                filteredNotifications.map((notification) => (
+                  <NotificationListItem
+                    key={notification.id}
+                    notification={notification}
                     onMarkAsRead={markAsRead}
                     onArchive={archiveNotification}
                     onUnarchive={unarchiveNotification}
-                    onClose={() => setSelectedNotification(null)}
+                    isSelected={selectedNotification?.id === notification.id}
+                    onSelect={handleNotificationSelect}
                     isArchived={activeTab === 'archived'}
                     userRole={userRole || 'resident'}
                   />
-                ) : (
-                  <div className="h-full flex items-center justify-center">
-                    <div className="text-center">
-                      <Bell className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-500 mb-2">Select a notification</h3>
-                      <p className="text-gray-400">Choose a notification from the list to view its details</p>
-                    </div>
-                  </div>
-                )}
-              </Card>
-            </div>
-          )}
+                ))
+              ) : (
+                <div className="text-center py-12">
+                  {activeTab === 'archived' ? (
+                    <>
+                      <Archive className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No archived notifications</h3>
+                      <p className="text-gray-500">Archived notifications will appear here.</p>
+                    </>
+                  ) : activeTab === 'unread' ? (
+                    <>
+                      <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No unread notifications</h3>
+                      <p className="text-gray-500">All caught up! You have no unread notifications.</p>
+                    </>
+                  ) : (
+                    <>
+                      <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No notifications</h3>
+                      <p className="text-gray-500">You're all caught up! Check back later for new updates.</p>
+                    </>
+                  )}
+                </div>
+              )}
+            </ScrollArea>
+          </Card>
         </div>
 
-        {/* Mobile notification details modal */}
-        {isMobile && selectedNotification && (
-          <div className="fixed inset-0 bg-white z-50 overflow-hidden">
-            <NotificationDetails
-              notification={selectedNotification}
-              onMarkAsRead={markAsRead}
-              onArchive={archiveNotification}
-              onUnarchive={unarchiveNotification}
-              onClose={() => setSelectedNotification(null)}
-              isArchived={activeTab === 'archived'}
-              userRole={userRole || 'resident'}
-            />
+        {/* Notification Details */}
+        {!isMobile && (
+          <div className="lg:col-span-3">
+            <Card className="h-full">
+              {selectedNotification ? (
+                <NotificationDetails
+                  notification={selectedNotification}
+                  onMarkAsRead={markAsRead}
+                  onArchive={archiveNotification}
+                  onUnarchive={unarchiveNotification}
+                  onClose={() => setSelectedNotification(null)}
+                  isArchived={activeTab === 'archived'}
+                  userRole={userRole || 'resident'}
+                />
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <div className="text-center">
+                    <Bell className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-500 mb-2">Select a notification</h3>
+                    <p className="text-gray-400">Choose a notification from the list to view its details</p>
+                  </div>
+                </div>
+              )}
+            </Card>
           </div>
         )}
       </div>
-    </AdminLayout>
+
+      {/* Mobile notification details modal */}
+      {isMobile && selectedNotification && (
+        <div className="fixed inset-0 bg-white z-50 overflow-hidden">
+          <NotificationDetails
+            notification={selectedNotification}
+            onMarkAsRead={markAsRead}
+            onArchive={archiveNotification}
+            onUnarchive={unarchiveNotification}
+            onClose={() => setSelectedNotification(null)}
+            isArchived={activeTab === 'archived'}
+            userRole={userRole || 'resident'}
+          />
+        </div>
+      )}
+    </div>
+  );
+
+  // Conditionally render with appropriate layout based on user role
+  if (userRole === 'superadmin') {
+    return (
+      <AdminLayout title="Notifications">
+        <NotificationsContent />
+      </AdminLayout>
+    );
+  }
+
+  // For officials and residents, use the Layout component (which shows the correct sidebar)
+  return (
+    <Layout>
+      <div className="container mx-auto px-4 md:px-6 py-2">
+        <NotificationsContent />
+      </div>
+    </Layout>
   );
 }
