@@ -104,12 +104,11 @@ export function AppRoutes() {
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
       {/* Registration flow routes */}
-      <Route path="/register" element={<RoleSelection />} />
+      <Route path="/register" element={<Register />} />
       <Route path="/register/role" element={<RoleSelection />} />
       <Route path="/register/location" element={<LocationSelection />} />
       <Route path="/register/officials" element={<OfficialsInfo />} />
       <Route path="/register/logo" element={<LogoUpload />} />
-      <Route path="/register/details" element={<Register />} />
       <Route path="/email-verification" element={<EmailVerification />} />
       <Route path="/email-confirmation" element={<EmailConfirmationHandler />} />
       <Route path="/auth/confirm" element={<EmailConfirmationHandler />} />
