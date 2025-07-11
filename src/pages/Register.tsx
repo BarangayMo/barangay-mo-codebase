@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronLeft, Eye, EyeOff } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { RegistrationProgress } from "@/components/ui/registration-progress";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -131,28 +132,26 @@ export default function Register() {
     return "/register/location";
   };
 
-  const getProgressWidth = () => {
-    return locationState.role === "official" ? "w-full" : "w-3/4";
-  };
-
   if (isMobile) {
     return (
       <div className="min-h-screen bg-white flex flex-col">
-        {/* Progress Bar */}
-        <div className="w-full bg-gray-200 h-1">
-          <div className={`h-1 ${getProgressWidth()} ${locationState.role === 'official' ? 'bg-red-600' : 'bg-blue-600'}`}></div>
-        </div>
-
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b bg-white">
+        <div className={`flex items-center justify-between px-4 py-4 text-white ${
+          locationState.role === 'official' ? 'bg-red-600' : 'bg-blue-600'
+        }`}>
           <button 
             onClick={() => navigate(getBackLink(), { state: locationState })}
-            className="text-gray-600 hover:text-gray-800"
+            className="text-white hover:text-gray-200"
           >
             <ChevronLeft className="h-6 w-6" />
           </button>
-          <h1 className="text-lg font-semibold text-gray-900">Complete Registration</h1>
+          <h1 className="text-lg font-bold">Complete Registration</h1>
           <div className="w-6" />
+        </div>
+
+        {/* Progress Bar */}
+        <div className="px-6 py-4 bg-white">
+          <RegistrationProgress currentStep="register" userRole={locationState.role as 'resident' | 'official'} />
         </div>
 
         {/* Content */}
@@ -356,19 +355,22 @@ export default function Register() {
     );
   }
 
-  // Desktop version
+  // Desktop version with same fixes applied
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
         {/* Progress Bar */}
-        <div className="w-full bg-gray-200 h-1">
-          <div className={`h-1 ${getProgressWidth()} ${locationState.role === 'official' ? 'bg-red-600' : 'bg-blue-600'}`}></div>
+        <div className="px-8 py-6 border-b bg-white">
+          <RegistrationProgress currentStep="register" userRole={locationState.role as 'resident' | 'official'} />
         </div>
 
         <div className="p-8 bg-white">
-          <Link to={getBackLink()} state={locationState} className="inline-flex items-center text-sm text-gray-500 mb-6 hover:text-gray-700">
+          <button 
+            onClick={() => navigate(getBackLink(), { state: locationState })}
+            className="inline-flex items-center text-sm text-gray-500 mb-6 hover:text-gray-700"
+          >
             <ChevronLeft className="w-4 h-4 mr-1" /> Back
-          </Link>
+          </button>
           
           {/* Header */}
           <div className="text-center mb-8">
