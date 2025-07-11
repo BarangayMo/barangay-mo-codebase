@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -216,97 +217,107 @@ export default function LogoUpload() {
     );
   }
 
-  // Desktop version
+  // Desktop version - Full screen
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-white to-orange-50 px-4 py-8">
-      <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
-        {/* Progress Bar */}
-        <div className="w-full bg-gray-200 h-1">
-          <div className={`h-1 w-4/5 ${progressColor}`}></div>
-        </div>
-
-        <div className="p-8">
-          <button onClick={handleBack} className={`inline-flex items-center text-sm ${textColor} mb-6 ${hoverTextColor}`}>
-            <ChevronLeft className="w-4 h-4 mr-1" /> Back
-          </button>
-          
-          <div className="space-y-6">
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">Upload Your Logo</h1>
-              <p className="text-gray-600">Add your barangay's official logo</p>
-            </div>
-
-            {/* Upload Area */}
-            <div
-              className={`relative border-2 border-dashed ${
-                dragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300'
-              } rounded-lg p-8 transition-colors`}
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-            >
-              <input
-                type="file"
-                id="logo-upload"
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                accept="image/*"
-                onChange={handleChange}
-              />
-              
-              {selectedFile ? (
-                <div className="text-center">
-                  <div className="flex items-center justify-center mb-4">
-                    <img
-                      src={URL.createObjectURL(selectedFile)}
-                      alt="Preview"
-                      className="max-h-32 max-w-full object-contain"
-                    />
-                  </div>
-                  <p className="text-sm text-gray-600 mb-2">{selectedFile.name}</p>
-                  <button
-                    onClick={() => setSelectedFile(null)}
-                    className="inline-flex items-center text-sm text-red-600 hover:text-red-700"
-                  >
-                    <X className="w-4 h-4 mr-1" />
-                    Remove
-                  </button>
-                </div>
-              ) : (
-                <div className="text-center">
-                  <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                  <p className="text-lg font-medium text-gray-900 mb-2">
-                    Upload your barangay logo
-                  </p>
-                  <p className="text-sm text-gray-500 mb-4">
-                    Drag and drop your logo here, or click to browse
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    Supports PNG, JPG, GIF up to 10MB
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Skip Option */}
-            <div className="text-center">
-              <button
-                onClick={handleNext}
-                className="text-sm text-gray-500 hover:text-gray-700"
-              >
-                Skip for now
-              </button>
-            </div>
-
-            {/* Next Button */}
-            <Button
-              onClick={handleNext}
-              disabled={uploading}
-              className={`w-full text-white py-3 text-base font-medium rounded-lg ${buttonColor}`}
-            >
-              {uploading ? "Uploading..." : "Next"}
-            </Button>
+    <div className="min-h-screen bg-gray-50">
+      {/* Sticky Header with Progress Bar */}
+      <div className="sticky top-0 z-50 bg-white shadow-sm border-b">
+        <div className="max-w-4xl mx-auto px-8 py-6">
+          <div className="flex items-center justify-between mb-4">
+            <button onClick={handleBack} className={`inline-flex items-center text-sm ${textColor} ${hoverTextColor}`}>
+              <ChevronLeft className="w-4 h-4 mr-1" /> Back
+            </button>
+            <img 
+              src={isOfficial 
+                ? "/lovable-uploads/141c2a56-35fc-4123-a51f-358481e0f167.png"
+                : "/lovable-uploads/6960369f-3a6b-4d57-ab0f-f7db77f16152.png"
+              } 
+              alt="eGov.PH Logo" 
+              className="h-8 w-auto" 
+            />
           </div>
+          <RegistrationProgress currentStep="logo" userRole={locationState.role as 'resident' | 'official'} />
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-md mx-auto px-4 py-8">
+        <div className="space-y-6">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Upload Your Logo</h1>
+            <p className="text-gray-600">Add your barangay's official logo</p>
+          </div>
+
+          {/* Upload Area */}
+          <div
+            className={`relative border-2 border-dashed ${
+              dragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300'
+            } rounded-lg p-8 transition-colors`}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+          >
+            <input
+              type="file"
+              id="logo-upload"
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              accept="image/*"
+              onChange={handleChange}
+            />
+            
+            {selectedFile ? (
+              <div className="text-center">
+                <div className="flex items-center justify-center mb-4">
+                  <img
+                    src={URL.createObjectURL(selectedFile)}
+                    alt="Preview"
+                    className="max-h-32 max-w-full object-contain"
+                  />
+                </div>
+                <p className="text-sm text-gray-600 mb-2">{selectedFile.name}</p>
+                <button
+                  onClick={() => setSelectedFile(null)}
+                  className="inline-flex items-center text-sm text-red-600 hover:text-red-700"
+                >
+                  <X className="w-4 h-4 mr-1" />
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <div className="text-center">
+                <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <p className="text-lg font-medium text-gray-900 mb-2">
+                  Upload your barangay logo
+                </p>
+                <p className="text-sm text-gray-500 mb-4">
+                  Drag and drop your logo here, or click to browse
+                </p>
+                <p className="text-xs text-gray-400">
+                  Supports PNG, JPG, GIF up to 10MB
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Skip Option */}
+          <div className="text-center">
+            <button
+              onClick={handleNext}
+              className="text-sm text-gray-500 hover:text-gray-700"
+            >
+              Skip for now
+            </button>
+          </div>
+
+          {/* Next Button */}
+          <Button
+            onClick={handleNext}
+            disabled={uploading}
+            className={`w-full text-white py-3 text-base font-medium rounded-lg ${buttonColor}`}
+          >
+            {uploading ? "Uploading..." : "Next"}
+          </Button>
         </div>
       </div>
     </div>
