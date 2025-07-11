@@ -391,16 +391,16 @@ export default function LocationSelection() {
   if (isMobile) {
     return <div className="min-h-screen bg-gray-50 flex flex-col">
         {/* Progress Bar */}
-        <div className="px-6 pt-6 pb-0 bg-gray-50">
-          <RegistrationProgress currentStep="location" userRole={locationState.role as 'resident' | 'official'} />
+        <div className="w-full bg-gray-200 h-1">
+          <div className={`h-1 w-2/5 ${locationState.role === 'official' ? 'bg-red-600' : 'bg-blue-600'}`}></div>
         </div>
 
-        {/* Header with role-based color */}
-        <div className="flex items-center justify-between px-4 py-4 bg-white text-red-600 mx-6 mt-4 rounded-lg shadow-sm">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b bg-white">
           <button onClick={handleBack} className="text-red-600 hover:text-red-700">
             <ChevronLeft className="h-6 w-6" />
           </button>
-          <h1 className="text-lg font-bold">Location</h1>
+          <h1 className="text-lg font-semibold text-red-600">Location</h1>
           <div className="w-6" />
         </div>
 
@@ -538,21 +538,12 @@ export default function LocationSelection() {
   return <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
         {/* Progress Bar */}
-        <div className="px-8 py-6 border-b bg-white">
-          <RegistrationProgress currentStep="location" userRole={locationState.role as 'resident' | 'official'} />
-        </div>
-
-        {/* Header */}
-        <div className="flex items-center justify-between px-8 py-4 bg-white border-b">
-          <button onClick={handleBack} className="text-red-600 hover:text-red-700">
-            <ChevronLeft className="h-6 w-6" />
-          </button>
-          <h1 className="text-xl font-bold text-red-600">Location</h1>
-          <div className="w-6" />
+        <div className="w-full bg-gray-200 h-1">
+          <div className={`h-1 w-2/5 ${locationState.role === 'official' ? 'bg-red-600' : 'bg-blue-600'}`}></div>
         </div>
 
         <div className="p-8 bg-white">
-          <button onClick={handleBack} className="inline-flex items-center text-sm text-gray-500 mb-6 hover:text-gray-700">
+          <button onClick={handleBack} className="inline-flex items-center text-sm text-red-600 mb-6 hover:text-red-700">
             <ChevronLeft className="w-4 h-4 mr-1" /> Back
           </button>
           
