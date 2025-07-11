@@ -121,13 +121,13 @@ export const MobileNavbar = () => {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md bg-white/90 border-t border-white/20 shadow-lg rounded-t-xl pb-2">
-      <div className="flex items-center justify-center px-6 py-2 max-w-md mx-auto">
+      <div className="flex items-center justify-center px-6 py-1 max-w-md mx-auto">
         <div className="flex items-center justify-between w-full">
           {navItems.map(({ icon: Icon, path, label, key }) => {
             return (
               <Link key={key} to={path} className="flex flex-col items-center justify-center p-1 min-w-0 flex-1">
                 <Icon className={cn(
-                  "h-6 w-6 transition-colors mb-1",
+                  "h-5 w-5 transition-colors mb-1",
                   pathname === path 
                     ? userRole === "official" 
                       ? "text-red-600" 
