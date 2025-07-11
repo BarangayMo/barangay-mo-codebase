@@ -208,6 +208,10 @@ const OfficialsPage = () => {
 
   const uniquePositions = [...new Set(officials.map(official => official.position))];
 
+  // Count active and inactive officials
+  const activeCount = officials.filter(o => o.status === "active").length;
+  const inactiveCount = officials.filter(o => o.status === "inactive").length;
+
   const handleOfficialClick = (official: any) => {
     if (official.position === "Punong Barangay") {
       navigate("/official/punong-barangay");
@@ -319,7 +323,7 @@ const OfficialsPage = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className={`font-bold text-gray-900 ${isMobile ? 'text-lg' : 'text-2xl'}`}>
-                      {officials.filter(o => o.status === "active").length}
+                      {activeCount}
                     </p>
                     <p className={`text-gray-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>Active Officials</p>
                   </div>
@@ -351,7 +355,7 @@ const OfficialsPage = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className={`font-bold text-gray-900 ${isMobile ? 'text-lg' : 'text-2xl'}`}>
-                      {officials.filter(o => o.status === "inactive").length}
+                      {inactiveCount}
                     </p>
                     <p className={`text-gray-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>Inactive</p>
                   </div>
