@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -58,54 +57,59 @@ import { OfficialDetailsModal } from "@/components/officials/OfficialDetailsModa
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-// Fetch officials from all regional tables
-const fetchAllOfficials = async () => {
-  const regionalTables = [
-    'NCR', 'REGION 1', 'REGION 2', 'REGION 3', 'REGION 4A', 'REGION 4B',
-    'REGION 5', 'REGION 6', 'REGION 7', 'REGION 8', 'REGION 9', 'REGION 10',
-    'REGION 11', 'REGION 12', 'REGION 13', 'CAR', 'BARMM'
-  ];
-
-  const allOfficials = [];
-
-  for (const tableName of regionalTables) {
-    try {
-      const { data, error } = await supabase
-        .from(tableName as any)
-        .select('*');
-      
-      if (!error && data) {
-        const transformedOfficials = data.map((official: any) => ({
-          id: `${tableName}-${official.FIRSTNAME}-${official.LASTNAME}-${official.POSITION}`,
-          user_id: null,
-          position: official.POSITION || 'Unknown Position',
-          barangay: official.BARANGAY || 'Unknown Barangay',
-          term_start: null,
-          term_end: null,
-          status: 'active' as const,
-          contact_phone: official['BARANGAY HALL TELNO'] || null,
-          contact_email: null,
-          years_of_service: 0,
-          achievements: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          firstName: official.FIRSTNAME,
-          lastName: official.LASTNAME,
-          middleName: official.MIDDLENAME,
-          suffix: official.SUFFIX,
-          region: tableName,
-          municipality: official['CITY/MUNICIPALITY'],
-          province: official.PROVINCE
-        }));
-        
-        allOfficials.push(...transformedOfficials);
-      }
-    } catch (error) {
-      console.error(`Error fetching from ${tableName}:`, error);
-    }
+// Fetch officials from the specific barangay
+const fetchBarangayOfficials = async (barangayName: string, region: string) => {
+  if (!barangayName || !region) {
+    return [];
   }
 
-  return allOfficials;
+  console.log(`Fetching officials for barangay: ${barangayName}, region: ${region}`);
+  
+  try {
+    const { data, error } = await supabase
+      .from(region as any)
+      .select('*')
+      .eq('BARANGAY', barangayName);
+    
+    if (error) {
+      console.error(`Error fetching from ${region}:`, error);
+      return [];
+    }
+
+    if (!data || data.length === 0) {
+      console.log(`No officials found for barangay ${barangayName} in region ${region}`);
+      return [];
+    }
+
+    const transformedOfficials = data.map((official: any) => ({
+      id: `${region}-${official.FIRSTNAME}-${official.LASTNAME}-${official.POSITION}`,
+      user_id: null,
+      position: official.POSITION || 'Unknown Position',
+      barangay: official.BARANGAY || barangayName,
+      term_start: null,
+      term_end: null,
+      status: 'active' as const,
+      contact_phone: official['BARANGAY HALL TELNO'] || null,
+      contact_email: null,
+      years_of_service: 0,
+      achievements: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      firstName: official.FIRSTNAME,
+      lastName: official.LASTNAME,
+      middleName: official.MIDDLENAME,
+      suffix: official.SUFFIX,
+      region: region,
+      municipality: official['CITY/MUNICIPALITY'],
+      province: official.PROVINCE
+    }));
+    
+    console.log(`Found ${transformedOfficials.length} officials for ${barangayName}`);
+    return transformedOfficials;
+  } catch (error) {
+    console.error(`Error fetching from ${region}:`, error);
+    return [];
+  }
 };
 
 const OfficialsPage = () => {
@@ -117,10 +121,16 @@ const OfficialsPage = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
 
-  // Fetch officials data from all regional tables
+  // For now, we'll use hardcoded values - in a real app, this would come from context/state
+  // You should replace these with actual selected barangay data
+  const selectedBarangay = "Barangay 1"; // This should come from user selection
+  const selectedRegion = "REGION 3"; // This should come from user selection
+  
+  // Fetch officials data for the selected barangay
   const { data: officials = [], isLoading } = useQuery({
-    queryKey: ['all-officials'],
-    queryFn: fetchAllOfficials,
+    queryKey: ['barangay-officials', selectedBarangay, selectedRegion],
+    queryFn: () => fetchBarangayOfficials(selectedBarangay, selectedRegion),
+    enabled: !!selectedBarangay && !!selectedRegion,
   });
 
   // Official roles with their corresponding icons and counts
@@ -235,7 +245,7 @@ const OfficialsPage = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading officials...</p>
+          <p className="mt-4 text-gray-600">Loading officials for {selectedBarangay}...</p>
         </div>
       </div>
     );
@@ -254,7 +264,7 @@ const OfficialsPage = () => {
               />
               <div className="flex-1">
                 <h1 className="text-lg font-bold">Officials Management</h1>
-                <p className="text-sm text-red-100 mt-1">Manage barangay officials and their positions</p>
+                <p className="text-sm text-red-100 mt-1">Manage officials for {selectedBarangay}</p>
               </div>
             </div>
             <Button 
@@ -273,7 +283,7 @@ const OfficialsPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Officials Management</h1>
-                <p className="text-gray-600 mt-1">Manage barangay officials and their positions</p>
+                <p className="text-gray-600 mt-1">Manage officials for {selectedBarangay}, {selectedRegion}</p>
               </div>
               <Button 
                 className="bg-red-600 hover:bg-red-700 text-white"
@@ -436,100 +446,110 @@ const OfficialsPage = () => {
           {/* Officials Table */}
           <Card>
             <CardHeader className="pb-4">
-              <CardTitle className={`font-semibold ${isMobile ? 'text-base' : 'text-lg'}`}>Barangay Officials</CardTitle>
+              <CardTitle className={`font-semibold ${isMobile ? 'text-base' : 'text-lg'}`}>
+                {selectedBarangay} Officials
+              </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 {isMobile ? (
                   // Mobile Card Layout
                   <div className="space-y-3 p-4">
-                    {filteredOfficials.map((official) => (
-                      <Card 
-                        key={official.id} 
-                        className="border border-gray-200 cursor-pointer hover:shadow-md transition-shadow"
-                        onClick={() => handleOfficialClick(official)}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-3">
-                            <Avatar className="h-14 w-14 border-2 border-gray-200 flex-shrink-0">
-                              <AvatarFallback className="bg-red-600 text-white font-semibold text-sm">
-                                {official.firstName ? official.firstName.substring(0, 1) : official.position.substring(0, 1)}
-                                {official.lastName ? official.lastName.substring(0, 1) : official.position.substring(1, 2)}
-                              </AvatarFallback>
-                            </Avatar>
-                            
-                            <div className="flex-1 min-w-0">
-                              {/* Name and Status */}
-                              <div className="flex items-start justify-between mb-3">
-                                <div className="min-w-0 flex-1">
-                                  <h3 className="font-semibold text-gray-900 text-base mb-1">
-                                    {official.firstName && official.lastName 
-                                      ? `${official.firstName} ${official.lastName}`
-                                      : official.position
-                                    }
-                                  </h3>
-                                  <div className="flex items-center gap-2 mb-2">
-                                    {getRoleIcon(official.position)}
-                                    <span className="text-sm text-gray-700 font-medium">{official.position}</span>
+                    {filteredOfficials.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-500">No officials found for {selectedBarangay}</p>
+                        <p className="text-sm text-gray-400 mt-2">Try adjusting your search or filters</p>
+                      </div>
+                    ) : (
+                      filteredOfficials.map((official) => (
+                        <Card 
+                          key={official.id} 
+                          className="border border-gray-200 cursor-pointer hover:shadow-md transition-shadow"
+                          onClick={() => handleOfficialClick(official)}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-start gap-3">
+                              <Avatar className="h-14 w-14 border-2 border-gray-200 flex-shrink-0">
+                                <AvatarFallback className="bg-red-600 text-white font-semibold text-sm">
+                                  {official.firstName ? official.firstName.substring(0, 1) : official.position.substring(0, 1)}
+                                  {official.lastName ? official.lastName.substring(0, 1) : official.position.substring(1, 2)}
+                                </AvatarFallback>
+                              </Avatar>
+                              
+                              <div className="flex-1 min-w-0">
+                                {/* Name and Status */}
+                                <div className="flex items-start justify-between mb-3">
+                                  <div className="min-w-0 flex-1">
+                                    <h3 className="font-semibold text-gray-900 text-base mb-1">
+                                      {official.firstName && official.lastName 
+                                        ? `${official.firstName} ${official.lastName}`
+                                        : official.position
+                                      }
+                                    </h3>
+                                    <div className="flex items-center gap-2 mb-2">
+                                      {getRoleIcon(official.position)}
+                                      <span className="text-sm text-gray-700 font-medium">{official.position}</span>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                                    {getStatusBadge(official.status)}
+                                    
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                          <MoreHorizontal className="h-4 w-4" />
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                        <DropdownMenuItem>
+                                          <Eye className="h-4 w-4 mr-2" />
+                                          View Profile
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem>
+                                          <PenLine className="h-4 w-4 mr-2" />
+                                          Edit
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem className="text-red-600">
+                                          <Trash2 className="h-4 w-4 mr-2" />
+                                          Remove
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
                                   </div>
                                 </div>
                                 
-                                <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                                  {getStatusBadge(official.status)}
-                                  
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                        <MoreHorizontal className="h-4 w-4" />
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                      <DropdownMenuItem>
-                                        <Eye className="h-4 w-4 mr-2" />
-                                        View Profile
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem>
-                                        <PenLine className="h-4 w-4 mr-2" />
-                                        Edit
-                                      </DropdownMenuItem>
-                                      <DropdownMenuSeparator />
-                                      <DropdownMenuItem className="text-red-600">
-                                        <Trash2 className="h-4 w-4 mr-2" />
-                                        Remove
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </div>
-                              </div>
-                              
-                              {/* Contact and Service Info */}
-                              <div className="space-y-2">
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                  <MapPin className="h-4 w-4 flex-shrink-0" />
-                                  <span className="truncate">{official.barangay}</span>
-                                </div>
-                                {official.contact_phone && (
+                                {/* Contact and Service Info */}
+                                <div className="space-y-2">
                                   <div className="flex items-center gap-2 text-sm text-gray-600">
-                                    <Phone className="h-4 w-4 flex-shrink-0" />
-                                    <span>{official.contact_phone}</span>
+                                    <MapPin className="h-4 w-4 flex-shrink-0" />
+                                    <span className="truncate">{official.barangay}</span>
                                   </div>
-                                )}
-                                <div className="flex items-center justify-between text-sm text-gray-600 pt-2 border-t border-gray-100">
-                                  <div className="flex items-center gap-2">
-                                    <Calendar className="h-4 w-4" />
-                                    <span>{official.region}</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <Award className="h-4 w-4 text-yellow-500" />
-                                    <span>{official.years_of_service} years</span>
+                                  {official.contact_phone && (
+                                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                                      <Phone className="h-4 w-4 flex-shrink-0" />
+                                      <span>{official.contact_phone}</span>
+                                    </div>
+                                  )}
+                                  <div className="flex items-center justify-between text-sm text-gray-600 pt-2 border-t border-gray-100">
+                                    <div className="flex items-center gap-2">
+                                      <Calendar className="h-4 w-4" />
+                                      <span>{official.region}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <Award className="h-4 w-4 text-yellow-500" />
+                                      <span>{official.years_of_service} years</span>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                          </CardContent>
+                        </Card>
+                      ))
+                    )}
                   </div>
                 ) : (
                   // Desktop Table Layout
@@ -545,89 +565,99 @@ const OfficialsPage = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredOfficials.map((official) => (
-                        <TableRow key={official.id} className="hover:bg-gray-50">
-                          <TableCell className="py-4">
-                            <div className="flex items-center gap-3">
-                              <Avatar className="h-12 w-12 border-2 border-gray-200">
-                                <AvatarFallback className="bg-red-600 text-white font-semibold">
-                                  {official.firstName ? official.firstName.substring(0, 1) : official.position.substring(0, 1)}
-                                  {official.lastName ? official.lastName.substring(0, 1) : official.position.substring(1, 2)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="space-y-1">
-                                <p className="font-semibold text-gray-900">
-                                  {official.firstName && official.lastName 
-                                    ? `${official.firstName} ${official.lastName}`
-                                    : 'N/A'
-                                  }
-                                </p>
-                                <div className="flex items-center gap-1 text-xs text-gray-500">
-                                  <Calendar className="h-3 w-3" />
-                                  <span>{official.region}</span>
-                                </div>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell className="py-4">
-                            <div className="flex items-center gap-2">
-                              {getRoleIcon(official.position)}
-                              <span className="text-gray-900">{official.position}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="py-4">
-                            <div className="space-y-1">
-                              {official.contact_phone && (
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                  <Phone className="h-3.5 w-3.5" />
-                                  <span>{official.contact_phone}</span>
-                                </div>
-                              )}
-                              {!official.contact_phone && (
-                                <span className="text-sm text-gray-400">No contact info</span>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="py-4">
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2">
-                                <MapPin className="h-4 w-4 text-gray-500" />
-                                <span className="text-gray-900">{official.barangay}</span>
-                              </div>
-                              {official.municipality && (
-                                <p className="text-xs text-gray-500">{official.municipality}</p>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="py-4">{getStatusBadge(official.status)}</TableCell>
-                          <TableCell className="py-4 text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem>
-                                  <Eye className="mr-2 h-4 w-4" /> View Profile
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  <PenLine className="mr-2 h-4 w-4" /> Edit Details
-                                </DropdownMenuItem>
-                                {official.contact_phone && (
-                                  <DropdownMenuItem>
-                                    <Phone className="mr-2 h-4 w-4" /> Call
-                                  </DropdownMenuItem>
-                                )}
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-red-600">
-                                  <Trash2 className="mr-2 h-4 w-4" /> Remove
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                      {filteredOfficials.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center py-8">
+                            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                            <p className="text-gray-500">No officials found for {selectedBarangay}</p>
+                            <p className="text-sm text-gray-400 mt-2">Try adjusting your search or filters</p>
                           </TableCell>
                         </TableRow>
-                      ))}
+                      ) : (
+                        filteredOfficials.map((official) => (
+                          <TableRow key={official.id} className="hover:bg-gray-50">
+                            <TableCell className="py-4">
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-12 w-12 border-2 border-gray-200">
+                                  <AvatarFallback className="bg-red-600 text-white font-semibold">
+                                    {official.firstName ? official.firstName.substring(0, 1) : official.position.substring(0, 1)}
+                                    {official.lastName ? official.lastName.substring(0, 1) : official.position.substring(1, 2)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="space-y-1">
+                                  <p className="font-semibold text-gray-900">
+                                    {official.firstName && official.lastName 
+                                      ? `${official.firstName} ${official.lastName}`
+                                      : 'N/A'
+                                    }
+                                  </p>
+                                  <div className="flex items-center gap-1 text-xs text-gray-500">
+                                    <Calendar className="h-3 w-3" />
+                                    <span>{official.region}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-4">
+                              <div className="flex items-center gap-2">
+                                {getRoleIcon(official.position)}
+                                <span className="text-gray-900">{official.position}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-4">
+                              <div className="space-y-1">
+                                {official.contact_phone && (
+                                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                                    <Phone className="h-3.5 w-3.5" />
+                                    <span>{official.contact_phone}</span>
+                                  </div>
+                                )}
+                                {!official.contact_phone && (
+                                  <span className="text-sm text-gray-400">No contact info</span>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-4">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <MapPin className="h-4 w-4 text-gray-500" />
+                                  <span className="text-gray-900">{official.barangay}</span>
+                                </div>
+                                {official.municipality && (
+                                  <p className="text-xs text-gray-500">{official.municipality}</p>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-4">{getStatusBadge(official.status)}</TableCell>
+                            <TableCell className="py-4 text-right">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem>
+                                    <Eye className="mr-2 h-4 w-4" /> View Profile
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem>
+                                    <PenLine className="mr-2 h-4 w-4" /> Edit Details
+                                  </DropdownMenuItem>
+                                  {official.contact_phone && (
+                                    <DropdownMenuItem>
+                                      <Phone className="mr-2 h-4 w-4" /> Call
+                                    </DropdownMenuItem>
+                                  )}
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem className="text-red-600">
+                                    <Trash2 className="mr-2 h-4 w-4" /> Remove
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
                     </TableBody>
                   </Table>
                 )}
