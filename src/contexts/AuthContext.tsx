@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode, useEffect, useRef } from "react";
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -246,7 +245,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const register = async (email: string, password: string, userData: any) => {
     try {
+      console.log("=== REGISTRATION DEBUG START ===");
       console.log("Registration attempt with userData:", userData);
+      
+      // Validate that role is one of the expected values
+      const validRoles = ['resident', 'official', 'superadmin'];
+      const userRole = userData.role || 'resident';
+      
+      if (!validRoles.includes(userRole)) {
+        console.error("Invalid role provided:", userRole);
+        return { error: new Error(`Invalid role: ${userRole}. Must be one of: ${validRoles.join(', ')}`) };
+      }
+      
+      console.log("Role validation passed:", userRole);
       
       // Create clean metadata object with all required fields
       const metaData = {
@@ -254,7 +265,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         last_name: userData.lastName || '',
         middle_name: userData.middleName || '',
         suffix: userData.suffix || '',
-        role: userData.role || 'resident',
+        role: userRole, // Use validated role
         region: userData.region || '',
         province: userData.province || '',
         municipality: userData.municipality || '',
@@ -266,6 +277,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       };
 
       console.log("Clean metadata being sent:", metaData);
+      console.log("Metadata role specifically:", metaData.role, typeof metaData.role);
 
       // Sign up the user with clean metadata
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
@@ -277,15 +289,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         }
       });
 
+      console.log("Supabase signUp response:", { authData, signUpError });
+
       if (signUpError) {
         console.error("Signup error:", signUpError);
+        console.log("=== REGISTRATION DEBUG END (ERROR) ===");
         return { error: signUpError };
       }
 
       console.log("User created successfully, trigger should handle profile creation");
+      console.log("=== REGISTRATION DEBUG END (SUCCESS) ===");
       return { error: null };
     } catch (error) {
       console.error("Unexpected registration error:", error);
+      console.log("=== REGISTRATION DEBUG END (EXCEPTION) ===");
       return { error: error as Error };
     }
   };

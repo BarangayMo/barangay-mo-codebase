@@ -13,7 +13,7 @@ const PHILIPPINE_REGIONS = [{
   code: "REGION 1",
   name: "Ilocos Region (Region I)"
 }, {
-  code: "REGION 2",
+  code: "REGION 2", 
   name: "Cagayan Valley (Region II)"
 }, {
   code: "REGION 3",
@@ -73,8 +73,13 @@ export default function LocationSelection() {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const locationState = location.state;
 
+  console.log("=== LOCATION SELECTION DEBUG ===");
+  console.log("Location state received:", locationState);
+  console.log("Role from state:", locationState?.role);
+
   // If no role selected, redirect to role selection
   if (!locationState?.role) {
+    console.log("No role in location state, redirecting to role selection");
     navigate('/register/role');
     return null;
   }
@@ -282,11 +287,18 @@ export default function LocationSelection() {
         municipality: selectedMunicipality,
         barangay: selectedBarangay
       };
+      
+      console.log("=== LOCATION SELECTION NEXT DEBUG ===");
+      console.log("Next state being passed:", nextState);
+      console.log("Role being passed:", nextState.role);
+      
       if (locationState.role === "official") {
+        console.log("Navigating to officials page");
         navigate("/register/officials", {
           state: nextState
         });
       } else {
+        console.log("Navigating to register page");
         // Resident goes directly to register
         navigate("/register", {
           state: nextState
