@@ -15,6 +15,9 @@ interface UserData {
   lastName?: string;
   role?: UserRole;
   barangay?: string;
+  municipality?: string;
+  province?: string;
+  officials_data?: any;
   createdAt?: string;
 }
 
@@ -58,7 +61,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       console.log('Fetching user profile for:', userId);
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('barangay, created_at, role, first_name, last_name')
+        .select('barangay, created_at, role, first_name, last_name, municipality, province, officials_data')
         .eq('id', userId)
         .maybeSingle();
       
@@ -70,6 +73,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       console.log('Profile fetched successfully:', profile);
       return {
         barangay: profile?.barangay,
+        municipality: profile?.municipality,
+        province: profile?.province,
+        officials_data: profile?.officials_data,
         createdAt: profile?.created_at,
         role: profile?.role,
         firstName: profile?.first_name,
@@ -133,6 +139,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                 lastName: profileData.lastName || session.user.user_metadata?.last_name,
                 role,
                 barangay: profileData.barangay,
+                municipality: profileData.municipality,
+                province: profileData.province,
+                officials_data: profileData.officials_data,
                 createdAt: profileData.createdAt
               };
               
@@ -197,6 +206,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               lastName: profileData.lastName || session.user.user_metadata?.last_name,
               role,
               barangay: profileData.barangay,
+              municipality: profileData.municipality,
+              province: profileData.province,
+              officials_data: profileData.officials_data,
               createdAt: profileData.createdAt
             };
             
