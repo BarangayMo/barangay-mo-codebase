@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -208,9 +209,9 @@ const OfficialsPage = () => {
 
   const uniquePositions = [...new Set(officials.map(official => official.position))];
 
-  // Count active and inactive officials
-  const activeCount = officials.filter(o => o.status === "active").length;
-  const inactiveCount = officials.filter(o => o.status === "inactive").length;
+  // Count active and inactive officials - since all are active from region tables, we can count directly
+  const activeCount = officials.length; // All officials from region tables are active
+  const inactiveCount = 0; // No inactive officials from region tables
 
   const handleOfficialClick = (official: any) => {
     if (official.position === "Punong Barangay") {
