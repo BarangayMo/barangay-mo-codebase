@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode, useEffect, useRef } from "react";
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -62,7 +61,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       console.log('Fetching user profile for:', userId);
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('barangay, created_at, role, first_name, last_name, municipality, province, officials_data')
+        .select('barangay, created_at, role, first_name, last_name, municipality, province, officials_data, logo_url')
         .eq('id', userId)
         .maybeSingle();
       
@@ -72,11 +71,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
       
       console.log('Profile fetched successfully:', profile);
+      console.log('Officials data structure:', profile?.officials_data);
+      
       return {
         barangay: profile?.barangay,
         municipality: profile?.municipality,
         province: profile?.province,
         officials_data: profile?.officials_data,
+        logo_url: profile?.logo_url,
         createdAt: profile?.created_at,
         role: profile?.role,
         firstName: profile?.first_name,
@@ -143,8 +145,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                 municipality: profileData.municipality,
                 province: profileData.province,
                 officials_data: profileData.officials_data,
+                logo_url: profileData.logo_url,
                 createdAt: profileData.createdAt
               };
+              
+              console.log('Setting user data:', userData);
+              console.log('Officials data in userData:', userData.officials_data);
               
               setUser(userData);
               setUserRole(role);
@@ -210,8 +216,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               municipality: profileData.municipality,
               province: profileData.province,
               officials_data: profileData.officials_data,
+              logo_url: profileData.logo_url,
               createdAt: profileData.createdAt
             };
+            
+            console.log('Initial user data set:', userData);
             
             setUser(userData);
             setUserRole(role);

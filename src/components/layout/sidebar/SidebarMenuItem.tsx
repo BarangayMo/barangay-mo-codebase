@@ -42,31 +42,30 @@ export function SidebarMenuItem({
     ? pathname === "/admin"
     : pathname === item.path || pathname.startsWith(`${item.path}/`);
 
-  // Determine colors based on user role - ALL items should be red for officials
+  // Enhanced colors with higher specificity for officials
   const getActiveColors = () => {
     if (userRole === "official") {
-      return "bg-red-50 text-red-600 font-medium";
+      return "!bg-red-50 !text-red-600 !font-medium border-l-2 !border-red-500";
     }
     return "bg-blue-50 text-blue-600 font-medium";
   };
 
   const getOpenColors = () => {
     if (userRole === "official") {
-      return "bg-red-50 text-red-600 font-medium";
+      return "!bg-red-50 !text-red-600 !font-medium";
     }
     return "bg-gray-100 font-medium";
   };
 
   const getHoverColors = () => {
     if (userRole === "official") {
-      return "hover:bg-red-50 hover:text-red-600";
+      return "hover:!bg-red-50 hover:!text-red-600 transition-all duration-200";
     }
     return "hover:bg-gray-100";
   };
   
   useEffect(() => {
     if (isActive && hasSubmenu && !isOpen) {
-      // Call onToggle without an event object when auto-opening
       onToggle(item.path);
     }
   }, [pathname]);
@@ -136,11 +135,12 @@ export function SidebarMenuItem({
         </CollapsibleTrigger>
         {!isCollapsed && (
           <CollapsibleContent className={cn(
-  "overflow-hidden transition-[max-height] duration-300 ease-in-out",
-  isOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
-)}>
+            "overflow-hidden transition-[max-height] duration-300 ease-in-out",
+            isOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+          )}>
             <div className={cn(
-              "pl-4 relative border-l border-gray-200 ml-5 mt-1 space-y-0.5",
+              "pl-4 relative ml-5 mt-1 space-y-0.5",
+              userRole === "official" ? "border-l border-red-200" : "border-l border-gray-200",
               level > 0 && "ml-4"
             )}>
               <SidebarMenu>
