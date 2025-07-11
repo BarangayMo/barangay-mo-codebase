@@ -54,18 +54,76 @@ import { MobileNavbar } from "@/components/layout/MobileNavbar";
 import { useNavigate } from "react-router-dom";
 import { useOfficials } from "@/hooks/use-officials-data";
 import { format } from "date-fns";
+import { OfficialDetailsModal } from "@/components/officials/OfficialDetailsModal";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+// Fetch officials from all regional tables
+const fetchAllOfficials = async () => {
+  const regionalTables = [
+    'NCR', 'REGION 1', 'REGION 2', 'REGION 3', 'REGION 4A', 'REGION 4B',
+    'REGION 5', 'REGION 6', 'REGION 7', 'REGION 8', 'REGION 9', 'REGION 10',
+    'REGION 11', 'REGION 12', 'REGION 13', 'CAR', 'BARMM'
+  ];
+
+  const allOfficials = [];
+
+  for (const tableName of regionalTables) {
+    try {
+      const { data, error } = await supabase
+        .from(tableName as any)
+        .select('*');
+      
+      if (!error && data) {
+        const transformedOfficials = data.map((official: any) => ({
+          id: `${tableName}-${official.FIRSTNAME}-${official.LASTNAME}-${official.POSITION}`,
+          user_id: null,
+          position: official.POSITION || 'Unknown Position',
+          barangay: official.BARANGAY || 'Unknown Barangay',
+          term_start: null,
+          term_end: null,
+          status: 'active' as const,
+          contact_phone: official['BARANGAY HALL TELNO'] || null,
+          contact_email: null,
+          years_of_service: 0,
+          achievements: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          firstName: official.FIRSTNAME,
+          lastName: official.LASTNAME,
+          middleName: official.MIDDLENAME,
+          suffix: official.SUFFIX,
+          region: tableName,
+          municipality: official['CITY/MUNICIPALITY'],
+          province: official.PROVINCE
+        }));
+        
+        allOfficials.push(...transformedOfficials);
+      }
+    } catch (error) {
+      console.error(`Error fetching from ${tableName}:`, error);
+    }
+  }
+
+  return allOfficials;
+};
 
 const OfficialsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [positionFilter, setPositionFilter] = useState("all");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedOfficial, setSelectedOfficial] = useState<any>(null);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
 
-  // Fetch officials data from database
-  const { data: officials = [], isLoading } = useOfficials();
+  // Fetch officials data from all regional tables
+  const { data: officials = [], isLoading } = useQuery({
+    queryKey: ['all-officials'],
+    queryFn: fetchAllOfficials,
+  });
 
-  // Official roles with their corresponding icons
+  // Official roles with their corresponding icons and counts
   const officialRoles = [
     {
       title: "Punong Barangay",
@@ -83,7 +141,7 @@ const OfficialsPage = () => {
     {
       title: "Barangay Councilor",
       icon: Users,
-      count: officials.filter(o => o.position === "Barangay Councilor").length,
+      count: officials.filter(o => o.position?.includes("Sangguniang Barangay")).length,
       color: "bg-green-50 text-green-600 border-green-100"
     },
     {
@@ -112,24 +170,24 @@ const OfficialsPage = () => {
   };
 
   const getRoleIcon = (position: string) => {
-    switch (position) {
-      case "Punong Barangay":
-        return <ShieldCheck className="h-4 w-4 text-red-600" />;
-      case "Barangay Secretary":
-        return <PenLine className="h-4 w-4 text-green-600" />;
-      case "Barangay Treasurer":
-        return <Award className="h-4 w-4 text-purple-600" />;
-      case "SK Chairman":
-        return <Settings className="h-4 w-4 text-blue-600" />;
-      default:
-        return <Users className="h-4 w-4 text-gray-500" />;
+    if (position === "Punong Barangay") {
+      return <ShieldCheck className="h-4 w-4 text-red-600" />;
+    } else if (position === "Barangay Secretary") {
+      return <PenLine className="h-4 w-4 text-green-600" />;
+    } else if (position === "Barangay Treasurer") {
+      return <Award className="h-4 w-4 text-purple-600" />;
+    } else if (position === "SK Chairman") {
+      return <Settings className="h-4 w-4 text-blue-600" />;
+    } else {
+      return <Users className="h-4 w-4 text-gray-500" />;
     }
   };
 
   const filteredOfficials = officials.filter((official) => {
     const matchesSearch = 
       official.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (official.contact_email && official.contact_email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (official.firstName && official.firstName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (official.lastName && official.lastName.toLowerCase().includes(searchTerm.toLowerCase())) ||
       official.barangay.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === "all" || official.status === statusFilter;
@@ -151,6 +209,25 @@ const OfficialsPage = () => {
     if (role.route) {
       navigate(role.route);
     }
+  };
+
+  const handleAddOfficial = () => {
+    setSelectedOfficial({
+      position: "",
+      firstName: "",
+      middleName: "",
+      lastName: "",
+      suffix: "",
+      isCompleted: false
+    });
+    setShowAddModal(true);
+  };
+
+  const handleSaveOfficial = (data: any) => {
+    console.log('Saving new official:', data);
+    // Here you would typically save to the database
+    setShowAddModal(false);
+    setSelectedOfficial(null);
   };
 
   if (isLoading) {
@@ -182,7 +259,7 @@ const OfficialsPage = () => {
             </div>
             <Button 
               className="bg-white text-red-600 hover:bg-red-50 px-4 py-2 w-full"
-              onClick={() => console.log("Add official")}
+              onClick={handleAddOfficial}
             >
               <UserPlus className="h-4 w-4 mr-2" />
               Add Official
@@ -200,7 +277,7 @@ const OfficialsPage = () => {
               </div>
               <Button 
                 className="bg-red-600 hover:bg-red-700 text-white"
-                onClick={() => console.log("Add official")}
+                onClick={handleAddOfficial}
               >
                 <UserPlus className="h-4 w-4 mr-2" />
                 Add Official
@@ -376,7 +453,8 @@ const OfficialsPage = () => {
                           <div className="flex items-start gap-3">
                             <Avatar className="h-14 w-14 border-2 border-gray-200 flex-shrink-0">
                               <AvatarFallback className="bg-red-600 text-white font-semibold text-sm">
-                                {official.position.substring(0, 2).toUpperCase()}
+                                {official.firstName ? official.firstName.substring(0, 1) : official.position.substring(0, 1)}
+                                {official.lastName ? official.lastName.substring(0, 1) : official.position.substring(1, 2)}
                               </AvatarFallback>
                             </Avatar>
                             
@@ -385,11 +463,14 @@ const OfficialsPage = () => {
                               <div className="flex items-start justify-between mb-3">
                                 <div className="min-w-0 flex-1">
                                   <h3 className="font-semibold text-gray-900 text-base mb-1">
-                                    {official.position}
+                                    {official.firstName && official.lastName 
+                                      ? `${official.firstName} ${official.lastName}`
+                                      : official.position
+                                    }
                                   </h3>
                                   <div className="flex items-center gap-2 mb-2">
                                     {getRoleIcon(official.position)}
-                                    <span className="text-sm text-gray-700 font-medium">{official.barangay}</span>
+                                    <span className="text-sm text-gray-700 font-medium">{official.position}</span>
                                   </div>
                                 </div>
                                 
@@ -423,12 +504,10 @@ const OfficialsPage = () => {
                               
                               {/* Contact and Service Info */}
                               <div className="space-y-2">
-                                {official.contact_email && (
-                                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                                    <Mail className="h-4 w-4 flex-shrink-0" />
-                                    <span className="truncate">{official.contact_email}</span>
-                                  </div>
-                                )}
+                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                  <MapPin className="h-4 w-4 flex-shrink-0" />
+                                  <span className="truncate">{official.barangay}</span>
+                                </div>
                                 {official.contact_phone && (
                                   <div className="flex items-center gap-2 text-sm text-gray-600">
                                     <Phone className="h-4 w-4 flex-shrink-0" />
@@ -438,7 +517,7 @@ const OfficialsPage = () => {
                                 <div className="flex items-center justify-between text-sm text-gray-600 pt-2 border-t border-gray-100">
                                   <div className="flex items-center gap-2">
                                     <Calendar className="h-4 w-4" />
-                                    <span>Since {official.term_start ? format(new Date(official.term_start), 'MMM yyyy') : 'N/A'}</span>
+                                    <span>{official.region}</span>
                                   </div>
                                   <div className="flex items-center gap-1">
                                     <Award className="h-4 w-4 text-yellow-500" />
@@ -457,10 +536,10 @@ const OfficialsPage = () => {
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-gray-50">
+                        <TableHead className="font-semibold text-gray-700 py-4">Official</TableHead>
                         <TableHead className="font-semibold text-gray-700 py-4">Position</TableHead>
                         <TableHead className="font-semibold text-gray-700 py-4">Contact Info</TableHead>
-                        <TableHead className="font-semibold text-gray-700 py-4">Assignment</TableHead>
-                        <TableHead className="font-semibold text-gray-700 py-4">Service</TableHead>
+                        <TableHead className="font-semibold text-gray-700 py-4">Location</TableHead>
                         <TableHead className="font-semibold text-gray-700 py-4">Status</TableHead>
                         <TableHead className="font-semibold text-gray-700 py-4 text-right">Actions</TableHead>
                       </TableRow>
@@ -472,51 +551,51 @@ const OfficialsPage = () => {
                             <div className="flex items-center gap-3">
                               <Avatar className="h-12 w-12 border-2 border-gray-200">
                                 <AvatarFallback className="bg-red-600 text-white font-semibold">
-                                  {official.position.substring(0, 2).toUpperCase()}
+                                  {official.firstName ? official.firstName.substring(0, 1) : official.position.substring(0, 1)}
+                                  {official.lastName ? official.lastName.substring(0, 1) : official.position.substring(1, 2)}
                                 </AvatarFallback>
                               </Avatar>
                               <div className="space-y-1">
-                                <p className="font-semibold text-gray-900">{official.position}</p>
+                                <p className="font-semibold text-gray-900">
+                                  {official.firstName && official.lastName 
+                                    ? `${official.firstName} ${official.lastName}`
+                                    : 'N/A'
+                                  }
+                                </p>
                                 <div className="flex items-center gap-1 text-xs text-gray-500">
                                   <Calendar className="h-3 w-3" />
-                                  <span>Since {official.term_start ? format(new Date(official.term_start), 'MMM yyyy') : 'N/A'}</span>
+                                  <span>{official.region}</span>
                                 </div>
                               </div>
                             </div>
                           </TableCell>
                           <TableCell className="py-4">
+                            <div className="flex items-center gap-2">
+                              {getRoleIcon(official.position)}
+                              <span className="text-gray-900">{official.position}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="py-4">
                             <div className="space-y-1">
-                              {official.contact_email && (
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                  <Mail className="h-3.5 w-3.5" />
-                                  <span>{official.contact_email}</span>
-                                </div>
-                              )}
                               {official.contact_phone && (
                                 <div className="flex items-center gap-2 text-sm text-gray-600">
                                   <Phone className="h-3.5 w-3.5" />
                                   <span>{official.contact_phone}</span>
                                 </div>
                               )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="py-4">
-                            <div className="flex items-center gap-2">
-                              <MapPin className="h-4 w-4 text-gray-500" />
-                              <span className="text-gray-900">{official.barangay}</span>
+                              {!official.contact_phone && (
+                                <span className="text-sm text-gray-400">No contact info</span>
+                              )}
                             </div>
                           </TableCell>
                           <TableCell className="py-4">
                             <div className="space-y-1">
-                              <p className="font-semibold text-gray-900">{official.years_of_service} years</p>
-                              <p className="text-xs text-gray-500">Until {official.term_end ? format(new Date(official.term_end), 'MMM yyyy') : 'N/A'}</p>
-                              {official.achievements && official.achievements.length > 0 && (
-                                <div className="flex items-center gap-1">
-                                  <Award className="h-3 w-3 text-yellow-500" />
-                                  <span className="text-xs text-gray-600">
-                                    {official.achievements.length} achievement{official.achievements.length > 1 ? 's' : ''}
-                                  </span>
-                                </div>
+                              <div className="flex items-center gap-2">
+                                <MapPin className="h-4 w-4 text-gray-500" />
+                                <span className="text-gray-900">{official.barangay}</span>
+                              </div>
+                              {official.municipality && (
+                                <p className="text-xs text-gray-500">{official.municipality}</p>
                               )}
                             </div>
                           </TableCell>
@@ -535,9 +614,11 @@ const OfficialsPage = () => {
                                 <DropdownMenuItem>
                                   <PenLine className="mr-2 h-4 w-4" /> Edit Details
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  <Mail className="mr-2 h-4 w-4" /> Send Message
-                                </DropdownMenuItem>
+                                {official.contact_phone && (
+                                  <DropdownMenuItem>
+                                    <Phone className="mr-2 h-4 w-4" /> Call
+                                  </DropdownMenuItem>
+                                )}
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem className="text-red-600">
                                   <Trash2 className="mr-2 h-4 w-4" /> Remove
@@ -575,6 +656,24 @@ const OfficialsPage = () => {
       
       {/* Mobile Navigation - Only show on mobile */}
       {isMobile && <MobileNavbar />}
+
+      {/* Add Official Modal */}
+      <OfficialDetailsModal
+        isOpen={showAddModal}
+        onClose={() => {
+          setShowAddModal(false);
+          setSelectedOfficial(null);
+        }}
+        official={selectedOfficial || {
+          position: "",
+          firstName: "",
+          middleName: "",
+          lastName: "",
+          suffix: "",
+          isCompleted: false
+        }}
+        onSave={handleSaveOfficial}
+      />
     </>
   );
 };
