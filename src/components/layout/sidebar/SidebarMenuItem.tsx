@@ -42,7 +42,7 @@ export function SidebarMenuItem({
     ? pathname === "/admin"
     : pathname === item.path || pathname.startsWith(`${item.path}/`);
 
-  // Determine colors based on user role
+  // Determine colors based on user role - ALL items should be red for officials
   const getActiveColors = () => {
     if (userRole === "official") {
       return "bg-red-50 text-red-600 font-medium";
@@ -52,9 +52,16 @@ export function SidebarMenuItem({
 
   const getOpenColors = () => {
     if (userRole === "official") {
-      return "bg-red-100 font-medium";
+      return "bg-red-50 text-red-600 font-medium";
     }
     return "bg-gray-100 font-medium";
+  };
+
+  const getHoverColors = () => {
+    if (userRole === "official") {
+      return "hover:bg-red-50 hover:text-red-600";
+    }
+    return "hover:bg-gray-100";
   };
   
   useEffect(() => {
@@ -78,9 +85,10 @@ export function SidebarMenuItem({
               setActiveSection(item.path);
             }}
             className={cn(
-              "flex w-full items-center justify-between px-3 py-1.5 text-sm hover:bg-gray-100 rounded-lg transition-all duration-300 ease-in-out",
+              "flex w-full items-center justify-between px-3 py-1.5 text-sm rounded-lg transition-all duration-300 ease-in-out",
               isActive && !isOpen && getActiveColors(),
               isOpen && getOpenColors(),
+              !isActive && !isOpen && getHoverColors(),
               isCollapsed && "px-0 justify-center"
             )}
           >
@@ -165,7 +173,7 @@ export function SidebarMenuItem({
         "flex items-center gap-3 px-3 py-1.5 text-sm rounded-lg transition-all duration-200",
         isActive
           ? getActiveColors()
-          : "hover:bg-gray-100",
+          : getHoverColors(),
         isCollapsed && "justify-center px-0",
         level > 0 && "relative"
       )}
