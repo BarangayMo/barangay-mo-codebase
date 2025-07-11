@@ -125,7 +125,7 @@ export const MobileNavbar = () => {
         <div className="flex items-center justify-between w-full">
           {navItems.map(({ icon: Icon, path, label, key }) => {
             return (
-              <Link key={key} to={path} className="flex flex-col items-center justify-center p-3 min-w-0 flex-1">
+              <Link key={key} to={path} className="flex flex-col items-center justify-center p-1 min-w-0 flex-1">
                 <Icon className={cn(
                   "h-6 w-6 transition-colors mb-1",
                   pathname === path 
