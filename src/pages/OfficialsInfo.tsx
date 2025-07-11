@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -333,18 +332,18 @@ export default function OfficialsInfo() {
 
     return (
       <div className="min-h-screen bg-white flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-4 bg-red-600 text-white">
-          <button onClick={handleBack} className="text-white hover:text-gray-200">
-            <ChevronLeft className="h-6 w-6" />
-          </button>
-          <h1 className="text-lg font-bold">Edit Barangay Official</h1>
-          <div className="w-6" />
+        {/* Progress Bar */}
+        <div className="w-full bg-gray-200 h-1">
+          <div className="h-1 w-3/5 bg-red-600"></div>
         </div>
 
-        {/* Progress Bar */}
-        <div className="px-6 py-4">
-          <RegistrationProgress currentStep="details" />
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b bg-white">
+          <button onClick={handleBack} className="text-red-600 hover:text-red-700">
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+          <h1 className="text-lg font-semibold text-red-600">Edit Barangay Official</h1>
+          <div className="w-6" />
         </div>
 
         {/* Content */}
@@ -451,18 +450,18 @@ export default function OfficialsInfo() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-white to-orange-50 px-4 py-8">
       <div className="max-w-2xl w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
         {/* Progress Bar */}
-        <div className="px-8 py-6 border-b">
-          <RegistrationProgress currentStep="details" />
+        <div className="w-full bg-gray-200 h-1">
+          <div className="h-1 w-3/5 bg-red-600"></div>
         </div>
 
         <div className="p-8 max-h-[80vh] overflow-y-auto">
-          <button onClick={handleBack} className="inline-flex items-center text-sm text-gray-500 mb-6 hover:text-gray-700">
+          <button onClick={handleBack} className="inline-flex items-center text-sm text-red-600 mb-6 hover:text-red-700">
             <ChevronLeft className="w-4 h-4 mr-1" /> Back
           </button>
           
           {/* Header */}
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Edit Barangay Official</h1>
+            <h1 className="text-2xl font-bold text-red-600 mb-2">Edit Barangay Official</h1>
             <p className="text-gray-600">Update official information for your barangay</p>
           </div>
 
