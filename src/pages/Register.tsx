@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,11 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ChevronLeft, Eye, EyeOff } from "lucide-react";
+import { ChevronLeft, Eye, EyeOff, MapPin, UserCheck } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { RegistrationProgress } from "@/components/ui/registration-progress";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface LocationState {
   role: string;
@@ -36,18 +37,15 @@ export default function Register() {
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const locationState = location.state as LocationState;
-  const {
-    register
-  } = useAuth();
-  const {
-    toast
-  } = useToast();
+  const { register } = useAuth();
+  const { toast } = useToast();
 
   // If no location state, redirect to role selection
   if (!locationState?.role) {
     navigate('/register/role');
     return null;
   }
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -59,11 +57,9 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const {
-      name,
-      value
-    } = e.target;
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -80,6 +76,7 @@ export default function Register() {
   const handleTermsChange = (checked: boolean | "indeterminate") => {
     setAcceptTerms(checked === true);
   };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!acceptTerms) {
@@ -109,9 +106,7 @@ export default function Register() {
         officials: locationState.officials || null
       };
       console.log('Complete userData being sent:', userData);
-      const {
-        error
-      } = await register(formData.email, formData.password, userData);
+      const { error } = await register(formData.email, formData.password, userData);
       if (error) {
         console.error('Registration error:', error);
         toast({
@@ -142,19 +137,25 @@ export default function Register() {
       setIsLoading(false);
     }
   };
+
   const getBackLink = () => {
     if (locationState.role === "official") {
       return locationState.logoUrl ? "/register/logo" : "/register/officials";
     }
     return "/register/location";
   };
+
+  // Use official logo if role is official, otherwise use resident logo
+  const logoUrl = locationState.role === 'official' 
+    ? "/lovable-uploads/141c2a56-35fc-4123-a51f-358481e0f167.png"
+    : "/lovable-uploads/6960369f-3a6b-4d57-ab0f-f7db77f16152.png";
+
   if (isMobile) {
-    return <div className="min-h-screen bg-white flex flex-col">
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
         {/* Header */}
         <div className={`flex items-center justify-between px-4 py-4 text-white ${locationState.role === 'official' ? 'bg-red-600' : 'bg-blue-600'}`}>
-          <button onClick={() => navigate(getBackLink(), {
-          state: locationState
-        })} className="text-white hover:text-gray-200">
+          <button onClick={() => navigate(getBackLink(), { state: locationState })} className="text-white hover:text-gray-200">
             <ChevronLeft className="h-6 w-6" />
           </button>
           <h1 className="text-lg font-bold">Complete Registration</h1>
@@ -166,14 +167,33 @@ export default function Register() {
           <div className="space-y-6">
             {/* Logo and Title */}
             <div className="text-center">
-              <img src="/lovable-uploads/6960369f-3a6b-4d57-ab0f-f7db77f16152.png" alt="eGov.PH Logo" className="h-12 w-auto mx-auto mb-4" />
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Complete Your Registration</h2>
-              <p className="text-gray-600 text-sm">
-                Registering as: <span className={`font-semibold capitalize ${locationState.role === 'official' ? 'text-red-600' : 'text-blue-600'}`}>{locationState.role}</span>
-              </p>
-              <p className="text-gray-600 text-sm">
-                Barangay: <span className="font-semibold">{locationState.barangay}</span>
-              </p>
+              <img src={logoUrl} alt="eGov.PH Logo" className="h-12 w-auto mx-auto mb-4" />
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Complete Your Registration</h2>
+              
+              {/* Modern role and location display */}
+              <div className="space-y-3 mb-6">
+                <Card className="p-3 border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-white">
+                  <CardContent className="p-0 flex items-center gap-2">
+                    <UserCheck className={`h-4 w-4 ${locationState.role === 'official' ? 'text-red-600' : 'text-blue-600'}`} />
+                    <div className="text-left">
+                      <p className="text-xs text-gray-500 font-medium">Registering as</p>
+                      <Badge variant="secondary" className={`${locationState.role === 'official' ? 'bg-red-100 text-red-700 border-red-200' : 'bg-blue-100 text-blue-700 border-blue-200'} capitalize font-semibold`}>
+                        {locationState.role}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="p-3 border-l-4 border-l-green-500 bg-gradient-to-r from-green-50 to-white">
+                  <CardContent className="p-0 flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-green-600" />
+                    <div className="text-left">
+                      <p className="text-xs text-gray-500 font-medium">Barangay</p>
+                      <p className="text-sm font-semibold text-gray-900">{locationState.barangay}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
 
             {/* Form */}
@@ -246,11 +266,13 @@ export default function Register() {
             </form>
           </div>
         </div>
-      </div>;
+      </div>
+    );
   }
 
   // Desktop version
-  return <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
         {/* Progress Bar */}
         <div className="px-8 py-6 border-b bg-white">
@@ -258,22 +280,39 @@ export default function Register() {
         </div>
 
         <div className="p-8 bg-white">
-          <button onClick={() => navigate(getBackLink(), {
-          state: locationState
-        })} className="inline-flex items-center text-sm text-gray-500 mb-6 hover:text-gray-700">
+          <button onClick={() => navigate(getBackLink(), { state: locationState })} className="inline-flex items-center text-sm text-gray-500 mb-6 hover:text-gray-700">
             <ChevronLeft className="w-4 h-4 mr-1" /> Back
           </button>
           
           {/* Header */}
           <div className="text-center mb-8">
-            <img src="/lovable-uploads/6960369f-3a6b-4d57-ab0f-f7db77f16152.png" alt="eGov.PH Logo" className="h-16 w-auto mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Complete Your Registration</h1>
-            <p className="text-gray-600">
-              Registering as: <span className={`font-semibold capitalize ${locationState.role === 'official' ? 'text-red-600' : 'text-blue-600'}`}>{locationState.role}</span>
-            </p>
-            <p className="text-gray-600">
-              Barangay: <span className="font-semibold">{locationState.barangay}</span>
-            </p>
+            <img src={logoUrl} alt="eGov.PH Logo" className="h-16 w-auto mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Complete Your Registration</h1>
+            
+            {/* Modern role and location display */}
+            <div className="space-y-3 mb-6">
+              <Card className="p-4 border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-white">
+                <CardContent className="p-0 flex items-center gap-3">
+                  <UserCheck className={`h-5 w-5 ${locationState.role === 'official' ? 'text-red-600' : 'text-blue-600'}`} />
+                  <div className="text-left">
+                    <p className="text-sm text-gray-500 font-medium">Registering as</p>
+                    <Badge variant="secondary" className={`${locationState.role === 'official' ? 'bg-red-100 text-red-700 border-red-200' : 'bg-blue-100 text-blue-700 border-blue-200'} capitalize font-semibold`}>
+                      {locationState.role}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="p-4 border-l-4 border-l-green-500 bg-gradient-to-r from-green-50 to-white">
+                <CardContent className="p-0 flex items-center gap-3">
+                  <MapPin className="h-5 w-5 text-green-600" />
+                  <div className="text-left">
+                    <p className="text-sm text-gray-500 font-medium">Barangay</p>
+                    <p className="text-base font-semibold text-gray-900">{locationState.barangay}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
           
           {/* Form */}
@@ -346,5 +385,6 @@ export default function Register() {
           </form>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 }
