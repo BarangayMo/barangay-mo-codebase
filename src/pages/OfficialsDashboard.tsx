@@ -472,8 +472,16 @@ const OfficialsDashboard = () => {
             <div className="w-64 bg-white border-r border-gray-200 min-h-screen">
               <div className="p-6">
                 <div className="flex items-center gap-2 mb-8">
-                  <div className="w-8 h-8 bg-red-400 rounded-lg flex items-center justify-center">
-                    <span className="text-white font-bold">🏛️</span>
+                  <div className="w-8 h-8 bg-red-400 rounded-lg flex items-center justify-center overflow-hidden">
+                    {barangayData?.Logo ? (
+                      <img 
+                        src={barangayData.Logo} 
+                        alt="Barangay Logo" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-white font-bold">🏛️</span>
+                    )}
                   </div>
                   <span className="font-semibold text-gray-900">Barangay Portal</span>
                 </div>
