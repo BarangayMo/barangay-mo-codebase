@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -39,16 +40,22 @@ export default function LocationSelection() {
     const fetchLocationData = async () => {
       setIsLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('location_data')
-          .select('*')
-          .single();
-
-        if (error) {
-          console.error("Error fetching location data:", error);
-        } else {
-          setLocationData(data);
-        }
+        // Create mock location data for now since location_data table doesn't exist
+        const mockData: LocationData = {
+          region: "REGION 3",
+          provinces: ["Bulacan", "Nueva Ecija", "Pampanga"],
+          municipalities: {
+            "Bulacan": ["Malolos", "Meycauayan", "San Jose del Monte"],
+            "Nueva Ecija": ["Cabanatuan", "Gapan", "San Jose"],
+            "Pampanga": ["Angeles", "San Fernando", "Mabalacat"]
+          },
+          barangays: {
+            "Malolos": ["Barangay 1", "Barangay 2", "Barangay 3"],
+            "Meycauayan": ["Barangay A", "Barangay B", "Barangay C"],
+            "San Jose del Monte": ["Barangay X", "Barangay Y", "Barangay Z"]
+          }
+        };
+        setLocationData(mockData);
       } catch (error) {
         console.error("Error fetching location data:", error);
       } finally {
