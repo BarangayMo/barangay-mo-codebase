@@ -13,7 +13,6 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { CartDrawerContent } from "@/components/cart/CartDrawerContent";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -384,6 +383,11 @@ export const Header = () => {
               </div>
               {isMobile && userRole !== "official" && <Button asChild variant="ghost" size="icon" className="rounded-full w-8 h-8">
                   <Link to="/resident-profile">
+                    <User className="h-4 w-4 md:h-5 md:w-5" />
+                  </Link>
+                </Button>}
+              {isMobile && userRole === "official" && <Button asChild variant="ghost" size="icon" className="rounded-full w-8 h-8">
+                  <Link to="/official-profile">
                     <User className="h-4 w-4 md:h-5 md:w-5" />
                   </Link>
                 </Button>}

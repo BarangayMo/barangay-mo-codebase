@@ -88,49 +88,53 @@ export default function OfficialProfile() {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto p-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-gray-900">Barangay Profile</h1>
-          <Link to="/edit-profile">
-            <Button variant="outline" className="flex items-center gap-2">
-              <Edit className="w-4 h-4" />
-              Edit Profile
-            </Button>
-          </Link>
-        </div>
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Red Header Section */}
+        <div className="bg-gradient-to-r from-red-600 to-red-700 text-white p-8 rounded-lg shadow-lg">
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-3xl font-bold">Barangay Profile</h1>
+            <Link to="/edit-profile">
+              <Button variant="outline" className="flex items-center gap-2 bg-white/10 border-white/20 hover:bg-white/20 text-white">
+                <Edit className="w-4 h-4" />
+                Edit Profile
+              </Button>
+            </Link>
+          </div>
 
-        {/* Profile Card */}
-        <Card>
-          <CardHeader className="text-center">
-            <div className="flex flex-col items-center space-y-4">
-              <Avatar className="w-24 h-24">
-                <AvatarImage src={officialProfile?.logo_url || barangayDetails?.Logo} />
-                <AvatarFallback className="text-2xl font-semibold bg-primary/10 text-primary">
-                  {barangayDetails?.Logo ? (
-                    <img src={barangayDetails.Logo} alt="Barangay Logo" className="w-full h-full object-cover" />
-                  ) : (
-                    getInitials(officialProfile?.first_name, officialProfile?.last_name)
-                  )}
-                </AvatarFallback>
-              </Avatar>
-              <div className="text-center">
-                <CardTitle className="text-2xl">
-                  {officialProfile?.barangay || 'Unknown Barangay'}
-                </CardTitle>
-                <p className="text-muted-foreground">
-                  {officialProfile?.municipality}, {officialProfile?.province}
-                </p>
-                <Badge className="mt-2" variant="secondary">
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+            <Avatar className="w-32 h-32 border-4 border-white/20">
+              <AvatarImage src={officialProfile?.logo_url || barangayDetails?.Logo} />
+              <AvatarFallback className="text-3xl font-semibold bg-white/20 text-white">
+                {barangayDetails?.Logo ? (
+                  <img src={barangayDetails.Logo} alt="Barangay Logo" className="w-full h-full object-cover" />
+                ) : (
+                  getInitials(officialProfile?.first_name, officialProfile?.last_name)
+                )}
+              </AvatarFallback>
+            </Avatar>
+            
+            <div className="text-center md:text-left flex-1">
+              <h2 className="text-4xl font-bold mb-2">
+                {officialProfile?.barangay || 'Unknown Barangay'}
+              </h2>
+              <p className="text-xl text-red-100 mb-3">
+                {officialProfile?.municipality}, {officialProfile?.province}
+              </p>
+              <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30">
                   <Shield className="w-3 h-3 mr-1" />
                   {user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1)}
                 </Badge>
+                <Badge variant={isEmailConfirmed ? "default" : "secondary"} className="bg-white/20 text-white border-white/30">
+                  <Mail className="w-3 h-3 mr-1" />
+                  {isEmailConfirmed ? "Verified" : "Unverified"}
+                </Badge>
               </div>
             </div>
-          </CardHeader>
-        </Card>
+          </div>
+        </div>
 
-        {/* Tabs */}
+        {/* Tabs Section */}
         <Tabs defaultValue="details" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="details">Details</TabsTrigger>
@@ -141,55 +145,75 @@ export default function OfficialProfile() {
           <TabsContent value="details" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Barangay Details</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Building className="w-5 h-5 text-red-600" />
+                  Barangay Details
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center text-gray-600">
-                  <Phone className="w-5 h-5 mr-3" />
-                  <span>{barangayDetails?.["Mobile Number"] || barangayDetails?.["Telephone No"] || "Not available"}</span>
-                </div>
-                <div className="flex items-center text-gray-600">
-                  <Calendar className="w-5 h-5 mr-3" />
-                  <span>Founded: {barangayDetails?.["Foundation Date"] || "Not specified"}</span>
-                </div>
-                <div className="flex items-center text-gray-600">
-                  <Users className="w-5 h-5 mr-3" />
-                  <span>Population: {barangayDetails?.Population || "Not specified"}</span>
-                </div>
-                <div className="flex items-center text-gray-600">
-                  <MapPin className="w-5 h-5 mr-3" />
-                  <span>Land Area: {barangayDetails?.["Land Area"] || "Not specified"}</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="flex items-center text-gray-600">
+                    <Phone className="w-5 h-5 mr-3 text-red-500" />
+                    <div>
+                      <p className="text-sm text-gray-500">Contact Number</p>
+                      <p className="font-medium">{barangayDetails?.["Mobile Number"] || barangayDetails?.["Telephone No"] || "Not available"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center text-gray-600">
+                    <Calendar className="w-5 h-5 mr-3 text-red-500" />
+                    <div>
+                      <p className="text-sm text-gray-500">Founded</p>
+                      <p className="font-medium">{barangayDetails?.["Foundation Date"] || "Not specified"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center text-gray-600">
+                    <Users className="w-5 h-5 mr-3 text-red-500" />
+                    <div>
+                      <p className="text-sm text-gray-500">Population</p>
+                      <p className="font-medium">{barangayDetails?.Population || "Not specified"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center text-gray-600">
+                    <MapPin className="w-5 h-5 mr-3 text-red-500" />
+                    <div>
+                      <p className="text-sm text-gray-500">Land Area</p>
+                      <p className="font-medium">{barangayDetails?.["Land Area"] || "Not specified"}</p>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Emergency Contacts</CardTitle>
+                <CardTitle className="flex items-center gap-2 text-red-600">
+                  <Phone className="w-5 h-5" />
+                  Emergency Contacts
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {barangayDetails?.["Ambulance Phone"] && (
-                  <div className="flex items-center justify-between py-2 border-b">
-                    <span className="text-gray-600">Ambulance</span>
-                    <span className="font-medium">{barangayDetails["Ambulance Phone"]}</span>
+                  <div className="flex items-center justify-between py-3 border-b border-red-100">
+                    <span className="text-gray-600 font-medium">Ambulance</span>
+                    <span className="font-bold text-red-600">{barangayDetails["Ambulance Phone"]}</span>
                   </div>
                 )}
                 {barangayDetails?.["Fire Department Phone"] && (
-                  <div className="flex items-center justify-between py-2 border-b">
-                    <span className="text-gray-600">Fire Department</span>
-                    <span className="font-medium">{barangayDetails["Fire Department Phone"]}</span>
+                  <div className="flex items-center justify-between py-3 border-b border-red-100">
+                    <span className="text-gray-600 font-medium">Fire Department</span>
+                    <span className="font-bold text-red-600">{barangayDetails["Fire Department Phone"]}</span>
                   </div>
                 )}
                 {barangayDetails?.["Local Police Contact"] && (
-                  <div className="flex items-center justify-between py-2 border-b">
-                    <span className="text-gray-600">Local Police</span>
-                    <span className="font-medium">{barangayDetails["Local Police Contact"]}</span>
+                  <div className="flex items-center justify-between py-3 border-b border-red-100">
+                    <span className="text-gray-600 font-medium">Local Police</span>
+                    <span className="font-bold text-red-600">{barangayDetails["Local Police Contact"]}</span>
                   </div>
                 )}
                 {barangayDetails?.["VAWC Hotline No"] && (
-                  <div className="flex items-center justify-between py-2">
-                    <span className="text-gray-600">VAWC Hotline</span>
-                    <span className="font-medium">{barangayDetails["VAWC Hotline No"]}</span>
+                  <div className="flex items-center justify-between py-3">
+                    <span className="text-gray-600 font-medium">VAWC Hotline</span>
+                    <span className="font-bold text-red-600">{barangayDetails["VAWC Hotline No"]}</span>
                   </div>
                 )}
               </CardContent>
@@ -199,33 +223,36 @@ export default function OfficialProfile() {
           <TabsContent value="address" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Address Information</CardTitle>
+                <CardTitle className="flex items-center gap-2 text-red-600">
+                  <MapPin className="w-5 h-5" />
+                  Address Information
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="text-sm font-medium text-gray-500">Region</label>
-                    <p className="text-gray-900">{barangayDetails?.REGION || "Not specified"}</p>
+                    <p className="text-gray-900 font-medium">{barangayDetails?.REGION || "Not specified"}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-500">Province</label>
-                    <p className="text-gray-900">{barangayDetails?.PROVINCE || "Not specified"}</p>
+                    <p className="text-gray-900 font-medium">{barangayDetails?.PROVINCE || "Not specified"}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-500">City/Municipality</label>
-                    <p className="text-gray-900">{barangayDetails?.["CITY/MUNICIPALITY"] || "Not specified"}</p>
+                    <p className="text-gray-900 font-medium">{barangayDetails?.["CITY/MUNICIPALITY"] || "Not specified"}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-500">Barangay</label>
-                    <p className="text-gray-900">{barangayDetails?.BARANGAY || "Not specified"}</p>
+                    <p className="text-gray-900 font-medium">{barangayDetails?.BARANGAY || "Not specified"}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-500">Street</label>
-                    <p className="text-gray-900">{barangayDetails?.Street || "Not specified"}</p>
+                    <p className="text-gray-900 font-medium">{barangayDetails?.Street || "Not specified"}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-500">ZIP Code</label>
-                    <p className="text-gray-900">{barangayDetails?.["ZIP Code"] || "Not specified"}</p>
+                    <p className="text-gray-900 font-medium">{barangayDetails?.["ZIP Code"] || "Not specified"}</p>
                   </div>
                 </div>
               </CardContent>
@@ -235,26 +262,37 @@ export default function OfficialProfile() {
           <TabsContent value="council" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Barangay Council</CardTitle>
+                <CardTitle className="flex items-center gap-2 text-red-600">
+                  <Users className="w-5 h-5" />
+                  Barangay Council
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {officialProfile?.officials_data ? (
                     <div className="grid gap-4">
                       {Object.entries(officialProfile.officials_data).map(([position, official]: [string, any]) => (
-                        <div key={position} className="flex items-center justify-between py-3 border-b">
-                          <div>
-                            <p className="font-medium">{position}</p>
-                            <p className="text-sm text-gray-600">
-                              {official?.firstName} {official?.middleName} {official?.lastName} {official?.suffix}
-                            </p>
+                        <div key={position} className="flex items-center justify-between py-4 border-b border-red-100">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                              <User className="w-5 h-5 text-red-600" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-gray-900">
+                                {official?.firstName} {official?.middleName} {official?.lastName} {official?.suffix}
+                              </p>
+                              <p className="text-sm text-gray-600">{position}</p>
+                            </div>
                           </div>
-                          <Badge variant="outline">{position}</Badge>
+                          <Badge variant="outline" className="border-red-200 text-red-700">{position}</Badge>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-gray-500 text-center py-8">No council information available</p>
+                    <div className="text-center py-12">
+                      <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-500">No council information available</p>
+                    </div>
                   )}
                 </div>
               </CardContent>
@@ -265,7 +303,7 @@ export default function OfficialProfile() {
         {/* Account Information */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-red-600">
               <User className="w-5 h-5" />
               Account Information
             </CardTitle>
@@ -274,21 +312,30 @@ export default function OfficialProfile() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center text-gray-600">
-                  <Mail className="w-5 h-5 mr-3" />
-                  <span>{user?.email}</span>
+                  <Mail className="w-5 h-5 mr-3 text-red-500" />
+                  <div>
+                    <p className="text-sm text-gray-500">Email Address</p>
+                    <p className="font-medium">{user?.email}</p>
+                  </div>
                 </div>
-                <Badge variant={isEmailConfirmed ? "default" : "secondary"} className="text-xs">
+                <Badge variant={isEmailConfirmed ? "default" : "secondary"} className={isEmailConfirmed ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}>
                   {isEmailConfirmed ? "Confirmed" : "Unconfirmed"}
                 </Badge>
               </div>
               <div className="flex items-center text-gray-600">
-                <User className="w-5 h-5 mr-3" />
-                <span>ID: {officialProfile?.id.slice(0, 8)}...</span>
+                <User className="w-5 h-5 mr-3 text-red-500" />
+                <div>
+                  <p className="text-sm text-gray-500">Account ID</p>
+                  <p className="font-medium">{officialProfile?.id.slice(0, 8)}...</p>
+                </div>
               </div>
               {user?.createdAt && (
                 <div className="flex items-center text-gray-600">
-                  <Calendar className="w-5 h-5 mr-3" />
-                  <span>Member since {new Date(user.createdAt).toLocaleDateString()}</span>
+                  <Calendar className="w-5 h-5 mr-3 text-red-500" />
+                  <div>
+                    <p className="text-sm text-gray-500">Member Since</p>
+                    <p className="font-medium">{new Date(user.createdAt).toLocaleDateString()}</p>
+                  </div>
                 </div>
               )}
             </div>
