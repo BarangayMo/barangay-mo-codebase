@@ -1,142 +1,287 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronDown, X, Check } from "lucide-react";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ChevronLeft } from "lucide-react";
-import { useMediaQuery } from "@/hooks/use-media-query";
 import { supabase } from "@/integrations/supabase/client";
+import { RegistrationProgress } from "@/components/ui/registration-progress";
 
-interface LocationState {
-  role: string;
-}
+// Hardcoded Philippine regions with their full names
+const PHILIPPINE_REGIONS = [
+  { code: "REGION 1", name: "Ilocos Region (Region I)" },
+  { code: "REGION 2", name: "Cagayan Valley (Region II)" },
+  { code: "REGION 3", name: "Central Luzon (Region III)" },
+  { code: "REGION 4A", name: "CALABARZON (Region IV-A)" },
+  { code: "REGION 4B", name: "MIMAROPA (Region IV-B)" },
+  { code: "REGION 5", name: "Bicol Region (Region V)" },
+  { code: "REGION 6", name: "Western Visayas (Region VI)" },
+  { code: "REGION 7", name: "Central Visayas (Region VII)" },
+  { code: "REGION 8", name: "Eastern Visayas (Region VIII)" },
+  { code: "REGION 9", name: "Zamboanga Peninsula (Region IX)" },
+  { code: "REGION 10", name: "Northern Mindanao (Region X)" },
+  { code: "REGION 11", name: "Davao Region (Region XI)" },
+  { code: "REGION 12", name: "SOCCSKSARGEN (Region XII)" },
+  { code: "REGION 13", name: "Caraga (Region XIII)" },
+  { code: "NCR", name: "National Capital Region (NCR)" },
+  { code: "CAR", name: "Cordillera Administrative Region (CAR)" },
+  { code: "BARMM", name: "Bangsamoro Autonomous Region in Muslim Mindanao (BARMM)" }
+];
 
-interface LocationData {
-  region: string;
-  provinces: string[];
-  municipalities: { [key: string]: string[] };
-  barangays: { [key: string]: string[] };
-}
+// Helper function to convert text to title case
+const toTitleCase = (str: string) => {
+  return str.toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase());
+};
 
 export default function LocationSelection() {
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 768px)");
-  const locationState = location.state as LocationState;
+  const locationState = location.state;
 
-  // If no role is selected, redirect to role selection
+  // If no role selected, redirect to role selection
   if (!locationState?.role) {
     navigate('/register/role');
     return null;
   }
 
-  const [locationData, setLocationData] = useState<LocationData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedProvince, setSelectedProvince] = useState("");
-  const [selectedMunicipality, setSelectedMunicipality] = useState("");
-  const [selectedBarangay, setSelectedBarangay] = useState("");
-
+  // Initialize state from location state if available
+  const [selectedRegion, setSelectedRegion] = useState(location.state?.region || "");
+  const [selectedProvince, setSelectedProvince] = useState(location.state?.province || "");
+  const [selectedMunicipality, setSelectedMunicipality] = useState(location.state?.municipality || "");
+  const [selectedBarangay, setSelectedBarangay] = useState(location.state?.barangay || "");
+  
+  const [provinces, setProvinces] = useState<string[]>([]);
+  const [municipalities, setMunicipalities] = useState<string[]>([]);
+  const [barangays, setBarangays] = useState<string[]>([]);
+  
+  // Initialize search states with display values if data exists
+  const [regionSearch, setRegionSearch] = useState(() => {
+    if (location.state?.region) {
+      const regionObj = PHILIPPINE_REGIONS.find(r => r.code === location.state.region);
+      return regionObj?.name || "";
+    }
+    return "";
+  });
+  const [provinceSearch, setProvinceSearch] = useState(location.state?.province ? toTitleCase(location.state.province) : "");
+  const [municipalitySearch, setMunicipalitySearch] = useState(location.state?.municipality ? toTitleCase(location.state.municipality) : "");
+  const [barangaySearch, setBarangaySearch] = useState(location.state?.barangay ? toTitleCase(location.state.barangay) : "");
+  
+  const [showRegionDropdown, setShowRegionDropdown] = useState(false);
+  const [showProvinceDropdown, setShowProvinceDropdown] = useState(false);
+  const [showMunicipalityDropdown, setShowMunicipalityDropdown] = useState(false);
+  const [showBarangayDropdown, setShowBarangayDropdown] = useState(false);
+  
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Refs for blur detection
+  const regionRef = useRef<HTMLDivElement>(null);
+  const provinceRef = useRef<HTMLDivElement>(null);
+  const municipalityRef = useRef<HTMLDivElement>(null);
+  const barangayRef = useRef<HTMLDivElement>(null);
+  
+  // Load provinces when region is selected
   useEffect(() => {
-    const fetchLocationData = async () => {
-      setIsLoading(true);
-      try {
-        // Get unique regions from Barangays table
-        const { data: regionData, error: regionError } = await supabase
-          .from('Barangays')
-          .select('REGION')
-          .not('REGION', 'is', null)
-          .limit(1);
+    if (selectedRegion) {
+      loadProvinces();
+      setSelectedProvince("");
+      setSelectedMunicipality("");
+      setSelectedBarangay("");
+      setProvinceSearch("");
+      setMunicipalitySearch("");
+      setBarangaySearch("");
+    }
+  }, [selectedRegion]);
 
-        if (regionError) {
-          console.error("Error fetching region data:", regionError);
-          return;
-        }
+  // Load municipalities when province is selected
+  useEffect(() => {
+    if (selectedProvince) {
+      loadMunicipalities();
+      setSelectedMunicipality("");
+      setSelectedBarangay("");
+      setMunicipalitySearch("");
+      setBarangaySearch("");
+    }
+  }, [selectedProvince]);
 
-        const region = regionData?.[0]?.REGION || "REGION 3";
+  // Load barangays when municipality is selected
+  useEffect(() => {
+    if (selectedMunicipality) {
+      loadBarangays();
+      setSelectedBarangay("");
+      setBarangaySearch("");
+    }
+  }, [selectedMunicipality]);
 
-        // Get provinces for the region
-        const { data: provinceData, error: provinceError } = await supabase
-          .from('Barangays')
-          .select('PROVINCE')
-          .eq('REGION', region)
-          .not('PROVINCE', 'is', null)
-          .order('PROVINCE');
-
-        if (provinceError) {
-          console.error("Error fetching province data:", provinceError);
-          return;
-        }
-
-        const provinces = [...new Set(provinceData.map(p => p.PROVINCE).filter(Boolean))];
-
-        // Initialize data structure
-        const data: LocationData = {
-          region,
-          provinces,
-          municipalities: {},
-          barangays: {}
-        };
-
-        // Fetch municipalities for each province
-        for (const province of provinces) {
-          const { data: municipalityData, error: municipalityError } = await supabase
-            .from('Barangays')
-            .select('CITY/MUNICIPALITY')
-            .eq('REGION', region)
-            .eq('PROVINCE', province)
-            .not('CITY/MUNICIPALITY', 'is', null)
-            .order('CITY/MUNICIPALITY');
-
-          if (!municipalityError && municipalityData) {
-            data.municipalities[province] = [...new Set(municipalityData.map(m => m['CITY/MUNICIPALITY']).filter(Boolean))];
-          }
-        }
-
-        // Fetch barangays for each municipality
-        for (const province of provinces) {
-          const municipalities = data.municipalities[province] || [];
-          for (const municipality of municipalities) {
-            const { data: barangayData, error: barangayError } = await supabase
-              .from('Barangays')
-              .select('BARANGAY')
-              .eq('REGION', region)
-              .eq('PROVINCE', province)
-              .eq('CITY/MUNICIPALITY', municipality)
-              .not('BARANGAY', 'is', null)
-              .order('BARANGAY');
-
-            if (!barangayError && barangayData) {
-              data.barangays[municipality] = [...new Set(barangayData.map(b => b.BARANGAY).filter(Boolean))];
-            }
-          }
-        }
-
-        setLocationData(data);
-      } catch (error) {
-        console.error("Error fetching location data:", error);
-      } finally {
-        setIsLoading(false);
+  // Blur detection for dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (regionRef.current && !regionRef.current.contains(event.target as Node)) {
+        setShowRegionDropdown(false);
+      }
+      if (provinceRef.current && !provinceRef.current.contains(event.target as Node)) {
+        setShowProvinceDropdown(false);
+      }
+      if (municipalityRef.current && !municipalityRef.current.contains(event.target as Node)) {
+        setShowMunicipalityDropdown(false);
+      }
+      if (barangayRef.current && !barangayRef.current.contains(event.target as Node)) {
+        setShowBarangayDropdown(false);
       }
     };
 
-    fetchLocationData();
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
-  const handleNext = () => {
-    const nextState = {
-      ...locationState,
-      region: locationData?.region,
-      province: selectedProvince,
-      municipality: selectedMunicipality,
-      barangay: selectedBarangay
-    };
+  const loadProvinces = async () => {
+    if (!selectedRegion) return;
+    
+    console.log('Loading provinces for region:', selectedRegion);
+    setIsLoading(true);
+    setProvinces([]);
+    
+    try {
+      // Use type assertion to bypass TypeScript's strict table name checking
+      const { data, error } = await (supabase as any)
+        .from(selectedRegion)
+        .select('PROVINCE')
+        .not('PROVINCE', 'is', null)
+        .neq('PROVINCE', '');
+      
+      console.log('Query result:', { data, error });
+      
+      if (error) {
+        console.error('Error loading provinces:', error);
+        return;
+      }
+      
+      if (data && data.length > 0) {
+        const provinceList = data
+          .map((item: any) => item.PROVINCE)
+          .filter((province: any) => province && typeof province === 'string' && province.trim() !== '');
+        
+        const uniqueProvinces = [...new Set(provinceList)] as string[];
+        const sortedProvinces = uniqueProvinces.sort();
+        
+        console.log('Processed provinces:', sortedProvinces);
+        setProvinces(sortedProvinces);
+      } else {
+        console.log('No province data found for region:', selectedRegion);
+        setProvinces([]);
+      }
+    } catch (error) {
+      console.error('Exception while loading provinces:', error);
+      setProvinces([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    if (locationState.role === "official") {
-      navigate("/register/officials", { state: nextState });
-    } else {
-      navigate("/register", { state: nextState });
+  const loadMunicipalities = async () => {
+    if (!selectedRegion || !selectedProvince) return;
+    
+    console.log('Loading municipalities for region:', selectedRegion, 'province:', selectedProvince);
+    setIsLoading(true);
+    setMunicipalities([]);
+    
+    try {
+      // Use type assertion to bypass TypeScript's strict table name checking
+      const { data, error } = await (supabase as any)
+        .from(selectedRegion)
+        .select('"CITY/MUNICIPALITY"')
+        .eq('PROVINCE', selectedProvince)
+        .not('"CITY/MUNICIPALITY"', 'is', null)
+        .neq('"CITY/MUNICIPALITY"', '');
+      
+      console.log('Municipalities query result:', { data, error });
+      
+      if (error) {
+        console.error('Error loading municipalities:', error);
+        return;
+      }
+      
+      if (data && data.length > 0) {
+        const municipalityList = data
+          .map((item: any) => item['CITY/MUNICIPALITY'])
+          .filter((municipality: any) => municipality && typeof municipality === 'string' && municipality.trim() !== '');
+        
+        const uniqueMunicipalities = [...new Set(municipalityList)] as string[];
+        console.log('Processed municipalities:', uniqueMunicipalities.sort());
+        setMunicipalities(uniqueMunicipalities.sort());
+      } else {
+        console.log('No municipality data found for region:', selectedRegion, 'province:', selectedProvince);
+        setMunicipalities([]);
+      }
+    } catch (error) {
+      console.error('Error loading municipalities:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadBarangays = async () => {
+    if (!selectedRegion || !selectedProvince || !selectedMunicipality) return;
+    
+    console.log('Loading barangays for region:', selectedRegion, 'province:', selectedProvince, 'municipality:', selectedMunicipality);
+    setIsLoading(true);
+    setBarangays([]);
+    
+    try {
+      // Use type assertion to bypass TypeScript's strict table name checking
+      const { data, error } = await (supabase as any)
+        .from(selectedRegion)
+        .select('BARANGAY')
+        .eq('PROVINCE', selectedProvince)
+        .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
+        .not('BARANGAY', 'is', null)
+        .neq('BARANGAY', '');
+      
+      console.log('Barangays query result:', { data, error });
+      
+      if (error) {
+        console.error('Error loading barangays:', error);
+        return;
+      }
+      
+      if (data && data.length > 0) {
+        const barangayList = data
+          .map((item: any) => item.BARANGAY)
+          .filter((barangay: any) => barangay && typeof barangay === 'string' && barangay.trim() !== '');
+        
+        const uniqueBarangays = [...new Set(barangayList)] as string[];
+        console.log('Processed barangays:', uniqueBarangays.sort());
+        setBarangays(uniqueBarangays.sort());
+      } else {
+        console.log('No barangay data found');
+        setBarangays([]);
+      }
+    } catch (error) {
+      console.error('Error loading barangays:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleNext = () => {
+    if (selectedRegion && selectedProvince && selectedMunicipality && selectedBarangay) {
+      const nextState = {
+        role: locationState.role,
+        region: selectedRegion,
+        province: selectedProvince,
+        municipality: selectedMunicipality,
+        barangay: selectedBarangay
+      };
+
+      if (locationState.role === "official") {
+        navigate("/register/officials", { state: nextState });
+      } else {
+        // Resident goes directly to register
+        navigate("/register", { state: nextState });
+      }
     }
   };
 
@@ -144,134 +289,395 @@ export default function LocationSelection() {
     navigate("/register/role");
   };
 
-  const isFormValid = selectedProvince && selectedMunicipality && selectedBarangay;
+  const handleRegionSelect = (region: { code: string; name: string }) => {
+    setSelectedRegion(region.code);
+    setRegionSearch(region.name);
+    setShowRegionDropdown(false);
+  };
+
+  const handleProvinceSelect = (province: string) => {
+    setSelectedProvince(province);
+    setProvinceSearch(toTitleCase(province));
+    setShowProvinceDropdown(false);
+  };
+
+  const handleMunicipalitySelect = (municipality: string) => {
+    setSelectedMunicipality(municipality);
+    setMunicipalitySearch(toTitleCase(municipality));
+    setShowMunicipalityDropdown(false);
+  };
+
+  const handleBarangaySelect = (barangay: string) => {
+    setSelectedBarangay(barangay);
+    setBarangaySearch(toTitleCase(barangay));
+    setShowBarangayDropdown(false);
+  };
+
+  const handleRegionFocus = () => {
+    if (selectedRegion) {
+      setRegionSearch("");
+    }
+    setShowRegionDropdown(true);
+  };
+
+  const handleProvinceFocus = () => {
+    if (selectedProvince) {
+      setProvinceSearch("");
+    }
+    setShowProvinceDropdown(true);
+  };
+
+  const handleMunicipalityFocus = () => {
+    if (selectedMunicipality) {
+      setMunicipalitySearch("");
+    }
+    setShowMunicipalityDropdown(true);
+  };
+
+  const handleBarangayFocus = () => {
+    if (selectedBarangay) {
+      setBarangaySearch("");
+    }
+    setShowBarangayDropdown(true);
+  };
+
+  const handleRegionBlur = () => {
+    // If no region was selected and they blur, restore the previous selection
+    if (!regionSearch && selectedRegion) {
+      const selectedRegionObj = PHILIPPINE_REGIONS.find(r => r.code === selectedRegion);
+      if (selectedRegionObj) {
+        setRegionSearch(selectedRegionObj.name);
+      }
+    }
+  };
+
+  const handleProvinceBlur = () => {
+    if (!provinceSearch && selectedProvince) {
+      setProvinceSearch(toTitleCase(selectedProvince));
+    }
+  };
+
+  const handleMunicipalityBlur = () => {
+    if (!municipalitySearch && selectedMunicipality) {
+      setMunicipalitySearch(toTitleCase(selectedMunicipality));
+    }
+  };
+
+  const handleBarangayBlur = () => {
+    if (!barangaySearch && selectedBarangay) {
+      setBarangaySearch(toTitleCase(selectedBarangay));
+    }
+  };
+
+  const filteredRegions = PHILIPPINE_REGIONS.filter(region =>
+    region.name.toLowerCase().includes(regionSearch.toLowerCase()) ||
+    region.code.toLowerCase().includes(regionSearch.toLowerCase())
+  );
+
+  const filteredProvinces = provinces.filter(province =>
+    province.toLowerCase().includes(provinceSearch.toLowerCase())
+  );
+
+  const filteredMunicipalities = municipalities.filter(municipality =>
+    municipality.toLowerCase().includes(municipalitySearch.toLowerCase())
+  );
+
+  const filteredBarangays = barangays.filter(barangay =>
+    barangay.toLowerCase().includes(barangaySearch.toLowerCase())
+  );
+
+  const isFormValid = selectedRegion && selectedProvince && selectedMunicipality && selectedBarangay;
 
   if (isMobile) {
     return (
       <div className="min-h-screen bg-white flex flex-col">
-        {/* Progress Bar */}
-        <div className="w-full bg-gray-200 h-1">
-          <div className={`h-1 w-1/2 ${
-            locationState.role === 'official' ? 'bg-red-600' : 'bg-blue-600'
-          }`}></div>
-        </div>
-
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b bg-white">
-          <button onClick={handleBack} className="text-gray-600 hover:text-gray-800">
+        {/* Header with role-based color */}
+        <div className={`flex items-center justify-between px-4 py-4 text-white ${
+          locationState.role === 'official' ? 'bg-red-600' : 'bg-blue-600'
+        }`}>
+          <button onClick={handleBack} className="text-white hover:text-gray-200">
             <ChevronLeft className="h-6 w-6" />
           </button>
-          <h1 className="text-lg font-semibold text-gray-900">Select Location</h1>
+          <h1 className="text-lg font-bold">Location</h1>
           <div className="w-6" />
         </div>
 
+        {/* Progress Bar */}
+        <div className="px-6 py-4 bg-white">
+          <RegistrationProgress 
+            currentStep="location" 
+            userRole={locationState.role as 'resident' | 'official'} 
+          />
+        </div>
+
         {/* Content */}
-        <div className="flex-1 flex flex-col justify-between p-4 bg-white">
-          <div className="space-y-6">
-            {/* Logo and Title */}
-            <div className="text-center">
-              <img 
-                src="/lovable-uploads/6960369f-3a6b-4d57-ab0f-f7db77f16152.png" 
-                alt="eGov.PH Logo" 
-                className="h-12 w-auto mx-auto mb-4" 
+        <div className="flex-1 p-6 space-y-6 bg-white">
+          {/* Region Searchable Dropdown */}
+          <div className="relative" ref={regionRef}>
+            <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Region</Label>
+            <div className="relative">
+              <Input
+                placeholder="Search and select region..."
+                value={regionSearch}
+                onChange={(e) => setRegionSearch(e.target.value)}
+                onFocus={handleRegionFocus}
+                onBlur={handleRegionBlur}
+                className="h-12 pr-20"
               />
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Select Your Location</h2>
-              <p className="text-gray-600 text-sm">
-                Please select your location to continue with your{" "}
-                <span className={`font-semibold capitalize ${
-                  locationState.role === 'official' ? 'text-red-600' : 'text-blue-600'
-                }`}>{locationState.role}</span> registration
-              </p>
-            </div>
-
-            {/* Location Selection */}
-            {isLoading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="text-gray-600 mt-2">Loading locations...</p>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                {regionSearch && (
+                  <button
+                    onClick={() => {
+                      setRegionSearch("");
+                      setSelectedRegion("");
+                    }}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+                <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showRegionDropdown ? 'rotate-180' : ''}`} />
               </div>
-            ) : (
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="region" className="text-gray-700 text-sm">Region</Label>
-                  <Input
-                    id="region"
-                    value={locationData?.region || ""}
-                    disabled
-                    className="mt-1 h-9 text-sm bg-gray-100 border-gray-300"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="province" className="text-gray-700 text-sm">Province *</Label>
-                  <Select value={selectedProvince} onValueChange={setSelectedProvince}>
-                    <SelectTrigger className="mt-1 h-9 text-sm border-gray-300">
-                      <SelectValue placeholder="Select Province" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {locationData?.provinces.map((province) => (
-                        <SelectItem key={province} value={province}>
-                          {province}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="municipality" className="text-gray-700 text-sm">City/Municipality *</Label>
-                  <Select 
-                    value={selectedMunicipality} 
-                    onValueChange={setSelectedMunicipality}
-                    disabled={!selectedProvince}
+            </div>
+            {showRegionDropdown && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                {selectedRegion && (
+                  <button
+                    onClick={() => handleRegionSelect(PHILIPPINE_REGIONS.find(r => r.code === selectedRegion)!)}
+                    className="w-full text-left py-3 px-4 bg-blue-50 border-b border-gray-100 flex items-center gap-2"
                   >
-                    <SelectTrigger className="mt-1 h-9 text-sm border-gray-300">
-                      <SelectValue placeholder="Select City/Municipality" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {selectedProvince && locationData?.municipalities[selectedProvince]?.map((municipality) => (
-                        <SelectItem key={municipality} value={municipality}>
-                          {municipality}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="barangay" className="text-gray-700 text-sm">Barangay *</Label>
-                  <Select 
-                    value={selectedBarangay} 
-                    onValueChange={setSelectedBarangay}
-                    disabled={!selectedMunicipality}
+                    <Check className="h-4 w-4 text-blue-600" />
+                    {PHILIPPINE_REGIONS.find(r => r.code === selectedRegion)?.name}
+                  </button>
+                )}
+                {filteredRegions.filter(r => r.code !== selectedRegion).map((region, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleRegionSelect(region)}
+                    className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
                   >
-                    <SelectTrigger className="mt-1 h-9 text-sm border-gray-300">
-                      <SelectValue placeholder="Select Barangay" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {selectedMunicipality && locationData?.barangays[selectedMunicipality]?.map((barangay) => (
-                        <SelectItem key={barangay} value={barangay}>
-                          {barangay}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                    {region.name}
+                  </button>
+                ))}
               </div>
             )}
           </div>
 
-          {/* Next Button */}
+          {/* Province Searchable Dropdown */}
+          <div className="relative" ref={provinceRef}>
+            <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Province</Label>
+            <div className="relative">
+              <Input
+                placeholder="Search and select province..."
+                value={provinceSearch}
+                onChange={(e) => setProvinceSearch(e.target.value)}
+                onFocus={handleProvinceFocus}
+                onBlur={handleProvinceBlur}
+                disabled={!selectedRegion}
+                className={`h-12 pr-20 ${!selectedRegion ? 'opacity-50 cursor-not-allowed' : ''}`}
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                {provinceSearch && (
+                  <button
+                    onClick={() => {
+                      setProvinceSearch("");
+                      setSelectedProvince("");
+                    }}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+                <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showProvinceDropdown ? 'rotate-180' : ''}`} />
+              </div>
+            </div>
+            {showProvinceDropdown && selectedRegion && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                {isLoading ? (
+                  <div className="p-4 text-center text-gray-500">Loading provinces...</div>
+                ) : (
+                  <>
+                    {selectedProvince && (
+                      <button
+                        onClick={() => handleProvinceSelect(selectedProvince)}
+                        className="w-full text-left py-3 px-4 bg-blue-50 border-b border-gray-100 flex items-center gap-2"
+                      >
+                        <Check className="h-4 w-4 text-blue-600" />
+                        {toTitleCase(selectedProvince)}
+                      </button>
+                    )}
+                    {filteredProvinces.filter(p => p !== selectedProvince).length === 0 && provinces.length === 0 ? (
+                      <div className="p-4 text-center text-gray-500">No provinces found for this region</div>
+                    ) : filteredProvinces.filter(p => p !== selectedProvince).length === 0 ? (
+                      <div className="p-4 text-center text-gray-500">No provinces match your search</div>
+                    ) : (
+                      filteredProvinces.filter(p => p !== selectedProvince).map((province, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleProvinceSelect(province)}
+                          className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                        >
+                          {toTitleCase(province)}
+                        </button>
+                      ))
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Municipality Dropdown */}
+          <div className="relative" ref={municipalityRef}>
+            <Label className="text-sm font-medium text-gray-700 mb-3 block">Select City/Municipality</Label>
+            <div className="relative">
+              <Input
+                placeholder="Search and select city/municipality..."
+                value={municipalitySearch}
+                onChange={(e) => setMunicipalitySearch(e.target.value)}
+                onFocus={handleMunicipalityFocus}
+                onBlur={handleMunicipalityBlur}
+                disabled={!selectedProvince}
+                className={`h-12 pr-20 ${!selectedProvince ? 'opacity-50 cursor-not-allowed' : ''}`}
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                {municipalitySearch && (
+                  <button
+                    onClick={() => {
+                      setMunicipalitySearch("");
+                      setSelectedMunicipality("");
+                    }}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+                <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showMunicipalityDropdown ? 'rotate-180' : ''}`} />
+              </div>
+            </div>
+            {showMunicipalityDropdown && selectedProvince && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                {isLoading ? (
+                  <div className="p-4 text-center text-gray-500">Loading municipalities...</div>
+                ) : (
+                  <>
+                    {selectedMunicipality && (
+                      <button
+                        onClick={() => handleMunicipalitySelect(selectedMunicipality)}
+                        className="w-full text-left py-3 px-4 bg-blue-50 border-b border-gray-100 flex items-center gap-2"
+                      >
+                        <Check className="h-4 w-4 text-blue-600" />
+                        {toTitleCase(selectedMunicipality)}
+                      </button>
+                    )}
+                    {filteredMunicipalities.filter(m => m !== selectedMunicipality).length === 0 && municipalities.length === 0 ? (
+                      <div className="p-4 text-center text-gray-500">No municipalities found for this province</div>
+                    ) : filteredMunicipalities.filter(m => m !== selectedMunicipality).length === 0 ? (
+                      <div className="p-4 text-center text-gray-500">No municipalities match your search</div>
+                    ) : (
+                      filteredMunicipalities.filter(m => m !== selectedMunicipality).map((municipality, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleMunicipalitySelect(municipality)}
+                          className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                        >
+                          {toTitleCase(municipality)}
+                        </button>
+                      ))
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Barangay Dropdown */}
+          <div className="relative" ref={barangayRef}>
+            <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Barangay</Label>
+            <div className="relative">
+              <Input
+                placeholder="Search and select barangay..."
+                value={barangaySearch}
+                onChange={(e) => setBarangaySearch(e.target.value)}
+                onFocus={handleBarangayFocus}
+                onBlur={handleBarangayBlur}
+                disabled={!selectedMunicipality}
+                className={`h-12 pr-20 ${!selectedMunicipality ? 'opacity-50 cursor-not-allowed' : ''}`}
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                {barangaySearch && (
+                  <button
+                    onClick={() => {
+                      setBarangaySearch("");
+                      setSelectedBarangay("");
+                    }}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+                <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showBarangayDropdown ? 'rotate-180' : ''}`} />
+              </div>
+            </div>
+            {showBarangayDropdown && selectedMunicipality && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                {isLoading ? (
+                  <div className="p-4 text-center text-gray-500">Loading barangays...</div>
+                ) : (
+                  <>
+                    {selectedBarangay && (
+                      <button
+                        onClick={() => handleBarangaySelect(selectedBarangay)}
+                        className="w-full text-left py-3 px-4 bg-blue-50 border-b border-gray-100 flex items-center gap-2"
+                      >
+                        <Check className="h-4 w-4 text-blue-600" />
+                        {toTitleCase(selectedBarangay)}
+                      </button>
+                    )}
+                    {filteredBarangays.filter(b => b !== selectedBarangay).length === 0 && barangays.length === 0 ? (
+                      <div className="p-4 text-center text-gray-500">No barangays found for this municipality</div>
+                    ) : filteredBarangays.filter(b => b !== selectedBarangay).length === 0 ? (
+                      <div className="p-4 text-center text-gray-500">No barangays match your search</div>
+                    ) : (
+                      filteredBarangays.filter(b => b !== selectedBarangay).map((barangay, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleBarangaySelect(barangay)}
+                          className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                        >
+                          <div className="font-medium text-gray-900">{toTitleCase(barangay)}</div>
+                        </button>
+                      ))
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Selected Barangay Display */}
+          {selectedBarangay && (
+            <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
+              <div className="text-center">
+                <div className="font-semibold text-green-900 text-lg">{toTitleCase(selectedBarangay)}</div>
+                <div className="text-sm text-green-600">Barangay Selected</div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Next Button */}
+        <div className="p-6 bg-white border-t">
           <Button
             onClick={handleNext}
-            disabled={!isFormValid || isLoading}
-            className={`w-full text-white py-3 h-12 text-base font-medium ${
+            disabled={!isFormValid}
+            className={`w-full text-white py-4 h-12 text-base font-medium rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed ${
               locationState.role === 'official' 
                 ? 'bg-red-600 hover:bg-red-700' 
                 : 'bg-blue-600 hover:bg-blue-700'
             }`}
           >
-            NEXT
+            Next
           </Button>
         </div>
       </div>
@@ -283,10 +689,14 @@ export default function LocationSelection() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
         {/* Progress Bar */}
-        <div className="w-full bg-gray-200 h-1">
-          <div className={`h-1 w-1/2 ${
-            locationState.role === 'official' ? 'bg-red-600' : 'bg-blue-600'
-          }`}></div>
+        <div className="px-8 py-6 border-b bg-white">
+          <RegistrationProgress 
+            currentStep="location" 
+            userRole={locationState.role as 'resident' | 'official'} 
+          />
+          <div className="text-center mt-4">
+            <h2 className="text-2xl font-bold text-gray-900">Location</h2>
+          </div>
         </div>
 
         <div className="p-8 bg-white">
@@ -294,110 +704,275 @@ export default function LocationSelection() {
             <ChevronLeft className="w-4 h-4 mr-1" /> Back
           </button>
           
-          {/* Header */}
-          <div className="text-center mb-8">
-            <img 
-              src="/lovable-uploads/6960369f-3a6b-4d57-ab0f-f7db77f16152.png" 
-              alt="eGov.PH Logo" 
-              className="h-16 w-auto mx-auto mb-4" 
-            />
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Select Your Location</h1>
-            <p className="text-gray-600">
-              Please select your location to continue with your{" "}
-              <span className={`font-semibold capitalize ${
-                locationState.role === 'official' ? 'text-red-600' : 'text-blue-600'
-              }`}>{locationState.role}</span> registration
-            </p>
-          </div>
-          
-          {/* Location Selection */}
-          {isLoading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="text-gray-600 mt-2">Loading locations...</p>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              <div>
-                <Label htmlFor="region-desktop" className="text-gray-700">Region</Label>
+          <div className="space-y-6">
+            {/* Region Searchable Dropdown */}
+            <div className="relative" ref={regionRef}>
+              <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Region</Label>
+              <div className="relative">
                 <Input
-                  id="region-desktop"
-                  value={locationData?.region || ""}
-                  disabled
-                  className="mt-1 bg-gray-100 border-gray-300"
+                  placeholder="Search and select region..."
+                  value={regionSearch}
+                  onChange={(e) => setRegionSearch(e.target.value)}
+                  onFocus={handleRegionFocus}
+                  onBlur={handleRegionBlur}
+                  className="h-12 pr-20"
                 />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                  {regionSearch && (
+                    <button
+                      onClick={() => {
+                        setRegionSearch("");
+                        setSelectedRegion("");
+                      }}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showRegionDropdown ? 'rotate-180' : ''}`} />
+                </div>
               </div>
-
-              <div>
-                <Label htmlFor="province-desktop" className="text-gray-700">Province *</Label>
-                <Select value={selectedProvince} onValueChange={setSelectedProvince}>
-                  <SelectTrigger className="mt-1 border-gray-300">
-                    <SelectValue placeholder="Select Province" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {locationData?.provinces.map((province) => (
-                      <SelectItem key={province} value={province}>
-                        {province}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="municipality-desktop" className="text-gray-700">City/Municipality *</Label>
-                <Select 
-                  value={selectedMunicipality} 
-                  onValueChange={setSelectedMunicipality}
-                  disabled={!selectedProvince}
-                >
-                  <SelectTrigger className="mt-1 border-gray-300">
-                    <SelectValue placeholder="Select City/Municipality" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {selectedProvince && locationData?.municipalities[selectedProvince]?.map((municipality) => (
-                      <SelectItem key={municipality} value={municipality}>
-                        {municipality}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="barangay-desktop" className="text-gray-700">Barangay *</Label>
-                <Select 
-                  value={selectedBarangay} 
-                  onValueChange={setSelectedBarangay}
-                  disabled={!selectedMunicipality}
-                >
-                  <SelectTrigger className="mt-1 border-gray-300">
-                    <SelectValue placeholder="Select Barangay" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {selectedMunicipality && locationData?.barangays[selectedMunicipality]?.map((barangay) => (
-                      <SelectItem key={barangay} value={barangay}>
-                        {barangay}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {showRegionDropdown && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  {selectedRegion && (
+                    <button
+                      onClick={() => handleRegionSelect(PHILIPPINE_REGIONS.find(r => r.code === selectedRegion)!)}
+                      className="w-full text-left py-3 px-4 bg-blue-50 border-b border-gray-100 flex items-center gap-2"
+                    >
+                      <Check className="h-4 w-4 text-blue-600" />
+                      {PHILIPPINE_REGIONS.find(r => r.code === selectedRegion)?.name}
+                    </button>
+                  )}
+                  {filteredRegions.filter(r => r.code !== selectedRegion).map((region, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleRegionSelect(region)}
+                      className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                    >
+                      {region.name}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+
+            {/* Province Searchable Dropdown */}
+            <div className="relative" ref={provinceRef}>
+              <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Province</Label>
+              <div className="relative">
+                <Input
+                  placeholder="Search and select province..."
+                  value={provinceSearch}
+                  onChange={(e) => setProvinceSearch(e.target.value)}
+                  onFocus={handleProvinceFocus}
+                  onBlur={handleProvinceBlur}
+                  disabled={!selectedRegion}
+                  className={`h-12 pr-20 ${!selectedRegion ? 'opacity-50 cursor-not-allowed' : ''}`}
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                  {provinceSearch && (
+                    <button
+                      onClick={() => {
+                        setProvinceSearch("");
+                        setSelectedProvince("");
+                      }}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showProvinceDropdown ? 'rotate-180' : ''}`} />
+                </div>
+              </div>
+              {showProvinceDropdown && selectedRegion && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  {isLoading ? (
+                    <div className="p-4 text-center text-gray-500">Loading provinces...</div>
+                  ) : (
+                    <>
+                      {selectedProvince && (
+                        <button
+                          onClick={() => handleProvinceSelect(selectedProvince)}
+                          className="w-full text-left py-3 px-4 bg-blue-50 border-b border-gray-100 flex items-center gap-2"
+                        >
+                          <Check className="h-4 w-4 text-blue-600" />
+                          {toTitleCase(selectedProvince)}
+                        </button>
+                      )}
+                      {filteredProvinces.filter(p => p !== selectedProvince).length === 0 && provinces.length === 0 ? (
+                        <div className="p-4 text-center text-gray-500">No provinces found for this region</div>
+                      ) : filteredProvinces.filter(p => p !== selectedProvince).length === 0 ? (
+                        <div className="p-4 text-center text-gray-500">No provinces match your search</div>
+                      ) : (
+                        filteredProvinces.filter(p => p !== selectedProvince).map((province, index) => (
+                          <button
+                            key={index}
+                            onClick={() => handleProvinceSelect(province)}
+                            className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                          >
+                            {toTitleCase(province)}
+                          </button>
+                        ))
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Municipality Dropdown */}
+            <div className="relative" ref={municipalityRef}>
+              <Label className="text-sm font-medium text-gray-700 mb-3 block">Select City/Municipality</Label>
+              <div className="relative">
+                <Input
+                  placeholder="Search and select city/municipality..."
+                  value={municipalitySearch}
+                  onChange={(e) => setMunicipalitySearch(e.target.value)}
+                  onFocus={handleMunicipalityFocus}
+                  onBlur={handleMunicipalityBlur}
+                  disabled={!selectedProvince}
+                  className={`h-12 pr-20 ${!selectedProvince ? 'opacity-50 cursor-not-allowed' : ''}`}
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                  {municipalitySearch && (
+                    <button
+                      onClick={() => {
+                        setMunicipalitySearch("");
+                        setSelectedMunicipality("");
+                      }}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showMunicipalityDropdown ? 'rotate-180' : ''}`} />
+                </div>
+              </div>
+              {showMunicipalityDropdown && selectedProvince && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  {isLoading ? (
+                    <div className="p-4 text-center text-gray-500">Loading municipalities...</div>
+                  ) : (
+                    <>
+                      {selectedMunicipality && (
+                        <button
+                          onClick={() => handleMunicipalitySelect(selectedMunicipality)}
+                          className="w-full text-left py-3 px-4 bg-blue-50 border-b border-gray-100 flex items-center gap-2"
+                        >
+                          <Check className="h-4 w-4 text-blue-600" />
+                          {toTitleCase(selectedMunicipality)}
+                        </button>
+                      )}
+                      {filteredMunicipalities.filter(m => m !== selectedMunicipality).length === 0 && municipalities.length === 0 ? (
+                        <div className="p-4 text-center text-gray-500">No municipalities found for this province</div>
+                      ) : filteredMunicipalities.filter(m => m !== selectedMunicipality).length === 0 ? (
+                        <div className="p-4 text-center text-gray-500">No municipalities match your search</div>
+                      ) : (
+                        filteredMunicipalities.filter(m => m !== selectedMunicipality).map((municipality, index) => (
+                          <button
+                            key={index}
+                            onClick={() => handleMunicipalitySelect(municipality)}
+                            className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                          >
+                            {toTitleCase(municipality)}
+                          </button>
+                        ))
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Barangay Dropdown */}
+            <div className="relative" ref={barangayRef}>
+              <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Barangay</Label>
+              <div className="relative">
+                <Input
+                  placeholder="Search and select barangay..."
+                  value={barangaySearch}
+                  onChange={(e) => setBarangaySearch(e.target.value)}
+                  onFocus={handleBarangayFocus}
+                  onBlur={handleBarangayBlur}
+                  disabled={!selectedMunicipality}
+                  className={`h-12 pr-20 ${!selectedMunicipality ? 'opacity-50 cursor-not-allowed' : ''}`}
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                  {barangaySearch && (
+                    <button
+                      onClick={() => {
+                        setBarangaySearch("");
+                        setSelectedBarangay("");
+                      }}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showBarangayDropdown ? 'rotate-180' : ''}`} />
+                </div>
+              </div>
+              {showBarangayDropdown && selectedMunicipality && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  {isLoading ? (
+                    <div className="p-4 text-center text-gray-500">Loading barangays...</div>
+                  ) : (
+                    <>
+                      {selectedBarangay && (
+                        <button
+                          onClick={() => handleBarangaySelect(selectedBarangay)}
+                          className="w-full text-left py-3 px-4 bg-blue-50 border-b border-gray-100 flex items-center gap-2"
+                        >
+                          <Check className="h-4 w-4 text-blue-600" />
+                          {toTitleCase(selectedBarangay)}
+                        </button>
+                      )}
+                      {filteredBarangays.filter(b => b !== selectedBarangay).length === 0 && barangays.length === 0 ? (
+                        <div className="p-4 text-center text-gray-500">No barangays found for this municipality</div>
+                      ) : filteredBarangays.filter(b => b !== selectedBarangay).length === 0 ? (
+                        <div className="p-4 text-center text-gray-500">No barangays match your search</div>
+                      ) : (
+                        filteredBarangays.filter(b => b !== selectedBarangay).map((barangay, index) => (
+                          <button
+                            key={index}
+                            onClick={() => handleBarangaySelect(barangay)}
+                            className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                          >
+                            <div className="font-medium text-gray-900">{toTitleCase(barangay)}</div>
+                          </button>
+                        ))
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Selected Barangay Display */}
+            {selectedBarangay && (
+              <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
+                <div className="text-center">
+                  <div className="font-semibold text-green-900 text-lg">{toTitleCase(selectedBarangay)}</div>
+                  <div className="text-sm text-green-600">Barangay Selected</div>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Next Button */}
-          <Button
-            onClick={handleNext}
-            disabled={!isFormValid || isLoading}
-            className={`w-full text-white py-3 text-base font-medium mt-8 ${
-              locationState.role === 'official' 
-                ? 'bg-red-600 hover:bg-red-700' 
-                : 'bg-blue-600 hover:bg-blue-700'
-            }`}
-          >
-            Next
-          </Button>
+          <div className="mt-8">
+            <Button
+              onClick={handleNext}
+              disabled={!isFormValid}
+              className={`w-full text-white py-4 h-12 text-base font-medium rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed ${
+                locationState.role === 'official' 
+                  ? 'bg-red-600 hover:bg-red-700' 
+                  : 'bg-blue-600 hover:bg-blue-700'
+              }`}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       </div>
     </div>
