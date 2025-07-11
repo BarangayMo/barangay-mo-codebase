@@ -66,6 +66,7 @@ const PHILIPPINE_REGIONS = [{
 const toTitleCase = (str: string) => {
   return str.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
 };
+
 export default function LocationSelection() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -164,6 +165,7 @@ export default function LocationSelection() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
   const loadProvinces = async () => {
     if (!selectedRegion) return;
     console.log('Loading provinces for region:', selectedRegion);
@@ -200,6 +202,7 @@ export default function LocationSelection() {
       setIsLoading(false);
     }
   };
+
   const loadMunicipalities = async () => {
     if (!selectedRegion || !selectedProvince) return;
     console.log('Loading municipalities for region:', selectedRegion, 'province:', selectedProvince);
@@ -234,6 +237,7 @@ export default function LocationSelection() {
       setIsLoading(false);
     }
   };
+
   const loadBarangays = async () => {
     if (!selectedRegion || !selectedProvince || !selectedMunicipality) return;
     console.log('Loading barangays for region:', selectedRegion, 'province:', selectedProvince, 'municipality:', selectedMunicipality);
@@ -268,6 +272,7 @@ export default function LocationSelection() {
       setIsLoading(false);
     }
   };
+
   const handleNext = () => {
     if (selectedRegion && selectedProvince && selectedMunicipality && selectedBarangay) {
       const nextState = {
@@ -289,9 +294,11 @@ export default function LocationSelection() {
       }
     }
   };
+
   const handleBack = () => {
     navigate("/register/role");
   };
+
   const handleRegionSelect = (region: {
     code: string;
     name: string;
@@ -300,45 +307,53 @@ export default function LocationSelection() {
     setRegionSearch(region.name);
     setShowRegionDropdown(false);
   };
+
   const handleProvinceSelect = (province: string) => {
     setSelectedProvince(province);
     setProvinceSearch(toTitleCase(province));
     setShowProvinceDropdown(false);
   };
+
   const handleMunicipalitySelect = (municipality: string) => {
     setSelectedMunicipality(municipality);
     setMunicipalitySearch(toTitleCase(municipality));
     setShowMunicipalityDropdown(false);
   };
+
   const handleBarangaySelect = (barangay: string) => {
     setSelectedBarangay(barangay);
     setBarangaySearch(toTitleCase(barangay));
     setShowBarangayDropdown(false);
   };
+
   const handleRegionFocus = () => {
     if (selectedRegion) {
       setRegionSearch("");
     }
     setShowRegionDropdown(true);
   };
+
   const handleProvinceFocus = () => {
     if (selectedProvince) {
       setProvinceSearch("");
     }
     setShowProvinceDropdown(true);
   };
+
   const handleMunicipalityFocus = () => {
     if (selectedMunicipality) {
       setMunicipalitySearch("");
     }
     setShowMunicipalityDropdown(true);
   };
+
   const handleBarangayFocus = () => {
     if (selectedBarangay) {
       setBarangaySearch("");
     }
     setShowBarangayDropdown(true);
   };
+
   const handleRegionBlur = () => {
     // If no region was selected and they blur, restore the previous selection
     if (!regionSearch && selectedRegion) {
@@ -348,42 +363,49 @@ export default function LocationSelection() {
       }
     }
   };
+
   const handleProvinceBlur = () => {
     if (!provinceSearch && selectedProvince) {
       setProvinceSearch(toTitleCase(selectedProvince));
     }
   };
+
   const handleMunicipalityBlur = () => {
     if (!municipalitySearch && selectedMunicipality) {
       setMunicipalitySearch(toTitleCase(selectedMunicipality));
     }
   };
+
   const handleBarangayBlur = () => {
     if (!barangaySearch && selectedBarangay) {
       setBarangaySearch(toTitleCase(selectedBarangay));
     }
   };
+
   const filteredRegions = PHILIPPINE_REGIONS.filter(region => region.name.toLowerCase().includes(regionSearch.toLowerCase()) || region.code.toLowerCase().includes(regionSearch.toLowerCase()));
   const filteredProvinces = provinces.filter(province => province.toLowerCase().includes(provinceSearch.toLowerCase()));
   const filteredMunicipalities = municipalities.filter(municipality => municipality.toLowerCase().includes(municipalitySearch.toLowerCase()));
   const filteredBarangays = barangays.filter(barangay => barangay.toLowerCase().includes(barangaySearch.toLowerCase()));
   const isFormValid = selectedRegion && selectedProvince && selectedMunicipality && selectedBarangay;
+
   if (isMobile) {
-    return <div className="min-h-screen bg-white flex flex-col">
+    return <div className="min-h-screen bg-gray-50 flex flex-col">
+        {/* Progress Bar */}
+        <div className="px-6 pt-6 pb-0 bg-gray-50">
+          <RegistrationProgress currentStep="location" userRole={locationState.role as 'resident' | 'official'} />
+        </div>
+
         {/* Header with role-based color */}
-        <div className={`flex items-center justify-between px-4 py-4 text-white ${locationState.role === 'official' ? 'bg-red-600' : 'bg-blue-600'}`}>
-          <button onClick={handleBack} className="text-white hover:text-gray-200">
+        <div className="flex items-center justify-between px-4 py-4 bg-white text-red-600 mx-6 mt-4 rounded-lg shadow-sm">
+          <button onClick={handleBack} className="text-red-600 hover:text-red-700">
             <ChevronLeft className="h-6 w-6" />
           </button>
           <h1 className="text-lg font-bold">Location</h1>
           <div className="w-6" />
         </div>
 
-        {/* Progress Bar */}
-        
-
         {/* Content */}
-        <div className="flex-1 p-6 space-y-6 bg-white">
+        <div className="flex-1 p-6 space-y-6 bg-gray-50">
           {/* Region Searchable Dropdown */}
           <div className="relative" ref={regionRef}>
             <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Region</Label>
@@ -504,7 +526,7 @@ export default function LocationSelection() {
         </div>
 
         {/* Next Button */}
-        <div className="p-6 bg-white border-t">
+        <div className="p-6 bg-gray-50 border-t">
           <Button onClick={handleNext} disabled={!isFormValid} className={`w-full text-white py-4 h-12 text-base font-medium rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed ${locationState.role === 'official' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
             Next
           </Button>
@@ -518,9 +540,15 @@ export default function LocationSelection() {
         {/* Progress Bar */}
         <div className="px-8 py-6 border-b bg-white">
           <RegistrationProgress currentStep="location" userRole={locationState.role as 'resident' | 'official'} />
-          <div className="text-center mt-4">
-            <h2 className="text-2xl font-bold text-gray-900">Location</h2>
-          </div>
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-8 py-4 bg-white border-b">
+          <button onClick={handleBack} className="text-red-600 hover:text-red-700">
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+          <h1 className="text-xl font-bold text-red-600">Location</h1>
+          <div className="w-6" />
         </div>
 
         <div className="p-8 bg-white">
