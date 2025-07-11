@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/layout/Layout";
 import { DashboardStats } from "@/components/officials/DashboardStats";
 import { BudgetAllocationChart } from "@/components/officials/BudgetAllocationChart";
@@ -35,6 +36,58 @@ const OfficialsDashboard = () => {
       return data;
     },
     enabled: !!user?.id
+  });
+
+  // Get barangay data including logo and puroks
+  const { data: barangayData } = useQuery({
+    queryKey: ['barangay-data', officialProfile?.barangay],
+    queryFn: async () => {
+      if (!officialProfile?.barangay) return null;
+      const { data, error } = await supabase
+        .from('Barangays')
+        .select('*')
+        .eq('BARANGAY', officialProfile.barangay)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!officialProfile?.barangay
+  });
+
+  // Get barangay officials from database
+  const { data: barangayOfficials } = useQuery({
+    queryKey: ['barangay-officials', officialProfile?.barangay],
+    queryFn: async () => {
+      if (!officialProfile?.barangay) return [];
+      
+      // Try to get officials data from multiple region tables
+      const regionTables = [
+        'NCR', 'REGION 1', 'REGION 2', 'REGION 3', 'REGION 4A', 'REGION 4B',
+        'REGION 5', 'REGION 6', 'REGION 7', 'REGION 8', 'REGION 9', 'REGION 10',
+        'REGION 11', 'REGION 12', 'REGION 13', 'CAR', 'BARMM'
+      ];
+      
+      let officials = [];
+      
+      for (const table of regionTables) {
+        try {
+          const { data, error } = await supabase
+            .from(table)
+            .select('*')
+            .eq('BARANGAY', officialProfile.barangay);
+          
+          if (!error && data && data.length > 0) {
+            officials = [...officials, ...data];
+          }
+        } catch (err) {
+          console.log(`No data found in ${table} for barangay ${officialProfile.barangay}`);
+        }
+      }
+      
+      return officials;
+    },
+    enabled: !!officialProfile?.barangay
   });
 
   // Get barangay residents count
@@ -202,7 +255,7 @@ const OfficialsDashboard = () => {
       {/* Content */}
       <div className="relative flex items-center gap-3 p-3 rounded-lg">
         <Avatar className="h-12 w-12">
-          <AvatarImage src={officialProfile?.avatar_url || "/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png"} />
+          <AvatarImage src={officialProfile?.avatar_url || barangayData?.Logo || "/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png"} />
           <AvatarFallback className="bg-red-100 text-red-600">
             {officialProfile?.first_name?.[0]}{officialProfile?.last_name?.[0]}
           </AvatarFallback>
@@ -212,11 +265,28 @@ const OfficialsDashboard = () => {
             {officialProfile?.first_name} {officialProfile?.last_name}
           </p>
           <p className="text-sm text-gray-600">Barangay Official</p>
-          <p className="text-xs text-red-600">{officialProfile?.barangay || 'Barangay'}</p>
+          <p className="text-xs text-red-600">
+            {officialProfile?.barangay ? `Barangay ${officialProfile.barangay}` : 'Barangay'}
+          </p>
         </div>
       </div>
     </div>
   );
+
+  // Parse puroks from barangay data
+  const purokCount = useMemo(() => {
+    if (!barangayData) return 14; // default fallback
+    
+    // Try to get puroks from various fields in the barangay data
+    const divisions = barangayData['No of Divisions'] || barangayData['Division'];
+    
+    if (divisions) {
+      const parsed = parseInt(divisions);
+      if (!isNaN(parsed)) return parsed;
+    }
+    
+    return 14; // default fallback
+  }, [barangayData]);
 
   return (
     <Layout>
@@ -250,7 +320,7 @@ const OfficialsDashboard = () => {
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-3 h-3 bg-red-500 rounded-sm"></div>
-                  <p className="text-2xl font-bold text-gray-900">14</p>
+                  <p className="text-2xl font-bold text-gray-900">{purokCount}</p>
                 </div>
                 <p className="text-sm text-gray-600">Puroks</p>
               </CardContent>
@@ -298,6 +368,35 @@ const OfficialsDashboard = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Barangay Officials Section */}
+          {barangayOfficials && barangayOfficials.length > 0 && (
+            <Card className="mt-6 bg-white shadow-sm border border-gray-100">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-semibold text-gray-900">Barangay Officials</h3>
+                  <Link to="/users/officials" className="text-red-500 text-sm font-medium">View All</Link>
+                </div>
+                <div className="space-y-3">
+                  {barangayOfficials.slice(0, 3).map((official, index) => (
+                    <div key={index} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
+                      <Avatar className="w-10 h-10">
+                        <AvatarFallback className="bg-red-100 text-red-600">
+                          {official.FIRSTNAME?.[0]}{official.LASTNAME?.[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900">
+                          {official.FIRSTNAME} {official.LASTNAME}
+                        </p>
+                        <p className="text-xs text-gray-600">{official.POSITION}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Community Slider */}
           <CommunitySlider />
@@ -347,7 +446,7 @@ const OfficialsDashboard = () => {
                   <Bell className="h-4 w-4" />
                 </Button>
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={officialProfile?.avatar_url || "/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png"} />
+                  <AvatarImage src={officialProfile?.avatar_url || barangayData?.Logo || "/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png"} />
                   <AvatarFallback>BO</AvatarFallback>
                 </Avatar>
               </div>
@@ -420,7 +519,7 @@ const OfficialsDashboard = () => {
                   <div>
                     <h2 className="text-3xl font-bold text-gray-900">Community Overview</h2>
                     <p className="text-lg text-blue-600 mt-2">
-                      Serving {residentsCount || 0} residents across 14 puroks
+                      Serving {residentsCount || 0} residents across {purokCount} puroks
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
@@ -581,7 +680,21 @@ const OfficialsDashboard = () => {
               <div className="mt-8">
                 <h3 className="font-semibold text-gray-900 mb-4">Barangay Staff</h3>
                 <div className="space-y-3">
-                  {[
+                  {barangayOfficials?.slice(0, 3).map((official, index) => (
+                    <div key={index} className="flex items-center gap-3">
+                      <Avatar className="w-8 h-8">
+                        <AvatarFallback className="text-xs">
+                          {official.FIRSTNAME?.[0]}{official.LASTNAME?.[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {official.FIRSTNAME} {official.LASTNAME}
+                        </p>
+                        <p className="text-xs text-gray-500">{official.POSITION}</p>
+                      </div>
+                    </div>
+                  )) || [
                     { name: "Captain Rodriguez", role: "Barangay Captain", avatar: "CR" },
                     { name: "Secretary Santos", role: "Barangay Secretary", avatar: "SS" },
                     { name: "Kagawad Reyes", role: "Councilor", avatar: "KR" }
