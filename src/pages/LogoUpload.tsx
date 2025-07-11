@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Upload, Image } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { RegistrationProgress } from "@/components/ui/registration-progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -117,18 +116,18 @@ export default function LogoUpload() {
   if (isMobile) {
     return (
       <div className="min-h-screen bg-white flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-4 bg-red-600 text-white">
-          <button onClick={handleBack} className="text-white hover:text-gray-200">
-            <ChevronLeft className="h-6 w-6" />
-          </button>
-          <h1 className="text-lg font-bold">Upload Logo</h1>
-          <div className="w-6" />
+        {/* Progress Bar */}
+        <div className="w-full bg-gray-200 h-1">
+          <div className="h-1 w-full bg-red-600"></div>
         </div>
 
-        {/* Progress Bar */}
-        <div className="px-6 py-4">
-          <RegistrationProgress currentStep="logo" />
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b bg-white">
+          <button onClick={handleBack} className="text-gray-600 hover:text-gray-800">
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+          <h1 className="text-lg font-semibold text-gray-900">Upload Logo</h1>
+          <div className="w-6" />
         </div>
 
         {/* Content */}
@@ -214,17 +213,17 @@ export default function LogoUpload() {
 
   // Desktop version
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-white to-orange-50 px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
         {/* Progress Bar */}
-        <div className="px-8 py-6 border-b">
-          <RegistrationProgress currentStep="logo" />
+        <div className="w-full bg-gray-200 h-1">
+          <div className="h-1 w-full bg-red-600"></div>
         </div>
 
         <div className="p-8">
-          <button onClick={handleBack} className="inline-flex items-center text-sm text-gray-500 mb-6 hover:text-gray-700">
+          <Link to="/register/officials" state={locationState} className="inline-flex items-center text-sm text-gray-500 mb-6 hover:text-gray-700">
             <ChevronLeft className="w-4 h-4 mr-1" /> Back
-          </button>
+          </Link>
           
           {/* Header */}
           <div className="text-center mb-8">
