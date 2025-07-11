@@ -1,9 +1,9 @@
+
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronLeft, Eye, EyeOff, MapPin, UserCheck } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -55,7 +55,6 @@ export default function Register() {
     password: ""
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [acceptTerms, setAcceptTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,20 +72,8 @@ export default function Register() {
     }));
   };
 
-  const handleTermsChange = (checked: boolean | "indeterminate") => {
-    setAcceptTerms(checked === true);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!acceptTerms) {
-      toast({
-        title: "Terms Required",
-        description: "Please accept the terms and conditions to continue.",
-        variant: "destructive"
-      });
-      return;
-    }
     setIsLoading(true);
     try {
       console.log('Submitting registration with role:', locationState.role);
@@ -170,26 +157,26 @@ export default function Register() {
               <img src={logoUrl} alt="eGov.PH Logo" className="h-12 w-auto mx-auto mb-4" />
               <h2 className="text-xl font-bold text-gray-900 mb-4">Complete Your Registration</h2>
               
-              {/* Modern role and location display */}
-              <div className="space-y-3 mb-6">
-                <Card className="p-3 border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-white">
+              {/* Compact role and location display */}
+              <div className="grid grid-cols-2 gap-2 mb-6">
+                <Card className="p-2 bg-gradient-to-r from-blue-50 to-white">
                   <CardContent className="p-0 flex items-center gap-2">
                     <UserCheck className={`h-4 w-4 ${locationState.role === 'official' ? 'text-red-600' : 'text-blue-600'}`} />
                     <div className="text-left">
-                      <p className="text-xs text-gray-500 font-medium">Registering as</p>
-                      <Badge variant="secondary" className={`${locationState.role === 'official' ? 'bg-red-100 text-red-700 border-red-200' : 'bg-blue-100 text-blue-700 border-blue-200'} capitalize font-semibold`}>
+                      <p className="text-xs text-gray-500 font-medium">Role</p>
+                      <Badge variant="secondary" className={`${locationState.role === 'official' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'} capitalize font-semibold text-xs`}>
                         {locationState.role}
                       </Badge>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="p-3 border-l-4 border-l-green-500 bg-gradient-to-r from-green-50 to-white">
+                <Card className="p-2 bg-gradient-to-r from-green-50 to-white">
                   <CardContent className="p-0 flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-green-600" />
                     <div className="text-left">
                       <p className="text-xs text-gray-500 font-medium">Barangay</p>
-                      <p className="text-sm font-semibold text-gray-900">{locationState.barangay}</p>
+                      <p className="text-xs font-semibold text-gray-900">{locationState.barangay}</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -201,23 +188,23 @@ export default function Register() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label htmlFor="firstName" className="text-gray-700 text-sm">First Name *</Label>
-                  <Input id="firstName" name="firstName" value={formData.firstName} onChange={handleInputChange} required className={`mt-1 h-9 text-sm border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
+                  <Input id="firstName" name="firstName" value={formData.firstName} onChange={handleInputChange} required className={`mt-1 h-12 text-sm border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
                 </div>
                 <div>
                   <Label htmlFor="lastName" className="text-gray-700 text-sm">Last Name *</Label>
-                  <Input id="lastName" name="lastName" value={formData.lastName} onChange={handleInputChange} required className={`mt-1 h-9 text-sm border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
+                  <Input id="lastName" name="lastName" value={formData.lastName} onChange={handleInputChange} required className={`mt-1 h-12 text-sm border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label htmlFor="middleName" className="text-gray-700 text-sm">Middle Name</Label>
-                  <Input id="middleName" name="middleName" value={formData.middleName} onChange={handleInputChange} className={`mt-1 h-9 text-sm border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
+                  <Input id="middleName" name="middleName" value={formData.middleName} onChange={handleInputChange} className={`mt-1 h-12 text-sm border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
                 </div>
                 <div>
                   <Label htmlFor="suffix" className="text-gray-700 text-sm">Suffix</Label>
                   <Select value={formData.suffix} onValueChange={handleSuffixChange}>
-                    <SelectTrigger className={`mt-1 h-9 text-sm border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`}>
+                    <SelectTrigger className={`mt-1 h-12 text-sm border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`}>
                       <SelectValue placeholder="Select suffix" />
                     </SelectTrigger>
                     <SelectContent>
@@ -233,35 +220,32 @@ export default function Register() {
 
               <div>
                 <Label htmlFor="email" className="text-gray-700 text-sm">Email Address *</Label>
-                <Input id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} required className={`mt-1 h-9 text-sm border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
+                <Input id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} required className={`mt-1 h-12 text-sm border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
               </div>
 
               <div>
                 <Label htmlFor="password" className="text-gray-700 text-sm">Password *</Label>
                 <div className="relative mt-1">
-                  <Input id="password" name="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={handleInputChange} required className={`h-9 text-sm border-gray-300 pr-10 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
+                  <Input id="password" name="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={handleInputChange} required className={`h-12 text-sm border-gray-300 pr-10 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
 
-              <div className="flex items-start space-x-2">
-                <Checkbox id="terms" checked={acceptTerms} onCheckedChange={handleTermsChange} className={locationState.role === 'official' ? 'border-red-300' : 'border-blue-300'} />
-                <Label htmlFor="terms" className="text-xs text-gray-600 leading-4">
-                  I agree to the{" "}
-                  <a href="/terms" className={locationState.role === 'official' ? 'text-red-600 hover:underline' : 'text-blue-600 hover:underline'}>
-                    Terms and Conditions
-                  </a>{" "}
-                  and{" "}
-                  <a href="/privacy" className={locationState.role === 'official' ? 'text-red-600 hover:underline' : 'text-blue-600 hover:underline'}>
-                    Privacy Policy
-                  </a>
-                </Label>
+              <div className="text-center text-xs text-gray-600 leading-4">
+                By tapping Create new account, you agree with the{" "}
+                <a href="/terms" className={locationState.role === 'official' ? 'text-red-600 hover:underline' : 'text-blue-600 hover:underline'}>
+                  Terms and Conditions
+                </a>{" "}
+                and{" "}
+                <a href="/privacy" className={locationState.role === 'official' ? 'text-red-600 hover:underline' : 'text-blue-600 hover:underline'}>
+                  Privacy Notice
+                </a>
               </div>
 
               <Button type="submit" disabled={isLoading} className={`w-full text-white py-3 h-12 text-base font-medium ${locationState.role === 'official' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
-                {isLoading ? "Creating Account..." : "CREATE ACCOUNT"}
+                {isLoading ? "Creating Account..." : "Create new account"}
               </Button>
             </form>
           </div>
@@ -289,26 +273,26 @@ export default function Register() {
             <img src={logoUrl} alt="eGov.PH Logo" className="h-16 w-auto mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Complete Your Registration</h1>
             
-            {/* Modern role and location display */}
-            <div className="space-y-3 mb-6">
-              <Card className="p-4 border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-white">
-                <CardContent className="p-0 flex items-center gap-3">
-                  <UserCheck className={`h-5 w-5 ${locationState.role === 'official' ? 'text-red-600' : 'text-blue-600'}`} />
+            {/* Compact role and location display */}
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              <Card className="p-3 bg-gradient-to-r from-blue-50 to-white">
+                <CardContent className="p-0 flex items-center gap-2">
+                  <UserCheck className={`h-4 w-4 ${locationState.role === 'official' ? 'text-red-600' : 'text-blue-600'}`} />
                   <div className="text-left">
-                    <p className="text-sm text-gray-500 font-medium">Registering as</p>
-                    <Badge variant="secondary" className={`${locationState.role === 'official' ? 'bg-red-100 text-red-700 border-red-200' : 'bg-blue-100 text-blue-700 border-blue-200'} capitalize font-semibold`}>
+                    <p className="text-xs text-gray-500 font-medium">Role</p>
+                    <Badge variant="secondary" className={`${locationState.role === 'official' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'} capitalize font-semibold text-xs`}>
                       {locationState.role}
                     </Badge>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="p-4 border-l-4 border-l-green-500 bg-gradient-to-r from-green-50 to-white">
-                <CardContent className="p-0 flex items-center gap-3">
-                  <MapPin className="h-5 w-5 text-green-600" />
+              <Card className="p-3 bg-gradient-to-r from-green-50 to-white">
+                <CardContent className="p-0 flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-green-600" />
                   <div className="text-left">
-                    <p className="text-sm text-gray-500 font-medium">Barangay</p>
-                    <p className="text-base font-semibold text-gray-900">{locationState.barangay}</p>
+                    <p className="text-xs text-gray-500 font-medium">Barangay</p>
+                    <p className="text-sm font-semibold text-gray-900">{locationState.barangay}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -320,23 +304,23 @@ export default function Register() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="firstName-desktop" className="text-gray-700">First Name *</Label>
-                <Input id="firstName-desktop" name="firstName" value={formData.firstName} onChange={handleInputChange} required className={`mt-1 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
+                <Input id="firstName-desktop" name="firstName" value={formData.firstName} onChange={handleInputChange} required className={`mt-1 h-12 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
               </div>
               <div>
                 <Label htmlFor="lastName-desktop" className="text-gray-700">Last Name *</Label>
-                <Input id="lastName-desktop" name="lastName" value={formData.lastName} onChange={handleInputChange} required className={`mt-1 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
+                <Input id="lastName-desktop" name="lastName" value={formData.lastName} onChange={handleInputChange} required className={`mt-1 h-12 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="middleName-desktop" className="text-gray-700">Middle Name</Label>
-                <Input id="middleName-desktop" name="middleName" value={formData.middleName} onChange={handleInputChange} className={`mt-1 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
+                <Input id="middleName-desktop" name="middleName" value={formData.middleName} onChange={handleInputChange} className={`mt-1 h-12 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
               </div>
               <div>
                 <Label htmlFor="suffix-desktop" className="text-gray-700">Suffix</Label>
                 <Select value={formData.suffix} onValueChange={handleSuffixChange}>
-                  <SelectTrigger className={`mt-1 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`}>
+                  <SelectTrigger className={`mt-1 h-12 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`}>
                     <SelectValue placeholder="Select suffix" />
                   </SelectTrigger>
                   <SelectContent>
@@ -352,35 +336,32 @@ export default function Register() {
 
             <div>
               <Label htmlFor="email-desktop" className="text-gray-700">Email Address *</Label>
-              <Input id="email-desktop" name="email" type="email" value={formData.email} onChange={handleInputChange} required className={`mt-1 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
+              <Input id="email-desktop" name="email" type="email" value={formData.email} onChange={handleInputChange} required className={`mt-1 h-12 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
             </div>
 
             <div>
               <Label htmlFor="password-desktop" className="text-gray-700">Password *</Label>
               <div className="relative mt-1">
-                <Input id="password-desktop" name="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={handleInputChange} required className={`border-gray-300 pr-10 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
+                <Input id="password-desktop" name="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={handleInputChange} required className={`h-12 border-gray-300 pr-10 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
 
-            <div className="flex items-start space-x-2">
-              <Checkbox id="terms-desktop" checked={acceptTerms} onCheckedChange={handleTermsChange} className={locationState.role === 'official' ? 'border-red-300' : 'border-blue-300'} />
-              <Label htmlFor="terms-desktop" className="text-sm text-gray-600 leading-5">
-                I agree to the{" "}
-                <a href="/terms" className={locationState.role === 'official' ? 'text-red-600 hover:underline' : 'text-blue-600 hover:underline'}>
-                  Terms and Conditions
-                </a>{" "}
-                and{" "}
-                <a href="/privacy" className={locationState.role === 'official' ? 'text-red-600 hover:underline' : 'text-blue-600 hover:underline'}>
-                  Privacy Policy
-                </a>
-              </Label>
+            <div className="text-center text-sm text-gray-600 leading-5">
+              By tapping Create new account, you agree with the{" "}
+              <a href="/terms" className={locationState.role === 'official' ? 'text-red-600 hover:underline' : 'text-blue-600 hover:underline'}>
+                Terms and Conditions
+              </a>{" "}
+              and{" "}
+              <a href="/privacy" className={locationState.role === 'official' ? 'text-red-600 hover:underline' : 'text-blue-600 hover:underline'}>
+                Privacy Notice
+              </a>
             </div>
 
-            <Button type="submit" disabled={isLoading} className={`w-full text-white py-3 text-base font-medium ${locationState.role === 'official' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
-              {isLoading ? "Creating Account..." : "Create Account"}
+            <Button type="submit" disabled={isLoading} className={`w-full text-white py-3 h-12 text-base font-medium ${locationState.role === 'official' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
+              {isLoading ? "Creating Account..." : "Create new account"}
             </Button>
           </form>
         </div>
