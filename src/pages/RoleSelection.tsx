@@ -1,6 +1,5 @@
-
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Users, Shield, Check } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -9,13 +8,41 @@ import { Label } from "@/components/ui/label";
 import { RegistrationProgress } from "@/components/ui/registration-progress";
 
 export default function RoleSelection() {
-  const [selectedRole, setSelectedRole] = useState("");
+  const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 768px)");
+  
+  // Initialize from location state if available, otherwise from localStorage
+  const [selectedRole, setSelectedRole] = useState(() => {
+    return location.state?.role || localStorage.getItem('registrationRole') || "";
+  });
+
+  // Save to localStorage whenever role changes
+  useEffect(() => {
+    if (selectedRole) {
+      localStorage.setItem('registrationRole', selectedRole);
+    }
+  }, [selectedRole]);
 
   const handleNext = () => {
-    // Both resident and official go to location selection first
-    navigate("/register/location", { state: { role: selectedRole } });
+    if (!selectedRole) return;
+    
+    // Get any existing registration data from localStorage
+    const existingData = JSON.parse(localStorage.getItem('registrationData') || '{}');
+    
+    // Update with current role
+    const updatedData = {
+      ...existingData,
+      role: selectedRole
+    };
+    
+    // Save to localStorage
+    localStorage.setItem('registrationData', JSON.stringify(updatedData));
+    
+    // Navigate with state
+    navigate("/register/location", { 
+      state: updatedData
+    });
   };
 
   if (isMobile) {
