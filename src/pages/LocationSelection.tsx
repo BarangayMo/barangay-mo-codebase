@@ -71,41 +71,34 @@ export default function LocationSelection() {
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 768px)");
-  
-  // Get registration data from localStorage or location state
-  const getRegistrationData = () => {
-    const savedData = JSON.parse(localStorage.getItem('registrationData') || '{}');
-    return { ...savedData, ...location.state };
-  };
-
-  const registrationData = getRegistrationData();
+  const locationState = location.state;
 
   // If no role selected, redirect to role selection
-  if (!registrationData?.role) {
+  if (!locationState?.role) {
     navigate('/register/role');
     return null;
   }
 
-  // Initialize state from saved data
-  const [selectedRegion, setSelectedRegion] = useState(registrationData.region || "");
-  const [selectedProvince, setSelectedProvince] = useState(registrationData.province || "");
-  const [selectedMunicipality, setSelectedMunicipality] = useState(registrationData.municipality || "");
-  const [selectedBarangay, setSelectedBarangay] = useState(registrationData.barangay || "");
+  // Initialize state from location state if available
+  const [selectedRegion, setSelectedRegion] = useState(location.state?.region || "");
+  const [selectedProvince, setSelectedProvince] = useState(location.state?.province || "");
+  const [selectedMunicipality, setSelectedMunicipality] = useState(location.state?.municipality || "");
+  const [selectedBarangay, setSelectedBarangay] = useState(location.state?.barangay || "");
   const [provinces, setProvinces] = useState<string[]>([]);
   const [municipalities, setMunicipalities] = useState<string[]>([]);
   const [barangays, setBarangays] = useState<string[]>([]);
 
   // Initialize search states with display values if data exists
   const [regionSearch, setRegionSearch] = useState(() => {
-    if (registrationData.region) {
-      const regionObj = PHILIPPINE_REGIONS.find(r => r.code === registrationData.region);
+    if (location.state?.region) {
+      const regionObj = PHILIPPINE_REGIONS.find(r => r.code === location.state.region);
       return regionObj?.name || "";
     }
     return "";
   });
-  const [provinceSearch, setProvinceSearch] = useState(registrationData.province ? toTitleCase(registrationData.province) : "");
-  const [municipalitySearch, setMunicipalitySearch] = useState(registrationData.municipality ? toTitleCase(registrationData.municipality) : "");
-  const [barangaySearch, setBarangaySearch] = useState(registrationData.barangay ? toTitleCase(registrationData.barangay) : "");
+  const [provinceSearch, setProvinceSearch] = useState(location.state?.province ? toTitleCase(location.state.province) : "");
+  const [municipalitySearch, setMunicipalitySearch] = useState(location.state?.municipality ? toTitleCase(location.state.municipality) : "");
+  const [barangaySearch, setBarangaySearch] = useState(location.state?.barangay ? toTitleCase(location.state.barangay) : "");
   const [showRegionDropdown, setShowRegionDropdown] = useState(false);
   const [showProvinceDropdown, setShowProvinceDropdown] = useState(false);
   const [showMunicipalityDropdown, setShowMunicipalityDropdown] = useState(false);
@@ -117,21 +110,6 @@ export default function LocationSelection() {
   const provinceRef = useRef<HTMLDivElement>(null);
   const municipalityRef = useRef<HTMLDivElement>(null);
   const barangayRef = useRef<HTMLDivElement>(null);
-
-  // Save location data whenever it changes
-  useEffect(() => {
-    if (selectedRegion || selectedProvince || selectedMunicipality || selectedBarangay) {
-      const currentData = getRegistrationData();
-      const updatedData = {
-        ...currentData,
-        region: selectedRegion,
-        province: selectedProvince,
-        municipality: selectedMunicipality,
-        barangay: selectedBarangay
-      };
-      localStorage.setItem('registrationData', JSON.stringify(updatedData));
-    }
-  }, [selectedRegion, selectedProvince, selectedMunicipality, selectedBarangay]);
 
   // Load provinces when region is selected
   useEffect(() => {
@@ -297,30 +275,28 @@ export default function LocationSelection() {
 
   const handleNext = () => {
     if (selectedRegion && selectedProvince && selectedMunicipality && selectedBarangay) {
-      const currentData = getRegistrationData();
-      const completeData = {
-        ...currentData,
+      const nextState = {
+        role: locationState.role,
         region: selectedRegion,
         province: selectedProvince,
         municipality: selectedMunicipality,
         barangay: selectedBarangay
       };
-      
-      // Save complete data to localStorage
-      localStorage.setItem('registrationData', JSON.stringify(completeData));
-      
-      if (registrationData.role === "official") {
-        navigate("/register/officials", { state: completeData });
+      if (locationState.role === "official") {
+        navigate("/register/officials", {
+          state: nextState
+        });
       } else {
-        navigate("/register", { state: completeData });
+        // Resident goes directly to register
+        navigate("/register", {
+          state: nextState
+        });
       }
     }
   };
 
   const handleBack = () => {
-    // Navigate back with current data
-    const currentData = getRegistrationData();
-    navigate("/register/role", { state: currentData });
+    navigate("/register/role");
   };
 
   const handleRegionSelect = (region: {
@@ -416,7 +392,7 @@ export default function LocationSelection() {
     return <div className="min-h-screen bg-gray-50 flex flex-col">
         {/* Progress Bar */}
         <div className="w-full bg-gray-200 h-1">
-          <div className={`h-1 w-2/5 ${registrationData.role === 'official' ? 'bg-red-600' : 'bg-blue-600'}`}></div>
+          <div className={`h-1 w-2/5 ${locationState.role === 'official' ? 'bg-red-600' : 'bg-blue-600'}`}></div>
         </div>
 
         {/* Header */}
@@ -551,7 +527,7 @@ export default function LocationSelection() {
 
         {/* Next Button */}
         <div className="p-6 bg-gray-50 border-t">
-          <Button onClick={handleNext} disabled={!isFormValid} className={`w-full text-white py-4 h-12 text-base font-medium rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed ${registrationData.role === 'official' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
+          <Button onClick={handleNext} disabled={!isFormValid} className={`w-full text-white py-4 h-12 text-base font-medium rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed ${locationState.role === 'official' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
             Next
           </Button>
         </div>
@@ -563,7 +539,7 @@ export default function LocationSelection() {
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
         {/* Progress Bar */}
         <div className="w-full bg-gray-200 h-1">
-          <div className={`h-1 w-2/5 ${registrationData.role === 'official' ? 'bg-red-600' : 'bg-blue-600'}`}></div>
+          <div className={`h-1 w-2/5 ${locationState.role === 'official' ? 'bg-red-600' : 'bg-blue-600'}`}></div>
         </div>
 
         <div className="p-8 bg-white">
@@ -693,7 +669,7 @@ export default function LocationSelection() {
 
           {/* Next Button */}
           <div className="mt-8">
-            <Button onClick={handleNext} disabled={!isFormValid} className={`w-full text-white py-4 h-12 text-base font-medium rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed ${registrationData.role === 'official' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
+            <Button onClick={handleNext} disabled={!isFormValid} className={`w-full text-white py-4 h-12 text-base font-medium rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed ${locationState.role === 'official' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
               Next
             </Button>
           </div>
