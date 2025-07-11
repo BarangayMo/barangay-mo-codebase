@@ -18,6 +18,7 @@ interface UserData {
   municipality?: string;
   province?: string;
   officials_data?: any;
+  logo_url?: string;
   createdAt?: string;
 }
 
