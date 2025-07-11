@@ -39,6 +39,14 @@ export function ProfileMenu() {
     setIsLoggingOut(false);
   };
 
+  // Determine profile route based on user role
+  const getProfileRoute = () => {
+    if (user?.role === 'official' || user?.role === 'superadmin') {
+      return '/official-profile';
+    }
+    return '/resident-profile';
+  };
+
   return (
     <>
       {isLoggingOut && <LoadingScreen />}
@@ -68,7 +76,7 @@ export function ProfileMenu() {
           </div>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
-            <Link to="/resident-profile" className="flex items-center">
+            <Link to={getProfileRoute()} className="flex items-center">
               <User className="mr-2 h-4 w-4" />
               Profile
             </Link>

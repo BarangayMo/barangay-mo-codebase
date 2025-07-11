@@ -20,6 +20,7 @@ import Settings from "@/pages/Settings";
 import Menu from "@/pages/Menu";
 import Messages from "@/pages/Messages";
 import ResidentProfile from "@/pages/ResidentProfile";
+import OfficialProfile from "@/pages/OfficialProfile";
 import MobileWelcome from "@/pages/MobileWelcome";
 import RbiRegistration from "@/pages/RbiRegistration";
 import NotFound from "@/pages/NotFound";
@@ -134,6 +135,7 @@ export function AppRoutes() {
       <Route path="/community/post/:postId" element={<CommunityPostDetail />} />
       
       <Route path="/official-dashboard" element={<OfficialsDashboard />} />
+      <Route path="/official-profile" element={<OfficialProfile />} />
       <Route path="/official/residents" element={<OfficialResidents />} />
       <Route path="/official/services" element={<OfficialServices />} />
       <Route path="/official/requests" element={<OfficialRequests />} />
