@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { Home, MessageSquare, Store, Menu, LifeBuoy, User, Briefcase, Bell, ShoppingCart } from "lucide-react";
+import { Home, MessageSquare, Store, Menu, LifeBuoy, User, Briefcase, Bell, ShoppingCart, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
@@ -53,10 +53,10 @@ export const MobileNavbar = () => {
           key: "messages"
         },
         {
-          icon: Bell,
-          path: "/notifications",
-          label: "Notifications",
-          key: "notifications"
+          icon: Settings,
+          path: "/official/services",
+          label: "Services",
+          key: "services"
         },
         {
           icon: Menu,
@@ -121,13 +121,13 @@ export const MobileNavbar = () => {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md bg-white/90 border-t border-white/20 shadow-lg rounded-t-xl pb-2">
-      <div className="flex items-center justify-center px-4 py-2 max-w-md mx-auto">
+      <div className="flex items-center justify-center px-4 py-1 max-w-md mx-auto">
         <div className="flex items-center justify-between w-full max-w-sm">
           {navItems.map(({ icon: Icon, path, label, key }) => {
             return (
               <Link key={key} to={path} className="flex flex-col items-center justify-center p-2 min-w-0">
                 <Icon className={cn(
-                  "h-8 w-8 transition-colors mb-0.5",
+                  "h-6 w-6 transition-colors mb-0.5",
                   pathname === path 
                     ? userRole === "official" 
                       ? "text-red-600" 
