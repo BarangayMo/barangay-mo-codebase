@@ -1,14 +1,17 @@
+
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronLeft, Eye, EyeOff } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { RegistrationProgress } from "@/components/ui/registration-progress";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+
 interface LocationState {
   role: string;
   region: string;
@@ -18,6 +21,16 @@ interface LocationState {
   officials?: any[];
   logoUrl?: string;
 }
+
+const COMMON_SUFFIXES = [
+  "Jr.",
+  "Sr.", 
+  "II",
+  "III",
+  "IV",
+  "V"
+];
+
 export default function Register() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -41,9 +54,7 @@ export default function Register() {
     middleName: "",
     suffix: "",
     email: "",
-    password: "",
-    phoneNumber: "",
-    landlineNumber: ""
+    password: ""
   });
   const [showPassword, setShowPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
@@ -58,6 +69,14 @@ export default function Register() {
       [name]: value
     }));
   };
+
+  const handleSuffixChange = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      suffix: value
+    }));
+  };
+
   const handleTermsChange = (checked: boolean | "indeterminate") => {
     setAcceptTerms(checked === true);
   };
@@ -84,8 +103,8 @@ export default function Register() {
         province: locationState.province,
         municipality: locationState.municipality,
         barangay: locationState.barangay,
-        phoneNumber: formData.phoneNumber || null,
-        landlineNumber: formData.landlineNumber || null,
+        phoneNumber: null,
+        landlineNumber: null,
         logoUrl: locationState.logoUrl || null,
         officials: locationState.officials || null
       };
@@ -142,9 +161,6 @@ export default function Register() {
           <div className="w-6" />
         </div>
 
-        {/* Progress Bar */}
-        
-
         {/* Content */}
         <div className="flex-1 flex flex-col justify-between p-4 bg-white">
           <div className="space-y-6">
@@ -180,24 +196,24 @@ export default function Register() {
                 </div>
                 <div>
                   <Label htmlFor="suffix" className="text-gray-700 text-sm">Suffix</Label>
-                  <Input id="suffix" name="suffix" value={formData.suffix} onChange={handleInputChange} placeholder="Jr., Sr., III" className={`mt-1 h-9 text-sm border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
+                  <Select value={formData.suffix} onValueChange={handleSuffixChange}>
+                    <SelectTrigger className={`mt-1 h-9 text-sm border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`}>
+                      <SelectValue placeholder="Select suffix" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COMMON_SUFFIXES.map((suffix) => (
+                        <SelectItem key={suffix} value={suffix}>
+                          {suffix}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
               <div>
                 <Label htmlFor="email" className="text-gray-700 text-sm">Email Address *</Label>
                 <Input id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} required className={`mt-1 h-9 text-sm border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="phoneNumber" className="text-gray-700 text-sm">Phone Number</Label>
-                  <Input id="phoneNumber" name="phoneNumber" value={formData.phoneNumber} onChange={handleInputChange} placeholder="09XX XXX XXXX" className={`mt-1 h-9 text-sm border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
-                </div>
-                <div>
-                  <Label htmlFor="landlineNumber" className="text-gray-700 text-sm">Landline</Label>
-                  <Input id="landlineNumber" name="landlineNumber" value={formData.landlineNumber} onChange={handleInputChange} placeholder="(02) 8XXX XXXX" className={`mt-1 h-9 text-sm border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
-                </div>
               </div>
 
               <div>
@@ -233,7 +249,7 @@ export default function Register() {
       </div>;
   }
 
-  // Desktop version with same fixes applied
+  // Desktop version
   return <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
         {/* Progress Bar */}
@@ -260,7 +276,7 @@ export default function Register() {
             </p>
           </div>
           
-          {/* Form - keeping same structure as mobile but with desktop classes */}
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -280,24 +296,24 @@ export default function Register() {
               </div>
               <div>
                 <Label htmlFor="suffix-desktop" className="text-gray-700">Suffix</Label>
-                <Input id="suffix-desktop" name="suffix" value={formData.suffix} onChange={handleInputChange} placeholder="Jr., Sr., III" className={`mt-1 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
+                <Select value={formData.suffix} onValueChange={handleSuffixChange}>
+                  <SelectTrigger className={`mt-1 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`}>
+                    <SelectValue placeholder="Select suffix" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COMMON_SUFFIXES.map((suffix) => (
+                      <SelectItem key={suffix} value={suffix}>
+                        {suffix}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
             <div>
               <Label htmlFor="email-desktop" className="text-gray-700">Email Address *</Label>
               <Input id="email-desktop" name="email" type="email" value={formData.email} onChange={handleInputChange} required className={`mt-1 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="phoneNumber-desktop" className="text-gray-700">Phone Number</Label>
-                <Input id="phoneNumber-desktop" name="phoneNumber" value={formData.phoneNumber} onChange={handleInputChange} placeholder="09XX XXX XXXX" className={`mt-1 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
-              </div>
-              <div>
-                <Label htmlFor="landlineNumber-desktop" className="text-gray-700">Landline</Label>
-                <Input id="landlineNumber-desktop" name="landlineNumber" value={formData.landlineNumber} onChange={handleInputChange} placeholder="(02) 8XXX XXXX" className={`mt-1 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
-              </div>
             </div>
 
             <div>
