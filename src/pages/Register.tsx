@@ -160,23 +160,23 @@ export default function Register() {
               {/* Compact role and location display */}
               <div className="grid grid-cols-2 gap-2 mb-6">
                 <Card className="p-2 bg-gradient-to-r from-blue-50 to-white">
-                  <CardContent className="p-0 flex items-center gap-2">
-                    <UserCheck className={`h-4 w-4 ${locationState.role === 'official' ? 'text-red-600' : 'text-blue-600'}`} />
-                    <div className="text-left">
-                      <p className="text-xs text-gray-500 font-medium">Role</p>
-                      <Badge variant="secondary" className={`${locationState.role === 'official' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'} capitalize font-semibold text-xs`}>
-                        {locationState.role}
-                      </Badge>
+                  <CardContent className="p-0 flex items-center justify-center">
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500 font-medium">
+                        Role: <Badge variant="secondary" className={`${locationState.role === 'official' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'} capitalize font-semibold text-xs ml-1`}>
+                          {locationState.role}
+                        </Badge>
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="p-2 bg-gradient-to-r from-green-50 to-white">
-                  <CardContent className="p-0 flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-green-600" />
-                    <div className="text-left">
-                      <p className="text-xs text-gray-500 font-medium">Barangay</p>
-                      <p className="text-xs font-semibold text-gray-900">{locationState.barangay}</p>
+                  <CardContent className="p-0 flex items-center justify-center">
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500 font-medium">
+                        Barangay: <span className="text-xs font-semibold text-gray-900 ml-1">{locationState.barangay}</span>
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
@@ -256,115 +256,117 @@ export default function Register() {
 
   // Desktop version
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
-      <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
-        {/* Progress Bar */}
-        <div className="px-8 py-6 border-b bg-white">
+    <div className="min-h-screen bg-gray-50">
+      {/* Sticky Header with Progress Bar */}
+      <div className="sticky top-0 z-50 bg-white shadow-sm border-b">
+        <div className="max-w-4xl mx-auto px-8 py-6">
+          <div className="flex items-center justify-between mb-4">
+            <button onClick={() => navigate(getBackLink(), { state: locationState })} className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700">
+              <ChevronLeft className="w-4 h-4 mr-1" /> Back
+            </button>
+            <img src={logoUrl} alt="eGov.PH Logo" className="h-8 w-auto" />
+          </div>
           <RegistrationProgress currentStep="register" userRole={locationState.role as 'resident' | 'official'} />
         </div>
+      </div>
 
-        <div className="p-8 bg-white">
-          <button onClick={() => navigate(getBackLink(), { state: locationState })} className="inline-flex items-center text-sm text-gray-500 mb-6 hover:text-gray-700">
-            <ChevronLeft className="w-4 h-4 mr-1" /> Back
-          </button>
+      {/* Main Content */}
+      <div className="max-w-md mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Complete Your Registration</h1>
           
-          {/* Header */}
-          <div className="text-center mb-8">
-            <img src={logoUrl} alt="eGov.PH Logo" className="h-16 w-auto mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Complete Your Registration</h1>
-            
-            {/* Compact role and location display */}
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              <Card className="p-3 bg-gradient-to-r from-blue-50 to-white">
-                <CardContent className="p-0 flex items-center gap-2">
-                  <UserCheck className={`h-4 w-4 ${locationState.role === 'official' ? 'text-red-600' : 'text-blue-600'}`} />
-                  <div className="text-left">
-                    <p className="text-xs text-gray-500 font-medium">Role</p>
-                    <Badge variant="secondary" className={`${locationState.role === 'official' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'} capitalize font-semibold text-xs`}>
+          {/* Compact role and location display */}
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <Card className="p-3 bg-gradient-to-r from-blue-50 to-white">
+              <CardContent className="p-0 flex items-center justify-center">
+                <div className="text-center">
+                  <p className="text-xs text-gray-500 font-medium">
+                    Role: <Badge variant="secondary" className={`${locationState.role === 'official' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'} capitalize font-semibold text-xs ml-1`}>
                       {locationState.role}
                     </Badge>
-                  </div>
-                </CardContent>
-              </Card>
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
 
-              <Card className="p-3 bg-gradient-to-r from-green-50 to-white">
-                <CardContent className="p-0 flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-green-600" />
-                  <div className="text-left">
-                    <p className="text-xs text-gray-500 font-medium">Barangay</p>
-                    <p className="text-sm font-semibold text-gray-900">{locationState.barangay}</p>
-                  </div>
-                </CardContent>
-              </Card>
+            <Card className="p-3 bg-gradient-to-r from-green-50 to-white">
+              <CardContent className="p-0 flex items-center justify-center">
+                <div className="text-center">
+                  <p className="text-xs text-gray-500 font-medium">
+                    Barangay: <span className="text-sm font-semibold text-gray-900 ml-1">{locationState.barangay}</span>
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+        
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="firstName-desktop" className="text-gray-700">First Name *</Label>
+              <Input id="firstName-desktop" name="firstName" value={formData.firstName} onChange={handleInputChange} required className={`mt-1 h-12 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
+            </div>
+            <div>
+              <Label htmlFor="lastName-desktop" className="text-gray-700">Last Name *</Label>
+              <Input id="lastName-desktop" name="lastName" value={formData.lastName} onChange={handleInputChange} required className={`mt-1 h-12 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
             </div>
           </div>
-          
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="firstName-desktop" className="text-gray-700">First Name *</Label>
-                <Input id="firstName-desktop" name="firstName" value={formData.firstName} onChange={handleInputChange} required className={`mt-1 h-12 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
-              </div>
-              <div>
-                <Label htmlFor="lastName-desktop" className="text-gray-700">Last Name *</Label>
-                <Input id="lastName-desktop" name="lastName" value={formData.lastName} onChange={handleInputChange} required className={`mt-1 h-12 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
-              </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="middleName-desktop" className="text-gray-700">Middle Name</Label>
-                <Input id="middleName-desktop" name="middleName" value={formData.middleName} onChange={handleInputChange} className={`mt-1 h-12 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
-              </div>
-              <div>
-                <Label htmlFor="suffix-desktop" className="text-gray-700">Suffix</Label>
-                <Select value={formData.suffix} onValueChange={handleSuffixChange}>
-                  <SelectTrigger className={`mt-1 h-12 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`}>
-                    <SelectValue placeholder="Select suffix" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {COMMON_SUFFIXES.map((suffix) => (
-                      <SelectItem key={suffix} value={suffix}>
-                        {suffix}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="email-desktop" className="text-gray-700">Email Address *</Label>
-              <Input id="email-desktop" name="email" type="email" value={formData.email} onChange={handleInputChange} required className={`mt-1 h-12 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
+              <Label htmlFor="middleName-desktop" className="text-gray-700">Middle Name</Label>
+              <Input id="middleName-desktop" name="middleName" value={formData.middleName} onChange={handleInputChange} className={`mt-1 h-12 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
             </div>
-
             <div>
-              <Label htmlFor="password-desktop" className="text-gray-700">Password *</Label>
-              <div className="relative mt-1">
-                <Input id="password-desktop" name="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={handleInputChange} required className={`h-12 border-gray-300 pr-10 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
+              <Label htmlFor="suffix-desktop" className="text-gray-700">Suffix</Label>
+              <Select value={formData.suffix} onValueChange={handleSuffixChange}>
+                <SelectTrigger className={`mt-1 h-12 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`}>
+                  <SelectValue placeholder="Select suffix" />
+                </SelectTrigger>
+                <SelectContent>
+                  {COMMON_SUFFIXES.map((suffix) => (
+                    <SelectItem key={suffix} value={suffix}>
+                      {suffix}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+          </div>
 
-            <div className="text-center text-sm text-gray-600 leading-5">
-              By tapping Create new account, you agree with the{" "}
-              <a href="/terms" className={locationState.role === 'official' ? 'text-red-600 hover:underline' : 'text-blue-600 hover:underline'}>
-                Terms and Conditions
-              </a>{" "}
-              and{" "}
-              <a href="/privacy" className={locationState.role === 'official' ? 'text-red-600 hover:underline' : 'text-blue-600 hover:underline'}>
-                Privacy Notice
-              </a>
+          <div>
+            <Label htmlFor="email-desktop" className="text-gray-700">Email Address *</Label>
+            <Input id="email-desktop" name="email" type="email" value={formData.email} onChange={handleInputChange} required className={`mt-1 h-12 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
+          </div>
+
+          <div>
+            <Label htmlFor="password-desktop" className="text-gray-700">Password *</Label>
+            <div className="relative mt-1">
+              <Input id="password-desktop" name="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={handleInputChange} required className={`h-12 border-gray-300 pr-10 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
             </div>
+          </div>
 
-            <Button type="submit" disabled={isLoading} className={`w-full text-white py-3 h-12 text-base font-medium ${locationState.role === 'official' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
-              {isLoading ? "Creating Account..." : "Create new account"}
-            </Button>
-          </form>
-        </div>
+          <div className="text-center text-sm text-gray-600 leading-5">
+            By tapping Create new account, you agree with the{" "}
+            <a href="/terms" className={locationState.role === 'official' ? 'text-red-600 hover:underline' : 'text-blue-600 hover:underline'}>
+              Terms and Conditions
+            </a>{" "}
+            and{" "}
+            <a href="/privacy" className={locationState.role === 'official' ? 'text-red-600 hover:underline' : 'text-blue-600 hover:underline'}>
+              Privacy Notice
+            </a>
+          </div>
+
+          <Button type="submit" disabled={isLoading} className={`w-full text-white py-3 h-12 text-base font-medium ${locationState.role === 'official' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
+            {isLoading ? "Creating Account..." : "Create new account"}
+          </Button>
+        </form>
       </div>
     </div>
   );
