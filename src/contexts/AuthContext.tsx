@@ -248,7 +248,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       console.log("Registration attempt with userData:", userData);
       
-      // Create clean metadata object with all required fields
+      // Create clean metadata object - this will be used by the database trigger
       const metaData = {
         first_name: userData.firstName || '',
         last_name: userData.lastName || '',
@@ -267,7 +267,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       console.log("Clean metadata being sent:", metaData);
 
-      // Sign up the user with clean metadata
+      // Sign up the user - the database trigger will handle profile creation
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -282,7 +282,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         return { error: signUpError };
       }
 
-      console.log("User created successfully, trigger should handle profile creation");
+      console.log("User registration successful, profile will be created by trigger");
       return { error: null };
     } catch (error) {
       console.error("Unexpected registration error:", error);
