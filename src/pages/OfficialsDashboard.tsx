@@ -287,6 +287,26 @@ const OfficialsDashboard = () => {
     return "Punong Barangay";
   };
 
+  // Get Punong Barangay initials
+  const getPunongBarangayInitials = () => {
+    if (user?.officials_data && Array.isArray(user.officials_data)) {
+      const punongBarangay = user.officials_data.find(
+        (official: any) => official.position === "Punong Barangay" || 
+                          official.POSITION === "Punong Barangay"
+      );
+      
+      if (punongBarangay) {
+        const firstName = punongBarangay.firstName || punongBarangay.FIRSTNAME || punongBarangay.first_name;
+        const lastName = punongBarangay.lastName || punongBarangay.LASTNAME || punongBarangay.last_name;
+        
+        if (firstName && lastName) {
+          return `${firstName[0]}${lastName[0]}`;
+        }
+      }
+    }
+    return "PB";
+  };
+
   // Get actual location data from user profile
   const getLocationText = () => {
     const municipality = user?.municipality;
@@ -316,7 +336,7 @@ const OfficialsDashboard = () => {
     }
     return (
       <div className="w-12 h-12 rounded-full bg-red-100 border border-red-200 flex items-center justify-center text-sm font-medium text-red-600">
-        BO
+        {getPunongBarangayInitials()}
       </div>
     );
   };
