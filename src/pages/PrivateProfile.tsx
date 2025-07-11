@@ -12,8 +12,11 @@ import { Footer } from "@/components/layout/Footer";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function PrivateProfile() {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const isMobile = useIsMobile();
+  
+  // Check email confirmation status
+  const isEmailConfirmed = session?.user?.email_confirmed_at ? true : false;
   
   // Enhanced user data with detailed activity and emergency access
   const userData = {
@@ -197,9 +200,14 @@ export default function PrivateProfile() {
                     <CardTitle className="text-lg">Contact Information</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <Mail className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm">{userData.email}</span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Mail className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm">{userData.email}</span>
+                      </div>
+                      <Badge variant={isEmailConfirmed ? "default" : "secondary"} className="text-xs">
+                        {isEmailConfirmed ? "Confirmed" : "Unconfirmed"}
+                      </Badge>
                     </div>
                     <div className="flex items-center gap-3">
                       <Phone className="w-4 h-4 text-gray-500" />

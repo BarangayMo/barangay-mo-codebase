@@ -4,7 +4,9 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import { Json } from "@/integrations/supabase/types";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface UserPersonalInfoProps {
   first_name: string;
@@ -38,6 +40,11 @@ const formatAddress = (address: Json | null): string => {
 };
 
 export const UserPersonalInfo = ({ first_name, last_name, email, settings }: UserPersonalInfoProps) => {
+  const { session } = useAuth();
+  
+  // Check email confirmation status
+  const isEmailConfirmed = session?.user?.email_confirmed_at ? true : false;
+
   return (
     <Card className="p-6 col-span-1">
       <h2 className="text-xl font-semibold mb-4">Personal Information</h2>
@@ -56,9 +63,14 @@ export const UserPersonalInfo = ({ first_name, last_name, email, settings }: Use
         </div>
         
         <div className="space-y-3 mt-4">
-          <div className="flex items-center gap-2 text-sm">
-            <Mail className="w-4 h-4 text-gray-500" />
-            <span>{email}</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm">
+              <Mail className="w-4 h-4 text-gray-500" />
+              <span>{email}</span>
+            </div>
+            <Badge variant={isEmailConfirmed ? "default" : "secondary"} className="text-xs">
+              {isEmailConfirmed ? "Confirmed" : "Unconfirmed"}
+            </Badge>
           </div>
           {settings?.phone_number && (
             <div className="flex items-center gap-2 text-sm">

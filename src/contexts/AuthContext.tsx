@@ -139,9 +139,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               setUser(userData);
               setUserRole(role);
               
-              // Handle redirects after successful login or signup
+              // Handle redirects after successful login or signup - redirect directly to dashboard
               if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && !redirectInProgress.current && isInitialized) {
-                if (currentPath === '/login' || currentPath === '/register' || currentPath === '/email-confirmation' || currentPath === '/mpin') {
+                if (currentPath === '/login' || currentPath === '/register' || currentPath === '/email-verification' || currentPath === '/email-confirmation' || currentPath === '/mpin') {
                   console.log("Redirecting to:", redirectPath, "after", event);
                   redirectInProgress.current = true;
                   navigate(redirectPath, { replace: true });
@@ -204,7 +204,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             setUserRole(role);
             
             // Redirect if user is on login/register page with existing session
-            if ((currentPath === '/login' || currentPath === '/register') && !redirectInProgress.current) {
+            if ((currentPath === '/login' || currentPath === '/register' || currentPath === '/email-verification' || currentPath === '/email-confirmation') && !redirectInProgress.current) {
               console.log("Redirecting existing session from login/register to:", redirectPath);
               redirectInProgress.current = true;
               navigate(redirectPath, { replace: true });
@@ -267,13 +267,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       console.log("Clean metadata being sent:", metaData);
 
-      // Sign up the user - the database trigger will handle profile creation
+      // Sign up the user without email confirmation redirect
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: metaData,
-          emailRedirectTo: `${window.location.origin}/email-confirmation`
+          data: metaData
+          // Removed emailRedirectTo to skip email verification step
         }
       });
 

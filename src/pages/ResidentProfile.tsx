@@ -22,7 +22,7 @@ import RbiFormsSection from "@/components/users/profile/RbiFormsSection";
 import RbiSubmissionSuccess from "@/components/rbi/RbiSubmissionSuccess";
 
 export default function ResidentProfile() {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const { profile, isLoading } = useResidentProfile();
   const location = useLocation();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -66,6 +66,9 @@ export default function ResidentProfile() {
         return 'bg-green-100 text-green-800';
     }
   };
+
+  // Check email confirmation status
+  const isEmailConfirmed = session?.user?.email_confirmed_at ? true : false;
 
   return (
     <Layout>
@@ -125,9 +128,14 @@ export default function ResidentProfile() {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <div className="flex items-center text-gray-600">
-                  <Mail className="w-5 h-5 mr-3" />
-                  <span>{profile?.email}</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center text-gray-600">
+                    <Mail className="w-5 h-5 mr-3" />
+                    <span>{profile?.email}</span>
+                  </div>
+                  <Badge variant={isEmailConfirmed ? "default" : "secondary"} className="text-xs">
+                    {isEmailConfirmed ? "Confirmed" : "Unconfirmed"}
+                  </Badge>
                 </div>
                 {user?.createdAt && (
                   <div className="flex items-center text-gray-600">
