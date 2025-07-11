@@ -1,24 +1,57 @@
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  ArrowLeft,
+  CalendarDays,
+  Download,
+  Plus,
+  Search,
+  Bell,
+  Filter,
+  Users,
+  FileText,
+  AlertTriangle,
+  Home,
+  MessageSquare,
+  BarChart3,
+  FolderOpen,
+  Settings,
+  UsersIcon,
+  Hospital,
+  ClipboardList,
+  Siren
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { format } from "date-fns";
+import { useOfficials } from "@/hooks/use-officials-data";
 import { Layout } from "@/components/layout/Layout";
 import { DashboardStats } from "@/components/officials/DashboardStats";
 import { BudgetAllocationChart } from "@/components/officials/BudgetAllocationChart";
 import { QuickAccessPanel } from "@/components/officials/QuickAccessPanel";
 import { CommunitySlider } from "@/components/community/CommunitySlider";
-import { Button } from "@/components/ui/button";
-import { CalendarDays, Download, Plus, Search, Bell, Filter, Users, FileText, AlertTriangle, Home, MessageSquare, BarChart3, FolderOpen, Settings, UsersIcon, Hospital, ClipboardList, Siren } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Helmet } from "react-helmet";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 
 const OfficialsDashboard = () => {
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [searchQuery, setSearchQuery] = useState("");
+  const { user } = useAuth();
 
   // Get official profile
   const { data: officialProfile } = useQuery({
@@ -284,7 +317,7 @@ const OfficialsDashboard = () => {
         }
       }
     }
-    return "Punong Barangay";
+    return "Unknown Official";
   };
 
   // Get Punong Barangay initials
@@ -304,7 +337,7 @@ const OfficialsDashboard = () => {
         }
       }
     }
-    return "PB";
+    return "UO";
   };
 
   // Get actual location data from user profile
