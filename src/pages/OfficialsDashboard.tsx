@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/layout/Layout";
 import { DashboardStats } from "@/components/officials/DashboardStats";
 import { BudgetAllocationChart } from "@/components/officials/BudgetAllocationChart";
@@ -55,22 +54,37 @@ const OfficialsDashboard = () => {
     enabled: !!officialProfile?.barangay
   });
 
-  // Get barangay officials from database
+  // Get barangay officials from database using type-safe approach
   const { data: barangayOfficials } = useQuery({
     queryKey: ['barangay-officials', officialProfile?.barangay],
     queryFn: async () => {
       if (!officialProfile?.barangay) return [];
       
-      // Try to get officials data from multiple region tables
-      const regionTables = [
-        'NCR', 'REGION 1', 'REGION 2', 'REGION 3', 'REGION 4A', 'REGION 4B',
-        'REGION 5', 'REGION 6', 'REGION 7', 'REGION 8', 'REGION 9', 'REGION 10',
-        'REGION 11', 'REGION 12', 'REGION 13', 'CAR', 'BARMM'
+      // Query each region table individually to avoid TypeScript issues
+      const officials = [];
+      
+      // Define region table names that exist in our schema
+      const regionQueries = [
+        { table: 'NCR' as const },
+        { table: 'REGION 1' as const },
+        { table: 'REGION 2' as const },
+        { table: 'REGION 3' as const },
+        { table: 'REGION 4A' as const },
+        { table: 'REGION 4B' as const },
+        { table: 'REGION 5' as const },
+        { table: 'REGION 6' as const },
+        { table: 'REGION 7' as const },
+        { table: 'REGION 8' as const },
+        { table: 'REGION 9' as const },
+        { table: 'REGION 10' as const },
+        { table: 'REGION 11' as const },
+        { table: 'REGION 12' as const },
+        { table: 'REGION 13' as const },
+        { table: 'CAR' as const },
+        { table: 'BARMM' as const }
       ];
       
-      let officials = [];
-      
-      for (const table of regionTables) {
+      for (const { table } of regionQueries) {
         try {
           const { data, error } = await supabase
             .from(table)
@@ -78,7 +92,7 @@ const OfficialsDashboard = () => {
             .eq('BARANGAY', officialProfile.barangay);
           
           if (!error && data && data.length > 0) {
-            officials = [...officials, ...data];
+            officials.push(...data);
           }
         } catch (err) {
           console.log(`No data found in ${table} for barangay ${officialProfile.barangay}`);
