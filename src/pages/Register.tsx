@@ -92,6 +92,7 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    
     try {
       console.log('Submitting registration with role:', registrationData.role);
       const userData = {
@@ -109,13 +110,29 @@ export default function Register() {
         logoUrl: registrationData.logoUrl || null,
         officials: registrationData.officials || null
       };
+      
       console.log('Complete userData being sent:', userData);
       const { error } = await register(formData.email, formData.password, userData);
+      
       if (error) {
         console.error('Registration error:', error);
+        
+        // Provide more specific error messages based on the error type
+        let errorMessage = "An error occurred during registration.";
+        
+        if (error.message.includes('email')) {
+          errorMessage = "This email address is already registered or invalid.";
+        } else if (error.message.includes('password')) {
+          errorMessage = "Password must be at least 6 characters long.";
+        } else if (error.message.includes('foreign key')) {
+          errorMessage = "There was a database error. Please try again.";
+        } else if (error.message.includes('duplicate')) {
+          errorMessage = "This account already exists. Please try logging in instead.";
+        }
+        
         toast({
           title: "Registration Failed",
-          description: error.message || "An error occurred during registration.",
+          description: errorMessage,
           variant: "destructive"
         });
       } else {
@@ -126,10 +143,12 @@ export default function Register() {
         localStorage.removeItem('registration_municipality');
         localStorage.removeItem('registration_barangay');
         
+        console.log('Registration successful');
         toast({
           title: "Registration Successful",
           description: "Please check your email to verify your account."
         });
+        
         navigate("/email-verification", {
           state: {
             email: formData.email,
