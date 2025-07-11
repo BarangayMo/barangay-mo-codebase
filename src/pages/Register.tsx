@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -40,11 +39,29 @@ export default function Register() {
   const { register } = useAuth();
   const { toast } = useToast();
 
-  // If no location state, redirect to role selection
-  if (!locationState?.role) {
+  // Get registration data from localStorage or location state
+  const role = localStorage.getItem('registration_role') || locationState?.role;
+  const region = localStorage.getItem('registration_region') || locationState?.region;
+  const province = localStorage.getItem('registration_province') || locationState?.province;
+  const municipality = localStorage.getItem('registration_municipality') || locationState?.municipality;
+  const barangay = localStorage.getItem('registration_barangay') || locationState?.barangay;
+
+  // If no role or location data, redirect to role selection
+  if (!role || !region || !province || !municipality || !barangay) {
     navigate('/register/role');
     return null;
   }
+
+  // Create locationState object with collected data
+  const registrationData = {
+    role,
+    region,
+    province,
+    municipality,
+    barangay,
+    officials: locationState?.officials,
+    logoUrl: locationState?.logoUrl
+  };
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -76,21 +93,21 @@ export default function Register() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      console.log('Submitting registration with role:', locationState.role);
+      console.log('Submitting registration with role:', registrationData.role);
       const userData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
         middleName: formData.middleName,
         suffix: formData.suffix,
-        role: locationState.role,
-        region: locationState.region,
-        province: locationState.province,
-        municipality: locationState.municipality,
-        barangay: locationState.barangay,
+        role: registrationData.role,
+        region: registrationData.region,
+        province: registrationData.province,
+        municipality: registrationData.municipality,
+        barangay: registrationData.barangay,
         phoneNumber: null,
         landlineNumber: null,
-        logoUrl: locationState.logoUrl || null,
-        officials: locationState.officials || null
+        logoUrl: registrationData.logoUrl || null,
+        officials: registrationData.officials || null
       };
       console.log('Complete userData being sent:', userData);
       const { error } = await register(formData.email, formData.password, userData);
@@ -102,6 +119,13 @@ export default function Register() {
           variant: "destructive"
         });
       } else {
+        // Clear localStorage after successful registration
+        localStorage.removeItem('registration_role');
+        localStorage.removeItem('registration_region');
+        localStorage.removeItem('registration_province');
+        localStorage.removeItem('registration_municipality');
+        localStorage.removeItem('registration_barangay');
+        
         toast({
           title: "Registration Successful",
           description: "Please check your email to verify your account."
@@ -109,7 +133,7 @@ export default function Register() {
         navigate("/email-verification", {
           state: {
             email: formData.email,
-            role: locationState.role
+            role: registrationData.role
           }
         });
       }
@@ -126,14 +150,14 @@ export default function Register() {
   };
 
   const getBackLink = () => {
-    if (locationState.role === "official") {
-      return locationState.logoUrl ? "/register/logo" : "/register/officials";
+    if (registrationData.role === "official") {
+      return registrationData.logoUrl ? "/register/logo" : "/register/officials";
     }
     return "/register/location";
   };
 
   // Use official logo if role is official, otherwise use resident logo
-  const logoUrl = locationState.role === 'official' 
+  const logoUrl = registrationData.role === 'official' 
     ? "/lovable-uploads/141c2a56-35fc-4123-a51f-358481e0f167.png"
     : "/lovable-uploads/6960369f-3a6b-4d57-ab0f-f7db77f16152.png";
 
@@ -141,8 +165,8 @@ export default function Register() {
     return (
       <div className="min-h-screen bg-white flex flex-col">
         {/* Header */}
-        <div className={`flex items-center justify-between px-4 py-4 text-white ${locationState.role === 'official' ? 'bg-red-600' : 'bg-blue-600'}`}>
-          <button onClick={() => navigate(getBackLink(), { state: locationState })} className="text-white hover:text-gray-200">
+        <div className={`flex items-center justify-between px-4 py-4 text-white ${registrationData.role === 'official' ? 'bg-red-600' : 'bg-blue-600'}`}>
+          <button onClick={() => navigate(getBackLink(), { state: registrationData })} className="text-white hover:text-gray-200">
             <ChevronLeft className="h-6 w-6" />
           </button>
           <h1 className="text-lg font-bold">Complete Registration</h1>
@@ -163,8 +187,8 @@ export default function Register() {
                   <CardContent className="p-0 flex items-center justify-center">
                     <div className="text-center">
                       <p className="text-xs text-gray-500 font-medium">
-                        Role: <Badge variant="secondary" className={`${locationState.role === 'official' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'} capitalize font-semibold text-xs ml-1`}>
-                          {locationState.role}
+                        Role: <Badge variant="secondary" className={`${registrationData.role === 'official' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'} capitalize font-semibold text-xs ml-1`}>
+                          {registrationData.role}
                         </Badge>
                       </p>
                     </div>
@@ -175,7 +199,7 @@ export default function Register() {
                   <CardContent className="p-0 flex items-center justify-center">
                     <div className="text-center">
                       <p className="text-xs text-gray-500 font-medium">
-                        Barangay: <span className="text-xs font-semibold text-gray-900 ml-1">{locationState.barangay}</span>
+                        Barangay: <span className="text-xs font-semibold text-gray-900 ml-1">{registrationData.barangay}</span>
                       </p>
                     </div>
                   </CardContent>
@@ -188,23 +212,23 @@ export default function Register() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label htmlFor="firstName" className="text-gray-700 text-sm">First Name *</Label>
-                  <Input id="firstName" name="firstName" value={formData.firstName} onChange={handleInputChange} required className={`mt-1 h-12 text-sm border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
+                  <Input id="firstName" name="firstName" value={formData.firstName} onChange={handleInputChange} required className={`mt-1 h-12 text-sm border-gray-300 ${registrationData.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
                 </div>
                 <div>
                   <Label htmlFor="lastName" className="text-gray-700 text-sm">Last Name *</Label>
-                  <Input id="lastName" name="lastName" value={formData.lastName} onChange={handleInputChange} required className={`mt-1 h-12 text-sm border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
+                  <Input id="lastName" name="lastName" value={formData.lastName} onChange={handleInputChange} required className={`mt-1 h-12 text-sm border-gray-300 ${registrationData.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label htmlFor="middleName" className="text-gray-700 text-sm">Middle Name</Label>
-                  <Input id="middleName" name="middleName" value={formData.middleName} onChange={handleInputChange} className={`mt-1 h-12 text-sm border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
+                  <Input id="middleName" name="middleName" value={formData.middleName} onChange={handleInputChange} className={`mt-1 h-12 text-sm border-gray-300 ${registrationData.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
                 </div>
                 <div>
                   <Label htmlFor="suffix" className="text-gray-700 text-sm">Suffix</Label>
                   <Select value={formData.suffix} onValueChange={handleSuffixChange}>
-                    <SelectTrigger className={`mt-1 h-12 text-sm border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`}>
+                    <SelectTrigger className={`mt-1 h-12 text-sm border-gray-300 ${registrationData.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`}>
                       <SelectValue placeholder="Select suffix" />
                     </SelectTrigger>
                     <SelectContent>
@@ -220,13 +244,13 @@ export default function Register() {
 
               <div>
                 <Label htmlFor="email" className="text-gray-700 text-sm">Email Address *</Label>
-                <Input id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} required className={`mt-1 h-12 text-sm border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
+                <Input id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} required className={`mt-1 h-12 text-sm border-gray-300 ${registrationData.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
               </div>
 
               <div>
                 <Label htmlFor="password" className="text-gray-700 text-sm">Password *</Label>
                 <div className="relative mt-1">
-                  <Input id="password" name="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={handleInputChange} required className={`h-12 text-sm border-gray-300 pr-10 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
+                  <Input id="password" name="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={handleInputChange} required className={`h-12 text-sm border-gray-300 pr-10 ${registrationData.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -235,16 +259,16 @@ export default function Register() {
 
               <div className="text-center text-xs text-gray-600 leading-4">
                 By tapping Create new account, you agree with the{" "}
-                <a href="/terms" className={locationState.role === 'official' ? 'text-red-600 hover:underline' : 'text-blue-600 hover:underline'}>
+                <a href="/terms" className={registrationData.role === 'official' ? 'text-red-600 hover:underline' : 'text-blue-600 hover:underline'}>
                   Terms and Conditions
                 </a>{" "}
                 and{" "}
-                <a href="/privacy" className={locationState.role === 'official' ? 'text-red-600 hover:underline' : 'text-blue-600 hover:underline'}>
+                <a href="/privacy" className={registrationData.role === 'official' ? 'text-red-600 hover:underline' : 'text-blue-600 hover:underline'}>
                   Privacy Notice
                 </a>
               </div>
 
-              <Button type="submit" disabled={isLoading} className={`w-full text-white py-3 h-12 text-base font-medium ${locationState.role === 'official' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
+              <Button type="submit" disabled={isLoading} className={`w-full text-white py-3 h-12 text-base font-medium ${registrationData.role === 'official' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
                 {isLoading ? "Creating Account..." : "Create new account"}
               </Button>
             </form>
@@ -261,12 +285,12 @@ export default function Register() {
       <div className="sticky top-0 z-50 bg-white shadow-sm border-b">
         <div className="max-w-4xl mx-auto px-8 py-6">
           <div className="flex items-center justify-between mb-4">
-            <button onClick={() => navigate(getBackLink(), { state: locationState })} className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700">
+            <button onClick={() => navigate(getBackLink(), { state: registrationData })} className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700">
               <ChevronLeft className="w-4 h-4 mr-1" /> Back
             </button>
             <img src={logoUrl} alt="eGov.PH Logo" className="h-8 w-auto" />
           </div>
-          <RegistrationProgress currentStep="register" userRole={locationState.role as 'resident' | 'official'} />
+          <RegistrationProgress currentStep="register" userRole={registrationData.role as 'resident' | 'official'} />
         </div>
       </div>
 
@@ -282,8 +306,8 @@ export default function Register() {
               <CardContent className="p-0 flex items-center justify-center">
                 <div className="text-center">
                   <p className="text-xs text-gray-500 font-medium">
-                    Role: <Badge variant="secondary" className={`${locationState.role === 'official' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'} capitalize font-semibold text-xs ml-1`}>
-                      {locationState.role}
+                    Role: <Badge variant="secondary" className={`${registrationData.role === 'official' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'} capitalize font-semibold text-xs ml-1`}>
+                      {registrationData.role}
                     </Badge>
                   </p>
                 </div>
@@ -294,7 +318,7 @@ export default function Register() {
               <CardContent className="p-0 flex items-center justify-center">
                 <div className="text-center">
                   <p className="text-xs text-gray-500 font-medium">
-                    Barangay: <span className="text-sm font-semibold text-gray-900 ml-1">{locationState.barangay}</span>
+                    Barangay: <span className="text-sm font-semibold text-gray-900 ml-1">{registrationData.barangay}</span>
                   </p>
                 </div>
               </CardContent>
@@ -307,23 +331,23 @@ export default function Register() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="firstName-desktop" className="text-gray-700">First Name *</Label>
-              <Input id="firstName-desktop" name="firstName" value={formData.firstName} onChange={handleInputChange} required className={`mt-1 h-12 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
+              <Input id="firstName-desktop" name="firstName" value={formData.firstName} onChange={handleInputChange} required className={`mt-1 h-12 border-gray-300 ${registrationData.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
             </div>
             <div>
               <Label htmlFor="lastName-desktop" className="text-gray-700">Last Name *</Label>
-              <Input id="lastName-desktop" name="lastName" value={formData.lastName} onChange={handleInputChange} required className={`mt-1 h-12 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
+              <Input id="lastName-desktop" name="lastName" value={formData.lastName} onChange={handleInputChange} required className={`mt-1 h-12 border-gray-300 ${registrationData.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="middleName-desktop" className="text-gray-700">Middle Name</Label>
-              <Input id="middleName-desktop" name="middleName" value={formData.middleName} onChange={handleInputChange} className={`mt-1 h-12 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
+              <Input id="middleName-desktop" name="middleName" value={formData.middleName} onChange={handleInputChange} className={`mt-1 h-12 border-gray-300 ${registrationData.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
             </div>
             <div>
               <Label htmlFor="suffix-desktop" className="text-gray-700">Suffix</Label>
               <Select value={formData.suffix} onValueChange={handleSuffixChange}>
-                <SelectTrigger className={`mt-1 h-12 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`}>
+                <SelectTrigger className={`mt-1 h-12 border-gray-300 ${registrationData.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`}>
                   <SelectValue placeholder="Select suffix" />
                 </SelectTrigger>
                 <SelectContent>
@@ -339,13 +363,13 @@ export default function Register() {
 
           <div>
             <Label htmlFor="email-desktop" className="text-gray-700">Email Address *</Label>
-            <Input id="email-desktop" name="email" type="email" value={formData.email} onChange={handleInputChange} required className={`mt-1 h-12 border-gray-300 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
+            <Input id="email-desktop" name="email" type="email" value={formData.email} onChange={handleInputChange} required className={`mt-1 h-12 border-gray-300 ${registrationData.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
           </div>
 
           <div>
             <Label htmlFor="password-desktop" className="text-gray-700">Password *</Label>
             <div className="relative mt-1">
-              <Input id="password-desktop" name="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={handleInputChange} required className={`h-12 border-gray-300 pr-10 ${locationState.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
+              <Input id="password-desktop" name="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={handleInputChange} required className={`h-12 border-gray-300 pr-10 ${registrationData.role === 'official' ? 'focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'}`} />
               <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -354,16 +378,16 @@ export default function Register() {
 
           <div className="text-center text-sm text-gray-600 leading-5">
             By tapping Create new account, you agree with the{" "}
-            <a href="/terms" className={locationState.role === 'official' ? 'text-red-600 hover:underline' : 'text-blue-600 hover:underline'}>
+            <a href="/terms" className={registrationData.role === 'official' ? 'text-red-600 hover:underline' : 'text-blue-600 hover:underline'}>
               Terms and Conditions
             </a>{" "}
             and{" "}
-            <a href="/privacy" className={locationState.role === 'official' ? 'text-red-600 hover:underline' : 'text-blue-600 hover:underline'}>
+            <a href="/privacy" className={registrationData.role === 'official' ? 'text-red-600 hover:underline' : 'text-blue-600 hover:underline'}>
               Privacy Notice
             </a>
           </div>
 
-          <Button type="submit" disabled={isLoading} className={`w-full text-white py-3 h-12 text-base font-medium ${locationState.role === 'official' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
+          <Button type="submit" disabled={isLoading} className={`w-full text-white py-3 h-12 text-base font-medium ${registrationData.role === 'official' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
             {isLoading ? "Creating Account..." : "Create new account"}
           </Button>
         </form>

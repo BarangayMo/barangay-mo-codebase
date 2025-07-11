@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Users, Shield, Check } from "lucide-react";
@@ -13,7 +12,25 @@ export default function RoleSelection() {
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 768px)");
 
+  // Restore role from localStorage on component mount
+  useEffect(() => {
+    const savedRole = localStorage.getItem('registration_role');
+    if (savedRole) {
+      setSelectedRole(savedRole);
+    }
+  }, []);
+
+  // Save role to localStorage whenever it changes
+  useEffect(() => {
+    if (selectedRole) {
+      localStorage.setItem('registration_role', selectedRole);
+    }
+  }, [selectedRole]);
+
   const handleNext = () => {
+    // Save role to localStorage before navigation
+    localStorage.setItem('registration_role', selectedRole);
+    
     // Both resident and official go to location selection first
     navigate("/register/location", { state: { role: selectedRole } });
   };

@@ -74,36 +74,76 @@ export default function LocationSelection() {
   const locationState = location.state;
 
   // If no role selected, redirect to role selection
-  if (!locationState?.role) {
+  if (!locationState?.role && !localStorage.getItem('registration_role')) {
     navigate('/register/role');
     return null;
   }
 
-  // Initialize state from location state if available
-  const [selectedRegion, setSelectedRegion] = useState(location.state?.region || "");
-  const [selectedProvince, setSelectedProvince] = useState(location.state?.province || "");
-  const [selectedMunicipality, setSelectedMunicipality] = useState(location.state?.municipality || "");
-  const [selectedBarangay, setSelectedBarangay] = useState(location.state?.barangay || "");
+  // Get role from localStorage or location state
+  const userRole = localStorage.getItem('registration_role') || locationState?.role;
+
+  // Initialize state from localStorage first, then fallback to location state
+  const [selectedRegion, setSelectedRegion] = useState(() => {
+    return localStorage.getItem('registration_region') || location.state?.region || "";
+  });
+  const [selectedProvince, setSelectedProvince] = useState(() => {
+    return localStorage.getItem('registration_province') || location.state?.province || "";
+  });
+  const [selectedMunicipality, setSelectedMunicipality] = useState(() => {
+    return localStorage.getItem('registration_municipality') || location.state?.municipality || "";
+  });
+  const [selectedBarangay, setSelectedBarangay] = useState(() => {
+    return localStorage.getItem('registration_barangay') || location.state?.barangay || "";
+  });
+
   const [provinces, setProvinces] = useState<string[]>([]);
   const [municipalities, setMunicipalities] = useState<string[]>([]);
   const [barangays, setBarangays] = useState<string[]>([]);
 
-  // Initialize search states with display values if data exists
+  // Initialize search states with display values from localStorage or location state
   const [regionSearch, setRegionSearch] = useState(() => {
-    if (location.state?.region) {
-      const regionObj = PHILIPPINE_REGIONS.find(r => r.code === location.state.region);
+    const savedRegion = localStorage.getItem('registration_region') || location.state?.region;
+    if (savedRegion) {
+      const regionObj = PHILIPPINE_REGIONS.find(r => r.code === savedRegion);
       return regionObj?.name || "";
     }
     return "";
   });
-  const [provinceSearch, setProvinceSearch] = useState(location.state?.province ? toTitleCase(location.state.province) : "");
-  const [municipalitySearch, setMunicipalitySearch] = useState(location.state?.municipality ? toTitleCase(location.state.municipality) : "");
-  const [barangaySearch, setBarangaySearch] = useState(location.state?.barangay ? toTitleCase(location.state.barangay) : "");
+  const [provinceSearch, setProvinceSearch] = useState(() => {
+    const savedProvince = localStorage.getItem('registration_province') || location.state?.province;
+    return savedProvince ? toTitleCase(savedProvince) : "";
+  });
+  const [municipalitySearch, setMunicipalitySearch] = useState(() => {
+    const savedMunicipality = localStorage.getItem('registration_municipality') || location.state?.municipality;
+    return savedMunicipality ? toTitleCase(savedMunicipality) : "";
+  });
+  const [barangaySearch, setBarangaySearch] = useState(() => {
+    const savedBarangay = localStorage.getItem('registration_barangay') || location.state?.barangay;
+    return savedBarangay ? toTitleCase(savedBarangay) : "";
+  });
+
   const [showRegionDropdown, setShowRegionDropdown] = useState(false);
   const [showProvinceDropdown, setShowProvinceDropdown] = useState(false);
   const [showMunicipalityDropdown, setShowMunicipalityDropdown] = useState(false);
   const [showBarangayDropdown, setShowBarangayDropdown] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Save location data to localStorage whenever selections change
+  useEffect(() => {
+    if (selectedRegion) localStorage.setItem('registration_region', selectedRegion);
+  }, [selectedRegion]);
+
+  useEffect(() => {
+    if (selectedProvince) localStorage.setItem('registration_province', selectedProvince);
+  }, [selectedProvince]);
+
+  useEffect(() => {
+    if (selectedMunicipality) localStorage.setItem('registration_municipality', selectedMunicipality);
+  }, [selectedMunicipality]);
+
+  useEffect(() => {
+    if (selectedBarangay) localStorage.setItem('registration_barangay', selectedBarangay);
+  }, [selectedBarangay]);
 
   // Refs for blur detection
   const regionRef = useRef<HTMLDivElement>(null);
@@ -275,14 +315,20 @@ export default function LocationSelection() {
 
   const handleNext = () => {
     if (selectedRegion && selectedProvince && selectedMunicipality && selectedBarangay) {
+      // Save all location data to localStorage before navigation
+      localStorage.setItem('registration_region', selectedRegion);
+      localStorage.setItem('registration_province', selectedProvince);
+      localStorage.setItem('registration_municipality', selectedMunicipality);
+      localStorage.setItem('registration_barangay', selectedBarangay);
+      
       const nextState = {
-        role: locationState.role,
+        role: userRole,
         region: selectedRegion,
         province: selectedProvince,
         municipality: selectedMunicipality,
         barangay: selectedBarangay
       };
-      if (locationState.role === "official") {
+      if (userRole === "official") {
         navigate("/register/officials", {
           state: nextState
         });
@@ -392,7 +438,7 @@ export default function LocationSelection() {
     return <div className="min-h-screen bg-gray-50 flex flex-col">
         {/* Progress Bar */}
         <div className="w-full bg-gray-200 h-1">
-          <div className={`h-1 w-2/5 ${locationState.role === 'official' ? 'bg-red-600' : 'bg-blue-600'}`}></div>
+          <div className={`h-1 w-2/5 ${userRole === 'official' ? 'bg-red-600' : 'bg-blue-600'}`}></div>
         </div>
 
         {/* Header */}
@@ -527,7 +573,7 @@ export default function LocationSelection() {
 
         {/* Next Button */}
         <div className="p-6 bg-gray-50 border-t">
-          <Button onClick={handleNext} disabled={!isFormValid} className={`w-full text-white py-4 h-12 text-base font-medium rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed ${locationState.role === 'official' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
+          <Button onClick={handleNext} disabled={!isFormValid} className={`w-full text-white py-4 h-12 text-base font-medium rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed ${userRole === 'official' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
             Next
           </Button>
         </div>
@@ -539,7 +585,7 @@ export default function LocationSelection() {
       <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
         {/* Progress Bar */}
         <div className="w-full bg-gray-200 h-1">
-          <div className={`h-1 w-2/5 ${locationState.role === 'official' ? 'bg-red-600' : 'bg-blue-600'}`}></div>
+          <div className={`h-1 w-2/5 ${userRole === 'official' ? 'bg-red-600' : 'bg-blue-600'}`}></div>
         </div>
 
         <div className="p-8 bg-white">
@@ -669,7 +715,7 @@ export default function LocationSelection() {
 
           {/* Next Button */}
           <div className="mt-8">
-            <Button onClick={handleNext} disabled={!isFormValid} className={`w-full text-white py-4 h-12 text-base font-medium rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed ${locationState.role === 'official' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
+            <Button onClick={handleNext} disabled={!isFormValid} className={`w-full text-white py-4 h-12 text-base font-medium rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed ${userRole === 'official' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
               Next
             </Button>
           </div>
