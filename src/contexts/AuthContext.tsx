@@ -248,22 +248,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       console.log("Registration attempt with userData:", userData);
       
-      // Validate that role is one of the expected values
-      const validRoles = ['resident', 'official', 'superadmin'];
-      const userRole = userData.role || 'resident';
-      
-      if (!validRoles.includes(userRole)) {
-        console.error("Invalid role provided:", userRole);
-        return { error: new Error(`Invalid role: ${userRole}. Must be one of: ${validRoles.join(', ')}`) };
-      }
-      
       // Create clean metadata object with all required fields
       const metaData = {
         first_name: userData.firstName || '',
         last_name: userData.lastName || '',
         middle_name: userData.middleName || '',
         suffix: userData.suffix || '',
-        role: userRole, // Use validated role
+        role: userData.role || 'resident',
         region: userData.region || '',
         province: userData.province || '',
         municipality: userData.municipality || '',
@@ -285,8 +276,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           emailRedirectTo: `${window.location.origin}/email-confirmation`
         }
       });
-
-      console.log("Supabase signUp response:", { authData, signUpError });
 
       if (signUpError) {
         console.error("Signup error:", signUpError);
