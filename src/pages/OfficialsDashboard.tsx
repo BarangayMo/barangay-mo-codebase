@@ -259,29 +259,84 @@ const OfficialsDashboard = () => {
     ).slice(0, 5);
   }, [searchableItems, searchQuery]);
 
+  // Get Punong Barangay name from officials data
+  const getPunongBarangayName = () => {
+    console.log('Getting Punong Barangay name from:', user?.officials_data);
+    
+    if (user?.officials_data && Array.isArray(user.officials_data)) {
+      const punongBarangay = user.officials_data.find(
+        (official: any) => official.position === "Punong Barangay" || 
+                          official.POSITION === "Punong Barangay"
+      );
+      
+      console.log('Found Punong Barangay:', punongBarangay);
+      
+      if (punongBarangay) {
+        const firstName = punongBarangay.firstName || punongBarangay.FIRSTNAME || punongBarangay.first_name;
+        const lastName = punongBarangay.lastName || punongBarangay.LASTNAME || punongBarangay.last_name;
+        const middleName = punongBarangay.middleName || punongBarangay.MIDDLENAME || punongBarangay.middle_name;
+        
+        if (firstName && lastName) {
+          const fullName = middleName 
+            ? `${firstName} ${middleName} ${lastName}`
+            : `${firstName} ${lastName}`;
+          return fullName;
+        }
+      }
+    }
+    return "Punong Barangay";
+  };
+
+  // Get actual location data from user profile
+  const getLocationText = () => {
+    const municipality = user?.municipality;
+    const province = user?.province;
+    
+    console.log('Location data:', { municipality, province });
+    
+    if (municipality && province) {
+      return `${municipality}, ${province}`;
+    }
+    if (user?.barangay) {
+      return user.barangay;
+    }
+    return "Location not set";
+  };
+
+  // Show logo if available, otherwise show initials
+  const getLogoDisplay = () => {
+    if (user?.logo_url) {
+      return (
+        <img 
+          src={user.logo_url} 
+          alt="Barangay Logo" 
+          className="w-12 h-12 rounded-full object-cover border border-red-200"
+        />
+      );
+    }
+    return (
+      <div className="w-12 h-12 rounded-full bg-red-100 border border-red-200 flex items-center justify-center text-sm font-medium text-red-600">
+        BO
+      </div>
+    );
+  };
+
   const ProfileCard = () => (
     <div className="relative overflow-hidden">
-      {/* Subtle red background shape */}
+      {/* Red background shape for officials */}
       <div className="absolute inset-0 bg-gradient-to-br from-red-50 to-red-100 rounded-lg"></div>
       <div className="absolute top-0 right-0 w-20 h-20 bg-red-200/30 rounded-full transform translate-x-8 -translate-y-8"></div>
       <div className="absolute bottom-0 left-0 w-16 h-16 bg-red-100/40 rounded-full transform -translate-x-6 translate-y-6"></div>
       
       {/* Content */}
-      <div className="relative flex items-center gap-3 p-3 rounded-lg">
-        <Avatar className="h-12 w-12">
-          <AvatarImage src={officialProfile?.avatar_url || barangayData?.Logo || "/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png"} />
-          <AvatarFallback className="bg-red-100 text-red-600">
-            {officialProfile?.first_name?.[0]}{officialProfile?.last_name?.[0]}
-          </AvatarFallback>
-        </Avatar>
+      <div className="relative flex items-center gap-3 p-4 rounded-lg">
+        {getLogoDisplay()}
         <div className="flex-1">
-          <p className="font-medium text-gray-900">
-            {officialProfile?.first_name} {officialProfile?.last_name}
-          </p>
-          <p className="text-sm text-gray-600">Barangay Official</p>
-          <p className="text-xs text-red-600">
-            {officialProfile?.barangay ? `Barangay ${officialProfile.barangay}` : 'Barangay'}
-          </p>
+          <h3 className="text-base font-semibold text-gray-900 truncate font-outfit">
+            {getPunongBarangayName()}
+          </h3>
+          <p className="text-sm text-red-600 truncate font-medium">{getLocationText()}</p>
+          <p className="text-xs text-gray-500 truncate">BarangayMo Officials</p>
         </div>
       </div>
     </div>
@@ -445,7 +500,7 @@ const OfficialsDashboard = () => {
                       <CardContent className="p-2">
                         {filteredSearchResults.map((result, index) => (
                           <Link key={index} to={result.href} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                             <div>
                               <p className="text-sm font-medium">{result.title}</p>
                               <p className="text-xs text-gray-500">{result.description}</p>
@@ -460,7 +515,7 @@ const OfficialsDashboard = () => {
                   <Bell className="h-4 w-4" />
                 </Button>
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={officialProfile?.avatar_url || barangayData?.Logo || "/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png"} />
+                  <AvatarImage src={user?.logo_url || "/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png"} />
                   <AvatarFallback>BO</AvatarFallback>
                 </Avatar>
               </div>
@@ -469,13 +524,13 @@ const OfficialsDashboard = () => {
 
           <div className="flex">
             {/* Desktop Sidebar */}
-            <div className="w-64 bg-white border-r border-gray-200 min-h-screen">
+            <div className="w-64 bg-white border-r border-red-100 min-h-screen">
               <div className="p-6">
                 <div className="flex items-center gap-2 mb-8">
                   <div className="w-8 h-8 bg-red-400 rounded-lg flex items-center justify-center overflow-hidden">
-                    {barangayData?.Logo ? (
+                    {user?.logo_url ? (
                       <img 
-                        src={barangayData.Logo} 
+                        src={user.logo_url} 
                         alt="Barangay Logo" 
                         className="w-full h-full object-cover"
                       />
@@ -503,10 +558,10 @@ const OfficialsDashboard = () => {
                       { name: "Documents", icon: FolderOpen, href: "/official/documents" },
                       { name: "Settings", icon: Settings, href: "/settings" }
                     ].map((item, index) => (
-                      <Link key={index} to={item.href || "/official-dashboard"} className={`flex items-center gap-3 px-2 py-2 rounded-lg cursor-pointer ${
-                        item.active ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50 text-gray-700'
+                      <Link key={index} to={item.href || "/official-dashboard"} className={`flex items-center gap-3 px-2 py-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                        item.active ? 'bg-red-50 text-red-600 border-l-2 border-red-500' : 'hover:bg-red-50 hover:text-red-600 text-gray-700'
                       }`}>
-                        <item.icon className={`h-4 w-4 ${item.active ? 'text-blue-600' : 'text-red-500'}`} />
+                        <item.icon className={`h-4 w-4 ${item.active ? 'text-red-600' : 'text-red-500'}`} />
                         <span className="text-sm">{item.name}</span>
                       </Link>
                     ))}
@@ -523,9 +578,9 @@ const OfficialsDashboard = () => {
                       { name: "RBI Forms", icon: ClipboardList, href: "/official/rbi-forms" },
                       { name: "Emergency Response", icon: Siren, href: "/official/emergency-responder" }
                     ].map((item, index) => (
-                      <Link key={index} to={item.href} className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+                      <Link key={index} to={item.href} className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-red-50 hover:text-red-600 cursor-pointer transition-all duration-200">
                         <item.icon className="h-4 w-4 text-red-500" />
-                        <span className="text-sm text-gray-700">{item.name}</span>
+                        <span className="text-sm text-gray-700 hover:text-red-600">{item.name}</span>
                       </Link>
                     ))}
                   </div>
