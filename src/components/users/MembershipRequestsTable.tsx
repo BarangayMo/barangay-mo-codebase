@@ -25,6 +25,10 @@ export const MembershipRequestsTable = () => {
   const { data: requests = [], isLoading, error } = useMembershipRequests();
   const approveMutation = useApproveMembershipRequest();
 
+  console.log('Membership requests data:', requests);
+  console.log('Loading:', isLoading);
+  console.log('Error:', error);
+
   const getInitials = (firstName?: string, lastName?: string) => {
     const first = firstName || "";
     const last = lastName || "";
@@ -44,6 +48,7 @@ export const MembershipRequestsTable = () => {
   };
 
   const handleAction = (request: MembershipRequest, action: 'approve' | 'reject') => {
+    console.log('Handle action called:', { request, action });
     setSelectedRequest(request);
     setActionType(action);
     setAdminNotes("");
@@ -52,6 +57,12 @@ export const MembershipRequestsTable = () => {
 
   const handleConfirmAction = () => {
     if (!selectedRequest) return;
+
+    console.log('Confirming action:', {
+      requestId: selectedRequest.id,
+      approve: actionType === 'approve',
+      adminNotes: adminNotes.trim() || undefined,
+    });
 
     approveMutation.mutate({
       requestId: selectedRequest.id,
@@ -73,9 +84,10 @@ export const MembershipRequestsTable = () => {
   }
 
   if (error) {
+    console.error('Membership requests error:', error);
     return (
       <div className="text-center text-red-600 p-8">
-        Error loading membership requests. Please try again.
+        Error loading membership requests: {error.message || 'Unknown error'}
       </div>
     );
   }
@@ -166,6 +178,17 @@ export const MembershipRequestsTable = () => {
                         >
                           <X className="h-4 w-4" />
                         </Button>
+                        {request.request_message && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              alert(request.request_message);
+                            }}
+                          >
+                            <MessageSquare className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     ) : (
                       <div className="flex justify-center">
@@ -180,7 +203,7 @@ export const MembershipRequestsTable = () => {
               {requests.length === 0 && (
                 <tr>
                   <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
-                    No membership requests found.
+                    No membership requests found. Users can submit membership requests to appear here.
                   </td>
                 </tr>
               )}

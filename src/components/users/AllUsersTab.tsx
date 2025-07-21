@@ -16,7 +16,6 @@ import {
 import { InviteUsersModal } from "./InviteUsersModal";
 import { MembershipRequestsTable } from "./MembershipRequestsTable";
 import { useUsers, useArchiveUser, User } from "@/hooks/use-users-data";
-import { useApproveMembershipRequest } from "@/hooks/use-membership-requests";
 import { formatDistanceToNow } from "date-fns";
 
 const filterOptions = [
@@ -37,7 +36,10 @@ export const AllUsersTab = () => {
 
   const { data: users = [], isLoading, error } = useUsers();
   const archiveUserMutation = useArchiveUser();
-  const approveMembershipMutation = useApproveMembershipRequest();
+
+  console.log('Users data:', users);
+  console.log('Users loading:', isLoading);
+  console.log('Users error:', error);
 
   const getInitials = (firstName?: string | null, lastName?: string | null) => {
     const first = firstName || "";
@@ -134,7 +136,7 @@ export const AllUsersTab = () => {
 
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-900">Company users</h2>
+        <h2 className="text-xl font-semibold text-gray-900">All Users</h2>
         <Button 
           onClick={() => setIsInviteModalOpen(true)}
           className="bg-blue-600 hover:bg-blue-700 text-white"
