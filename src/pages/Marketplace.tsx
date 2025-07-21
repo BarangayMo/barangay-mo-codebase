@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { SearchBar } from "@/components/marketplace/SearchBar";
@@ -9,7 +10,6 @@ import { ProductCardType } from "@/components/marketplace/ProductCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryWithDebug } from "@/hooks/use-query-with-debug";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FloatingAddButton } from "@/components/marketplace/FloatingAddButton";
 
 // Define Category type based on Supabase schema
 interface Category {
@@ -170,7 +170,6 @@ export default function Marketplace() {
       </div>
 
       <MobileNavigation />
-      <FloatingAddButton />
     </Layout>
   );
 }
