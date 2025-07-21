@@ -24,28 +24,43 @@ export const useMembershipRequests = () => {
   return useQuery({
     queryKey: ['membership-requests'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get the membership requests
+      const { data: requests, error: requestsError } = await supabase
         .from('barangay_membership_requests')
-        .select(`
-          *,
-          profiles!inner(
-            email,
-            first_name,
-            last_name,
-            role
-          )
-        `)
+        .select('*')
         .order('requested_at', { ascending: false });
 
-      if (error) throw error;
+      if (requestsError) throw requestsError;
 
-      return data?.map(request => ({
-        ...request,
-        user_email: request.profiles?.email,
-        user_first_name: request.profiles?.first_name,
-        user_last_name: request.profiles?.last_name,
-        user_role: request.profiles?.role,
-      })) as MembershipRequest[] || [];
+      if (!requests || requests.length === 0) {
+        return [];
+      }
+
+      // Get user IDs from requests
+      const userIds = requests.map(request => request.user_id);
+
+      // Get user profiles for those user IDs
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, email, first_name, last_name, role')
+        .in('id', userIds);
+
+      if (profilesError) throw profilesError;
+
+      // Create a map of profiles for easy lookup
+      const profilesMap = new Map(profiles?.map(profile => [profile.id, profile]) || []);
+
+      // Combine requests with profile data
+      return requests.map(request => {
+        const profile = profilesMap.get(request.user_id);
+        return {
+          ...request,
+          user_email: profile?.email,
+          user_first_name: profile?.first_name,
+          user_last_name: profile?.last_name,
+          user_role: profile?.role,
+        } as MembershipRequest;
+      });
     },
   });
 };
