@@ -66,6 +66,7 @@ import Cart from "@/pages/marketplace/Cart";
 import Checkout from "@/pages/marketplace/Checkout";
 import OrderConfirmation from "@/pages/marketplace/OrderConfirmation";
 import MyOrders from "@/pages/marketplace/MyOrders";
+import AddProduct from "@/pages/marketplace/AddProduct";
 
 // Import the EditProfile component
 import EditProfile from "./pages/EditProfile";
@@ -190,6 +191,7 @@ export function AppRoutes() {
       
       <Route path="/marketplace" element={<Marketplace />} />
       <Route path="/marketplace/product/:id" element={<ProductDetail />} />
+      <Route path="/marketplace/add-product" element={<AddProduct />} />
       <Route path="/marketplace/cart" element={<Cart />} />
       <Route path="/marketplace/checkout" element={<Checkout />} />
       <Route path="/marketplace/order-confirmation" element={<OrderConfirmation />} />

@@ -6,6 +6,7 @@ import { MobileNavigation } from "@/components/marketplace/MobileNavigation";
 import { FilterButton } from "@/components/marketplace/FilterButton";
 import { MarketHero } from "@/components/marketplace/MarketHero";
 import { ProductList } from "@/components/marketplace/ProductList";
+import { FloatingAddButton } from "@/components/marketplace/FloatingAddButton";
 import { ProductCardType } from "@/components/marketplace/ProductCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryWithDebug } from "@/hooks/use-query-with-debug";
@@ -170,6 +171,7 @@ export default function Marketplace() {
       </div>
 
       <MobileNavigation />
+      <FloatingAddButton />
     </Layout>
   );
 }
