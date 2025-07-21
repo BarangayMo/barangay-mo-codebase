@@ -75,10 +75,27 @@ export const useApproveMembershipRequest = () => {
       approve: boolean; 
       adminNotes?: string;
     }) => {
-      const { data: { user } } = await supabase.auth.getUser();
+      console.log('Processing membership request:', { requestId, approve, adminNotes });
       
-      // Update the membership request
-      const { data: requestData, error: requestError } = await supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log('Current user:', user?.id);
+      
+      // First, get the request to find the user_id
+      const { data: request, error: fetchError } = await supabase
+        .from('barangay_membership_requests')
+        .select('user_id')
+        .eq('id', requestId)
+        .single();
+
+      if (fetchError) {
+        console.error('Error fetching request:', fetchError);
+        throw fetchError;
+      }
+
+      console.log('Found request for user:', request.user_id);
+
+      // Update the membership request status
+      const { error: requestError } = await supabase
         .from('barangay_membership_requests')
         .update({
           status: approve ? 'approved' : 'rejected',
@@ -86,39 +103,51 @@ export const useApproveMembershipRequest = () => {
           reviewed_at: new Date().toISOString(),
           reviewed_by: user?.id,
         })
-        .eq('id', requestId)
-        .select('user_id')
-        .single();
+        .eq('id', requestId);
 
-      if (requestError) throw requestError;
+      if (requestError) {
+        console.error('Error updating request:', requestError);
+        throw requestError;
+      }
+
+      console.log('Updated membership request status');
 
       // If approved, also approve the user's profile
-      if (approve && requestData?.user_id) {
+      if (approve && request?.user_id) {
         const { error: profileError } = await supabase
           .from('profiles')
           .update({ is_approved: true })
-          .eq('id', requestData.user_id);
+          .eq('id', request.user_id);
 
-        if (profileError) throw profileError;
+        if (profileError) {
+          console.error('Error updating profile:', profileError);
+          throw profileError;
+        }
+
+        console.log('Updated user profile approval status');
       }
 
-      return requestData;
+      return { success: true, user_id: request.user_id };
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (data, variables) => {
+      // Invalidate all relevant queries
       queryClient.invalidateQueries({ queryKey: ['membership-requests'] });
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      
+      console.log('Approval process completed successfully');
+      
       toast({
         title: variables.approve ? "Request approved" : "Request rejected",
         description: `Membership request has been ${variables.approve ? 'approved' : 'rejected'} successfully.`,
       });
     },
     onError: (error) => {
+      console.error('Membership request error:', error);
       toast({
         title: "Error",
         description: "Failed to process membership request. Please try again.",
         variant: "destructive",
       });
-      console.error('Membership request error:', error);
     },
   });
 };

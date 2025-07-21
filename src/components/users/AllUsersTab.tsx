@@ -15,7 +15,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { InviteUsersModal } from "./InviteUsersModal";
 import { MembershipRequestsTable } from "./MembershipRequestsTable";
-import { useUsers, useArchiveUser, useUpdateUserRole, User } from "@/hooks/use-users-data";
+import { useUsers, useArchiveUser, User } from "@/hooks/use-users-data";
+import { useApproveMembershipRequest } from "@/hooks/use-membership-requests";
 import { formatDistanceToNow } from "date-fns";
 
 const filterOptions = [
@@ -36,7 +37,7 @@ export const AllUsersTab = () => {
 
   const { data: users = [], isLoading, error } = useUsers();
   const archiveUserMutation = useArchiveUser();
-  const updateRoleMutation = useUpdateUserRole();
+  const approveMembershipMutation = useApproveMembershipRequest();
 
   const getInitials = (firstName?: string | null, lastName?: string | null) => {
     const first = firstName || "";
@@ -108,10 +109,6 @@ export const AllUsersTab = () => {
 
   const handleArchiveUser = (userId: string) => {
     archiveUserMutation.mutate(userId);
-  };
-
-  const handleApproveUser = (userId: string) => {
-    updateRoleMutation.mutate({ userId, role: 'resident' });
   };
 
   if (isLoading) {
@@ -261,18 +258,6 @@ export const AllUsersTab = () => {
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem>View Profile</DropdownMenuItem>
                         <DropdownMenuItem>Edit User</DropdownMenuItem>
-                        {!user.is_approved && (
-                          <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem 
-                              className="text-green-600"
-                              onClick={() => handleApproveUser(user.id)}
-                              disabled={updateRoleMutation.isPending}
-                            >
-                              Approve User
-                            </DropdownMenuItem>
-                          </>
-                        )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem 
                           className="text-red-600"
