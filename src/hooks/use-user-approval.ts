@@ -26,7 +26,9 @@ export const useUserApproval = () => {
           throw error;
         }
         
-        return { isApproved: data?.is_approved || false };
+        // Use type assertion since TypeScript types haven't been updated yet
+        const profileData = data as any;
+        return { isApproved: profileData?.is_approved || false };
       } catch (error) {
         console.error('Error checking user approval:', error);
         return { isApproved: false };
