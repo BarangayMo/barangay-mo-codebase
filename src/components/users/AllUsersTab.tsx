@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Plus, MoreHorizontal, Loader2, Users, User as UserIcon, Badge as BadgeIcon, Circle, CircleDot, UserCheck } from "lucide-react";
+import { Search, Plus, MoreHorizontal, Loader2, Users, User as UserIcon, Badge as BadgeIcon, Circle, CircleDot } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,7 +14,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { InviteUsersModal } from "./InviteUsersModal";
-import { MembershipRequestsTable } from "./MembershipRequestsTable";
 import { useUsers, useArchiveUser, User } from "@/hooks/use-users-data";
 import { formatDistanceToNow } from "date-fns";
 
@@ -25,7 +24,6 @@ const filterOptions = [
   { value: "Online", label: "Online", icon: CircleDot },
   { value: "Offline", label: "Offline", icon: Circle },
   { value: "Archived", label: "Archived", icon: Circle },
-  { value: "Pending", label: "Pending Approval", icon: UserCheck },
 ];
 
 export const AllUsersTab = () => {
@@ -36,10 +34,6 @@ export const AllUsersTab = () => {
 
   const { data: users = [], isLoading, error } = useUsers();
   const archiveUserMutation = useArchiveUser();
-
-  console.log('Users data:', users);
-  console.log('Users loading:', isLoading);
-  console.log('Users error:', error);
 
   const getInitials = (firstName?: string | null, lastName?: string | null) => {
     const first = firstName || "";
@@ -58,11 +52,7 @@ export const AllUsersTab = () => {
     }
   };
 
-  const getStatusBadge = (status: string | null, lastLogin: string | null, isApproved?: boolean) => {
-    if (!isApproved) {
-      return <Badge className="bg-orange-500 text-white">Pending Approval</Badge>;
-    }
-    
+  const getStatusBadge = (status: string | null, lastLogin: string | null) => {
     switch (status) {
       case 'online':
         return <Badge className="bg-green-500 text-white">Online</Badge>;
@@ -89,7 +79,6 @@ export const AllUsersTab = () => {
     if (selectedFilter === "Online") return matchesSearch && user.status === "online";
     if (selectedFilter === "Offline") return matchesSearch && user.status === "offline";
     if (selectedFilter === "Archived") return matchesSearch && user.status === "archived";
-    if (selectedFilter === "Pending") return matchesSearch && !user.is_approved;
     return matchesSearch;
   });
 
@@ -131,12 +120,9 @@ export const AllUsersTab = () => {
 
   return (
     <div className="space-y-6">
-      {/* Membership Requests Section */}
-      <MembershipRequestsTable />
-
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-900">All Users</h2>
+        <h2 className="text-xl font-semibold text-gray-900">Company users</h2>
         <Button 
           onClick={() => setIsInviteModalOpen(true)}
           className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -206,7 +192,7 @@ export const AllUsersTab = () => {
                   Joined
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
+                  Last login
                 </th>
                 <th className="w-12 px-6 py-3"></th>
               </tr>
@@ -248,7 +234,7 @@ export const AllUsersTab = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm">
-                    {getStatusBadge(user.status, user.last_login, user.is_approved)}
+                    {getStatusBadge(user.status, user.last_login)}
                   </td>
                   <td className="px-6 py-4">
                     <DropdownMenu>

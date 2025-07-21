@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -14,7 +13,6 @@ export interface User {
   status: 'online' | 'offline' | 'archived' | null;
   avatar_url: string | null;
   invited_by: string | null;
-  is_approved: boolean | null;
 }
 
 export interface UserInvitation {
@@ -34,8 +32,6 @@ export const useUsers = () => {
   return useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      console.log('Fetching users...');
-      
       const { data: profiles, error } = await supabase
         .from('profiles')
         .select(`
@@ -47,26 +43,23 @@ export const useUsers = () => {
           last_login,
           status,
           avatar_url,
-          invited_by,
-          is_approved,
-          email
+          invited_by
         `)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching users:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('Users fetched successfully:', profiles?.length);
-
-      // Map the profiles to User interface
-      const users = profiles?.map(profile => ({
+      // Get user emails from auth.users table through a join or separate query
+      const userIds = profiles?.map(p => p.id) || [];
+      
+      // For now, we'll fetch users without emails since we can't access auth.users directly
+      // In a real implementation, this would require a database function or API endpoint
+      const usersWithEmails = profiles?.map(profile => ({
         ...profile,
-        email: profile.email || `user-${profile.id.slice(0, 8)}@example.com`, // Fallback email if not available
+        email: `user-${profile.id.slice(0, 8)}@example.com` // Placeholder email
       } as User)) || [];
 
-      return users;
+      return usersWithEmails;
     },
   });
 };
@@ -126,6 +119,41 @@ export const useCreateInvitation = () => {
         variant: "destructive",
       });
       console.error('Invitation error:', error);
+    },
+  });
+};
+
+export const useUpdateUserRole = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: 'resident' | 'official' }) => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ role })
+        .eq('id', userId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['role-settings'] });
+      toast({
+        title: "Role updated",
+        description: "User role has been updated successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update user role. Please try again.",
+        variant: "destructive",
+      });
+      console.error('Role update error:', error);
     },
   });
 };
