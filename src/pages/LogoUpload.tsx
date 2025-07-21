@@ -27,7 +27,7 @@ export default function LogoUpload() {
   const [dragActive, setDragActive] = useState(false);
 
   const handleBack = () => {
-    navigate("/register/officials", { state: locationState });
+    navigate("/register/official-documents", { state: locationState });
   };
 
   const handleDrag = useCallback((e: React.DragEvent) => {
@@ -139,12 +139,12 @@ export default function LogoUpload() {
         </div>
 
         {/* Content */}
-        <div className="flex-1 p-6 space-y-6 bg-gray-50">
-          {/* Upload Area */}
+        <div className="flex-1 p-4 space-y-4 bg-gray-50">
+          {/* Upload Area - More Mobile Friendly */}
           <div
             className={`relative border-2 border-dashed ${
-              dragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300'
-            } rounded-lg p-8 transition-colors`}
+              dragActive ? 'border-red-400 bg-red-50' : 'border-gray-300'
+            } rounded-lg p-4 transition-colors`}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
@@ -160,14 +160,14 @@ export default function LogoUpload() {
             
             {selectedFile ? (
               <div className="text-center">
-                <div className="flex items-center justify-center mb-4">
+                <div className="flex items-center justify-center mb-3">
                   <img
                     src={URL.createObjectURL(selectedFile)}
                     alt="Preview"
-                    className="max-h-32 max-w-full object-contain"
+                    className="max-h-20 max-w-full object-contain rounded"
                   />
                 </div>
-                <p className="text-sm text-gray-600 mb-2">{selectedFile.name}</p>
+                <p className="text-sm text-gray-600 mb-2 truncate">{selectedFile.name}</p>
                 <button
                   onClick={() => setSelectedFile(null)}
                   className="inline-flex items-center text-sm text-red-600 hover:text-red-700"
@@ -177,16 +177,16 @@ export default function LogoUpload() {
                 </button>
               </div>
             ) : (
-              <div className="text-center">
-                <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                <p className="text-lg font-medium text-gray-900 mb-2">
+              <div className="text-center py-4">
+                <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                <p className="text-sm font-medium text-gray-900 mb-1">
                   Upload your barangay logo
                 </p>
-                <p className="text-sm text-gray-500 mb-4">
-                  Drag and drop your logo here, or click to browse
+                <p className="text-xs text-gray-500 mb-2">
+                  Tap to browse or drag and drop
                 </p>
                 <p className="text-xs text-gray-400">
-                  Supports PNG, JPG, GIF up to 10MB
+                  PNG, JPG, GIF up to 10MB
                 </p>
               </div>
             )}
@@ -204,11 +204,11 @@ export default function LogoUpload() {
         </div>
 
         {/* Next Button */}
-        <div className="p-6 bg-gray-50 border-t">
+        <div className="p-4 bg-gray-50 border-t">
           <Button
             onClick={handleNext}
             disabled={uploading}
-            className={`w-full text-white py-4 h-12 text-base font-medium rounded-lg ${buttonColor}`}
+            className={`w-full text-white py-3 h-12 text-base font-medium rounded-lg ${buttonColor}`}
           >
             {uploading ? "Uploading..." : "Next"}
           </Button>
