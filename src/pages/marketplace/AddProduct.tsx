@@ -318,7 +318,8 @@ export default function AddProduct() {
                 <div>
                   <label className="block text-sm font-medium mb-2">Main Image</label>
                   <MediaUpload
-                    onUpload={setMainImage}
+                    value={mainImage}
+                    onChange={setMainImage}
                     onRemove={() => setMainImage("")}
                     accept="image/*"
                     className="w-full"
@@ -350,13 +351,14 @@ export default function AddProduct() {
                     ))}
                     
                     {additionalImages.length < 5 && (
-                      <MediaUpload
-                        onUpload={handleAddImage}
-                        accept="image/*"
-                        className="h-24 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center"
-                      >
-                        <Upload className="h-6 w-6 text-gray-400" />
-                      </MediaUpload>
+                      <div className="h-24 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center">
+                        <MediaUpload
+                          onChange={handleAddImage}
+                          onRemove={() => {}}
+                          accept="image/*"
+                          className="h-full w-full"
+                        />
+                      </div>
                     )}
                   </div>
                 </div>
