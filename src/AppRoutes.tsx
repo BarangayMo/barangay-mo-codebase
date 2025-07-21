@@ -1,20 +1,21 @@
+
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import Home from "./pages/Home";
+import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ResidentHome from "./pages/ResidentHome";
-import OfficialDashboard from "./pages/OfficialDashboard";
+import OfficialsDashboard from "./pages/OfficialsDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import Products from "./pages/Products";
-import MediaLibrary from "./pages/MediaLibrary";
+import MediaLibraryPage from "./pages/admin/MediaLibraryPage";
 import { AuthProvider } from "@/contexts/AuthContext";
 import EmailVerification from "./pages/EmailVerification";
 import EmailConfirmation from "./pages/EmailConfirmation";
-import MPin from "./pages/MPin";
-import RbiForm from "./pages/RBI/RbiForm";
-import RbiSuccess from "./pages/RBI/RbiSuccess";
-import RbiFormDrafts from "./pages/RBI/RbiFormDrafts";
-import RbiFormView from "./pages/RBI/RbiFormView";
+import MPin from "./pages/MPIN";
+import RbiForm from "./pages/RbiRegistration";
+import RbiSuccess from "./pages/RbiRegistration";
+import RbiFormDrafts from "./pages/RbiRegistration";
+import RbiFormView from "./pages/RbiRegistration";
 import Messages from "./pages/Messages";
 import Marketplace from "./pages/Marketplace";
 import { ProductDetail, Cart, Checkout, OrderConfirmation, MyOrders } from "./pages/marketplace";
@@ -25,17 +26,17 @@ export default function AppRoutes() {
     <Router>
       <AuthProvider>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/email-verification" element={<EmailVerification />} />
           <Route path="/email-confirmation" element={<EmailConfirmation />} />
           <Route path="/mpin" element={<MPin />} />
           <Route path="/resident-home" element={<ResidentHome />} />
-          <Route path="/official-dashboard" element={<OfficialDashboard />} />
+          <Route path="/official-dashboard" element={<OfficialsDashboard />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/products" element={<Products />} />
-          <Route path="/media-library" element={<MediaLibrary />} />
+          <Route path="/media-library" element={<MediaLibraryPage />} />
 
           {/* RBI Routes */}
           <Route path="/rbi-form" element={<RbiForm />} />

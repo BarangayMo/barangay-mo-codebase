@@ -11,15 +11,26 @@ export const useUserApproval = () => {
     queryFn: async () => {
       if (!user?.id) return { isApproved: false };
       
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('is_approved')
-        .eq('id', user.id)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('is_approved')
+          .eq('id', user.id)
+          .single();
 
-      if (error) throw error;
-      
-      return { isApproved: data?.is_approved || false };
+        if (error) {
+          // If column doesn't exist yet, assume not approved
+          if (error.message?.includes('column "is_approved" does not exist')) {
+            return { isApproved: false };
+          }
+          throw error;
+        }
+        
+        return { isApproved: data?.is_approved || false };
+      } catch (error) {
+        console.error('Error checking user approval:', error);
+        return { isApproved: false };
+      }
     },
     enabled: !!user?.id,
   });

@@ -150,12 +150,19 @@ export default function AddProduct() {
         imageUrls = await uploadImages();
       }
 
+      // Match the database schema exactly
       const productData = {
-        ...data,
-        user_id: user.id,
+        name: data.name,
+        description: data.description,
+        price: data.price,
+        original_price: data.original_price || null,
+        stock_quantity: data.stock_quantity,
+        category_id: data.category_id,
+        vendor_id: user.id, // Required field
         main_image_url: imageUrls[0] || null,
-        additional_images: imageUrls.slice(1),
+        gallery_image_urls: imageUrls.slice(1),
         is_active: true,
+        tags: data.tags || [],
       };
 
       const { error } = await supabase
