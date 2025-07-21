@@ -144,7 +144,7 @@ export default function LogoUpload() {
           <div
             className={`relative border-2 border-dashed ${
               dragActive ? 'border-red-400 bg-red-50' : 'border-gray-300'
-            } rounded-lg p-4 transition-colors`}
+            } rounded-lg p-3 transition-colors`}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
@@ -160,7 +160,7 @@ export default function LogoUpload() {
             
             {selectedFile ? (
               <div className="text-center">
-                <div className="flex items-center justify-center mb-3">
+                <div className="flex items-center justify-center mb-2">
                   <img
                     src={URL.createObjectURL(selectedFile)}
                     alt="Preview"
@@ -177,7 +177,7 @@ export default function LogoUpload() {
                 </button>
               </div>
             ) : (
-              <div className="text-center py-4">
+              <div className="text-center py-3">
                 <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
                 <p className="text-sm font-medium text-gray-900 mb-1">
                   Upload your barangay logo
