@@ -6,6 +6,7 @@ import Register from "@/pages/Register";
 import RoleSelection from "@/pages/RoleSelection";
 import LocationSelection from "@/pages/LocationSelection";
 import OfficialsInfo from "@/pages/OfficialsInfo";
+import OfficialDocuments from "@/pages/OfficialDocuments";
 import LogoUpload from "@/pages/LogoUpload";
 import EmailVerification from "@/pages/EmailVerification";
 import Verify from "@/pages/Verify";
@@ -109,6 +110,7 @@ export function AppRoutes() {
       <Route path="/register/role" element={<RoleSelection />} />
       <Route path="/register/location" element={<LocationSelection />} />
       <Route path="/register/officials" element={<OfficialsInfo />} />
+      <Route path="/register/official-documents" element={<OfficialDocuments />} />
       <Route path="/register/logo" element={<LogoUpload />} />
       <Route path="/email-verification" element={<EmailVerification />} />
       <Route path="/email-confirmation" element={<EmailConfirmationHandler />} />

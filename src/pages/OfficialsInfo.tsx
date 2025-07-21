@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -61,8 +62,6 @@ export default function OfficialsInfo() {
 
   const [selectedOfficialIndex, setSelectedOfficialIndex] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState("9171234567");
-  const [landlineNumber, setLandlineNumber] = useState("047-222-5173");
   const [isLoading, setIsLoading] = useState(true);
 
   // Load officials from database when component mounts
@@ -204,12 +203,10 @@ export default function OfficialsInfo() {
   };
 
   const handleNext = () => {
-    navigate("/register/logo", { 
+    navigate("/register/official-documents", { 
       state: { 
         ...locationState,
-        officials: officials,
-        phoneNumber,
-        landlineNumber
+        officials: officials
       } 
     });
   };
@@ -369,49 +366,6 @@ export default function OfficialsInfo() {
               {renderOfficialSection("Sangguniang Barangay", sangguniang, executive.length)}
               {renderOfficialSection("Youth Council", youth, executive.length + sangguniang.length)}
             </div>
-
-            {/* Phone Number Section */}
-            <div className="space-y-4 mt-6">
-              <div className="text-left">
-                <div className="text-xs text-gray-600 mb-1">Contact</div>
-                <div className="text-sm font-medium text-gray-900">Verify/Confirm your official barangay number</div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
-                  <img 
-                    src="/lovable-uploads/d61c25bf-51d4-4bc8-a8ff-69e0b901ee3a.png" 
-                    alt="Philippines Flag" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <span className="text-sm text-gray-600">+63</span>
-                <Input 
-                  placeholder="9171234567" 
-                  className="flex-1"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Landline Section */}
-            <div className="space-y-4">
-              <div className="text-left">
-                <div className="text-xs text-gray-600 mb-1">Landline</div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                  <Phone className="h-4 w-4 text-white" />
-                </div>
-                <span className="text-sm text-gray-600">02</span>
-                <Input 
-                  placeholder="047-222-5173" 
-                  className="flex-1"
-                  value={landlineNumber}
-                  onChange={(e) => setLandlineNumber(e.target.value)}
-                />
-              </div>
-            </div>
           </div>
         </div>
 
@@ -486,50 +440,6 @@ export default function OfficialsInfo() {
               {renderOfficialSection("Executive Officials", executive, 0)}
               {renderOfficialSection("Sangguniang Barangay", sangguniang, executive.length)}
               {renderOfficialSection("Youth Council", youth, executive.length + sangguniang.length)}
-            </div>
-
-            {/* Phone and contact sections */}
-            <div className="space-y-6">
-              <div>
-                <div className="text-left mb-3">
-                  <div className="text-xs text-gray-600 mb-1">Contact</div>
-                  <div className="text-sm font-medium text-gray-900">Verify/Confirm your official barangay number</div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
-                    <img 
-                      src="/lovable-uploads/d61c25bf-51d4-4bc8-a8ff-69e0b901ee3a.png" 
-                      alt="Philippines Flag" 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <span className="text-sm text-gray-600">+63</span>
-                  <Input 
-                    placeholder="9171234567" 
-                    className="flex-1"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <div className="text-left mb-3">
-                  <div className="text-xs text-gray-600 mb-1">Landline</div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                    <Phone className="h-4 w-4 text-white" />
-                  </div>
-                  <span className="text-sm text-gray-600">02</span>
-                  <Input 
-                    placeholder="047-222-5173" 
-                    className="flex-1"
-                    value={landlineNumber}
-                    onChange={(e) => setLandlineNumber(e.target.value)}
-                  />
-                </div>
-              </div>
             </div>
           </div>
 
