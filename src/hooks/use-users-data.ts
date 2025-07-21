@@ -13,6 +13,7 @@ export interface User {
   status: 'online' | 'offline' | 'archived' | null;
   avatar_url: string | null;
   invited_by: string | null;
+  is_approved: boolean | null;
 }
 
 export interface UserInvitation {
@@ -43,7 +44,8 @@ export const useUsers = () => {
           last_login,
           status,
           avatar_url,
-          invited_by
+          invited_by,
+          is_approved
         `)
         .order('created_at', { ascending: false });
 
@@ -131,7 +133,10 @@ export const useUpdateUserRole = () => {
     mutationFn: async ({ userId, role }: { userId: string; role: 'resident' | 'official' }) => {
       const { data, error } = await supabase
         .from('profiles')
-        .update({ role })
+        .update({ 
+          role,
+          is_approved: true // Approve user when updating role
+        })
         .eq('id', userId)
         .select()
         .single();
@@ -142,18 +147,19 @@ export const useUpdateUserRole = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['role-settings'] });
+      queryClient.invalidateQueries({ queryKey: ['membership-requests'] });
       toast({
-        title: "Role updated",
-        description: "User role has been updated successfully.",
+        title: "User approved",
+        description: "User has been approved and role updated successfully.",
       });
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to update user role. Please try again.",
+        description: "Failed to approve user. Please try again.",
         variant: "destructive",
       });
-      console.error('Role update error:', error);
+      console.error('User approval error:', error);
     },
   });
 };
