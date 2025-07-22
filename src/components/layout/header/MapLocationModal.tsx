@@ -7,7 +7,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { GoogleMapLocationPicker } from "@/components/ui/google-map-location-picker";
+import { MapboxLocationPicker } from "@/components/ui/mapbox-location-picker";
 import { toast } from "sonner";
 
 // Define types for our location data
@@ -56,7 +56,7 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
         </DialogHeader>
         
         <div className="mt-4">
-          <GoogleMapLocationPicker
+          <MapboxLocationPicker
             onLocationSelected={handleLocationSelected}
             height="500px"
             className="w-full"
