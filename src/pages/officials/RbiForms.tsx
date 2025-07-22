@@ -30,12 +30,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { RbiApprovalModal } from "@/components/officials/RbiApprovalModal";
 
 const RbiForms = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedForm, setSelectedForm] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Get official profile to determine barangay
   const { data: officialProfile } = useQuery({
@@ -55,7 +58,7 @@ const RbiForms = () => {
   });
 
   // Fetch RBI forms for the official's barangay
-  const { data: rbiForms = [], isLoading } = useQuery({
+  const { data: rbiForms = [], isLoading, refetch } = useQuery({
     queryKey: ['rbi-forms', officialProfile?.barangay],
     queryFn: async () => {
       if (!officialProfile?.barangay) return [];
@@ -127,6 +130,20 @@ const RbiForms = () => {
       case 'rejected': return <AlertCircle className="h-4 w-4" />;
       default: return <FileText className="h-4 w-4" />;
     }
+  };
+
+  const handleViewDetails = (form: any) => {
+    setSelectedForm(form);
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedForm(null);
+  };
+
+  const handleApprovalSuccess = () => {
+    refetch();
   };
 
   return (
@@ -305,7 +322,7 @@ const RbiForms = () => {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleViewDetails(form)}>
                             <Eye className="h-4 w-4 mr-2" />
                             View Details
                           </DropdownMenuItem>
@@ -329,6 +346,14 @@ const RbiForms = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* RBI Approval Modal */}
+      <RbiApprovalModal 
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        form={selectedForm}
+        onSuccess={handleApprovalSuccess}
+      />
     </div>
   );
 };

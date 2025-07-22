@@ -3,7 +3,7 @@ import { Home } from "lucide-react";
 import { FloatingInput } from "@/components/ui/floating-input";
 import { FloatingSelect } from "@/components/ui/floating-select";
 import { SelectItem } from "@/components/ui/select";
-import { MapLocationModal } from "@/components/layout/header/MapLocationModal";
+import { MapboxLocationPicker } from "@/components/ui/mapbox-location-picker";
 import { Button } from "@/components/ui/button";
 import { MapPin } from "lucide-react";
 import { useState } from "react";
@@ -23,9 +23,10 @@ const AddressDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiFor
     }
   };
 
-  const handleLocationSelected = (location: { barangay: string; coordinates: { lat: number; lng: number } }) => {
-    setSelectedBarangay(location.barangay);
-    handleChange('barangay', location.barangay);
+  const handleLocationSelected = (location: { address: string; barangay?: string; coordinates: { lat: number; lng: number } }) => {
+    const barangayName = location.barangay || location.address;
+    setSelectedBarangay(barangayName);
+    handleChange('barangay', barangayName);
     handleChange('coordinates', JSON.stringify(location.coordinates));
   };
 
@@ -85,28 +86,36 @@ const AddressDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiFor
           onChange={(e) => handleChange("zone", e.target.value)}
         />
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="space-y-2">
-            <MapLocationModal onLocationSelected={handleLocationSelected}>
-              <Button 
-                type="button" 
-                variant="outline"
-                className="w-full flex items-center justify-between gap-2 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-              >
-                <span className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-blue-600" />
-                  {selectedBarangay || formData?.address?.barangay || "Select Your Barangay"}
-                </span>
-                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                  Choose on Map
-                </span>
-              </Button>
-            </MapLocationModal>
-            <p className="text-xs text-gray-500 ml-1">Click to select your barangay using the map</p>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Select Your Location on Map
+            </label>
+            <div className="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+              <MapboxLocationPicker 
+                onLocationSelected={handleLocationSelected}
+                height="256px"
+                className="w-full"
+                initialLocation={selectedBarangay || "Philippines"}
+              />
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Click on the map to pinpoint your exact location within your barangay
+            </p>
+            {selectedBarangay && (
+              <div className="mt-2 p-2 bg-blue-50 rounded text-sm">
+                <span className="font-medium text-blue-800">Selected: </span>
+                <span className="text-blue-700">{selectedBarangay}</span>
+              </div>
+            )}
             {errors?.address?.barangay && (
-              <p className="text-red-500 text-xs ml-1">{errors.address.barangay}</p>
+              <p className="text-red-500 text-xs mt-1">{errors.address.barangay}</p>
             )}
           </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div></div>
           
           <FloatingInput 
             id="residenceSince" 
