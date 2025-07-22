@@ -31,6 +31,7 @@ interface AuthContextType {
   rbiCompleted: boolean;
   setRbiCompleted: (completed: boolean) => void;
   session: Session | null;
+  isEmailVerified: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -50,6 +51,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [session, setSession] = useState<Session | null>(null);
   const [rbiCompleted, setRbiCompleted] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
   
   const redirectInProgress = useRef(false);
 
@@ -121,6 +123,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         
         setSession(session);
         setIsAuthenticated(!!session);
+        setIsEmailVerified(!!session?.user?.email_confirmed_at);
         
         if (session?.user) {
           // Use setTimeout to prevent blocking other queries
@@ -155,13 +158,27 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               setUser(userData);
               setUserRole(role);
               
-              // Handle redirects after successful login or signup - redirect directly to dashboard
+              // Handle redirects after successful login or signup
               if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && !redirectInProgress.current && isInitialized) {
-                if (currentPath === '/login' || currentPath === '/register' || currentPath === '/email-verification' || currentPath === '/email-confirmation' || currentPath === '/mpin') {
-                  console.log("Redirecting to:", redirectPath, "after", event);
-                  redirectInProgress.current = true;
-                  navigate(redirectPath, { replace: true });
-                  setTimeout(() => { redirectInProgress.current = false; }, 1000);
+                // Check if email is verified
+                const emailVerified = !!session?.user?.email_confirmed_at;
+                
+                if (currentPath === '/login' || currentPath === '/register' || currentPath === '/email-confirmation' || currentPath === '/mpin') {
+                  if (emailVerified) {
+                    console.log("Redirecting to:", redirectPath, "after", event);
+                    redirectInProgress.current = true;
+                    navigate(redirectPath, { replace: true });
+                    setTimeout(() => { redirectInProgress.current = false; }, 1000);
+                  } else {
+                    // Redirect to email verification if not verified
+                    console.log("Email not verified, redirecting to email verification");
+                    redirectInProgress.current = true;
+                    navigate('/email-verification', { 
+                      state: { email: session?.user?.email },
+                      replace: true 
+                    });
+                    setTimeout(() => { redirectInProgress.current = false; }, 1000);
+                  }
                 }
               }
             } catch (error) {
@@ -172,6 +189,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           // User signed out
           setUser(null);
           setUserRole(null);
+          setIsEmailVerified(false);
           
           if (event === 'SIGNED_OUT' && !redirectInProgress.current && isInitialized) {
             console.log("Redirecting to login after sign out");
@@ -193,6 +211,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       setSession(session);
       setIsAuthenticated(!!session);
+      setIsEmailVerified(!!session?.user?.email_confirmed_at);
       
       if (session?.user) {
         setTimeout(async () => {
@@ -226,11 +245,24 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             setUserRole(role);
             
             // Redirect if user is on login/register page with existing session
-            if ((currentPath === '/login' || currentPath === '/register' || currentPath === '/email-verification' || currentPath === '/email-confirmation') && !redirectInProgress.current) {
-              console.log("Redirecting existing session from login/register to:", redirectPath);
-              redirectInProgress.current = true;
-              navigate(redirectPath, { replace: true });
-              setTimeout(() => { redirectInProgress.current = false; }, 1000);
+            if ((currentPath === '/login' || currentPath === '/register' || currentPath === '/email-confirmation' || currentPath === '/email-verification') && !redirectInProgress.current) {
+              const emailVerified = !!session?.user?.email_confirmed_at;
+              
+              if (emailVerified) {
+                console.log("Redirecting existing session from login/register to:", redirectPath);
+                redirectInProgress.current = true;
+                navigate(redirectPath, { replace: true });
+                setTimeout(() => { redirectInProgress.current = false; }, 1000);
+              } else if (currentPath !== '/email-verification') {
+                // Redirect to email verification if not verified
+                console.log("Email not verified, redirecting to email verification");
+                redirectInProgress.current = true;
+                navigate('/email-verification', { 
+                  state: { email: session?.user?.email },
+                  replace: true 
+                });
+                setTimeout(() => { redirectInProgress.current = false; }, 1000);
+              }
             }
           } catch (error) {
             console.error('Error in initial session handler:', error);
@@ -289,13 +321,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       console.log("Clean metadata being sent:", metaData);
 
-      // Sign up the user without email confirmation redirect
+      // Sign up the user with email confirmation redirect
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: metaData
-          // Removed emailRedirectTo to skip email verification step
+          data: metaData,
+          emailRedirectTo: `${window.location.origin}/email-confirmation`
         }
       });
 
@@ -340,7 +372,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     logout,
     rbiCompleted,
     setRbiCompleted,
-    session
+    session,
+    isEmailVerified
   };
 
   return (
