@@ -61,7 +61,7 @@ export const MapboxMap = ({
       const map = await createMap(mapContainer.current, {
         center: [geocodeResult.lng, geocodeResult.lat],
         zoom,
-        style: 'mapbox://styles/mapbox/streets-v12'
+        style: 'mapbox://styles/mapbox/streets-v11'
       });
 
       mapInstance.current = map;

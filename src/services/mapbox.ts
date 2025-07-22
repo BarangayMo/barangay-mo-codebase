@@ -118,7 +118,7 @@ export async function createMap(
   
   const map = new mapboxgl.Map({
     container,
-    style: options.style || 'mapbox://styles/mapbox/streets-v12',
+    style: options.style || 'mapbox://styles/mapbox/streets-v11',
     center: options.center,
     zoom: options.zoom || 15,
     attributionControl: false
