@@ -14,10 +14,12 @@ export async function initializeMapbox(): Promise<void> {
 
   try {
     // Get API key from Supabase
-    const apiKey = await getMapboxApiKey();
+    let apiKey = await getMapboxApiKey();
     
+    // Fallback to hardcoded key if not found in database
     if (!apiKey) {
-      throw new Error('Mapbox API key not found. Please configure it in the admin settings.');
+      console.log('⚠️ Mapbox API key not found in database, using fallback key');
+      apiKey = 'pk.eyJ1IjoiYmFyYW5nYXltbyIsImEiOiJjbWJxZHBzenAwMmdrMmtzZmloemphb284In0.U22j37ppYT1IMyC2lXVBzw';
     }
 
     // Set the access token

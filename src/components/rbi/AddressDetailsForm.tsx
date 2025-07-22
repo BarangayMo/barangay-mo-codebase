@@ -31,24 +31,24 @@ const AddressDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiFor
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
-        <Home className="text-blue-600 w-6 h-6" />
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex items-start sm:items-center gap-3 pb-3 sm:pb-4 border-b border-gray-100">
+        <Home className="text-blue-600 w-5 h-5 sm:w-6 sm:h-6 mt-1 sm:mt-0 flex-shrink-0" />
         <div>
-          <h2 className="text-xl font-semibold text-gray-800">Address Details</h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-800">Address Details</h2>
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">
             Provide your current residence details and location within the barangay
           </p>
         </div>
       </div>
       
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-5">
           <FloatingInput 
             id="houseNumber" 
             label="House/Bldg Number" 
             placeholder=" " 
-            className="focus-visible:ring-blue-500"
+            className="focus-visible:ring-blue-500 text-sm sm:text-base"
             value={formData?.address?.houseNumber || ""}
             onChange={(e) => handleChange("houseNumber", e.target.value)}
             error={errors?.address?.houseNumber}
@@ -58,7 +58,7 @@ const AddressDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiFor
             id="street" 
             label="Street / Kalye" 
             placeholder=" " 
-            className="focus-visible:ring-blue-500"
+            className="focus-visible:ring-blue-500 text-sm sm:text-base"
             value={formData?.address?.street || ""}
             onChange={(e) => handleChange("street", e.target.value)}
             error={errors?.address?.street}
@@ -81,20 +81,20 @@ const AddressDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiFor
           id="zone" 
           label="Division/Zone/Sitio/Purok" 
           placeholder=" " 
-          className="focus-visible:ring-blue-500"
+          className="focus-visible:ring-blue-500 text-sm sm:text-base"
           value={formData?.address?.zone || ""}
           onChange={(e) => handleChange("zone", e.target.value)}
         />
         
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
               Select Your Location on Map
             </label>
             <div className="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
               <MapboxLocationPicker 
                 onLocationSelected={handleLocationSelected}
-                height="256px"
+                height="200px"
                 className="w-full"
                 initialLocation={selectedBarangay || "Philippines"}
               />
@@ -103,7 +103,7 @@ const AddressDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiFor
               Click on the map to pinpoint your exact location within your barangay
             </p>
             {selectedBarangay && (
-              <div className="mt-2 p-2 bg-blue-50 rounded text-sm">
+              <div className="mt-2 p-2 sm:p-3 bg-blue-50 rounded text-xs sm:text-sm">
                 <span className="font-medium text-blue-800">Selected: </span>
                 <span className="text-blue-700">{selectedBarangay}</span>
               </div>
@@ -114,7 +114,7 @@ const AddressDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiFor
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-5">
           <div></div>
           
           <FloatingInput 
@@ -122,7 +122,7 @@ const AddressDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiFor
             label="Residence Since" 
             type="date" 
             placeholder=" " 
-            className="focus-visible:ring-blue-500"
+            className="focus-visible:ring-blue-500 text-sm sm:text-base"
             value={formData?.address?.residenceSince || ""}
             onChange={(e) => handleChange("residenceSince", e.target.value)}
           />

@@ -28,11 +28,12 @@ export const RbiProtectedRoute = ({ children }: RbiProtectedRouteProps) => {
       return;
     }
 
-    // For residents only: check RBI completion
+    // For residents only: Strictly enforce RBI completion - no access without submission
     if (userRole === 'resident' && isEmailVerified && !rbiCompleted) {
-      // Don't redirect if already on RBI registration page
-      if (location.pathname !== '/rbi-registration') {
-        console.log('Resident has not completed RBI, redirecting to RBI registration');
+      // Only allow access to RBI registration page and logout
+      const allowedPaths = ['/rbi-registration', '/logout'];
+      if (!allowedPaths.includes(location.pathname)) {
+        console.log('Resident has not submitted RBI form, access denied');
         navigate('/rbi-registration', { replace: true });
         return;
       }
@@ -40,7 +41,11 @@ export const RbiProtectedRoute = ({ children }: RbiProtectedRouteProps) => {
   }, [isAuthenticated, isEmailVerified, userRole, rbiCompleted, navigate, session, location.pathname]);
 
   // Show loading state or nothing while redirecting
-  if (!isAuthenticated || !isEmailVerified || (userRole === 'resident' && !rbiCompleted && location.pathname !== '/rbi-registration')) {
+  // Strict enforcement: Residents without RBI submission can only access RBI registration
+  if (!isAuthenticated || 
+      !isEmailVerified || 
+      (userRole === 'resident' && !rbiCompleted && location.pathname !== '/rbi-registration')
+  ) {
     return null;
   }
 

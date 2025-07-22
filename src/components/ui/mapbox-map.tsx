@@ -42,7 +42,7 @@ export const MapboxMap = ({
       setError(null);
       console.log(`🗺️ MapboxMap: Initializing map (attempt ${attempt}) for location:`, location);
 
-      // Initialize Mapbox
+      // Initialize Mapbox with fallback API key
       await initializeMapbox();
       console.log('🗺️ MapboxMap: Mapbox initialized successfully');
 
@@ -56,18 +56,31 @@ export const MapboxMap = ({
 
       console.log('📍 MapboxMap: Coordinates found:', geocodeResult);
 
-      // Create map
+      // Create map with proper cleanup
       console.log('🗺️ MapboxMap: Creating map instance...');
       const map = await createMap(mapContainer.current, {
         center: [geocodeResult.lng, geocodeResult.lat],
-        zoom
+        zoom,
+        style: 'mapbox://styles/mapbox/streets-v12'
       });
 
       mapInstance.current = map;
 
+      // Ensure map loads properly
+      map.on('load', () => {
+        console.log('✅ Map loaded and ready');
+        map.resize(); // Ensure proper sizing
+        setLoading(false);
+      });
+
+      map.on('error', (e) => {
+        console.error('❌ Map error:', e);
+        throw new Error('Map failed to load properly');
+      });
+
       // Create marker
       const marker = createMarker(map, [geocodeResult.lng, geocodeResult.lat], {
-        color: '#ef4444'
+        color: '#3b82f6'
       });
 
       markerInstance.current = marker;
@@ -75,9 +88,9 @@ export const MapboxMap = ({
       // Create popup if enabled
       if (showPopup) {
         const popup = createPopup(`
-          <div style="padding: 8px; font-family: system-ui, -apple-system, sans-serif;">
-            <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px;">${location}</div>
-            <div style="font-size: 12px; color: #666;">${geocodeResult.place_name}</div>
+          <div class="p-3">
+            <div class="font-semibold text-sm text-gray-800 mb-1">${location}</div>
+            <div class="text-xs text-gray-600">${geocodeResult.place_name}</div>
           </div>
         `);
 
@@ -98,7 +111,6 @@ export const MapboxMap = ({
       }
 
       console.log('✅ MapboxMap: Map initialization completed successfully');
-      setLoading(false);
       setError(null);
 
     } catch (error) {
