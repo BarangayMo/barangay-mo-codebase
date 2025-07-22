@@ -32,7 +32,7 @@ type Step = {
 export default function RbiRegistration() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, setRbiCompleted } = useAuth();
   
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -277,12 +277,17 @@ export default function RbiRegistration() {
         .delete()
         .eq('user_id', user.id);
       
+      // Update RBI completion status in context
+      if (setRbiCompleted) {
+        setRbiCompleted(true);
+      }
+      
       toast({
         title: "RBI Registration Complete",
         description: `Your RBI form has been successfully submitted with number: ${data.rbi_number}`,
       });
       
-      navigate("/resident-profile", { 
+      navigate("/resident-home", {
         state: { 
           rbiNumber: data.rbi_number,
           showSuccess: true 

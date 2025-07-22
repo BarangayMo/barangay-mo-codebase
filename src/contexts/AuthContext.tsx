@@ -92,6 +92,34 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  // Function to check RBI completion status for residents
+  const checkRbiCompletion = async (userId: string, userRole: UserRole) => {
+    if (userRole !== 'resident') {
+      return true; // Non-residents don't need RBI
+    }
+    
+    try {
+      const { data: rbiForms, error } = await supabase
+        .from('rbi_forms')
+        .select('id, status')
+        .eq('user_id', userId)
+        .order('submitted_at', { ascending: false })
+        .limit(1);
+      
+      if (error) {
+        console.warn('RBI check warning:', error);
+        return false;
+      }
+      
+      const hasRbiForm = rbiForms && rbiForms.length > 0;
+      console.log('RBI completion check:', { userId, hasRbiForm, rbiForms });
+      return hasRbiForm;
+    } catch (error) {
+      console.warn('Error checking RBI completion:', error);
+      return false;
+    }
+  };
+
   // Function to determine user role and redirect path
   const getUserRoleAndRedirect = (role: string | null, email: string) => {
     let userRole: UserRole = "resident";
@@ -157,6 +185,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               
               setUser(userData);
               setUserRole(role);
+              
+              // Check RBI completion for residents
+              const rbiComplete = await checkRbiCompletion(session.user.id, role);
+              setRbiCompleted(rbiComplete);
               
               // Handle redirects after successful login or signup
               if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && !redirectInProgress.current && isInitialized) {
@@ -243,6 +275,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             
             setUser(userData);
             setUserRole(role);
+            
+            // Check RBI completion for residents
+            const rbiComplete = await checkRbiCompletion(session.user.id, role);
+            setRbiCompleted(rbiComplete);
             
             // Redirect if user is on login/register page with existing session
             if ((currentPath === '/login' || currentPath === '/register' || currentPath === '/email-confirmation' || currentPath === '/email-verification') && !redirectInProgress.current) {

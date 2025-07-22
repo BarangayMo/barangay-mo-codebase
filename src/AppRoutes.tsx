@@ -100,6 +100,7 @@ import RbiForms from "@/pages/officials/RbiForms";
 // Import the EmailConfirmationHandler
 import { EmailConfirmationHandler } from "@/components/auth/EmailConfirmationHandler";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { RbiProtectedRoute } from "@/components/auth/RbiProtectedRoute";
 
 export function AppRoutes() {
   return (
@@ -131,12 +132,12 @@ export function AppRoutes() {
       <Route path="/partnerships" element={<Partnerships />} />
       
       {/* Protected routes - require authentication and email verification */}
-      <Route path="/resident-home" element={<ProtectedRoute><ResidentHome /></ProtectedRoute>} />
+      <Route path="/resident-home" element={<RbiProtectedRoute><ResidentHome /></RbiProtectedRoute>} />
       <Route path="/rbi-registration" element={<ProtectedRoute><RbiRegistration /></ProtectedRoute>} />
-      <Route path="/resident-profile" element={<ProtectedRoute><ResidentProfile /></ProtectedRoute>} />
-      <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
+      <Route path="/resident-profile" element={<RbiProtectedRoute><ResidentProfile /></RbiProtectedRoute>} />
+      <Route path="/community" element={<RbiProtectedRoute><Community /></RbiProtectedRoute>} />
       
-      <Route path="/community/post/:postId" element={<ProtectedRoute><CommunityPostDetail /></ProtectedRoute>} />
+      <Route path="/community/post/:postId" element={<RbiProtectedRoute><CommunityPostDetail /></RbiProtectedRoute>} />
       
       <Route path="/official-dashboard" element={<ProtectedRoute><OfficialsDashboard /></ProtectedRoute>} />
       <Route path="/official-profile" element={<ProtectedRoute><OfficialProfile /></ProtectedRoute>} />
@@ -180,35 +181,35 @@ export function AppRoutes() {
       
       <Route path="/admin/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       
-      <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-      <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-      <Route path="/menu" element={<ProtectedRoute><Menu /></ProtectedRoute>} />
-      <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
-      <Route path="/messages/:id" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+      <Route path="/notifications" element={<RbiProtectedRoute><Notifications /></RbiProtectedRoute>} />
+      <Route path="/settings" element={<RbiProtectedRoute><Settings /></RbiProtectedRoute>} />
+      <Route path="/menu" element={<RbiProtectedRoute><Menu /></RbiProtectedRoute>} />
+      <Route path="/messages" element={<RbiProtectedRoute><Messages /></RbiProtectedRoute>} />
+      <Route path="/messages/:id" element={<RbiProtectedRoute><Messages /></RbiProtectedRoute>} />
       
-      <Route path="/services" element={<Services />} />
-      <Route path="/jobs" element={<Jobs />} />
-      <Route path="/jobs/:id" element={<JobDetail />} />
+      <Route path="/services" element={<RbiProtectedRoute><Services /></RbiProtectedRoute>} />
+      <Route path="/jobs" element={<RbiProtectedRoute><Jobs /></RbiProtectedRoute>} />
+      <Route path="/jobs/:id" element={<RbiProtectedRoute><JobDetail /></RbiProtectedRoute>} />
       
-      <Route path="/marketplace" element={<Marketplace />} />
-      <Route path="/marketplace/product/:id" element={<ProductDetail />} />
-      <Route path="/marketplace/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
-      <Route path="/marketplace/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
-      <Route path="/marketplace/order-confirmation" element={<ProtectedRoute><OrderConfirmation /></ProtectedRoute>} />
-      <Route path="/marketplace/my-orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
+      <Route path="/marketplace" element={<RbiProtectedRoute><Marketplace /></RbiProtectedRoute>} />
+      <Route path="/marketplace/product/:id" element={<RbiProtectedRoute><ProductDetail /></RbiProtectedRoute>} />
+      <Route path="/marketplace/cart" element={<RbiProtectedRoute><Cart /></RbiProtectedRoute>} />
+      <Route path="/marketplace/checkout" element={<RbiProtectedRoute><Checkout /></RbiProtectedRoute>} />
+      <Route path="/marketplace/order-confirmation" element={<RbiProtectedRoute><OrderConfirmation /></RbiProtectedRoute>} />
+      <Route path="/marketplace/my-orders" element={<RbiProtectedRoute><MyOrders /></RbiProtectedRoute>} />
       
       <Route path="/admin/media-library" element={<ProtectedRoute><MediaLibraryPage /></ProtectedRoute>} />
       
-      <Route path="/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
+      <Route path="/edit-profile" element={<RbiProtectedRoute><EditProfile /></RbiProtectedRoute>} />
       
       <Route path="/admin/jobs" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
       <Route path="/admin/jobs/all" element={<ProtectedRoute><JobsAllPage /></ProtectedRoute>} />
       <Route path="/admin/jobs/edit/:id" element={<ProtectedRoute><JobEditPage /></ProtectedRoute>} />
       <Route path="/admin/jobs/applications" element={<ProtectedRoute><JobApplicationsPage /></ProtectedRoute>} />
       
-      <Route path="/profile/public/:userId" element={<PublicProfile />} />
-      <Route path="/profile/private" element={<ProtectedRoute><PrivateProfile /></ProtectedRoute>} />
-      <Route path="/profile" element={<ProtectedRoute><PrivateProfile /></ProtectedRoute>} />
+      <Route path="/profile/public/:userId" element={<RbiProtectedRoute><PublicProfile /></RbiProtectedRoute>} />
+      <Route path="/profile/private" element={<RbiProtectedRoute><PrivateProfile /></RbiProtectedRoute>} />
+      <Route path="/profile" element={<RbiProtectedRoute><PrivateProfile /></RbiProtectedRoute>} />
       
       <Route path="*" element={<NotFound />} />
     </Routes>
