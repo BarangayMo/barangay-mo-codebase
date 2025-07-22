@@ -129,12 +129,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     if (role === "official") {
       userRole = 'official';
       redirectPath = '/official-dashboard';
-    } else if (role === "superadmin" || email.includes('admin')) {
+    } else if (role === "superadmin") {
       userRole = 'superadmin';
       redirectPath = '/admin';
-    } else if (email.includes('official')) {
-      userRole = 'official';
-      redirectPath = '/official-dashboard';
     }
     
     console.log('User role determined:', { email, role, userRole, redirectPath });
