@@ -40,13 +40,31 @@ export default function EmailVerification() {
 
     checkVerificationStatus();
 
+    // Listen for auth state changes (verification on other devices)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('📧 Email verification page - Auth state changed:', event, session?.user?.email_confirmed_at);
+      
+      if (session?.user?.email_confirmed_at) {
+        console.log('✅ Email verified on another device, redirecting...');
+        const userRole = session.user.user_metadata?.role || 'resident';
+        const redirectPath = userRole === 'official' ? '/official-dashboard' : userRole === 'superadmin' ? '/admin' : '/resident-home';
+        console.log('🔄 Redirecting verified user to:', redirectPath);
+        navigate(redirectPath, { replace: true });
+      }
+    });
+
     // Countdown timer
     if (countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        subscription.unsubscribe();
+      };
     } else {
       setCanResend(true);
     }
+
+    return () => subscription.unsubscribe();
   }, [countdown, navigate]);
 
   const handleResend = async () => {
