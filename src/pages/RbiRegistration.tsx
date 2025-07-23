@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Progress } from "@/components/ui/progress";
@@ -20,7 +19,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { RbiFormData } from "@/types/rbi";
 import { Json } from "@/integrations/supabase/types";
-import { toast } from "sonner";
 
 // Define step types
 type Step = {
@@ -33,7 +31,7 @@ type Step = {
 
 export default function RbiRegistration() {
   const navigate = useNavigate();
-  const { toast: useToastHook } = useToast();
+  const { toast } = useToast();
   const { user, setRbiCompleted } = useAuth();
   
   const [currentStep, setCurrentStep] = useState(1);
@@ -51,44 +49,24 @@ export default function RbiRegistration() {
     beneficiary: {}
   });
   const [errors, setErrors] = useState<Record<string, any>>({});
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
   
-  // Auto-save function - silent saves to reduce notification spam
+  // Auto-save function
   const autoSave = async (dataToSave: RbiFormData, stepToSave: number) => {
     if (!user?.id) return;
     
     setIsAutoSaving(true);
     try {
-      console.log('💾 Auto-saving form data...', { step: stepToSave, data: dataToSave });
-      
-      // Use upsert with conflict resolution for the unique constraint
       const { error } = await supabase
         .from('rbi_draft_forms')
         .upsert({
           user_id: user.id,
           form_data: dataToSave as unknown as Json,
           last_completed_step: stepToSave
-        }, {
-          onConflict: 'user_id'
         });
         
-      if (error) {
-        console.error('Auto-save error:', error);
-        throw error;
-      }
-      
-      setLastSaved(new Date());
-      console.log('✅ Auto-save successful');
-      // Silent save - no toast notification to avoid spam
+      if (error) throw error;
     } catch (error) {
       console.error("Auto-save failed:", error);
-      // Dismiss any existing toasts before showing error to prevent stacking
-      toast.dismiss();
-      setTimeout(() => {
-        toast.error('Auto-save failed', {
-          description: 'Your progress may not be saved. Please try again.',
-        });
-      }, 100);
     } finally {
       setIsAutoSaving(false);
     }
@@ -111,8 +89,6 @@ export default function RbiRegistration() {
       if (user?.id) {
         setIsLoading(true);
         try {
-          console.log('📥 Loading saved form data...');
-          
           const { data, error } = await supabase
             .from('rbi_draft_forms')
             .select('form_data, last_completed_step')
@@ -120,39 +96,16 @@ export default function RbiRegistration() {
             .single();
             
           if (data && !error) {
-            console.log('✅ Loaded saved data:', data);
             // Cast the JSON data to RbiFormData type
             setFormData(data.form_data as unknown as RbiFormData);
             setCurrentStep(data.last_completed_step || 1);
-            setLastSaved(new Date());
-            
-            // Dismiss any existing toasts before showing new one to prevent stacking
-            toast.dismiss();
-            setTimeout(() => {
-              toast.success('Form Data Loaded', {
-                description: 'Your previously saved information has been loaded.',
-              });
-            }, 100);
-          } else if (error && error.code !== 'PGRST116') {
-            // PGRST116 is "not found" error, which is expected for new users
-            console.error('Error loading saved data:', error);
-            // Dismiss any existing toasts before showing error to prevent stacking
-            toast.dismiss();
-            setTimeout(() => {
-              toast.error('Failed to load saved data', {
-                description: 'Starting with a fresh form.',
-              });
-            }, 100);
+            toast({
+              title: "Form Data Loaded",
+              description: "Your previously saved information has been loaded.",
+            });
           }
         } catch (error) {
           console.error("Error loading saved data:", error);
-          // Dismiss any existing toasts before showing error to prevent stacking
-          toast.dismiss();
-          setTimeout(() => {
-            toast.error('Failed to load saved data', {
-              description: 'Starting with a fresh form.',
-            });
-          }, 100);
         } finally {
           setIsLoading(false);
         }
@@ -160,7 +113,7 @@ export default function RbiRegistration() {
     };
     
     loadSavedData();
-  }, [user]);
+  }, [user, toast]);
   
   // Define steps with descriptions and required fields
   const steps: Step[] = [
@@ -258,8 +211,10 @@ export default function RbiRegistration() {
     if (currentStep < steps.length) {
       // Validate before proceeding
       if (!validateStep()) {
-        toast.error('Validation Error', {
-          description: 'Please fill in all required fields before proceeding.'
+        toast({
+          title: "Validation Error",
+          description: "Please fill in all required fields before proceeding.",
+          variant: "destructive"
         });
         return;
       }
@@ -272,7 +227,7 @@ export default function RbiRegistration() {
         setCurrentStep(currentStep + 1);
         window.scrollTo(0, 0);
         setIsLoading(false);
-      }, 300);
+      }, 500);
     }
   };
   
@@ -286,14 +241,16 @@ export default function RbiRegistration() {
         setCurrentStep(currentStep - 1);
         window.scrollTo(0, 0);
         setIsLoading(false);
-      }, 300);
+      }, 500);
     }
   };
   
   const handleSubmit = async () => {
     if (!user?.id) {
-      toast.error('Authentication Error', {
-        description: 'You must be logged in to submit the form.'
+      toast({
+        title: "Error",
+        description: "You must be logged in to submit the form.",
+        variant: "destructive"
       });
       return;
     }
@@ -301,8 +258,6 @@ export default function RbiRegistration() {
     setIsSubmitting(true);
     
     try {
-      console.log('🚀 Submitting RBI form...', formData);
-      
       const { data, error } = await supabase
         .from('rbi_forms')
         .upsert({
@@ -310,37 +265,26 @@ export default function RbiRegistration() {
           form_data: formData as unknown as Json,
           status: 'submitted',
           barangay_id: formData.address?.barangay || user.barangay || 'Unknown'
-        }, {
-          onConflict: 'user_id'
         })
         .select('rbi_number')
         .single();
         
-      if (error) {
-        console.error('Submission error:', error);
-        throw error;
-      }
-      
-      console.log('✅ Form submitted successfully:', data);
+      if (error) throw error;
       
       // Clean up draft form after successful submission
-      try {
-        await supabase
-          .from('rbi_draft_forms')
-          .delete()
-          .eq('user_id', user.id);
-        console.log('✅ Draft form cleaned up');
-      } catch (cleanupError) {
-        console.warn('Draft cleanup failed:', cleanupError);
-      }
+      await supabase
+        .from('rbi_draft_forms')
+        .delete()
+        .eq('user_id', user.id);
       
       // Update RBI completion status in context
       if (setRbiCompleted) {
         setRbiCompleted(true);
       }
       
-      toast.success('RBI Registration Complete!', {
-        description: `Your RBI form has been successfully submitted with number: ${data.rbi_number}`
+      toast({
+        title: "RBI Registration Complete",
+        description: `Your RBI form has been successfully submitted with number: ${data.rbi_number}`,
       });
       
       navigate("/resident-home", {
@@ -351,8 +295,10 @@ export default function RbiRegistration() {
       });
     } catch (error) {
       console.error("Error submitting RBI form:", error);
-      toast.error('Submission Failed', {
-        description: 'There was an error submitting your form. Please try again.'
+      toast({
+        title: "Submission Failed",
+        description: "There was an error submitting your form. Please try again.",
+        variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
@@ -380,11 +326,6 @@ export default function RbiRegistration() {
                   <div className="flex items-center gap-1 text-xs text-gray-500">
                     <Loader2 className="w-3 h-3 animate-spin" />
                     <span className="hidden sm:inline">Saving...</span>
-                  </div>
-                )}
-                {lastSaved && !isAutoSaving && (
-                  <div className="text-xs text-green-600 hidden sm:block">
-                    Saved {lastSaved.toLocaleTimeString()}
                   </div>
                 )}
               </div>
@@ -415,7 +356,6 @@ export default function RbiRegistration() {
             <Button 
               variant="outline" 
               onClick={handlePrevious}
-              disabled={isAutoSaving}
               className="flex-1 sm:flex-none flex items-center justify-center gap-2 border-blue-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 h-12"
             >
               <ArrowLeft className="w-4 h-4" /> 
@@ -438,7 +378,6 @@ export default function RbiRegistration() {
           {currentStep < steps.length ? (
             <Button 
               onClick={handleNext} 
-              disabled={isAutoSaving}
               className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 h-12"
             >
               <span>Next</span> <ArrowRight className="w-4 h-4" />
@@ -446,7 +385,7 @@ export default function RbiRegistration() {
           ) : (
             <Button 
               onClick={handleSubmit} 
-              disabled={isSubmitting || isAutoSaving}
+              disabled={isSubmitting}
               className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 h-12"
             >
               {isSubmitting ? (
