@@ -56,7 +56,7 @@ export const RbiProtectedRoute = ({ children }: RbiProtectedRouteProps) => {
       // Show toast notification for restricted access
       const message = status === 'not-submitted' 
         ? "Submit your RBI form to access these options"
-        : "Your RBI form is pending approval";
+        : "Waiting for approval";
       
       toast.dismiss(); // Dismiss any existing toasts first
       toast.error("Restricted Access", {

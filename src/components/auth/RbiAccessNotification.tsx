@@ -23,7 +23,7 @@ export const RbiAccessNotification = ({ status }: RbiAccessNotificationProps) =>
         return {
           icon: <Clock className="w-5 h-5" />,
           title: 'RBI Registration Pending',
-          message: 'Your RBI form is pending approval.',
+          message: 'Waiting for approval.',
           bgColor: 'bg-yellow-50',
           borderColor: 'border-yellow-200',
           textColor: 'text-yellow-800',
