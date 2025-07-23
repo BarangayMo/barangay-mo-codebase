@@ -133,7 +133,7 @@ export function AppRoutes() {
       
       {/* Protected routes - require authentication and email verification */}
       <Route path="/resident-home" element={<RbiProtectedRoute><ResidentHome /></RbiProtectedRoute>} />
-      <Route path="/rbi-registration" element={<ProtectedRoute><RbiRegistration /></ProtectedRoute>} />
+      <Route path="/rbi-registration" element={<RbiProtectedRoute><RbiRegistration /></RbiProtectedRoute>} />
       <Route path="/resident-profile" element={<RbiProtectedRoute><ResidentProfile /></RbiProtectedRoute>} />
       <Route path="/community" element={<RbiProtectedRoute><Community /></RbiProtectedRoute>} />
       

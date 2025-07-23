@@ -28,6 +28,18 @@ export const RbiProtectedRoute = ({ children }: RbiProtectedRouteProps) => {
       return;
     }
 
+    // Check if non-resident is trying to access RBI registration
+    if (location.pathname === '/rbi-registration' && userRole !== 'resident') {
+      // Redirect non-residents away from RBI registration
+      const redirectMap = {
+        'superadmin': '/admin',
+        'barangay_official': '/official-dashboard',
+        'staff': '/official-dashboard'
+      };
+      navigate(redirectMap[userRole as keyof typeof redirectMap] || '/login', { replace: true });
+      return;
+    }
+
     // For residents: Allow access but show disclaimers in components for marketplace restrictions
     // No longer redirect for RBI - components will handle access control with disclaimers
   }, [isAuthenticated, isEmailVerified, userRole, rbiCompleted, navigate, session, location.pathname]);
