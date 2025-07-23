@@ -22,60 +22,105 @@ export default function EmailVerification() {
   const [canResend, setCanResend] = useState(false);
   const [countdown, setCountdown] = useState(30);
 
-  useEffect(() => {
-    // Check if user is already verified and redirect if so
-    const checkVerificationStatus = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+  // Check if user is already verified and redirect if so
+  const checkVerificationStatus = async () => {
+    try {
+      console.log('🔄 Forcing session refresh to get latest verification status...');
+      
+      // Force refresh session to get latest state from server
+      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+      
+      if (refreshError) {
+        console.log('⚠️ Session refresh error (may be normal):', refreshError.message);
+      } else {
+        console.log('✅ Session refreshed successfully');
+      }
+      
+      // Now get the fresh session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('❌ Error getting session:', sessionError);
+        return;
+      }
+      
+      console.log('📊 Fresh session data:', {
+        hasUser: !!session?.user,
+        email: session?.user?.email,
+        emailConfirmed: !!session?.user?.email_confirmed_at,
+        confirmationTime: session?.user?.email_confirmed_at
+      });
+      
       if (session?.user?.email_confirmed_at) {
-        console.log('✅ Email already verified, redirecting...');
+        console.log('✅ Email verified! Redirecting user...');
         const userRole = session.user.user_metadata?.role || 'resident';
         const redirectPath = userRole === 'official' ? '/official-dashboard' : userRole === 'superadmin' ? '/admin' : '/resident-home';
-        console.log('🔄 Redirecting verified user to:', redirectPath);
+        console.log('🚀 Redirecting verified user to:', redirectPath);
         navigate(redirectPath, { replace: true });
         return;
       } else if (session?.user) {
         console.log('🚫 Email NOT verified yet for:', session.user.email);
+      } else {
+        console.log('👤 No active session found');
       }
-    };
+    } catch (error) {
+      console.error('💥 Unexpected error in checkVerificationStatus:', error);
+    }
+  };
 
+  // Effect 1: Initial setup and auth state listener
+  useEffect(() => {
+    console.log('🎬 Setting up email verification page...');
+    
+    // Initial check
     checkVerificationStatus();
 
     // Listen for auth state changes (verification on other devices)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('📧 Email verification page - Auth state changed:', event, session?.user?.email_confirmed_at);
+      console.log('📧 Auth state changed:', event, {
+        hasUser: !!session?.user,
+        emailConfirmed: !!session?.user?.email_confirmed_at
+      });
       
       if (session?.user?.email_confirmed_at) {
-        console.log('✅ Email verified on another device, redirecting...');
+        console.log('✅ Email verified via auth state change, redirecting...');
         const userRole = session.user.user_metadata?.role || 'resident';
         const redirectPath = userRole === 'official' ? '/official-dashboard' : userRole === 'superadmin' ? '/admin' : '/resident-home';
-        console.log('🔄 Redirecting verified user to:', redirectPath);
+        console.log('🚀 Redirecting verified user to:', redirectPath);
         navigate(redirectPath, { replace: true });
       }
     });
 
-    // Periodic session checking for cross-device verification detection
-    const sessionCheckInterval = setInterval(async () => {
-      console.log('🔄 Periodic session check for email verification...');
-      await checkVerificationStatus();
-    }, 3000); // Check every 3 seconds
+    return () => {
+      console.log('🧹 Cleaning up auth state listener');
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
 
-    // Countdown timer
+  // Effect 2: Periodic session checking for cross-device verification
+  useEffect(() => {
+    console.log('⏰ Setting up periodic session check (every 3 seconds)');
+    
+    const sessionCheckInterval = setInterval(async () => {
+      console.log('🔄 Periodic session check triggered...');
+      await checkVerificationStatus();
+    }, 3000);
+
+    return () => {
+      console.log('🧹 Cleaning up periodic session check');
+      clearInterval(sessionCheckInterval);
+    };
+  }, [navigate]);
+
+  // Effect 3: Countdown timer for resend button
+  useEffect(() => {
     if (countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-      return () => {
-        clearTimeout(timer);
-        clearInterval(sessionCheckInterval);
-        subscription.unsubscribe();
-      };
+      return () => clearTimeout(timer);
     } else {
       setCanResend(true);
     }
-
-    return () => {
-      clearInterval(sessionCheckInterval);
-      subscription.unsubscribe();
-    };
-  }, [countdown, navigate]);
+  }, [countdown]);
 
   const handleResend = async () => {
     if (!email) {
