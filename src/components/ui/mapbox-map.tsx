@@ -34,91 +34,90 @@ export const MapboxMap = ({
 
   const initializeMapInstance = async (attempt: number = 1): Promise<void> => {
     if (!mapContainer.current) {
-      throw new Error('Map container not found');
+      console.error('❌ Map container not found');
+      return;
     }
 
     try {
       setLoading(true);
       setError(null);
-      console.log(`🗺️ MapboxMap: Initializing map (attempt ${attempt}) for location:`, location);
+      console.log(`🗺️ MapboxMap: Initializing map (attempt ${attempt}) for location: ${location}`);
 
-      // Initialize Mapbox with fallback API key
       await initializeMapbox();
-      console.log('🗺️ MapboxMap: Mapbox initialized successfully');
+      console.log('🗺️ MapboxMap: Mapbox initialized');
 
-      // Geocode the location
-      console.log('🌍 MapboxMap: Starting geocoding for:', location);
-      const geocodeResult = await geocodeAddress(location);
-      
-      if (!geocodeResult) {
-        throw new Error(`Location "${location}" not found`);
+      // Try geocoding with timeout fallback
+      let geocodeResult = null;
+
+      try {
+        geocodeResult = await geocodeAddress(location);
+        if (!geocodeResult) {
+          console.warn(`⚠️ Geocode failed for "${location}", using fallback coordinates`);
+        }
+      } catch (err) {
+        console.warn(`⚠️ Geocoding threw an error, using fallback`, err);
       }
 
-      console.log('📍 MapboxMap: Coordinates found:', geocodeResult);
+      const center: [number, number] = geocodeResult
+        ? [geocodeResult.lng, geocodeResult.lat]
+        : [121.0244, 14.5547]; // fallback to Manila
 
-      // Create map with proper cleanup
-      console.log('🗺️ MapboxMap: Creating map instance...');
+      console.log('📍 MapboxMap: Using center:', center);
+
       const map = await createMap(mapContainer.current, {
-        center: [geocodeResult.lng, geocodeResult.lat],
+        center,
         zoom,
         style: 'mapbox://styles/mapbox/streets-v11'
       });
 
       mapInstance.current = map;
 
-      // Ensure map loads properly
       map.on('load', () => {
-        console.log('✅ Map loaded and ready');
-        map.resize(); // Ensure proper sizing
+        console.log('✅ Map loaded');
+        map.resize();
         setLoading(false);
       });
 
       map.on('error', (e) => {
-        console.error('❌ Map error:', e);
+        console.error('❌ Map load error:', e);
         throw new Error('Map failed to load properly');
       });
 
-      // Create marker
-      const marker = createMarker(map, [geocodeResult.lng, geocodeResult.lat], {
+      const marker = createMarker(map, center, {
         color: '#3b82f6'
       });
-
       markerInstance.current = marker;
 
-      // Create popup if enabled
       if (showPopup) {
         const popup = createPopup(`
           <div class="p-3">
             <div class="font-semibold text-sm text-gray-800 mb-1">${location}</div>
-            <div class="text-xs text-gray-600">${geocodeResult.place_name}</div>
+            <div class="text-xs text-gray-600">${geocodeResult?.place_name || 'Unknown address'}</div>
           </div>
         `);
-
         popupInstance.current = popup;
         marker.setPopup(popup);
         popup.addTo(map);
       }
 
-      // Add click listener if callback provided
       if (onLocationClick) {
         marker.getElement().addEventListener('click', () => {
-          onLocationClick(geocodeResult.lng, geocodeResult.lat);
+          onLocationClick(center[0], center[1]);
         });
-
         map.on('click', (e) => {
           onLocationClick(e.lngLat.lng, e.lngLat.lat);
         });
       }
 
-      console.log('✅ MapboxMap: Map initialization completed successfully');
+      console.log('✅ MapboxMap: Finished');
       setError(null);
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error(`❌ MapboxMap: Initialization failed (attempt ${attempt}):`, error);
-      
+      console.error(`❌ MapboxMap: Initialization failed (attempt ${attempt}):`, errorMessage);
+
       if (attempt < maxRetries) {
-        console.log(`🔄 MapboxMap: Retrying in 2 seconds... (attempt ${attempt + 1}/${maxRetries})`);
+        console.log(`🔄 Retrying in 2s (attempt ${attempt + 1}/${maxRetries})`);
         setTimeout(() => {
           setRetryCount(attempt);
           initializeMapInstance(attempt + 1);
@@ -135,17 +134,10 @@ export const MapboxMap = ({
       initializeMapInstance();
     }
 
-    // Cleanup function
     return () => {
-      if (popupInstance.current) {
-        popupInstance.current.remove();
-      }
-      if (markerInstance.current) {
-        markerInstance.current.remove();
-      }
-      if (mapInstance.current) {
-        mapInstance.current.remove();
-      }
+      popupInstance.current?.remove();
+      markerInstance.current?.remove();
+      mapInstance.current?.remove();
     };
   }, [location]);
 
@@ -207,16 +199,14 @@ export const MapboxMap = ({
 
   return (
     <div 
-      className={`relative border border-border rounded-lg overflow-hidden shadow-sm ${className}`}
+      className={`relative border border-border rounded-lg overflow-hidden ${className}`}
       style={{ height }}
     >
       <div 
         ref={mapContainer} 
-        className="w-full h-full rounded-lg"
+        className="w-full h-full"
         style={{ minHeight: height }}
       />
-      {/* Map overlay for better styling */}
-      <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-transparent via-transparent to-primary/5 rounded-lg" />
     </div>
   );
 };
