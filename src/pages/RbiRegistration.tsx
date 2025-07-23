@@ -61,12 +61,15 @@ export default function RbiRegistration() {
     try {
       console.log('💾 Auto-saving form data...', { step: stepToSave, data: dataToSave });
       
+      // Use upsert with conflict resolution for the unique constraint
       const { error } = await supabase
         .from('rbi_draft_forms')
         .upsert({
           user_id: user.id,
           form_data: dataToSave as unknown as Json,
           last_completed_step: stepToSave
+        }, {
+          onConflict: 'user_id'
         });
         
       if (error) {
@@ -79,10 +82,13 @@ export default function RbiRegistration() {
       // Silent save - no toast notification to avoid spam
     } catch (error) {
       console.error("Auto-save failed:", error);
-      // Only show error notifications
-      toast.error('Auto-save failed', {
-        description: 'Your progress may not be saved. Please try again.',
-      });
+      // Dismiss any existing toasts before showing error to prevent stacking
+      toast.dismiss();
+      setTimeout(() => {
+        toast.error('Auto-save failed', {
+          description: 'Your progress may not be saved. Please try again.',
+        });
+      }, 100);
     } finally {
       setIsAutoSaving(false);
     }

@@ -32,7 +32,7 @@ export const FloatingInput = React.forwardRef<HTMLInputElement, FloatingInputPro
             type={type}
             aria-invalid={!!error}
             className={cn(
-              "h-14 transition-all bg-background px-4 pt-5 pb-2 w-full rounded-md border",
+              "h-14 transition-all bg-background px-4 pt-6 pb-2 w-full rounded-md border",
               icon && "pl-10",
               error ? "border-destructive" : "border-input",
               className
@@ -51,10 +51,10 @@ export const FloatingInput = React.forwardRef<HTMLInputElement, FloatingInputPro
           <Label
             htmlFor={id}
             className={cn(
-              "absolute pointer-events-none transition-all duration-200",
+              "absolute pointer-events-none transition-all duration-200 z-20",
               isActive
-                ? cn("text-xs top-1.5", icon ? "left-10" : "left-4")
-                : cn("text-base top-3.5", icon ? "left-10" : "left-4"),
+                ? cn("text-xs top-2", icon ? "left-10" : "left-4", "bg-background px-1 -ml-1")
+                : cn("text-sm top-4", icon ? "left-10" : "left-4"),
               error ? "text-destructive" : "text-muted-foreground",
               isActive && !error && isFocused && "text-primary"
             )}
