@@ -126,21 +126,33 @@ export default function RbiRegistration() {
             setCurrentStep(data.last_completed_step || 1);
             setLastSaved(new Date());
             
-            toast.success('Form Data Loaded', {
-              description: 'Your previously saved information has been loaded.',
-            });
+            // Dismiss any existing toasts before showing new one to prevent stacking
+            toast.dismiss();
+            setTimeout(() => {
+              toast.success('Form Data Loaded', {
+                description: 'Your previously saved information has been loaded.',
+              });
+            }, 100);
           } else if (error && error.code !== 'PGRST116') {
             // PGRST116 is "not found" error, which is expected for new users
             console.error('Error loading saved data:', error);
-            toast.error('Failed to load saved data', {
-              description: 'Starting with a fresh form.',
-            });
+            // Dismiss any existing toasts before showing error to prevent stacking
+            toast.dismiss();
+            setTimeout(() => {
+              toast.error('Failed to load saved data', {
+                description: 'Starting with a fresh form.',
+              });
+            }, 100);
           }
         } catch (error) {
           console.error("Error loading saved data:", error);
-          toast.error('Failed to load saved data', {
-            description: 'Starting with a fresh form.',
-          });
+          // Dismiss any existing toasts before showing error to prevent stacking
+          toast.dismiss();
+          setTimeout(() => {
+            toast.error('Failed to load saved data', {
+              description: 'Starting with a fresh form.',
+            });
+          }, 100);
         } finally {
           setIsLoading(false);
         }
