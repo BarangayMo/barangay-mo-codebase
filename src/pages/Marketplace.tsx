@@ -130,30 +130,44 @@ export default function Marketplace() {
         
         <MarketHero />
         
-        <div className="mt-6 mb-8 flex items-center gap-4 overflow-x-auto pb-2 scrollbar-none">
-          <FilterButton />
-          {isLoadingCategories ? (
-            Array.from({ length: 5 }).map((_, index) => <Skeleton key={index} className="h-10 w-24 rounded-full" />)
-          ) : categoriesError ? (
-            <div>
-              <p className="text-red-500">Error loading categories.</p>
-              <p className="text-xs text-gray-500">Error: {categoriesError.message}</p>
+        <div className="mt-6 mb-8">
+          {/* Mobile Filter Layout */}
+          <div className="md:hidden mb-4">
+            <FilterButton />
+          </div>
+          
+          {/* Category filters - responsive */}
+          <div className="flex items-center gap-2 md:gap-4 overflow-x-auto pb-2 scrollbar-none">
+            {/* Desktop Filter Button */}
+            <div className="hidden md:block flex-shrink-0">
+              <FilterButton />
             </div>
-          ) : (
-            displayCategories.map((cat) => (
-              <button
-                key={cat.id}
-                className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${
-                  activeFilter === cat.name
-                    ? "bg-resident text-white font-medium"
-                    : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                }`}
-                onClick={() => setActiveFilter(cat.name)}
-              >
-                {cat.name}
-              </button>
-            ))
-          )}
+            
+            {isLoadingCategories ? (
+              Array.from({ length: 5 }).map((_, index) => 
+                <Skeleton key={index} className="h-8 md:h-10 w-16 md:w-24 rounded-full flex-shrink-0" />
+              )
+            ) : categoriesError ? (
+              <div className="text-center w-full">
+                <p className="text-red-500 text-sm">Error loading categories.</p>
+                <p className="text-xs text-gray-500">Error: {categoriesError.message}</p>
+              </div>
+            ) : (
+              displayCategories.map((cat) => (
+                <button
+                  key={cat.id}
+                  className={`px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm whitespace-nowrap flex-shrink-0 transition-colors ${
+                    activeFilter === cat.name
+                      ? "bg-resident text-white font-medium"
+                      : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                  }`}
+                  onClick={() => setActiveFilter(cat.name)}
+                >
+                  {cat.name}
+                </button>
+              ))
+            )}
+          </div>
         </div>
 
         {isLoadingProducts ? (

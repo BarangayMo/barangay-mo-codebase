@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
+import { Button } from "@/components/ui/button";
 import { RoleButton } from "@/components/ui/role-button";
 import { ShoppingBag } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -327,7 +328,17 @@ export default function Checkout() {
         {/* Custom Header */}
         <header className="py-4 px-4 sm:px-6 md:px-12 lg:px-24 bg-white border-b">
           <div className="max-w-7xl mx-auto flex justify-between items-center">
-            <Link to="/marketplace" className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 mx-0 px-0">Checkout</Link>
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('/marketplace')}
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+              >
+                ← Back
+              </Button>
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900">Checkout</h1>
+            </div>
             <Link to="/marketplace/cart" className="relative">
               <ShoppingBag className="h-6 w-6 text-gray-500 hover:text-gray-700" />
               {cartItems.length > 0 && (

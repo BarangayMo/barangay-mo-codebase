@@ -66,6 +66,7 @@ import Cart from "@/pages/marketplace/Cart";
 import Checkout from "@/pages/marketplace/Checkout";
 import OrderConfirmation from "@/pages/marketplace/OrderConfirmation";
 import MyOrders from "@/pages/marketplace/MyOrders";
+import CategoryPage from "@/pages/marketplace/CategoryPage";
 
 // Import the EditProfile component
 import EditProfile from "./pages/EditProfile";
@@ -192,6 +193,7 @@ export function AppRoutes() {
       <Route path="/jobs/:id" element={<RbiProtectedRoute><JobDetail /></RbiProtectedRoute>} />
       
       <Route path="/marketplace" element={<RbiProtectedRoute><Marketplace /></RbiProtectedRoute>} />
+      <Route path="/marketplace/category/:categorySlug" element={<RbiProtectedRoute><CategoryPage /></RbiProtectedRoute>} />
       <Route path="/marketplace/product/:id" element={<RbiProtectedRoute><ProductDetail /></RbiProtectedRoute>} />
       <Route path="/marketplace/cart" element={<RbiProtectedRoute><Cart /></RbiProtectedRoute>} />
       <Route path="/marketplace/checkout" element={<RbiProtectedRoute><Checkout /></RbiProtectedRoute>} />
