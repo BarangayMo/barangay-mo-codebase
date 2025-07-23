@@ -1,5 +1,4 @@
 
-import { AuthProvider } from "./contexts/AuthContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { ThemeProvider } from "./components/theme-provider";
 import { AppRoutes } from "./AppRoutes"; 
@@ -44,14 +43,12 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
         <LanguageProvider>
-          <AuthProvider>
-            <FaviconManager />
-            <ScrollToTop />
-            <AppRoutes />
-            <ShadcnToaster />
-            <SonnerToaster />
-            <SupabaseWarning />
-          </AuthProvider>
+          <FaviconManager />
+          <ScrollToTop />
+          <AppRoutes />
+          <ShadcnToaster />
+          <SonnerToaster />
+          <SupabaseWarning />
         </LanguageProvider>
       </ThemeProvider>
     </QueryClientProvider>
