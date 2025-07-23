@@ -1,37 +1,26 @@
-import { getMapboxApiKey } from './apiKeys';
 import mapboxgl from 'mapbox-gl';
+
+// Use the provided API key directly
+const MAPBOX_API_KEY = 'pk.eyJ1IjoiYmFyYW5nYXltbyIsImEiOiJjbWJxZHBzenAwMmdrMmtzZmloemphb284In0.U22j37ppYT1IMyC2lXVBzw';
 
 let isMapboxInitialized = false;
 
 /**
  * Initialize Mapbox with API key
  */
-export async function initializeMapbox(): Promise<void> {
+export function initializeMapbox(): void {
   if (isMapboxInitialized) return;
 
-  try {
-    let apiKey = await getMapboxApiKey();
-
-    if (!apiKey) {
-      console.warn('⚠️ Mapbox API key not found in database, using fallback key');
-      apiKey = 'pk.eyJ1IjoiYmFyYW5nYXltbyIsImEiOiJjbWJxZHBzenAwMmdrMmtzZmloemphb284In0.U22j37ppYT1IMyC2lXVBzw';
-    }
-
-    mapboxgl.accessToken = apiKey;
-    isMapboxInitialized = true;
-
-    console.info('🗺️ Mapbox initialized');
-  } catch (error) {
-    console.error('❌ Failed to initialize Mapbox:', error);
-    throw error;
-  }
+  mapboxgl.accessToken = MAPBOX_API_KEY;
+  isMapboxInitialized = true;
+  console.info('🗺️ Mapbox initialized');
 }
 
 /**
  * Geocode an address using Mapbox Geocoding API
  */
 export async function geocodeAddress(address: string): Promise<{ lng: number; lat: number; place_name: string } | null> {
-  await initializeMapbox();
+  initializeMapbox();
 
   try {
     const response = await fetch(
@@ -60,7 +49,7 @@ export async function geocodeAddress(address: string): Promise<{ lng: number; la
  * Reverse geocode coordinates to get address information
  */
 export async function reverseGeocode(lng: number, lat: number): Promise<{ address: string; barangay?: string } | null> {
-  await initializeMapbox();
+  initializeMapbox();
 
   try {
     const response = await fetch(
@@ -97,15 +86,15 @@ export async function reverseGeocode(lng: number, lat: number): Promise<{ addres
 /**
  * Create a map instance with default styling
  */
-export async function createMap(
+export function createMap(
   container: HTMLElement,
   options: {
     center: [number, number];
     zoom?: number;
     style?: string;
   }
-): Promise<mapboxgl.Map> {
-  await initializeMapbox();
+): mapboxgl.Map {
+  initializeMapbox();
 
   const map = new mapboxgl.Map({
     container,

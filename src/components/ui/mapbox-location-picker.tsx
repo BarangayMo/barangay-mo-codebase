@@ -39,20 +39,9 @@ export const MapboxLocationPicker = ({
   } | null>(null);
 
   const initializeMap = async () => {
-    // Add a small delay to ensure DOM is ready
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
     if (!mapContainer.current) {
-      console.error('⚠️ Map container not found, retrying...');
-      // Retry after a short delay
-      setTimeout(() => {
-        if (mapContainer.current) {
-          initializeMap();
-        } else {
-          setError('Map container could not be found');
-          setLoading(false);
-        }
-      }, 500);
+      setError('Map container not found');
+      setLoading(false);
       return;
     }
 
@@ -61,16 +50,14 @@ export const MapboxLocationPicker = ({
       setError(null);
 
       console.log('🗺️ Initializing Mapbox...');
-      await initializeMapbox();
+      initializeMapbox();
 
-      const initialCoords = await geocodeAddress(initialLocation);
-      const center: [number, number] = initialCoords 
-        ? [initialCoords.lng, initialCoords.lat]
-        : [121.0244, 14.5547];
+      // Set default center to Philippines
+      const center: [number, number] = [121.0244, 14.5547];
 
       console.log('📍 Initial map center:', center);
 
-      const map = await createMap(mapContainer.current, {
+      const map = createMap(mapContainer.current, {
         center,
         zoom: 6
       });
@@ -79,7 +66,6 @@ export const MapboxLocationPicker = ({
 
       map.on('load', () => {
         console.log('✅ Map loaded and ready');
-        map.resize();
         setLoading(false);
       });
 
@@ -89,9 +75,9 @@ export const MapboxLocationPicker = ({
         setLoading(false);
       });
 
-      map.on('click', async (e) => {
+      map.on('click', (e) => {
         console.log('🗺️ Map clicked:', e.lngLat);
-        await handleMapClick(e.lngLat.lng, e.lngLat.lat);
+        handleMapClick(e.lngLat.lng, e.lngLat.lat);
       });
 
     } catch (err) {
@@ -101,7 +87,7 @@ export const MapboxLocationPicker = ({
     }
   };
 
-  const handleMapClick = async (lng: number, lat: number) => {
+  const handleMapClick = (lng: number, lat: number) => {
     if (!mapInstance.current) return;
 
     try {
@@ -116,12 +102,12 @@ export const MapboxLocationPicker = ({
 
       markerInstance.current = marker;
 
-      marker.on('dragend', async () => {
+      marker.on('dragend', () => {
         const lngLat = marker.getLngLat();
-        await updateLocation(lngLat.lng, lngLat.lat);
+        updateLocation(lngLat.lng, lngLat.lat);
       });
 
-      await updateLocation(lng, lat);
+      updateLocation(lng, lat);
     } catch (error) {
       console.error('❌ Error on map click:', error);
       toast.error('Failed to get location information');
@@ -169,7 +155,7 @@ export const MapboxLocationPicker = ({
           duration: 2000
         });
 
-        await handleMapClick(result.lng, result.lat);
+        handleMapClick(result.lng, result.lat);
 
         toast.success('Location found!');
       } else {
@@ -193,15 +179,12 @@ export const MapboxLocationPicker = ({
   };
 
   useEffect(() => {
-    // Use a timeout to ensure the component is fully mounted
-    const timeoutId = setTimeout(() => {
-      if (mapContainer.current) {
-        initializeMap();
-      }
-    }, 50);
+    // Initialize map when component mounts
+    if (mapContainer.current) {
+      initializeMap();
+    }
 
     return () => {
-      clearTimeout(timeoutId);
       console.log('🧹 Cleaning up MapboxLocationPicker...');
       if (markerInstance.current) {
         markerInstance.current.remove();
