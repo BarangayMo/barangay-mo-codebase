@@ -32,7 +32,8 @@ export function FloatingSelect({
   disabled,
 }: FloatingSelectProps) {
   const [isFocused, setIsFocused] = useState(false);
-  const isActive = isFocused || value || defaultValue;
+  const isActive = isFocused || (!!value && value !== "") || (!!defaultValue && defaultValue !== "");
+
   
   return (
     <div className="relative">
@@ -51,15 +52,14 @@ export function FloatingSelect({
           <SelectTrigger
             id={id}
             className={cn(
-              "h-14 transition-all bg-background w-full border",
+              "h-14 transition-all bg-background w-full border pt-4",
               icon && "pl-10",
               error ? "border-destructive" : "border-input",
               className
             )}
             disabled={disabled}
           >
-            <SelectValue placeholder={placeholder || label} />
-
+            <SelectValue placeholder={placeholder} />
           </SelectTrigger>
           <SelectContent>{children}</SelectContent>
         </Select>
