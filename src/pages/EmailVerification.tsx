@@ -46,7 +46,7 @@ export default function EmailVerification() {
         type: 'signup',
         email: email,
         options: {
-          emailRedirectTo: `${window.location.origin}/email-confirmation`
+          emailRedirectTo: `${window.location.origin}/email-verification`
         }
       });
 

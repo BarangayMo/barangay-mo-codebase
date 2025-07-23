@@ -364,7 +364,7 @@ export default function RbiRegistration() {
       
       let submitData;
       if (existingFormId) {
-        // Update existing form
+        // Update existing form with proper headers
         const { data, error } = await supabase
           .from('rbi_forms')
           .update({
@@ -381,16 +381,17 @@ export default function RbiRegistration() {
         if (error) throw error;
         submitData = data;
       } else {
-        // Create new form
+        // Create new form with proper headers
         const { data, error } = await supabase
           .from('rbi_forms')
-          .insert({
+          .insert([{
             id: crypto.randomUUID(), // Ensure unique ID
             user_id: user.id,
             form_data: formData as unknown as Json,
             status: 'submitted',
-            barangay_id: formData.address?.barangay || user.barangay || 'Unknown'
-          })
+            barangay_id: formData.address?.barangay || user.barangay || 'Unknown',
+            submitted_at: new Date().toISOString()
+          }])
           .select('id, rbi_number, status')
           .single();
           

@@ -360,7 +360,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         password,
         options: {
           data: metaData,
-          emailRedirectTo: `${window.location.origin}/email-confirmation`
+          emailRedirectTo: `${window.location.origin}/email-verification`
         }
       });
 

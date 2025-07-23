@@ -135,9 +135,12 @@ export const EmailConfirmationHandler = () => {
             setStatus('success');
             setMessage('Email confirmed successfully! Redirecting to your dashboard...');
             
-            setTimeout(() => {
+            // Force auth context refresh by triggering auth state change
+            setTimeout(async () => {
+              // Refresh the session to ensure auth context is updated
+              await supabase.auth.refreshSession();
               navigate(redirectPath, { replace: true });
-            }, 2000);
+            }, 1500);
           } else {
             setStatus('error');
             setMessage('Authentication failed. Please try registering again.');
@@ -212,7 +215,7 @@ export const EmailConfirmationHandler = () => {
         type: 'signup',
         email: userEmail,
         options: {
-          emailRedirectTo: `${window.location.origin}/email-confirmation`
+          emailRedirectTo: `${window.location.origin}/email-verification`
         }
       });
 
