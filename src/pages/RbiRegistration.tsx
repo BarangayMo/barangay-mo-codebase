@@ -305,11 +305,13 @@ export default function RbiRegistration() {
       
       const { data, error } = await supabase
         .from('rbi_forms')
-        .insert({
+        .upsert({
           user_id: user.id,
           form_data: formData as unknown as Json,
           status: 'submitted',
           barangay_id: formData.address?.barangay || user.barangay || 'Unknown'
+        }, {
+          onConflict: 'user_id'
         })
         .select('rbi_number')
         .single();
