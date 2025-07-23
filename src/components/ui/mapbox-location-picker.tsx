@@ -39,8 +39,20 @@ export const MapboxLocationPicker = ({
   } | null>(null);
 
   const initializeMap = async () => {
+    // Add a small delay to ensure DOM is ready
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     if (!mapContainer.current) {
-      console.error('⚠️ Map container not found');
+      console.error('⚠️ Map container not found, retrying...');
+      // Retry after a short delay
+      setTimeout(() => {
+        if (mapContainer.current) {
+          initializeMap();
+        } else {
+          setError('Map container could not be found');
+          setLoading(false);
+        }
+      }, 500);
       return;
     }
 
@@ -181,9 +193,15 @@ export const MapboxLocationPicker = ({
   };
 
   useEffect(() => {
-    initializeMap();
+    // Use a timeout to ensure the component is fully mounted
+    const timeoutId = setTimeout(() => {
+      if (mapContainer.current) {
+        initializeMap();
+      }
+    }, 50);
 
     return () => {
+      clearTimeout(timeoutId);
       console.log('🧹 Cleaning up MapboxLocationPicker...');
       if (markerInstance.current) {
         markerInstance.current.remove();
