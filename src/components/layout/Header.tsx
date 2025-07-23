@@ -18,6 +18,7 @@ import { NotificationDropdown } from "@/components/notifications/NotificationDro
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const Header = () => {
   const {
@@ -191,14 +192,16 @@ export const Header = () => {
                           icon: MessageSquare,
                           href: "/messages"
                         }, {
-                          name: "Services",
-                          icon: Hospital,
-                          href: "/services"
-                        }, {
-                          name: "Marketplace",
-                          icon: ShoppingBag,
-                          href: "/marketplace"
-                        }, {
+                        name: "Services",
+                        icon: Hospital,
+                        href: "/services",
+                        restricted: true
+                      }, {
+                        name: "Marketplace",
+                        icon: ShoppingBag,
+                        href: "/marketplace",
+                        restricted: true
+                      }, {
                           name: "Settings",
                           icon: Settings,
                           href: "/settings"
@@ -229,10 +232,31 @@ export const Header = () => {
                         href: "/contact"
                       }];
                     }
-                  })().map((item, index) => <Link key={index} to={item.href} className={`flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer ${item.active ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50 text-gray-700'}`} onClick={() => setIsMobileMenuOpen(false)}>
+                  })().map((item, index) => {
+                    const isRestricted = item.restricted && userRole === 'resident' && !hasRbiAccess;
+                    
+                    return (
+                      <Link 
+                        key={index} 
+                        to={isRestricted ? "#" : item.href} 
+                        className={`flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer ${item.active ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50 text-gray-700'} ${isRestricted ? 'opacity-60' : ''}`} 
+                        onClick={(e) => {
+                          if (isRestricted) {
+                            e.preventDefault();
+                            toast.error("Restricted Access", {
+                              description: "Submit your RBI form to access these options",
+                              duration: 4000,
+                            });
+                            return;
+                          }
+                          setIsMobileMenuOpen(false);
+                        }}
+                      >
                         <item.icon className={`h-5 w-5 ${item.active ? 'text-blue-600' : 'text-blue-500'}`} />
                         <span className="text-sm font-medium">{item.name}</span>
-                      </Link>)}
+                      </Link>
+                    );
+                  })}
                   </div>
                 </div>
 

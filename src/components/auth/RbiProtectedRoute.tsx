@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useRbiStatus } from "@/hooks/use-rbi-status";
 import { RbiAccessNotification } from "./RbiAccessNotification";
+import { toast } from "sonner";
 
 interface RbiProtectedRouteProps {
   children: React.ReactNode;
@@ -52,7 +53,18 @@ export const RbiProtectedRoute = ({ children }: RbiProtectedRouteProps) => {
     );
 
     if (userRole === 'resident' && isRestrictedRoute && !hasAccess) {
-      // Allow access to show the notification, but the content will be restricted
+      // Show toast notification for restricted access
+      const message = status === 'not-submitted' 
+        ? "Submit your RBI form to access these options"
+        : "Your RBI form is pending approval";
+      
+      toast.error("Restricted Access", {
+        description: message,
+        duration: 4000,
+      });
+      
+      // Navigate back to resident home
+      navigate('/resident-home', { replace: true });
       return;
     }
   }, [isAuthenticated, isEmailVerified, userRole, hasAccess, navigate, session, location.pathname]);

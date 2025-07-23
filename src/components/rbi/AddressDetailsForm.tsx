@@ -1,8 +1,10 @@
 
-import { Home } from "lucide-react";
+import { Home, MapPin } from "lucide-react";
 import { FloatingInput } from "@/components/ui/floating-input";
 import { FloatingSelect } from "@/components/ui/floating-select";
 import { SelectItem } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { MapLocationModal } from "@/components/layout/header/MapLocationModal";
 import { useState } from "react";
 import { RbiFormComponentProps } from "@/types/rbi";
 
@@ -22,6 +24,12 @@ const AddressDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiFor
         address: { ...prev.address, [field]: null }
       }));
     }
+  };
+
+  const handleLocationSelected = (location: { barangay: string; coordinates: { lat: number; lng: number } }) => {
+    setSelectedBarangay(location.barangay);
+    handleChange("barangay", location.barangay);
+    handleChange("coordinates", JSON.stringify(location.coordinates));
   };
 
   return (
@@ -80,19 +88,30 @@ const AddressDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiFor
           onChange={(e) => handleChange("zone", e.target.value)}
         />
         
-        <FloatingInput 
-          id="barangay" 
-          label="Barangay" 
-          placeholder=" " 
-          className="focus-visible:ring-blue-500 text-sm sm:text-base"
-          value={formData?.address?.barangay || ""}
-          onChange={(e) => {
-            const value = e.target.value;
-            setSelectedBarangay(value);
-            handleChange("barangay", value);
-          }}
-          error={errors?.address?.barangay}
-        />
+        <div className="space-y-3">
+          <FloatingInput 
+            id="barangay" 
+            label="Barangay" 
+            placeholder=" " 
+            className="focus-visible:ring-blue-500 text-sm sm:text-base"
+            value={formData?.address?.barangay || ""}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSelectedBarangay(value);
+              handleChange("barangay", value);
+            }}
+            error={errors?.address?.barangay}
+          />
+          
+          <div className="flex justify-center">
+            <MapLocationModal onLocationSelected={handleLocationSelected}>
+              <Button type="button" variant="outline" size="sm" className="w-full max-w-xs">
+                <MapPin className="h-4 w-4 mr-2" />
+                Select your marker on map (Optional)
+              </Button>
+            </MapLocationModal>
+          </div>
+        </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-5">
           <div></div>

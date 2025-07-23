@@ -7,14 +7,17 @@ import { Helmet } from "react-helmet";
 import { useAuth } from "@/contexts/AuthContext";
 import { useResidentProfile } from "@/hooks/use-resident-profile";
 import { useRbiForms } from "@/hooks/use-rbi-forms";
+import { useRbiAccess } from "@/hooks/use-rbi-access";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 export default function ResidentHome() {
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const { profile, isLoading } = useResidentProfile();
   const { rbiForms, isLoading: rbiLoading } = useRbiForms();
+  const { hasRbiAccess } = useRbiAccess();
   
   const firstName = profile?.first_name || user?.firstName || "Resident";
   const rbiNumber = profile?.settings?.rbi_number || "Complete RBI to get number";
@@ -43,6 +46,18 @@ export default function ResidentHome() {
     { icon: Briefcase, label: "Jobs", path: "/jobs" },
     { icon: FileText, label: "Documents", path: "/services/documents" },
   ];
+
+  const handleQuickActionClick = (path: string, e: React.MouseEvent) => {
+    if (!hasRbiAccess && (path.includes('/marketplace') || path.includes('/jobs') || path.includes('/services'))) {
+      e.preventDefault();
+      toast.error("Restricted Access", {
+        description: "Submit your RBI form to access these options",
+        duration: 4000,
+      });
+      return false;
+    }
+    return true;
+  };
 
   return (
     <Layout>
@@ -180,6 +195,7 @@ export default function ResidentHome() {
                   key={index}
                   to={action.path} 
                   className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/20 backdrop-blur-lg py-5 hover:bg-white/40 transition-all aspect-square"
+                  onClick={(e) => handleQuickActionClick(action.path, e)}
                 >
                   <action.icon className="text-white h-7 w-7" />
                   <span className="text-white text-sm font-medium text-center px-2">{action.label}</span>
