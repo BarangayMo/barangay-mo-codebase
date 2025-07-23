@@ -191,12 +191,12 @@ export function AppRoutes() {
       <Route path="/jobs" element={<RbiProtectedRoute><Jobs /></RbiProtectedRoute>} />
       <Route path="/jobs/:id" element={<RbiProtectedRoute><JobDetail /></RbiProtectedRoute>} />
       
-      <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
-      <Route path="/marketplace/product/:id" element={<ProtectedRoute><ProductDetail /></ProtectedRoute>} />
-      <Route path="/marketplace/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
-      <Route path="/marketplace/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
-      <Route path="/marketplace/order-confirmation" element={<ProtectedRoute><OrderConfirmation /></ProtectedRoute>} />
-      <Route path="/marketplace/my-orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
+      <Route path="/marketplace" element={<RbiProtectedRoute><Marketplace /></RbiProtectedRoute>} />
+      <Route path="/marketplace/product/:id" element={<RbiProtectedRoute><ProductDetail /></RbiProtectedRoute>} />
+      <Route path="/marketplace/cart" element={<RbiProtectedRoute><Cart /></RbiProtectedRoute>} />
+      <Route path="/marketplace/checkout" element={<RbiProtectedRoute><Checkout /></RbiProtectedRoute>} />
+      <Route path="/marketplace/order-confirmation" element={<RbiProtectedRoute><OrderConfirmation /></RbiProtectedRoute>} />
+      <Route path="/marketplace/my-orders" element={<RbiProtectedRoute><MyOrders /></RbiProtectedRoute>} />
       
       <Route path="/admin/media-library" element={<ProtectedRoute><MediaLibraryPage /></ProtectedRoute>} />
       

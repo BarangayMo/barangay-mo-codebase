@@ -10,6 +10,7 @@ import { ProfileMenu } from "./ProfileMenu";
 import { LanguageSelector } from "./LanguageSelector";
 import { useCartSummary } from "@/hooks/useCartSummary";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useRbiAccess } from "@/hooks/use-rbi-access";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { CartDrawerContent } from "@/components/cart/CartDrawerContent";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -33,6 +34,7 @@ export const Header = () => {
   const {
     unreadCount
   } = useNotifications();
+  const { hasRbiAccess } = useRbiAccess();
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -69,7 +71,7 @@ export const Header = () => {
     logout();
     setIsMobileMenuOpen(false);
   };
-  const showCartIcon = location.pathname.startsWith('/marketplace') || location.pathname.startsWith('/resident-home');
+  const showCartIcon = (location.pathname.startsWith('/marketplace') || location.pathname.startsWith('/resident-home')) && (userRole !== 'resident' || hasRbiAccess);
 
   // Consistent mobile header for all users
   if (isMobile) {
