@@ -58,6 +58,7 @@ export const RbiProtectedRoute = ({ children }: RbiProtectedRouteProps) => {
         ? "Submit your RBI form to access these options"
         : "Your RBI form is pending approval";
       
+      toast.dismiss(); // Dismiss any existing toasts first
       toast.error("Restricted Access", {
         description: message,
         duration: 4000,

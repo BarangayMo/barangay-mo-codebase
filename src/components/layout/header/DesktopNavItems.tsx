@@ -3,11 +3,24 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRbiAccess } from "@/hooks/use-rbi-access";
 import { Briefcase } from "lucide-react";
+import { toast } from "sonner";
 
 export function DesktopNavItems() {
   const { pathname } = useLocation();
   const { isAuthenticated, userRole } = useAuth();
-  const { checkAccess } = useRbiAccess();
+  const { hasRbiAccess } = useRbiAccess();
+
+  const handleRestrictedAccess = (path: string) => {
+    if (userRole === 'resident' && !hasRbiAccess) {
+      toast.dismiss(); // Dismiss any existing toasts first
+      toast.error("Restricted Access", {
+        description: "Submit your RBI form to access these options",
+        duration: 4000,
+      });
+      return;
+    }
+    window.location.href = path;
+  };
 
   const getDashboardRoute = () => {
     switch (userRole) {
@@ -51,9 +64,7 @@ export function DesktopNavItems() {
         className={pathname === "/marketplace" ? "text-[#1a237e]" : ""}
         onClick={(e) => {
           e.preventDefault();
-          checkAccess(() => {
-            window.location.href = '/marketplace';
-          });
+          handleRestrictedAccess('/marketplace');
         }}
       >
         Marketplace
@@ -65,9 +76,7 @@ export function DesktopNavItems() {
         className={pathname === "/services" ? "text-[#1a237e]" : ""}
         onClick={(e) => {
           e.preventDefault();
-          checkAccess(() => {
-            window.location.href = '/services';
-          });
+          handleRestrictedAccess('/services');
         }}
       >
         Services
@@ -79,9 +88,7 @@ export function DesktopNavItems() {
         className={pathname.startsWith("/jobs") ? "text-[#1a237e]" : ""}
         onClick={(e) => {
           e.preventDefault();
-          checkAccess(() => {
-            window.location.href = '/jobs';
-          });
+          handleRestrictedAccess('/jobs');
         }}
       >
         Jobs
@@ -90,15 +97,10 @@ export function DesktopNavItems() {
       <Button 
         variant="ghost" 
         size="sm" 
+        asChild
         className={pathname === "/messages" ? "text-[#1a237e]" : ""}
-        onClick={(e) => {
-          e.preventDefault();
-          checkAccess(() => {
-            window.location.href = '/messages';
-          });
-        }}
       >
-        Messages
+        <Link to={getMessagesRoute()}>Messages</Link>
       </Button>
       
       {userRole === "superadmin" && (

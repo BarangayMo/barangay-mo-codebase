@@ -243,6 +243,7 @@ export const Header = () => {
                         onClick={(e) => {
                           if (isRestricted) {
                             e.preventDefault();
+                            toast.dismiss(); // Dismiss any existing toasts first
                             toast.error("Restricted Access", {
                               description: "Submit your RBI form to access these options",
                               duration: 4000,

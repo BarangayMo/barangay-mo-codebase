@@ -50,6 +50,7 @@ export default function ResidentHome() {
   const handleQuickActionClick = (path: string, e: React.MouseEvent) => {
     if (!hasRbiAccess && (path.includes('/marketplace') || path.includes('/jobs') || path.includes('/services'))) {
       e.preventDefault();
+      toast.dismiss(); // Dismiss any existing toasts first
       toast.error("Restricted Access", {
         description: "Submit your RBI form to access these options",
         duration: 4000,
