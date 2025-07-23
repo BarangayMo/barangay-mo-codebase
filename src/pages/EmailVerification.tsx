@@ -22,13 +22,49 @@ export default function EmailVerification() {
   const [countdown, setCountdown] = useState(30);
 
   useEffect(() => {
+    // Send initial verification email if we have an email from registration
+    const sendInitialVerificationEmail = async () => {
+      if (locationState?.email && locationState?.fromRegistration) {
+        console.log('Sending initial verification email to:', locationState.email);
+        try {
+          const { error } = await supabase.auth.resend({
+            type: 'signup',
+            email: locationState.email,
+            options: {
+              emailRedirectTo: `${window.location.origin}/email-confirmation`
+            }
+          });
+
+          if (error) {
+            console.error('Failed to send initial verification email:', error);
+            toast({
+              variant: "destructive",
+              title: "Email sending failed",
+              description: error.message
+            });
+          } else {
+            console.log('Initial verification email sent successfully');
+            toast({
+              title: "Verification email sent",
+              description: "Please check your inbox for the verification email."
+            });
+          }
+        } catch (error) {
+          console.error('Error sending initial verification email:', error);
+        }
+      }
+    };
+
+    sendInitialVerificationEmail();
+
+    // Countdown timer
     if (countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
       return () => clearTimeout(timer);
     } else {
       setCanResend(true);
     }
-  }, [countdown]);
+  }, [countdown, locationState, toast]);
 
   const handleResend = async () => {
     if (!email) {
@@ -46,7 +82,7 @@ export default function EmailVerification() {
         type: 'signup',
         email: email,
         options: {
-          emailRedirectTo: `${window.location.origin}/email-verification`
+          emailRedirectTo: `${window.location.origin}/email-confirmation`
         }
       });
 

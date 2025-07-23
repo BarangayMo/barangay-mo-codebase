@@ -161,7 +161,8 @@ export default function Register() {
         navigate("/email-verification", {
           state: {
             email: formData.email,
-            role: registrationData.role
+            role: registrationData.role,
+            fromRegistration: true // Flag to indicate this is from registration
           }
         });
       }

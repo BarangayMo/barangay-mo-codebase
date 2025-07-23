@@ -215,7 +215,7 @@ export const EmailConfirmationHandler = () => {
         type: 'signup',
         email: userEmail,
         options: {
-          emailRedirectTo: `${window.location.origin}/email-verification`
+          emailRedirectTo: `${window.location.origin}/email-confirmation`
         }
       });
 

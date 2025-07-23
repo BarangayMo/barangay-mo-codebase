@@ -189,21 +189,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               
               // Handle redirects after successful login or signup
               if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && !redirectInProgress.current && isInitialized) {
-                // Check if email is verified
+                // Check if email is verified - ENFORCE EMAIL VERIFICATION
                 const emailVerified = !!session?.user?.email_confirmed_at;
                 
                 if (currentPath === '/login' || currentPath === '/register' || currentPath === '/email-confirmation' || currentPath === '/mpin') {
                   if (emailVerified) {
-                    console.log("Redirecting to:", redirectPath, "after", event);
+                    console.log("Email verified, redirecting to:", redirectPath, "after", event);
                     redirectInProgress.current = true;
                     navigate(redirectPath, { replace: true });
                     setTimeout(() => { redirectInProgress.current = false; }, 1000);
                   } else {
-                    // Redirect to email verification if not verified
-                    console.log("Email not verified, redirecting to email verification");
+                    // FORCE email verification if not verified
+                    console.log("Email NOT verified, FORCING email verification");
                     redirectInProgress.current = true;
                     navigate('/email-verification', { 
-                      state: { email: session?.user?.email },
+                      state: { email: session?.user?.email, role },
                       replace: true 
                     });
                     setTimeout(() => { redirectInProgress.current = false; }, 1000);
@@ -282,16 +282,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               const emailVerified = !!session?.user?.email_confirmed_at;
               
               if (emailVerified) {
-                console.log("Redirecting existing session from login/register to:", redirectPath);
+                console.log("Email verified, redirecting existing session from login/register to:", redirectPath);
                 redirectInProgress.current = true;
                 navigate(redirectPath, { replace: true });
                 setTimeout(() => { redirectInProgress.current = false; }, 1000);
               } else if (currentPath !== '/email-verification') {
-                // Redirect to email verification if not verified
-                console.log("Email not verified, redirecting to email verification");
+                // FORCE email verification if not verified
+                console.log("Email NOT verified, FORCING email verification for existing session");
                 redirectInProgress.current = true;
                 navigate('/email-verification', { 
-                  state: { email: session?.user?.email },
+                  state: { email: session?.user?.email, role },
                   replace: true 
                 });
                 setTimeout(() => { redirectInProgress.current = false; }, 1000);
@@ -360,7 +360,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         password,
         options: {
           data: metaData,
-          emailRedirectTo: `${window.location.origin}/email-verification`
+          emailRedirectTo: `${window.location.origin}/email-confirmation`
         }
       });
 
