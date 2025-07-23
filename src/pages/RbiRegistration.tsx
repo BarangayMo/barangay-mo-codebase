@@ -32,7 +32,7 @@ type Step = {
 export default function RbiRegistration() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, setRbiCompleted } = useAuth();
   
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -277,12 +277,17 @@ export default function RbiRegistration() {
         .delete()
         .eq('user_id', user.id);
       
+      // Update RBI completion status in context
+      if (setRbiCompleted) {
+        setRbiCompleted(true);
+      }
+      
       toast({
         title: "RBI Registration Complete",
         description: `Your RBI form has been successfully submitted with number: ${data.rbi_number}`,
       });
       
-      navigate("/resident-profile", { 
+      navigate("/resident-home", {
         state: { 
           rbiNumber: data.rbi_number,
           showSuccess: true 
@@ -305,15 +310,15 @@ export default function RbiRegistration() {
   return (
     <Layout>
       {isLoading && <LoadingScreen />}
-      <div className="max-w-3xl mx-auto px-4 py-4 md:py-8">
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 py-3 sm:py-4 md:py-8">
         {/* Mobile-optimized header */}
-        <div className="mb-6 md:mb-8">
-          <div className="flex flex-col gap-3 mb-4">
-            <div className="flex items-center justify-between">
-              <h1 className="text-xl md:text-2xl lg:text-3xl font-bold font-outfit bg-gradient-to-r from-blue-700 to-blue-500 bg-clip-text text-transparent leading-tight">
+        <div className="mb-4 sm:mb-6 md:mb-8">
+          <div className="flex flex-col gap-2 sm:gap-3 mb-3 sm:mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
+              <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold font-outfit bg-gradient-to-r from-blue-700 to-blue-500 bg-clip-text text-transparent leading-tight">
                 Record of Barangay Inhabitant
               </h1>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 <span className="text-xs md:text-sm font-medium px-2 md:px-3 py-1 bg-blue-50 text-blue-700 rounded-full whitespace-nowrap">
                   Step {currentStep} of {steps.length}
                 </span>
@@ -326,7 +331,7 @@ export default function RbiRegistration() {
               </div>
             </div>
             
-            <Progress value={progress} className="h-2 bg-blue-100" indicatorClassName="bg-blue-600" />
+            <Progress value={progress} className="h-1.5 sm:h-2 bg-blue-100" indicatorClassName="bg-blue-600" />
             
             <div className="flex flex-col sm:flex-row sm:justify-between gap-2">
               <div className="flex-1">
@@ -334,14 +339,14 @@ export default function RbiRegistration() {
                 <p className="text-gray-500 text-xs md:text-sm mt-1">{currentStepData.description}</p>
               </div>
               <div className="flex items-center">
-                <span className="font-medium text-blue-800 text-sm md:text-base">{Math.round(progress)}% Complete</span>
+                <span className="font-medium text-blue-800 text-xs sm:text-sm md:text-base">{Math.round(progress)}% Complete</span>
               </div>
             </div>
           </div>
         </div>
         
         {/* Form content */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6 lg:p-8 mb-6">
+        <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 md:p-6 lg:p-8 mb-4 sm:mb-6">
           {currentStepData.component}
         </div>
         

@@ -92,6 +92,34 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  // Function to check RBI submission status for residents (not completion, just submission)
+  const checkRbiSubmission = async (userId: string, userRole: UserRole) => {
+    if (userRole !== 'resident') {
+      return true; // Non-residents don't need RBI
+    }
+    
+    try {
+      const { data: rbiForms, error } = await supabase
+        .from('rbi_forms')
+        .select('id, status')
+        .eq('user_id', userId)
+        .order('submitted_at', { ascending: false })
+        .limit(1);
+      
+      if (error) {
+        console.warn('RBI check warning:', error);
+        return false;
+      }
+      
+      const hasSubmittedRbiForm = rbiForms && rbiForms.length > 0;
+      console.log('RBI submission check:', { userId, hasSubmittedRbiForm, rbiForms });
+      return hasSubmittedRbiForm;
+    } catch (error) {
+      console.warn('Error checking RBI submission:', error);
+      return false;
+    }
+  };
+
   // Function to determine user role and redirect path
   const getUserRoleAndRedirect = (role: string | null, email: string) => {
     let userRole: UserRole = "resident";
@@ -101,12 +129,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     if (role === "official") {
       userRole = 'official';
       redirectPath = '/official-dashboard';
-    } else if (role === "superadmin" || email.includes('admin')) {
+    } else if (role === "superadmin") {
       userRole = 'superadmin';
       redirectPath = '/admin';
-    } else if (email.includes('official')) {
-      userRole = 'official';
-      redirectPath = '/official-dashboard';
     }
     
     console.log('User role determined:', { email, role, userRole, redirectPath });
@@ -157,6 +182,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               
               setUser(userData);
               setUserRole(role);
+              
+              // Check RBI submission for residents
+              const rbiSubmitted = await checkRbiSubmission(session.user.id, role);
+              setRbiCompleted(rbiSubmitted);
               
               // Handle redirects after successful login or signup
               if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && !redirectInProgress.current && isInitialized) {
@@ -243,6 +272,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             
             setUser(userData);
             setUserRole(role);
+            
+            // Check RBI submission for residents
+            const rbiSubmitted = await checkRbiSubmission(session.user.id, role);
+            setRbiCompleted(rbiSubmitted);
             
             // Redirect if user is on login/register page with existing session
             if ((currentPath === '/login' || currentPath === '/register' || currentPath === '/email-confirmation' || currentPath === '/email-verification') && !redirectInProgress.current) {

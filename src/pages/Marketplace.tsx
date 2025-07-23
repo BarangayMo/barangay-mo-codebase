@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { SearchBar } from "@/components/marketplace/SearchBar";
+import { RbiAccessCard } from "@/components/marketplace/RbiAccessCard";
 import { MobileNavigation } from "@/components/marketplace/MobileNavigation";
 import { FilterButton } from "@/components/marketplace/FilterButton";
 import { MarketHero } from "@/components/marketplace/MarketHero";
@@ -10,6 +11,8 @@ import { ProductCardType } from "@/components/marketplace/ProductCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryWithDebug } from "@/hooks/use-query-with-debug";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRbiForms } from "@/hooks/use-rbi-forms";
 
 // Define Category type based on Supabase schema
 interface Category {
@@ -82,6 +85,8 @@ const fetchCategories = async (): Promise<Category[]> => {
 export default function Marketplace() {
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
+  const { userRole } = useAuth();
+  const { rbiForms } = useRbiForms();
 
   console.log("🏪 Marketplace component rendering...");
 
@@ -106,11 +111,23 @@ export default function Marketplace() {
 
   const displayCategories = [{ id: "all-cat", name: "All" }, ...(categories || [])];
 
+  // Check RBI access for residents
+  const latestForm = rbiForms?.[0];
+  const isApproved = latestForm?.status === 'approved';
+  const hasRbiAccess = userRole !== 'resident' || isApproved;
+
   return (
     <Layout>
       <SearchBar search={search} setSearch={setSearch} />
       
       <div className="max-w-7xl mx-auto px-4 py-6 mb-20 md:mb-0">
+        {/* Show RBI access card for residents without approval */}
+        {!hasRbiAccess && (
+          <div className="mb-6">
+            <RbiAccessCard />
+          </div>
+        )}
+        
         <MarketHero />
         
         <div className="mt-6 mb-8 flex items-center gap-4 overflow-x-auto pb-2 scrollbar-none">
@@ -158,14 +175,18 @@ export default function Marketplace() {
               <pre className="text-xs mt-2 overflow-auto">{JSON.stringify(productsError, null, 2)}</pre>
             </details>
           </div>
-        ) : products && products.length > 0 ? (
+        ) : hasRbiAccess && products && products.length > 0 ? (
           <ProductList 
             products={products} 
             activeFilter={activeFilter}
             search={search}
           />
-        ) : (
+        ) : hasRbiAccess ? (
           <p className="text-center py-10 text-gray-500">No products available at the moment.</p>
+        ) : (
+          <div className="text-center py-10">
+            <p className="text-gray-500">Complete your RBI registration to access the marketplace.</p>
+          </div>
         )}
       </div>
 

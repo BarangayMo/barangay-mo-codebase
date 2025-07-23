@@ -3,7 +3,7 @@ import { Home } from "lucide-react";
 import { FloatingInput } from "@/components/ui/floating-input";
 import { FloatingSelect } from "@/components/ui/floating-select";
 import { SelectItem } from "@/components/ui/select";
-import { MapLocationModal } from "@/components/layout/header/MapLocationModal";
+import { MapboxLocationPicker } from "@/components/ui/mapbox-location-picker";
 import { Button } from "@/components/ui/button";
 import { MapPin } from "lucide-react";
 import { useState } from "react";
@@ -23,31 +23,32 @@ const AddressDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiFor
     }
   };
 
-  const handleLocationSelected = (location: { barangay: string; coordinates: { lat: number; lng: number } }) => {
-    setSelectedBarangay(location.barangay);
-    handleChange('barangay', location.barangay);
+  const handleLocationSelected = (location: { address: string; barangay?: string; coordinates: { lat: number; lng: number } }) => {
+    const barangayName = location.barangay || location.address;
+    setSelectedBarangay(barangayName);
+    handleChange('barangay', barangayName);
     handleChange('coordinates', JSON.stringify(location.coordinates));
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
-        <Home className="text-blue-600 w-6 h-6" />
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex items-start sm:items-center gap-3 pb-3 sm:pb-4 border-b border-gray-100">
+        <Home className="text-blue-600 w-5 h-5 sm:w-6 sm:h-6 mt-1 sm:mt-0 flex-shrink-0" />
         <div>
-          <h2 className="text-xl font-semibold text-gray-800">Address Details</h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-800">Address Details</h2>
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">
             Provide your current residence details and location within the barangay
           </p>
         </div>
       </div>
       
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-5">
           <FloatingInput 
             id="houseNumber" 
             label="House/Bldg Number" 
             placeholder=" " 
-            className="focus-visible:ring-blue-500"
+            className="focus-visible:ring-blue-500 text-sm sm:text-base"
             value={formData?.address?.houseNumber || ""}
             onChange={(e) => handleChange("houseNumber", e.target.value)}
             error={errors?.address?.houseNumber}
@@ -57,7 +58,7 @@ const AddressDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiFor
             id="street" 
             label="Street / Kalye" 
             placeholder=" " 
-            className="focus-visible:ring-blue-500"
+            className="focus-visible:ring-blue-500 text-sm sm:text-base"
             value={formData?.address?.street || ""}
             onChange={(e) => handleChange("street", e.target.value)}
             error={errors?.address?.street}
@@ -80,40 +81,55 @@ const AddressDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiFor
           id="zone" 
           label="Division/Zone/Sitio/Purok" 
           placeholder=" " 
-          className="focus-visible:ring-blue-500"
+          className="focus-visible:ring-blue-500 text-sm sm:text-base"
           value={formData?.address?.zone || ""}
           onChange={(e) => handleChange("zone", e.target.value)}
         />
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="space-y-2">
-            <MapLocationModal onLocationSelected={handleLocationSelected}>
-              <Button 
-                type="button" 
-                variant="outline"
-                className="w-full flex items-center justify-between gap-2 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-              >
-                <span className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-blue-600" />
-                  {selectedBarangay || formData?.address?.barangay || "Select Your Barangay"}
-                </span>
-                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                  Choose on Map
-                </span>
-              </Button>
-            </MapLocationModal>
-            <p className="text-xs text-gray-500 ml-1">Click to select your barangay using the map</p>
+        <div className="space-y-3 sm:space-y-4">
+          <div>
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+              Select Your Location on Map <span className="text-red-500">*</span>
+            </label>
+            <div className="border-2 border-primary/20 rounded-xl overflow-hidden shadow-lg bg-white">
+              <MapboxLocationPicker 
+                onLocationSelected={handleLocationSelected}
+                height="280px"
+                className="w-full rounded-xl"
+                initialLocation={selectedBarangay || "Manila, Philippines"}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground mt-3 flex items-start gap-2">
+              <span className="inline-block w-1 h-1 bg-primary rounded-full mt-2 flex-shrink-0"></span>
+              Click on the map to pinpoint your exact location within your barangay. This helps us verify your residency.
+            </p>
+            {selectedBarangay && (
+              <div className="mt-3 p-3 bg-gradient-to-r from-blue-50 to-primary/5 border border-primary/20 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                  <span className="font-medium text-primary text-sm">Selected Location:</span>
+                </div>
+                <span className="text-primary/80 text-sm block mt-1">{selectedBarangay}</span>
+              </div>
+            )}
             {errors?.address?.barangay && (
-              <p className="text-red-500 text-xs ml-1">{errors.address.barangay}</p>
+              <p className="text-red-500 text-xs mt-2 flex items-center gap-1">
+                <span className="inline-block w-3 h-3 bg-red-500 rounded-full text-white text-[8px] flex items-center justify-center">!</span>
+                {errors.address.barangay}
+              </p>
             )}
           </div>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-5">
+          <div></div>
           
           <FloatingInput 
             id="residenceSince" 
             label="Residence Since" 
             type="date" 
             placeholder=" " 
-            className="focus-visible:ring-blue-500"
+            className="focus-visible:ring-blue-500 text-sm sm:text-base"
             value={formData?.address?.residenceSince || ""}
             onChange={(e) => handleChange("residenceSince", e.target.value)}
           />

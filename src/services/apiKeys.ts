@@ -36,6 +36,14 @@ export async function getGoogleMapsApiKey(): Promise<string | null> {
 }
 
 /**
+ * Retrieves the Mapbox API key
+ * @returns The Mapbox API key or null if not found
+ */
+export async function getMapboxApiKey(): Promise<string | null> {
+  return getApiKey('mapbox_api_key');
+}
+
+/**
  * Get multiple API keys in a single request
  * @param keyNames - Array of key names to retrieve
  * @returns Object with key names as keys and their values
