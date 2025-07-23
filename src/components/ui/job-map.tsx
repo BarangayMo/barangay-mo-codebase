@@ -1,6 +1,7 @@
 import React from 'react';
 import { MapPin } from 'lucide-react';
-import  MapboxMap  from './mapbox-map';
+import MapboxMap from "./mapbox-map";
+
 
 interface JobMapProps {
   location: string;
