@@ -62,12 +62,23 @@ export const MapboxLocationPicker = ({
 
       mapInstance.current = map;
 
+      // Wait for map to load before setting up interactions
+      map.on('load', () => {
+        console.log('🗺️ Map loaded successfully');
+        setLoading(false);
+      });
+
+      // Add error handling
+      map.on('error', (e) => {
+        console.error('🗺️ Map error:', e);
+        setError('Failed to load map tiles');
+        setLoading(false);
+      });
+
       // Add click listener to map
       map.on('click', async (e) => {
         await handleMapClick(e.lngLat.lng, e.lngLat.lat);
       });
-
-      setLoading(false);
     } catch (error) {
       console.error('Failed to initialize map:', error);
       setError(error instanceof Error ? error.message : 'Failed to load map');
