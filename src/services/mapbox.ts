@@ -13,21 +13,25 @@ export async function initializeMapbox(): Promise<void> {
   }
 
   try {
-    // ✅ Just hardcode the key directly
-    const apiKey = 'pk.eyJ1IjoiYmFyYW5nYXltbyIsImEiOiJjbWJxZHBzenAwMmdrMmtzZmloemphb284In0.U22j37ppYT1IMyC2lXVBzw';
+    // Get API key from Supabase
+    let apiKey = await getMapboxApiKey();
+    
+    // Fallback to hardcoded key if not found in database
+    if (!apiKey) {
+      console.log('⚠️ Mapbox API key not found in database, using fallback key');
+      apiKey = 'pk.eyJ1IjoiYmFyYW5nYXltbyIsImEiOiJjbWJxZHBzenAwMmdrMmtzZmloemphb284In0.U22j37ppYT1IMyC2lXVBzw';
+    }
 
     // Set the access token
     mapboxgl.accessToken = apiKey;
     isMapboxInitialized = true;
-
+    
     console.log('🗺️ Mapbox initialized successfully');
   } catch (error) {
     console.error('❌ Failed to initialize Mapbox:', error);
     throw error;
   }
 }
-
-
 
 /**
  * Geocode an address using Mapbox Geocoding API
@@ -112,13 +116,12 @@ export async function createMap(
 ): Promise<mapboxgl.Map> {
   await initializeMapbox();
   
-  const map = new mapboxgl.Map({
-    container,
-    style: options.style || 'mapbox://styles/mapbox/streets-v11',
-    center: options.center,
-    zoom: options.zoom || 15,
-    attributionControl: false
-  });
+ const map = new mapboxgl.Map({
+  container: mapContainer.current,
+  style: 'mapbox://styles/mapbox/streets-v11',
+  center: [121.0244, 14.5547], // Manila fallback
+  zoom: 12
+});
 
   // Add navigation controls
   map.addControl(new mapboxgl.NavigationControl(), 'top-right');
