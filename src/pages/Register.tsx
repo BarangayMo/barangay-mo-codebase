@@ -129,10 +129,8 @@ export default function Register() {
         // Provide more specific error messages based on the error type
         let errorMessage = "An error occurred during registration.";
         
-        if (error.message.includes('User already registered') || error.message.includes('user_already_exists')) {
-          errorMessage = "This email address is already registered. Please use a different email or try logging in instead.";
-        } else if (error.message.includes('email')) {
-          errorMessage = "This email address is invalid. Please check and try again.";
+        if (error.message.includes('email')) {
+          errorMessage = "This email address is already registered or invalid.";
         } else if (error.message.includes('password')) {
           errorMessage = "Password must be at least 6 characters long.";
         } else if (error.message.includes('foreign key')) {
