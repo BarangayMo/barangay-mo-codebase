@@ -56,7 +56,7 @@ export default function Verify() {
       setTimeout(async () => {
         setIsLoading(false);
         const hasRbiForm = await checkRbiFormStatus();
-        navigate("/resident-home");
+        navigate(hasRbiForm ? "/resident-home" : "/rbi-registration");
       }, 1000);
     }
   };
@@ -65,10 +65,10 @@ export default function Verify() {
     setIsCheckingRbi(true);
     try {
       const hasRbiForm = await checkRbiFormStatus();
-      navigate("/resident-home");
+      navigate(hasRbiForm ? "/resident-home" : "/rbi-registration");
     } catch (error) {
       console.error("Error checking RBI form status:", error);
-      navigate("/resident-home");
+      navigate("/rbi-registration");
     } finally {
       setIsCheckingRbi(false);
     }

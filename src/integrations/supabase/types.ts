@@ -1144,7 +1144,6 @@ export type Database = {
           first_name: string | null
           id: string
           invited_by: string | null
-          is_approved: boolean | null
           landline_number: string | null
           last_login: string | null
           last_name: string | null
@@ -1169,7 +1168,6 @@ export type Database = {
           first_name?: string | null
           id: string
           invited_by?: string | null
-          is_approved?: boolean | null
           landline_number?: string | null
           last_login?: string | null
           last_name?: string | null
@@ -1194,7 +1192,6 @@ export type Database = {
           first_name?: string | null
           id?: string
           invited_by?: string | null
-          is_approved?: boolean | null
           landline_number?: string | null
           last_login?: string | null
           last_name?: string | null

@@ -32,16 +32,6 @@ const PersonalDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiFo
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <FloatingInput 
-            id="firstName" 
-            label="First Name" 
-            placeholder=" " 
-            className="focus-visible:ring-blue-500"
-            value={formData?.personalDetails?.firstName || ""}
-            onChange={(e) => handleChange("firstName", e.target.value)}
-            error={errors?.personalDetails?.firstName}
-          />
-          
-          <FloatingInput 
             id="lastName" 
             label="Last Name" 
             placeholder=" " 
@@ -49,6 +39,16 @@ const PersonalDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiFo
             value={formData?.personalDetails?.lastName || ""}
             onChange={(e) => handleChange("lastName", e.target.value)}
             error={errors?.personalDetails?.lastName}
+          />
+          
+          <FloatingInput 
+            id="firstName" 
+            label="First Name" 
+            placeholder=" " 
+            className="focus-visible:ring-blue-500"
+            value={formData?.personalDetails?.firstName || ""}
+            onChange={(e) => handleChange("firstName", e.target.value)}
+            error={errors?.personalDetails?.firstName}
           />
         </div>
         
