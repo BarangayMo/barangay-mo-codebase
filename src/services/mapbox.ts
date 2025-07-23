@@ -19,11 +19,11 @@ export async function initializeMapbox(): Promise<void> {
     // Fallback to hardcoded key if not found in database
     if (!apiKey) {
       console.log('⚠️ Mapbox API key not found in database, using fallback key');
-      apiKey = 'pk.eyJ1IjoiYmFyYW5nYXltbyIsImEiOiJjbWRmNzVjamEwOW1mMmxzZHVla3R6NnF3In0.e5CEdORPBd6Psm4BT5O7gw';
+      apiKey = 'pk.eyJ1IjoiYmFyYW5nYXltbyIsImEiOiJjbWJxZHBzenAwMmdrMmtzZmloemphb284In0.U22j37ppYT1IMyC2lXVBzw';
     }
 
     // Set the access token
-    mapboxgl.accessToken = apiKey;
+    mapboxgl.accessToken = 'pk.eyJ1IjoiYmFyYW5nYXltbyIsImEiOiJjbWJxZHBzenAwMmdrMmtzZmloemphb284In0.U22j37ppYT1IMyC2lXVBzw';
     isMapboxInitialized = true;
     
     console.log('🗺️ Mapbox initialized successfully');
