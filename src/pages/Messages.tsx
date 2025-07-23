@@ -5,7 +5,7 @@ import { Layout } from "@/components/layout/Layout";
 import { MessageList } from "@/components/messages/MessageList";
 import { MessageChat } from "@/components/messages/MessageChat";
 import { Helmet } from "react-helmet";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useNavigate, useParams, Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, LogIn, ArrowLeft } from "lucide-react";
 import { conversations as allConversations, UserConversation } from "@/data/conversations";
@@ -14,6 +14,8 @@ import { cn } from "@/lib/utils";
 export default function Messages() {
   const { isAuthenticated } = useAuth();
   const { id: activeConversationIdFromParams } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const recipientId = searchParams.get('recipient');
   const navigate = useNavigate();
 
   const [selectedConversation, setSelectedConversation] = useState<UserConversation | null>(null);
@@ -31,11 +33,37 @@ export default function Messages() {
         // Optional: navigate to /messages if ID is invalid, or show a "not found" in chat area
         navigate("/messages", { replace: true }); 
       }
+    } else if (recipientId) {
+      // Handle new conversation with recipient
+      // First, check if we already have a conversation with this user
+      const existingConversation = allConversations.find(c => 
+        c.id === recipientId || 
+        c.name.toLowerCase().includes('job poster')
+      );
+      
+      if (existingConversation) {
+        // Navigate to existing conversation
+        navigate(`/messages/${existingConversation.id}`, { replace: true });
+      } else {
+        // Create a temporary conversation for new message
+        const newConversation: UserConversation = {
+          id: `new-${recipientId}`,
+          name: "Job Poster",
+          avatar: "/placeholder.svg",
+          message: "Start a conversation...",
+          time: "now",
+          online: true,
+          unread: 0
+        };
+        
+        setSelectedConversation(newConversation);
+        setIsChatViewOpenMobile(true);
+      }
     } else {
       setSelectedConversation(null);
       setIsChatViewOpenMobile(false); // Close chat view on mobile if no ID
     }
-  }, [activeConversationIdFromParams, navigate]);
+  }, [activeConversationIdFromParams, recipientId, navigate]);
 
   const handleConversationSelect = (id: string) => {
     navigate(`/messages/${id}`);

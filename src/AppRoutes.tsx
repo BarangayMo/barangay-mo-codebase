@@ -192,6 +192,7 @@ export function AppRoutes() {
       <Route path="/settings" element={<RbiProtectedRoute><Settings /></RbiProtectedRoute>} />
       <Route path="/menu" element={<RbiProtectedRoute><Menu /></RbiProtectedRoute>} />
       <Route path="/messages" element={<RbiProtectedRoute><Messages /></RbiProtectedRoute>} />
+      <Route path="/messages/new" element={<RbiProtectedRoute><Messages /></RbiProtectedRoute>} />
       <Route path="/messages/:id" element={<RbiProtectedRoute><Messages /></RbiProtectedRoute>} />
       
       <Route path="/services" element={<RbiProtectedRoute><Services /></RbiProtectedRoute>} />
