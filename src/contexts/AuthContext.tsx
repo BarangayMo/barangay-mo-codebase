@@ -354,15 +354,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       console.log("Clean metadata being sent:", metaData);
 
-      // Sign up the user with email confirmation redirect
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: metaData,
-          emailRedirectTo: `${window.location.origin}/email-confirmation`
-        }
-      });
+        // Sign up the user with email confirmation redirect
+        const { data: authData, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: metaData,
+            emailRedirectTo: `${window.location.origin}/email-confirmation`
+          }
+        });
 
       if (signUpError) {
         console.error("Signup error:", signUpError);

@@ -22,40 +22,19 @@ export default function EmailVerification() {
   const [countdown, setCountdown] = useState(30);
 
   useEffect(() => {
-    // Send initial verification email if we have an email from registration
-    const sendInitialVerificationEmail = async () => {
-      if (locationState?.email && locationState?.fromRegistration) {
-        console.log('Sending initial verification email to:', locationState.email);
-        try {
-          const { error } = await supabase.auth.resend({
-            type: 'signup',
-            email: locationState.email,
-            options: {
-              emailRedirectTo: `${window.location.origin}/email-confirmation`
-            }
-          });
-
-          if (error) {
-            console.error('Failed to send initial verification email:', error);
-            toast({
-              variant: "destructive",
-              title: "Email sending failed",
-              description: error.message
-            });
-          } else {
-            console.log('Initial verification email sent successfully');
-            toast({
-              title: "Verification email sent",
-              description: "Please check your inbox for the verification email."
-            });
-          }
-        } catch (error) {
-          console.error('Error sending initial verification email:', error);
-        }
+    // Check if user is already verified and redirect if so
+    const checkVerificationStatus = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.email_confirmed_at) {
+        console.log('User already verified, redirecting...');
+        const userRole = session.user.user_metadata?.role || 'resident';
+        const redirectPath = userRole === 'official' ? '/official-dashboard' : userRole === 'superadmin' ? '/admin' : '/resident-home';
+        navigate(redirectPath, { replace: true });
+        return;
       }
     };
 
-    sendInitialVerificationEmail();
+    checkVerificationStatus();
 
     // Countdown timer
     if (countdown > 0) {
@@ -64,7 +43,7 @@ export default function EmailVerification() {
     } else {
       setCanResend(true);
     }
-  }, [countdown, locationState, toast]);
+  }, [countdown, navigate]);
 
   const handleResend = async () => {
     if (!email) {
@@ -141,11 +120,14 @@ export default function EmailVerification() {
 
             {/* Title and Description */}
             <div className="space-y-2">
-              <h2 className="text-xl font-bold text-gray-900">Check your email</h2>
+              <h2 className="text-xl font-bold text-gray-900">Check your inbox to verify your email</h2>
               <p className="text-gray-600 text-sm">
                 We've sent a verification link to
               </p>
               <p className="font-medium text-gray-900 text-sm">{email}</p>
+              <p className="text-gray-500 text-xs mt-2">
+                Click the link in your email to verify your account and unlock access to all features.
+              </p>
             </div>
 
             {/* Email Input for Resend */}
@@ -200,11 +182,14 @@ export default function EmailVerification() {
 
             {/* Title and Description */}
             <div className="space-y-3">
-              <h1 className="text-2xl font-bold text-gray-900">Check your email</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Check your inbox to verify your email</h1>
               <p className="text-gray-600">
                 We've sent a verification link to
               </p>
               <p className="font-medium text-gray-900">{email}</p>
+              <p className="text-gray-500 text-sm mt-2">
+                Click the link in your email to verify your account and unlock access to all features.
+              </p>
             </div>
 
             {/* Email Input for Resend */}
