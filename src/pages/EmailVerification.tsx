@@ -8,6 +8,7 @@ import { ChevronLeft, Mail } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { toastManager } from "@/lib/toast-manager";
 
 export default function EmailVerification() {
   const location = useLocation();
@@ -26,11 +27,14 @@ export default function EmailVerification() {
     const checkVerificationStatus = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user?.email_confirmed_at) {
-        console.log('User already verified, redirecting...');
+        console.log('✅ Email already verified, redirecting...');
         const userRole = session.user.user_metadata?.role || 'resident';
         const redirectPath = userRole === 'official' ? '/official-dashboard' : userRole === 'superadmin' ? '/admin' : '/resident-home';
+        console.log('🔄 Redirecting verified user to:', redirectPath);
         navigate(redirectPath, { replace: true });
         return;
+      } else if (session?.user) {
+        console.log('🚫 Email NOT verified yet for:', session.user.email);
       }
     };
 
@@ -47,44 +51,61 @@ export default function EmailVerification() {
 
   const handleResend = async () => {
     if (!email) {
-      toast({
-        variant: "destructive",
-        title: "Email required",
-        description: "Please enter your email address to resend verification"
-      });
+      console.log("❌ Resend failed: No email provided");
+      toastManager.showToast(() => {
+        toast({
+          variant: "destructive",
+          title: "Email required",
+          description: "Please enter your email address to resend verification"
+        });
+      }, "email-required");
       return;
     }
 
+    console.log("📧 Resending verification email to:", email);
     setIsResending(true);
+    
     try {
+      const emailRedirectUrl = `${window.location.origin}/auth/callback`;
+      console.log("📧 Using email redirect URL for resend:", emailRedirectUrl);
+      
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email: email,
         options: {
-          emailRedirectTo: `${window.location.origin}/email-confirmation`
+          emailRedirectTo: emailRedirectUrl
         }
       });
 
       if (error) {
-        toast({
-          variant: "destructive",
-          title: "Resend failed",
-          description: error.message
-        });
+        console.error("❌ Resend error:", error);
+        toastManager.showToast(() => {
+          toast({
+            variant: "destructive",
+            title: "Resend failed",
+            description: error.message
+          });
+        }, "resend-error");
       } else {
-        toast({
-          title: "Email sent",
-          description: "Verification email has been resent. Please check your inbox."
-        });
+        console.log("✅ Verification email resent successfully to:", email);
+        toastManager.showToast(() => {
+          toast({
+            title: "Email sent! 📧",
+            description: "Verification email has been resent. Please check your inbox."
+          });
+        }, "resend-success");
         setCanResend(false);
         setCountdown(30);
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Resend failed",
-        description: "An unexpected error occurred"
-      });
+      console.error("💥 Unexpected resend error:", error);
+      toastManager.showToast(() => {
+        toast({
+          variant: "destructive",
+          title: "Resend failed",
+          description: "An unexpected error occurred"
+        });
+      }, "resend-unexpected-error");
     } finally {
       setIsResending(false);
     }

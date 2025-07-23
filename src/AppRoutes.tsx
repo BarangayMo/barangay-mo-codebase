@@ -98,10 +98,11 @@ import QRScanner from "@/pages/officials/QRScanner";
 // Import the new RBI Forms component
 import RbiForms from "@/pages/officials/RbiForms";
 
-// Import the EmailConfirmationHandler
+// Import auth components
 import { EmailConfirmationHandler } from "@/components/auth/EmailConfirmationHandler";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { RbiProtectedRoute } from "@/components/auth/RbiProtectedRoute";
+import AuthCallback from "@/pages/AuthCallback";
 
 export function AppRoutes() {
   return (
@@ -118,6 +119,7 @@ export function AppRoutes() {
       <Route path="/email-verification" element={<EmailVerification />} />
       <Route path="/email-confirmation" element={<EmailConfirmationHandler />} />
       <Route path="/auth/confirm" element={<EmailConfirmationHandler />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/verify" element={<Verify />} />
       <Route path="/mpin" element={<MPIN />} />
       <Route path="/forgot-mpin" element={<ForgotMPIN />} />

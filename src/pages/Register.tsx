@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { toastManager } from "@/lib/toast-manager";
 
 interface LocationState {
   role: string;
@@ -141,11 +142,13 @@ export default function Register() {
           errorMessage = "This account already exists. Please try logging in instead.";
         }
         
-        toast({
-          title: "Registration Failed",
-          description: errorMessage,
-          variant: "destructive"
-        });
+        toastManager.showToast(() => {
+          toast({
+            title: "Registration Failed",
+            description: errorMessage,
+            variant: "destructive"
+          });
+        }, "registration-error");
       } else {
         // Clear localStorage after successful registration
         localStorage.removeItem('registration_role');
@@ -154,11 +157,13 @@ export default function Register() {
         localStorage.removeItem('registration_municipality');
         localStorage.removeItem('registration_barangay');
         
-        console.log('Registration successful');
-        toast({
-          title: "Registration Successful",
-          description: "Please check your email to verify your account."
-        });
+        console.log('✅ Registration successful - Check your inbox to verify your email!');
+        toastManager.showToast(() => {
+          toast({
+            title: "Registration Successful! 📧",
+            description: "Check your inbox to verify your email and unlock access to all features."
+          });
+        }, "registration-success");
         
         navigate("/email-verification", {
           state: {
@@ -169,11 +174,13 @@ export default function Register() {
       }
     } catch (error) {
       console.error('Unexpected registration error:', error);
-      toast({
-        title: "Registration Failed",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive"
-      });
+      toastManager.showToast(() => {
+        toast({
+          title: "Registration Failed",
+          description: "An unexpected error occurred. Please try again.",
+          variant: "destructive"
+        });
+      }, "registration-unexpected-error");
     } finally {
       setIsLoading(false);
     }
