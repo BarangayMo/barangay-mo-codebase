@@ -283,7 +283,7 @@ export default function JobDetail() {
                 <span>32 Reviews</span>
               </div>
             </div>
-            <Button variant="outline" size="sm" className="mt-4 w-full flex items-center justify-center gap-2" onClick={() => navigate(`/messages/new?recipient=${job?.poster_id || ''}`)}>
+            <Button variant="outline" size="sm" className="mt-4 w-full flex items-center justify-center gap-2" onClick={() => navigate(`/messages/new?recipient=${job?.assigned_to || job?.id || 'job-poster'}`)}>
               <MessageCircle size={14} /> Message
             </Button>
           </div>
