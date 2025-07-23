@@ -125,11 +125,8 @@ export default function JobDetail() {
   };
   
   const handleApplyConfirm = () => {
-    toast({ 
-      title: "Application submitted", 
-      description: "Your application has been submitted successfully!" 
-    });
     setApplyDialogOpen(false);
+    navigate(`/jobs/${id}/payment`);
   };
 
   return (

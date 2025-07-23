@@ -29,6 +29,7 @@ import Services from "@/pages/Services";
 import Marketplace from "@/pages/Marketplace";
 import Jobs from "@/pages/Jobs";
 import JobDetail from "@/pages/JobDetail";
+import JobPayment from "@/pages/marketplace/JobPayment";
 import Contact from "@/pages/Contact";
 import About from "@/pages/About";
 import Features from "@/pages/Features";
@@ -196,6 +197,7 @@ export function AppRoutes() {
       <Route path="/services" element={<RbiProtectedRoute><Services /></RbiProtectedRoute>} />
       <Route path="/jobs" element={<RbiProtectedRoute><Jobs /></RbiProtectedRoute>} />
       <Route path="/jobs/:id" element={<RbiProtectedRoute><JobDetail /></RbiProtectedRoute>} />
+      <Route path="/jobs/:id/payment" element={<RbiProtectedRoute><JobPayment /></RbiProtectedRoute>} />
       
       <Route path="/marketplace" element={<RbiProtectedRoute><Marketplace /></RbiProtectedRoute>} />
       <Route path="/marketplace/category/:categorySlug" element={<RbiProtectedRoute><CategoryPage /></RbiProtectedRoute>} />
