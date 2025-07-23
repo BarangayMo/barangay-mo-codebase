@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,9 +46,18 @@ export default function Register() {
   const municipality = localStorage.getItem('registration_municipality') || locationState?.municipality;
   const barangay = localStorage.getItem('registration_barangay') || locationState?.barangay;
 
-  // If no role or location data, redirect to role selection
-  if (!role || !region || !province || !municipality || !barangay) {
-    navigate('/register/role');
+  // Check if we need to redirect to role selection
+  const needsRedirect = !role || !region || !province || !municipality || !barangay;
+
+  // Handle redirect in useEffect to avoid render phase navigation
+  useEffect(() => {
+    if (needsRedirect) {
+      navigate('/register/role');
+    }
+  }, [needsRedirect, navigate]);
+
+  // Show loading or return null while redirecting
+  if (needsRedirect) {
     return null;
   }
 
