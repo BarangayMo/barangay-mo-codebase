@@ -55,6 +55,13 @@ const fetchCategoryProducts = async (categorySlug: string): Promise<ProductCardT
 export default function CategoryPage() {
   const { categorySlug } = useParams<{ categorySlug: string }>();
   const [search, setSearch] = useState("");
+  const [filters, setFilters] = useState<{
+    priceRange: [number, number];
+    selectedRatings: string[];
+  }>({
+    priceRange: [0, 100000],
+    selectedRatings: []
+  });
   
   const categoryName = categorySlug?.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || '';
 
@@ -67,8 +74,21 @@ export default function CategoryPage() {
     const vendorName = p.vendors?.shop_name || "";
     const productName = p.name || "";
     
-    return productName.toLowerCase().includes(search.toLowerCase()) || 
+    const matchesSearch = productName.toLowerCase().includes(search.toLowerCase()) || 
            vendorName.toLowerCase().includes(search.toLowerCase());
+    
+    // Apply price filter
+    const matchesPrice = p.price >= filters.priceRange[0] && p.price <= filters.priceRange[1];
+    
+    // Apply rating filter
+    const matchesRating = !filters.selectedRatings.length || filters.selectedRatings.some(range => {
+      const rating = p.average_rating || 0;
+      if (range === "5") return rating === 5;
+      const [min, max] = range.split('-').map(Number);
+      return rating >= min && rating <= max;
+    });
+    
+    return matchesSearch && matchesPrice && matchesRating;
   }) || [];
 
   return (
@@ -97,7 +117,7 @@ export default function CategoryPage() {
 
         {/* Filters */}
         <div className="mb-8 flex items-center gap-4 overflow-x-auto pb-2 scrollbar-none">
-          <FilterButton />
+          <FilterButton onFiltersChange={setFilters} />
         </div>
 
         {/* Products Grid */}

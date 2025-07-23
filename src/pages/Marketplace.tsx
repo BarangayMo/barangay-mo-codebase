@@ -85,6 +85,13 @@ const fetchCategories = async (): Promise<Category[]> => {
 export default function Marketplace() {
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
+  const [filters, setFilters] = useState<{
+    priceRange: [number, number];
+    selectedRatings: string[];
+  }>({
+    priceRange: [0, 100000],
+    selectedRatings: []
+  });
   const { userRole } = useAuth();
   const { rbiForms } = useRbiForms();
 
@@ -133,14 +140,14 @@ export default function Marketplace() {
         <div className="mt-6 mb-8">
           {/* Mobile Filter Layout */}
           <div className="md:hidden mb-4">
-            <FilterButton />
+            <FilterButton onFiltersChange={setFilters} />
           </div>
           
           {/* Category filters - responsive */}
           <div className="flex items-center gap-2 md:gap-4 overflow-x-auto pb-2 scrollbar-none">
             {/* Desktop Filter Button */}
             <div className="hidden md:block flex-shrink-0">
-              <FilterButton />
+              <FilterButton onFiltersChange={setFilters} />
             </div>
             
             {isLoadingCategories ? (
@@ -194,6 +201,7 @@ export default function Marketplace() {
             products={products} 
             activeFilter={activeFilter}
             search={search}
+            filters={filters}
           />
         ) : hasRbiAccess ? (
           <p className="text-center py-10 text-gray-500">No products available at the moment.</p>

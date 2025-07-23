@@ -8,9 +8,13 @@ interface ProductListProps {
   products: ProductCardType[];
   activeFilter: string; // This is category name or "All"
   search: string;
+  filters?: {
+    priceRange: [number, number];
+    selectedRatings: string[];
+  };
 }
 
-export const ProductList: FC<ProductListProps> = ({ products, activeFilter, search }) => {
+export const ProductList: FC<ProductListProps> = ({ products, activeFilter, search, filters }) => {
   const filteredProducts = products.filter((p) => {
     const vendorName = p.vendors?.shop_name || "";
     const productName = p.name || "";
@@ -19,7 +23,19 @@ export const ProductList: FC<ProductListProps> = ({ products, activeFilter, sear
     const matchesSearch = productName.toLowerCase().includes(search.toLowerCase()) || 
                         vendorName.toLowerCase().includes(search.toLowerCase());
     const matchesCategory = activeFilter === "All" || categoryName === activeFilter;
-    return matchesSearch && matchesCategory;
+    
+    // Apply price filter
+    const matchesPrice = !filters || (p.price >= filters.priceRange[0] && p.price <= filters.priceRange[1]);
+    
+    // Apply rating filter
+    const matchesRating = !filters || !filters.selectedRatings.length || filters.selectedRatings.some(range => {
+      const rating = p.average_rating || 0;
+      if (range === "5") return rating === 5;
+      const [min, max] = range.split('-').map(Number);
+      return rating >= min && rating <= max;
+    });
+    
+    return matchesSearch && matchesCategory && matchesPrice && matchesRating;
   });
 
   if (activeFilter !== "All") {
@@ -45,10 +61,23 @@ export const ProductList: FC<ProductListProps> = ({ products, activeFilter, sear
     if (!productsByCategory[categoryName]) {
       productsByCategory[categoryName] = [];
     }
-    // Apply search filter here as well for "All" view's individual sections
+    // Apply search and filters for "All" view's individual sections
     const vendorName = p.vendors?.shop_name || "";
     const productName = p.name || "";
-    if (productName.toLowerCase().includes(search.toLowerCase()) || vendorName.toLowerCase().includes(search.toLowerCase())) {
+    const matchesSearch = productName.toLowerCase().includes(search.toLowerCase()) || vendorName.toLowerCase().includes(search.toLowerCase());
+    
+    // Apply price filter
+    const matchesPrice = !filters || (p.price >= filters.priceRange[0] && p.price <= filters.priceRange[1]);
+    
+    // Apply rating filter
+    const matchesRating = !filters || !filters.selectedRatings.length || filters.selectedRatings.some(range => {
+      const rating = p.average_rating || 0;
+      if (range === "5") return rating === 5;
+      const [min, max] = range.split('-').map(Number);
+      return rating >= min && rating <= max;
+    });
+    
+    if (matchesSearch && matchesPrice && matchesRating) {
       productsByCategory[categoryName].push(p);
     }
   });

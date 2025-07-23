@@ -19,7 +19,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 
-export function FilterButton() {
+interface FilterButtonProps {
+  onFiltersChange: (filters: {
+    priceRange: [number, number];
+    selectedRatings: string[];
+  }) => void;
+}
+
+export function FilterButton({ onFiltersChange }: FilterButtonProps) {
   const [priceRange, setPriceRange] = useState([0, 100000]); // Updated to ₹1 Lakh max
   const [selectedRatings, setSelectedRatings] = useState<string[]>([]);
 
@@ -41,7 +48,7 @@ export function FilterButton() {
   };
 
   const ratingRanges = [
-    { label: "5 stars", range: "5.0-5.99", stars: "⭐⭐⭐⭐⭐" },
+    { label: "5 stars", range: "5", stars: "⭐⭐⭐⭐⭐" },
     { label: "4 stars", range: "4.0-4.99", stars: "⭐⭐⭐⭐" },
     { label: "3 stars", range: "3.0-3.99", stars: "⭐⭐⭐" },
     { label: "2 stars", range: "2.0-2.99", stars: "⭐⭐" },
@@ -107,7 +114,7 @@ export function FilterButton() {
                       <label htmlFor={`rating-${range}`} className="flex items-center text-sm font-medium cursor-pointer flex-1">
                         <span className="mr-2">{stars}</span>
                         <span>{label}</span>
-                        <span className="ml-auto text-xs text-gray-500">{range.replace('-', ' - ')}</span>
+                        <span className="ml-auto text-xs text-gray-500">{range === "5" ? "5" : range.replace('-', ' - ')}</span>
                       </label>
                     </div>
                   ))}
@@ -161,11 +168,25 @@ export function FilterButton() {
               onClick={() => {
                 setPriceRange([0, 100000]);
                 setSelectedRatings([]);
+                onFiltersChange({
+                  priceRange: [0, 100000],
+                  selectedRatings: []
+                });
               }}
             >
               Reset
             </Button>
-            <Button className="flex-1">Apply Filters</Button>
+            <Button 
+              className="flex-1"
+              onClick={() => {
+                onFiltersChange({
+                  priceRange: priceRange as [number, number],
+                  selectedRatings
+                });
+              }}
+            >
+              Apply Filters
+            </Button>
           </div>
         </div>
       </SheetContent>
