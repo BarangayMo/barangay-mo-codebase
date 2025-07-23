@@ -19,7 +19,7 @@ export async function initializeMapbox(): Promise<void> {
     // Fallback to hardcoded key if not found in database
     if (!apiKey) {
       console.log('⚠️ Mapbox API key not found in database, using fallback key');
-      apiKey = 'pk.eyJ1IjoiYmFyYW5nYXltbyIsImEiOiJjbWRmNzVjamEwOW1mMmxzZHVla3R6NnF3In0.e5CEdORPBd6Psm4BT5O7gw';
+      apiKey = 'pk.eyJ1IjoiYmFyYW5nYXltbyIsImEiOiJjbWJxZHBzenAwMmdrMmtzZmloemphb284In0.U22j37ppYT1IMyC2lXVBzw';
     }
 
     // Set the access token
@@ -115,6 +115,10 @@ export async function createMap(
   }
 ): Promise<mapboxgl.Map> {
   await initializeMapbox();
+  
+  console.log('🗺️ Creating map with token:', mapboxgl.accessToken);
+  console.log('🗺️ Container exists?', container);
+  console.log('🗺️ Style URL:', options.style || 'mapbox://styles/mapbox/streets-v11');
   
   const map = new mapboxgl.Map({
     container,
