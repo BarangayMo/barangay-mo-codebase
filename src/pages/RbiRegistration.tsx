@@ -53,7 +53,7 @@ export default function RbiRegistration() {
   const [errors, setErrors] = useState<Record<string, any>>({});
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   
-  // Auto-save function with improved error handling
+  // Auto-save function - silent saves to reduce notification spam
   const autoSave = async (dataToSave: RbiFormData, stepToSave: number) => {
     if (!user?.id) return;
     
@@ -76,8 +76,10 @@ export default function RbiRegistration() {
       
       setLastSaved(new Date());
       console.log('✅ Auto-save successful');
+      // Silent save - no toast notification to avoid spam
     } catch (error) {
       console.error("Auto-save failed:", error);
+      // Only show error notifications
       toast.error('Auto-save failed', {
         description: 'Your progress may not be saved. Please try again.',
       });

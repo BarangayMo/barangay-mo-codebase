@@ -67,14 +67,14 @@ const OtherDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiFormC
           </div>
         </div>
         
-        <FloatingInput 
-          id="placeOfBirth" 
-          label="Place of Birth" 
-          placeholder="City, Province, Country" 
-          className="focus-visible:ring-blue-500"
-          value={formData?.otherDetails?.placeOfBirth || ""}
-          onChange={(e) => handleChange("placeOfBirth", e.target.value)}
-        />
+          <FloatingInput 
+            id="placeOfBirth" 
+            label="Place of Birth" 
+            placeholder=" " 
+            className="focus-visible:ring-blue-500"
+            value={formData?.otherDetails?.placeOfBirth || ""}
+            onChange={(e) => handleChange("placeOfBirth", e.target.value)}
+          />
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <FloatingSelect 
@@ -122,7 +122,7 @@ const OtherDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiFormC
           <FloatingInput 
             id="contactNumber" 
             label="Contact Number" 
-            placeholder="+63 XXX XXX XXXX" 
+            placeholder=" " 
             className="focus-visible:ring-blue-500"
             value={formData?.otherDetails?.contactNumber || ""}
             onChange={(e) => handleChange("contactNumber", e.target.value)}
@@ -134,7 +134,7 @@ const OtherDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiFormC
             id="email" 
             label="Email Address" 
             type="email" 
-            placeholder="your@email.com" 
+            placeholder=" " 
             className="focus-visible:ring-blue-500"
             value={formData?.otherDetails?.email || ""}
             onChange={(e) => handleChange("email", e.target.value)}

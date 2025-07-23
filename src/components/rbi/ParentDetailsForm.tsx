@@ -112,7 +112,7 @@ const ParentDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiForm
               <FloatingInput 
                 id="parentStatus" 
                 label="Parent Status" 
-                placeholder="Married, Separated, etc." 
+                placeholder=" " 
                 className="focus-visible:ring-blue-500"
                 value={formData?.parentDetails?.parentStatus || ""}
                 onChange={(e) => handleChange("parentStatus", e.target.value)}
