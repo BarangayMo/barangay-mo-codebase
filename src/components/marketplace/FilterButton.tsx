@@ -29,6 +29,7 @@ interface FilterButtonProps {
 export function FilterButton({ onFiltersChange }: FilterButtonProps) {
   const [priceRange, setPriceRange] = useState([0, 100000]); // Updated to ₹1 Lakh max
   const [selectedRatings, setSelectedRatings] = useState<string[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleRatingChange = (ratingRange: string, checked: boolean) => {
     if (checked) {
@@ -56,7 +57,7 @@ export function FilterButton({ onFiltersChange }: FilterButtonProps) {
   ];
 
   return (
-    <Sheet>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <button className="flex items-center gap-1 px-4 py-2 rounded-full bg-gray-200 text-gray-800 hover:bg-gray-300 transition-colors">
           <SlidersHorizontal className="w-4 h-4" />
@@ -172,6 +173,7 @@ export function FilterButton({ onFiltersChange }: FilterButtonProps) {
                   priceRange: [0, 100000],
                   selectedRatings: []
                 });
+                setIsOpen(false);
               }}
             >
               Reset
@@ -183,6 +185,7 @@ export function FilterButton({ onFiltersChange }: FilterButtonProps) {
                   priceRange: priceRange as [number, number],
                   selectedRatings
                 });
+                setIsOpen(false);
               }}
             >
               Apply Filters
