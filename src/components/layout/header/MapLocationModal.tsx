@@ -7,7 +7,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import  MapboxLocationPicker  from "@/components/ui/mapbox-location-picker";
+import { MapboxLocationPicker } from "@/components/ui/mapbox-location-picker";
 import { toast } from "sonner";
 
 // Define types for our location data
