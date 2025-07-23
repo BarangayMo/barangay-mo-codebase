@@ -242,8 +242,8 @@ export const MapboxLocationPicker = ({
       </div>
 
       {/* Map Container */}
-      <div className="relative border border-border rounded-lg overflow-hidden" style={{ height }}>
-        <div ref={mapContainer} className="w-full h-full" />
+      <div className="relative border-2 border-primary/20 rounded-xl overflow-hidden shadow-lg bg-gradient-to-br from-primary/5 to-secondary/5" style={{ height }}>
+        <div ref={mapContainer} className="w-full h-full rounded-xl" />
         
         {/* Instructions Overlay */}
         <div className="absolute top-4 left-4 bg-background/90 backdrop-blur-sm border border-border rounded-lg p-3 max-w-xs">
