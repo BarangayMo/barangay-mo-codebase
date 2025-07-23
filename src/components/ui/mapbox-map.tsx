@@ -207,14 +207,16 @@ export const MapboxMap = ({
 
   return (
     <div 
-      className={`relative border border-border rounded-lg overflow-hidden ${className}`}
+      className={`relative border border-border rounded-lg overflow-hidden shadow-sm ${className}`}
       style={{ height }}
     >
       <div 
         ref={mapContainer} 
-        className="w-full h-full"
+        className="w-full h-full rounded-lg"
         style={{ minHeight: height }}
       />
+      {/* Map overlay for better styling */}
+      <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-transparent via-transparent to-primary/5 rounded-lg" />
     </div>
   );
 };

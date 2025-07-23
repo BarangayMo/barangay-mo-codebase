@@ -89,27 +89,34 @@ const AddressDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiFor
         <div className="space-y-3 sm:space-y-4">
           <div>
             <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-              Select Your Location on Map
+              Select Your Location on Map <span className="text-red-500">*</span>
             </label>
-            <div className="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+            <div className="border-2 border-primary/20 rounded-xl overflow-hidden shadow-lg bg-white">
               <MapboxLocationPicker 
                 onLocationSelected={handleLocationSelected}
-                height="200px"
-                className="w-full"
-                initialLocation={selectedBarangay || "Philippines"}
+                height="280px"
+                className="w-full rounded-xl"
+                initialLocation={selectedBarangay || "Manila, Philippines"}
               />
             </div>
-            <p className="text-xs text-gray-500 mt-2">
-              Click on the map to pinpoint your exact location within your barangay
+            <p className="text-xs text-muted-foreground mt-3 flex items-start gap-2">
+              <span className="inline-block w-1 h-1 bg-primary rounded-full mt-2 flex-shrink-0"></span>
+              Click on the map to pinpoint your exact location within your barangay. This helps us verify your residency.
             </p>
             {selectedBarangay && (
-              <div className="mt-2 p-2 sm:p-3 bg-blue-50 rounded text-xs sm:text-sm">
-                <span className="font-medium text-blue-800">Selected: </span>
-                <span className="text-blue-700">{selectedBarangay}</span>
+              <div className="mt-3 p-3 bg-gradient-to-r from-blue-50 to-primary/5 border border-primary/20 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                  <span className="font-medium text-primary text-sm">Selected Location:</span>
+                </div>
+                <span className="text-primary/80 text-sm block mt-1">{selectedBarangay}</span>
               </div>
             )}
             {errors?.address?.barangay && (
-              <p className="text-red-500 text-xs mt-1">{errors.address.barangay}</p>
+              <p className="text-red-500 text-xs mt-2 flex items-center gap-1">
+                <span className="inline-block w-3 h-3 bg-red-500 rounded-full text-white text-[8px] flex items-center justify-center">!</span>
+                {errors.address.barangay}
+              </p>
             )}
           </div>
         </div>
