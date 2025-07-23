@@ -1,11 +1,9 @@
+
 import React, { useEffect, useRef, useState } from 'react';
-import { Search, MapPin, Loader2, AlertCircle } from 'lucide-react';
+import { Search, MapPin, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { initializeMapbox, geocodeAddress, reverseGeocode, createMap, createMarker } from '@/services/mapbox';
 import { toast } from 'sonner';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
 
 interface MapboxLocationPickerProps {
   onLocationSelected: (location: { 
@@ -25,8 +23,8 @@ export const MapboxLocationPicker = ({
   initialLocation = 'Philippines'
 }: MapboxLocationPickerProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const mapInstance = useRef<mapboxgl.Map | null>(null);
-  const markerInstance = useRef<mapboxgl.Marker | null>(null);
+  const mapInstance = useRef<any>(null);
+  const markerInstance = useRef<any>(null);
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,38 +35,60 @@ export const MapboxLocationPicker = ({
     address: string;
     barangay: string;
   } | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const [mapboxLoaded, setMapboxLoaded] = useState(false);
+
+  const MAPBOX_TOKEN = 'pk.eyJ1IjoiYmFyYW5nYXltbyIsImEiOiJjbWJxZHBzenAwMmdrMmtzZmloemphb284In0.U22j37ppYT1IMyC2lXVBzw';
+
+  const loadMapboxResources = async (): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      // Check if already loaded
+      if (window.mapboxgl) {
+        setMapboxLoaded(true);
+        resolve();
+        return;
+      }
+
+      // Add CSS
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css';
+      document.head.appendChild(link);
+
+      // Add JS
+      const script = document.createElement('script');
+      script.src = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js';
+      script.onload = () => {
+        setMapboxLoaded(true);
+        resolve();
+      };
+      script.onerror = () => {
+        reject(new Error('Failed to load Mapbox GL JS'));
+      };
+      document.head.appendChild(script);
+    });
+  };
 
   const initializeMap = async () => {
-    if (!mapContainer.current) {
-      console.error('❌ Map container not found');
-      // Retry after a short delay
-      setTimeout(() => {
-        if (mapContainer.current) {
-          initializeMap();
-        } else {
-          setError('Map container not found');
-          setLoading(false);
-        }
-      }, 100);
-      return;
-    }
+    if (!mapContainer.current) return;
 
     try {
       setLoading(true);
       setError(null);
 
-      console.log('🗺️ Initializing Mapbox...');
+      console.log('🗺️ Loading Mapbox resources...');
+      await loadMapboxResources();
+
+      console.log('🗺️ Initializing map...');
       
-      // Initialize Mapbox with API key
-      (window as any).mapboxgl.accessToken = 'pk.eyJ1IjoiYmFyYW5nYXltbyIsImEiOiJjbWJxZHBzenAwMmdrMmtzZmloemphb284In0.U22j37ppYT1IMyC2lXVBzw';
+      // Set access token
+      window.mapboxgl.accessToken = MAPBOX_TOKEN;
 
-      // Set default center to Philippines
-      const center: [number, number] = [121.0244, 14.5547];
+      // Default center to Philippines
+      const center = [121.0244, 14.5547];
 
-      console.log('📍 Creating map with center:', center);
-
-      // Create map directly without helper function to avoid import issues
-      const map = new (window as any).mapboxgl.Map({
+      // Create map
+      const map = new window.mapboxgl.Map({
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/streets-v11',
         center,
@@ -77,24 +97,24 @@ export const MapboxLocationPicker = ({
       });
 
       // Add navigation controls
-      map.addControl(new (window as any).mapboxgl.NavigationControl(), 'top-right');
+      map.addControl(new window.mapboxgl.NavigationControl(), 'top-right');
 
       mapInstance.current = map;
 
       map.on('load', () => {
-        console.log('✅ Map loaded and ready');
+        console.log('✅ Map loaded successfully');
         setLoading(false);
       });
 
-      map.on('error', (e: any) => {
-        console.error('❌ Map load error:', e);
-        setError('Failed to load map');
+      map.on('error', (e) => {
+        console.error('❌ Map error:', e);
+        setError('Map failed to load properly');
         setLoading(false);
       });
 
-      map.on('click', (e: any) => {
-        console.log('🗺️ Map clicked:', e.lngLat);
-        handleMapClick(e.lngLat.lng, e.lngLat.lat);
+      map.on('click', (e) => {
+        const { lng, lat } = e.lngLat;
+        handleMapClick(lng, lat);
       });
 
     } catch (err) {
@@ -104,16 +124,17 @@ export const MapboxLocationPicker = ({
     }
   };
 
-  const handleMapClick = (lng: number, lat: number) => {
+  const handleMapClick = async (lng: number, lat: number) => {
     if (!mapInstance.current) return;
 
     try {
+      // Remove existing marker
       if (markerInstance.current) {
         markerInstance.current.remove();
       }
 
-      // Create marker directly
-      const marker = new (window as any).mapboxgl.Marker({
+      // Create new marker
+      const marker = new window.mapboxgl.Marker({
         color: '#ef4444',
         draggable: true,
       })
@@ -122,27 +143,41 @@ export const MapboxLocationPicker = ({
 
       markerInstance.current = marker;
 
+      // Handle marker drag
       marker.on('dragend', () => {
         const lngLat = marker.getLngLat();
         updateLocation(lngLat.lng, lngLat.lat);
       });
 
-      updateLocation(lng, lat);
+      // Update location
+      await updateLocation(lng, lat);
+
+      // Zoom to location
+      mapInstance.current.flyTo({
+        center: [lng, lat],
+        zoom: 15,
+        duration: 1000
+      });
+
     } catch (error) {
-      console.error('❌ Error on map click:', error);
-      toast('Failed to get location information', { 
+      console.error('❌ Error handling map click:', error);
+      toast.error('Failed to set location', {
         description: 'Please try clicking on the map again.'
       });
     }
   };
 
   const updateLocation = async (lng: number, lat: number) => {
-    console.log('🔄 Updating location:', lng, lat);
     try {
-      // Simple reverse geocoding using Mapbox API directly
+      console.log('🔄 Updating location:', { lng, lat });
+      
       const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=pk.eyJ1IjoiYmFyYW5nYXltbyIsImEiOiJjbWJxZHBzenAwMmdrMmtzZmloemphb284In0.U22j37ppYT1IMyC2lXVBzw`
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_TOKEN}`
       );
+
+      if (!response.ok) {
+        throw new Error('Geocoding request failed');
+      }
 
       const data = await response.json();
 
@@ -150,8 +185,8 @@ export const MapboxLocationPicker = ({
         const feature = data.features[0];
         const address = feature.place_name;
 
-        let barangay: string | undefined = undefined;
-
+        // Extract barangay from context
+        let barangay = 'Unknown Barangay';
         if (feature.context) {
           for (const context of feature.context) {
             if (context.id.includes('neighborhood') || context.id.includes('locality')) {
@@ -164,20 +199,18 @@ export const MapboxLocationPicker = ({
         const locationData = {
           coordinates: { lat, lng },
           address,
-          barangay: barangay || 'Unknown Barangay'
+          barangay
         };
 
         setSelectedLocation(locationData);
         console.log('📍 Location updated:', locationData);
       } else {
-        toast('Could not get address for this location', {
-          description: 'Please try selecting a different location.'
-        });
+        throw new Error('No address found for this location');
       }
     } catch (error) {
       console.error('❌ Error updating location:', error);
-      toast('Failed to get location information', {
-        description: 'Please check your internet connection and try again.'
+      toast.error('Failed to get location information', {
+        description: 'Please try selecting a different location.'
       });
     }
   };
@@ -189,42 +222,42 @@ export const MapboxLocationPicker = ({
       setSearching(true);
       console.log('🔍 Searching for:', searchQuery);
 
-      // Direct geocoding API call
       const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery)}.json?access_token=pk.eyJ1IjoiYmFyYW5nYXltbyIsImEiOiJjbWJxZHBzenAwMmdrMmtzZmloemphb284In0.U22j37ppYT1IMyC2lXVBzw`
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery)}.json?access_token=${MAPBOX_TOKEN}`
       );
+
+      if (!response.ok) {
+        throw new Error('Search request failed');
+      }
 
       const data = await response.json();
 
       if (data?.features?.length) {
         const feature = data.features[0];
-        const result = {
-          lng: feature.center[0],
-          lat: feature.center[1],
-          place_name: feature.place_name,
-        };
+        const { center, place_name } = feature;
+        const [lng, lat] = center;
 
-        console.log('📍 Search result:', result);
+        console.log('📍 Search result:', { lng, lat, place_name });
 
         mapInstance.current.flyTo({
-          center: [result.lng, result.lat],
+          center: [lng, lat],
           zoom: 15,
           duration: 2000
         });
 
-        handleMapClick(result.lng, result.lat);
+        await handleMapClick(lng, lat);
 
-        toast('Location found!', {
-          description: result.place_name
+        toast.success('Location found!', {
+          description: place_name
         });
       } else {
-        toast('Location not found', {
+        toast.error('Location not found', {
           description: 'Try a different search term.'
         });
       }
     } catch (error) {
       console.error('❌ Search error:', error);
-      toast('Search failed', {
+      toast.error('Search failed', {
         description: 'Please try again.'
       });
     } finally {
@@ -236,54 +269,28 @@ export const MapboxLocationPicker = ({
     if (selectedLocation) {
       console.log('✅ Confirming location:', selectedLocation);
       onLocationSelected(selectedLocation);
+      toast.success('Location confirmed!', {
+        description: `Selected: ${selectedLocation.barangay}`
+      });
     } else {
       toast.error('Please select a location first');
     }
   };
 
+  const handleRetry = () => {
+    console.log('🔄 Retrying map initialization...');
+    setRetryCount(prev => prev + 1);
+    setError(null);
+    initializeMap();
+  };
+
   useEffect(() => {
-    // Add Mapbox CSS and JS dynamically
-    const addMapboxResources = () => {
-      // Add CSS
-      if (!document.querySelector('link[href*="mapbox-gl.css"]')) {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css';
-        document.head.appendChild(link);
-      }
-
-      // Add JS
-      if (!window.mapboxgl) {
-        const script = document.createElement('script');
-        script.src = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js';
-        script.onload = () => {
-          console.log('📦 Mapbox GL JS loaded');
-          // Wait a bit for the container to be ready
-          setTimeout(() => {
-            if (mapContainer.current) {
-              initializeMap();
-            }
-          }, 100);
-        };
-        script.onerror = () => {
-          setError('Failed to load Mapbox GL JS');
-          setLoading(false);
-        };
-        document.head.appendChild(script);
-      } else {
-        // Mapbox already loaded, initialize directly
-        setTimeout(() => {
-          if (mapContainer.current) {
-            initializeMap();
-          }
-        }, 100);
-      }
-    };
-
-    addMapboxResources();
+    if (mapContainer.current) {
+      initializeMap();
+    }
 
     return () => {
-      console.log('🧹 Cleaning up MapboxLocationPicker...');
+      console.log('🧹 Cleaning up map...');
       if (markerInstance.current) {
         markerInstance.current.remove();
       }
@@ -300,6 +307,11 @@ export const MapboxLocationPicker = ({
           <div className="text-center space-y-3">
             <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
             <div className="text-sm text-muted-foreground">Loading map...</div>
+            {retryCount > 0 && (
+              <div className="text-xs text-muted-foreground">
+                Attempt {retryCount + 1}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -316,7 +328,8 @@ export const MapboxLocationPicker = ({
               <div className="text-sm font-medium text-destructive">Failed to load map</div>
               <div className="text-xs text-muted-foreground">{error}</div>
             </div>
-            <Button onClick={initializeMap} size="sm" variant="outline">
+            <Button onClick={handleRetry} size="sm" variant="outline">
+              <RefreshCw className="h-4 w-4 mr-2" />
               Try Again
             </Button>
           </div>
@@ -353,6 +366,7 @@ export const MapboxLocationPicker = ({
 
       <div className="relative border border-border rounded-lg overflow-hidden" style={{ height }}>
         <div ref={mapContainer} className="w-full h-full" />
+        
         <div className="absolute top-4 left-4 bg-background/90 backdrop-blur-sm border border-border rounded-lg p-3 max-w-xs">
           <div className="flex items-start gap-2">
             <MapPin className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
@@ -361,6 +375,7 @@ export const MapboxLocationPicker = ({
             </div>
           </div>
         </div>
+
         {selectedLocation && (
           <div className="absolute bottom-4 left-4 right-4 bg-background/90 backdrop-blur-sm border border-border rounded-lg p-3">
             <div className="space-y-2">
