@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRbiAccess } from "@/hooks/use-rbi-access";
@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 export function DesktopNavItems() {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const { isAuthenticated, userRole } = useAuth();
   const { hasRbiAccess } = useRbiAccess();
 
@@ -19,7 +20,7 @@ export function DesktopNavItems() {
       });
       return;
     }
-    window.location.href = path;
+    navigate(path);
   };
 
   const getDashboardRoute = () => {

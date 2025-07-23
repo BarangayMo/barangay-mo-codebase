@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import * as React from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,10 +16,10 @@ interface WishlistItem {
 export const useWishlist = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [localWishlist, setLocalWishlist] = useState<string[]>([]);
+  const [localWishlist, setLocalWishlist] = React.useState<string[]>([]);
 
   // Load local wishlist from localStorage on mount
-  useEffect(() => {
+  React.useEffect(() => {
     console.log('🔄 Loading local wishlist from localStorage...');
     const stored = localStorage.getItem(WISHLIST_STORAGE_KEY);
     if (stored) {

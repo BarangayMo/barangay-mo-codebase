@@ -1,4 +1,5 @@
 
+import * as React from "react";
 import { AuthProvider } from "./contexts/AuthContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { ThemeProvider } from "./components/theme-provider";
