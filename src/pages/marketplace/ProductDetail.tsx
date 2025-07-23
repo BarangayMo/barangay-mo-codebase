@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -10,6 +11,8 @@ import { ProductCard, ProductCardType } from '@/components/marketplace/ProductCa
 import { Star, ChevronLeft, ChevronRight, ShoppingCart, Heart, Minus, Plus, Share2, Store, Truck, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWishlist } from '@/hooks/useWishlist';
+import { useShare } from '@/hooks/useShare';
 import { cn } from '@/lib/utils';
 
 const DEFAULT_PRODUCT_IMAGE = "/lovable-uploads/fde1e978-0d35-49ec-9f4b-1f03b096b981.png";
@@ -244,6 +247,10 @@ export default function ProductDetail() {
   const { user } = useAuth(); // Assuming useAuth provides user info, including user.id
   const queryClient = useQueryClient();
   const [quantity, setQuantity] = useState(1);
+  
+  // Add wishlist and share functionality
+  const { isInWishlist, toggleWishlist, isAddingToWishlist } = useWishlist();
+  const { shareProduct } = useShare();
   
   useEffect(() => {
     console.log("ProductDetail mounted with ID from useParams:", id);
@@ -590,10 +597,33 @@ export default function ProductDetail() {
             </div>
             
             <div className="flex items-center gap-4 mt-4 text-sm">
-              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary">
-                <Heart className="mr-2 h-4 w-4" /> Add to Wishlist
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className={cn(
+                  "text-muted-foreground hover:text-primary",
+                  isInWishlist(product!.id) && "text-red-600 hover:text-red-700"
+                )}
+                onClick={(e) => {
+                  e.preventDefault();
+                  console.log('🔄 Wishlist button clicked for product:', product!.id);
+                  toggleWishlist(product!.id);
+                }}
+                disabled={isAddingToWishlist}
+              >
+                <Heart className={cn("mr-2 h-4 w-4", isInWishlist(product!.id) && "fill-current")} /> 
+                {isInWishlist(product!.id) ? "Remove from Wishlist" : "Add to Wishlist"}
               </Button>
-              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-muted-foreground hover:text-primary"
+                onClick={(e) => {
+                  e.preventDefault();
+                  console.log('🔄 Share button clicked for product:', product!.id, product!.name);
+                  shareProduct(product!.id, product!.name);
+                }}
+              >
                 <Share2 className="mr-2 h-4 w-4" /> Share
               </Button>
             </div>
