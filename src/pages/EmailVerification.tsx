@@ -53,18 +53,28 @@ export default function EmailVerification() {
       }
     });
 
+    // Periodic session checking for cross-device verification detection
+    const sessionCheckInterval = setInterval(async () => {
+      console.log('🔄 Periodic session check for email verification...');
+      await checkVerificationStatus();
+    }, 3000); // Check every 3 seconds
+
     // Countdown timer
     if (countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
       return () => {
         clearTimeout(timer);
+        clearInterval(sessionCheckInterval);
         subscription.unsubscribe();
       };
     } else {
       setCanResend(true);
     }
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearInterval(sessionCheckInterval);
+      subscription.unsubscribe();
+    };
   }, [countdown, navigate]);
 
   const handleResend = async () => {
