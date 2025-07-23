@@ -98,6 +98,9 @@ import QRScanner from "@/pages/officials/QRScanner";
 // Import the new RBI Forms component
 import RbiForms from "@/pages/officials/RbiForms";
 
+// Import Wishlist component
+import Wishlist from "@/pages/Wishlist";
+
 // Import auth components
 import { EmailConfirmationHandler } from "@/components/auth/EmailConfirmationHandler";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
@@ -201,6 +204,7 @@ export function AppRoutes() {
       <Route path="/marketplace/checkout" element={<RbiProtectedRoute><Checkout /></RbiProtectedRoute>} />
       <Route path="/marketplace/order-confirmation" element={<RbiProtectedRoute><OrderConfirmation /></RbiProtectedRoute>} />
       <Route path="/marketplace/my-orders" element={<RbiProtectedRoute><MyOrders /></RbiProtectedRoute>} />
+      <Route path="/marketplace/wishlist" element={<RbiProtectedRoute><Wishlist /></RbiProtectedRoute>} />
       
       <Route path="/admin/media-library" element={<ProtectedRoute><MediaLibraryPage /></ProtectedRoute>} />
       

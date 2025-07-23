@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, User, ShoppingBag, Menu, LogOut, Home, MessageSquare, BarChart3, FolderOpen, Settings, UsersIcon, Hospital, ClipboardList, Siren, FileText, Store, LifeBuoy, Info, Phone } from "lucide-react";
+import { Bell, User, ShoppingBag, Menu, LogOut, Home, MessageSquare, BarChart3, FolderOpen, Settings, UsersIcon, Hospital, ClipboardList, Siren, FileText, Store, LifeBuoy, Info, Phone, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { HeaderLogo } from "./header/HeaderLogo";
@@ -11,6 +11,7 @@ import { LanguageSelector } from "./LanguageSelector";
 import { useCartSummary } from "@/hooks/useCartSummary";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useRbiAccess } from "@/hooks/use-rbi-access";
+import { useWishlist } from "@/hooks/useWishlist";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { CartDrawerContent } from "@/components/cart/CartDrawerContent";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -36,6 +37,7 @@ export const Header = () => {
     unreadCount
   } = useNotifications();
   const { hasRbiAccess } = useRbiAccess();
+  const { wishlistItems } = useWishlist();
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -315,6 +317,16 @@ export const Header = () => {
 
           {/* Right side icons */}
           <div className="flex items-center gap-1">
+            {/* Wishlist Icon - show for marketplace or home */}
+            {showCartIcon && <Button asChild variant="ghost" size="icon" className="relative w-8 h-8">
+                <Link to="/marketplace/wishlist">
+                  <Heart className="h-5 w-5" />
+                  {wishlistItems.length > 0 && <span className="absolute -top-0.5 -right-0.5 text-white text-[10px] rounded-full w-3.5 h-3.5 flex items-center justify-center bg-red-500">
+                      {wishlistItems.length}
+                    </span>}
+                </Link>
+              </Button>}
+            
             {/* Cart Icon - show for marketplace or home */}
             {showCartIcon && <Button asChild variant="ghost" size="icon" className="relative w-8 h-8">
                 <Link to="/marketplace/cart">
@@ -365,6 +377,16 @@ export const Header = () => {
                   <LanguageSelector />
                 </>}
               <div className="flex items-center gap-0 md:gap-1">
+                {/* Wishlist Icon - show for marketplace or home */}
+                {showCartIcon && <Button asChild variant="ghost" size="icon" className="relative w-8 h-8 md:w-9 md:h-9">
+                    <Link to="/marketplace/wishlist">
+                      <Heart className="h-4 w-4 md:h-5 md:w-5" />
+                      {wishlistItems.length > 0 && <span className="absolute -top-0.5 -right-0.5 text-white text-[10px] md:text-xs rounded-full w-3.5 h-3.5 md:w-4 md:h-4 flex items-center justify-center bg-red-500">
+                          {wishlistItems.length}
+                        </span>}
+                    </Link>
+                  </Button>}
+                
                 {showCartIcon && (isMobile ? <Button asChild variant="ghost" size="icon" className="relative w-8 h-8">
                       <Link to="/marketplace/cart">
                         <ShoppingBag className="h-4 w-4 md:h-5 md:w-5" />
