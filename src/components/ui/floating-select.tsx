@@ -32,7 +32,7 @@ export function FloatingSelect({
   disabled,
 }: FloatingSelectProps) {
   const [isFocused, setIsFocused] = useState(false);
-  const isActive = isFocused || (!!value && value !== "") || (!!defaultValue && defaultValue !== "");
+  const isActive = true; // Always keep label floating for better UX
 
   
   return (

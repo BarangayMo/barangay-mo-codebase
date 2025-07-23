@@ -13,10 +13,7 @@ interface FloatingInputProps extends React.InputHTMLAttributes<HTMLInputElement>
 export const FloatingInput = React.forwardRef<HTMLInputElement, FloatingInputProps>(
   ({ label, id, error, className, icon, type, ...props }, ref) => {
     const [isFocused, setIsFocused] = useState(false);
-    const isActive =
-      type === "date"
-        ? true // always float for date input
-        : isFocused || (props.value && props.value.toString().length > 0);
+    const isActive = true; // Always keep label floating for better UX
 
     return (
       <div className="relative">
