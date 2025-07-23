@@ -121,7 +121,7 @@ const AddressDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiFor
             id="residenceSince" 
             label="Residence Since" 
             type="date" 
-
+            
             className="focus-visible:ring-blue-500 text-sm sm:text-base"
             value={formData?.address?.residenceSince || ""}
             onChange={(e) => handleChange("residenceSince", e.target.value)}
