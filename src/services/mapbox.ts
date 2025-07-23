@@ -19,7 +19,7 @@ export async function initializeMapbox(): Promise<void> {
     // Fallback to hardcoded key if not found in database
     if (!apiKey) {
       console.log('⚠️ Mapbox API key not found in database, using fallback key');
-      apiKey = 'pk.eyJ1IjoiYmFyYW5nYXltbyIsImEiOiJjbWRmNzVjamEwOW1mMmxzZHVla3R6NnF3In0.e5CEdORPBd6Psm4BT5O7gw';
+      apiKey = 'pk.eyJ1IjoiYmFyYW5nYXltbyIsImEiOiJjbWJxZHBzenAwMmdrMmtzZmloemphb284In0.U22j37ppYT1IMyC2lXVBzw';
     }
 
     // Set the access token
@@ -65,21 +65,32 @@ export async function geocodeAddress(address: string): Promise<{ lng: number; la
 /**
  * Reverse geocode coordinates to get address information
  */
-export async function reverseGeocode(lng: number, lat: number): Promise<{ address: string; barangay?: string } | null> {
+export async function reverseGeocode(lng: number, lat: number) {
   await initializeMapbox();
-  
+
+  console.log('➡️ reverseGeocode() called');
+  console.log('🧭 Coordinates:', lng, lat);
+  console.log('🔑 Access Token:', mapboxgl.accessToken);
+
+  const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${mapboxgl.accessToken}`;
+  console.log('🌍 Request URL:', url);
+
   try {
-    const response = await fetch(
-      `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${mapboxgl.accessToken}`
-    );
-    
+    const response = await fetch(url);
+    console.log('📡 Response status:', response.status);
+
+    if (!response.ok) {
+      console.error('❌ HTTP error:', response.status, response.statusText);
+    }
+
     const data = await response.json();
-    
+    console.log('📦 Response JSON:', data);
+
     if (data.features && data.features.length > 0) {
       const feature = data.features[0];
-      const address = feature.place_name;
-      
-      // Try to extract barangay from context
+      console.log('✅ First feature:', feature);
+
+      // same as before
       let barangay = '';
       if (feature.context) {
         for (const context of feature.context) {
@@ -89,16 +100,18 @@ export async function reverseGeocode(lng: number, lat: number): Promise<{ addres
           }
         }
       }
-      
+
       return {
-        address,
-        barangay: barangay || undefined
+        address: feature.place_name,
+        barangay: barangay || undefined,
       };
     }
-    
+
+    console.warn('⚠️ No features found');
     return null;
+
   } catch (error) {
-    console.error('Reverse geocoding failed:', error);
+    console.error('❌ Reverse geocoding failed:', error);
     return null;
   }
 }
