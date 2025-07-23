@@ -39,22 +39,25 @@ export const MapboxLocationPicker = ({
   } | null>(null);
 
   const initializeMap = async () => {
-    if (!mapContainer.current) return;
+    if (!mapContainer.current) {
+      console.error('⚠️ Map container not found');
+      return;
+    }
 
     try {
       setLoading(true);
       setError(null);
-      
-      // Initialize Mapbox
+
+      console.log('🗺️ Initializing Mapbox...');
       await initializeMapbox();
-      
-      // Get initial coordinates
+
       const initialCoords = await geocodeAddress(initialLocation);
       const center: [number, number] = initialCoords 
         ? [initialCoords.lng, initialCoords.lat]
-        : [121.0244, 14.5547]; // Manila fallback
+        : [121.0244, 14.5547];
 
-      // Create map
+      console.log('📍 Initial map center:', center);
+
       const map = await createMap(mapContainer.current, {
         center,
         zoom: 6
@@ -62,26 +65,26 @@ export const MapboxLocationPicker = ({
 
       mapInstance.current = map;
 
-      // Wait for map to load before setting up interactions
       map.on('load', () => {
-        console.log('🗺️ Map loaded successfully');
+        console.log('✅ Map loaded and ready');
+        map.resize();
         setLoading(false);
       });
 
-      // Add error handling
       map.on('error', (e) => {
-        console.error('🗺️ Map error:', e);
-        setError('Failed to load map tiles');
+        console.error('❌ Map load error:', e);
+        setError('Failed to load map');
         setLoading(false);
       });
 
-      // Add click listener to map
       map.on('click', async (e) => {
+        console.log('🗺️ Map clicked:', e.lngLat);
         await handleMapClick(e.lngLat.lng, e.lngLat.lat);
       });
-    } catch (error) {
-      console.error('Failed to initialize map:', error);
-      setError(error instanceof Error ? error.message : 'Failed to load map');
+
+    } catch (err) {
+      console.error('❌ Failed to initialize map:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load map');
       setLoading(false);
     }
   };
@@ -90,12 +93,10 @@ export const MapboxLocationPicker = ({
     if (!mapInstance.current) return;
 
     try {
-      // Remove existing marker
       if (markerInstance.current) {
         markerInstance.current.remove();
       }
 
-      // Create new marker
       const marker = createMarker(mapInstance.current, [lng, lat], {
         color: '#ef4444',
         draggable: true
@@ -103,7 +104,6 @@ export const MapboxLocationPicker = ({
 
       markerInstance.current = marker;
 
-      // Add drag listener to marker
       marker.on('dragend', async () => {
         const lngLat = marker.getLngLat();
         await updateLocation(lngLat.lng, lngLat.lat);
@@ -111,30 +111,30 @@ export const MapboxLocationPicker = ({
 
       await updateLocation(lng, lat);
     } catch (error) {
-      console.error('Error handling map click:', error);
+      console.error('❌ Error on map click:', error);
       toast.error('Failed to get location information');
     }
   };
 
   const updateLocation = async (lng: number, lat: number) => {
+    console.log('🔄 Updating location:', lng, lat);
     try {
-      // Reverse geocode to get address
       const result = await reverseGeocode(lng, lat);
-      
+
       if (result) {
         const locationData = {
           coordinates: { lat, lng },
           address: result.address,
           barangay: result.barangay || 'Unknown Barangay'
         };
-        
+
         setSelectedLocation(locationData);
         console.log('📍 Location updated:', locationData);
       } else {
         toast.error('Could not get address for this location');
       }
     } catch (error) {
-      console.error('Error updating location:', error);
+      console.error('❌ Error updating location:', error);
       toast.error('Failed to get location information');
     }
   };
@@ -145,26 +145,26 @@ export const MapboxLocationPicker = ({
     try {
       setSearching(true);
       console.log('🔍 Searching for:', searchQuery);
-      
+
       const result = await geocodeAddress(searchQuery.trim());
-      
+
       if (result) {
-        // Fly to location
+        console.log('📍 Search result:', result);
+
         mapInstance.current.flyTo({
           center: [result.lng, result.lat],
           zoom: 15,
           duration: 2000
         });
 
-        // Add marker and update location
         await handleMapClick(result.lng, result.lat);
-        
+
         toast.success('Location found!');
       } else {
-        toast.error('Location not found. Please try a different search term.');
+        toast.error('Location not found. Try a different search.');
       }
     } catch (error) {
-      console.error('Search error:', error);
+      console.error('❌ Search error:', error);
       toast.error('Search failed. Please try again.');
     } finally {
       setSearching(false);
@@ -184,6 +184,7 @@ export const MapboxLocationPicker = ({
     initializeMap();
 
     return () => {
+      console.log('🧹 Cleaning up MapboxLocationPicker...');
       if (markerInstance.current) {
         markerInstance.current.remove();
       }
@@ -227,7 +228,6 @@ export const MapboxLocationPicker = ({
 
   return (
     <div className={`space-y-4 ${className}`}>
-      {/* Search Bar */}
       <div className="flex gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -252,21 +252,16 @@ export const MapboxLocationPicker = ({
         </Button>
       </div>
 
-      {/* Map Container */}
-      <div className="relative border-2 border-primary/20 rounded-xl overflow-hidden shadow-lg bg-gradient-to-br from-primary/5 to-secondary/5" style={{ height }}>
-        <div ref={mapContainer} className="w-full h-full rounded-xl" />
-        
-        {/* Instructions Overlay */}
+      <div className="relative border border-border rounded-lg overflow-hidden" style={{ height }}>
+        <div ref={mapContainer} className="w-full h-full" />
         <div className="absolute top-4 left-4 bg-background/90 backdrop-blur-sm border border-border rounded-lg p-3 max-w-xs">
           <div className="flex items-start gap-2">
             <MapPin className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
             <div className="text-xs text-muted-foreground">
-              Click on the map or search for a location to place a marker. You can drag the marker to adjust the position.
+              Click on the map or search for a location. Drag the marker to adjust.
             </div>
           </div>
         </div>
-
-        {/* Selected Location Info */}
         {selectedLocation && (
           <div className="absolute bottom-4 left-4 right-4 bg-background/90 backdrop-blur-sm border border-border rounded-lg p-3">
             <div className="space-y-2">
