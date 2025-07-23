@@ -49,14 +49,16 @@ export function DesktopNavItems() {
 
   return (
     <div className="hidden md:flex items-center space-x-1">
-      <Button 
-        variant="ghost" 
-        size="sm" 
-        asChild
-        className={pathname === "/" ? (userRole === "resident" ? "text-[#1a237e]" : "text-[#ea384c]") : ""}
-      >
-        <Link to={getHomeRoute()}>Home</Link>
-      </Button>
+      {userRole !== "resident" && (
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          asChild
+          className={pathname === "/" ? "text-[#ea384c]" : ""}
+        >
+          <Link to={getHomeRoute()}>Home</Link>
+        </Button>
+      )}
       
       <Button 
         variant="ghost" 
