@@ -2,11 +2,13 @@
 import { Link, useLocation } from "react-router-dom";
 import { Home, MessageSquare, Store, Menu, LifeBuoy, User, Briefcase, Bell, ShoppingCart, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRbiAccess } from "@/hooks/use-rbi-access";
 import { cn } from "@/lib/utils";
 
 export const MobileNavbar = () => {
   const { pathname } = useLocation();
   const { userRole, isAuthenticated } = useAuth();
+  const { checkAccess } = useRbiAccess();
 
   const getHomeRoute = () => {
     if (!isAuthenticated) {
@@ -79,13 +81,15 @@ export const MobileNavbar = () => {
         icon: MessageSquare,
         path: getMessagesRoute(),
         label: "Messages",
-        key: "messages"
+        key: "messages",
+        requiresRbi: true
       },
       {
         icon: Store,
         path: "/marketplace",
         label: "Market",
-        key: "marketplace"
+        key: "marketplace",
+        requiresRbi: true
       }
     ];
 
@@ -123,9 +127,23 @@ export const MobileNavbar = () => {
     <nav className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md bg-white/90 border-t border-white/20 shadow-lg rounded-t-xl pb-2">
       <div className="flex items-center justify-center px-4 py-1 max-w-md mx-auto">
         <div className="flex items-center justify-between w-full max-w-sm">
-          {navItems.map(({ icon: Icon, path, label, key }) => {
+        {navItems.map(({ icon: Icon, path, label, key, requiresRbi }: any) => {
+            const handleClick = (e: React.MouseEvent) => {
+              if (requiresRbi && userRole === 'resident') {
+                e.preventDefault();
+                checkAccess(() => {
+                  window.location.href = path;
+                });
+              }
+            };
+
             return (
-              <Link key={key} to={path} className="flex flex-col items-center justify-center p-2 min-w-0">
+              <Link 
+                key={key} 
+                to={path} 
+                className="flex flex-col items-center justify-center p-2 min-w-0"
+                onClick={handleClick}
+              >
                 <Icon className={cn(
                   "h-6 w-6 transition-colors mb-0.5",
                   pathname === path 

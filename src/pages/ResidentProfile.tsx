@@ -174,7 +174,7 @@ export default function ResidentProfile() {
               <Link to="/rbi-registration">
                 <Button variant="outline" className="w-full h-20 flex flex-col gap-2">
                   <User className="w-6 h-6" />
-                  <span>Submit RBI Form</span>
+                  <span>Update RBI Form</span>
                 </Button>
               </Link>
               <Link to="/services">

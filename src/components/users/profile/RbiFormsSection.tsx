@@ -6,6 +6,7 @@ import { FileText, Copy, Calendar, Clock, CheckCircle, AlertCircle } from "lucid
 import { useRbiForms } from "@/hooks/use-rbi-forms";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { Link } from "react-router-dom";
 
 const RbiFormsSection = () => {
   const { rbiForms, isLoading, error } = useRbiForms();
@@ -106,7 +107,7 @@ const RbiFormsSection = () => {
             <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500 mb-4">No RBI forms submitted yet</p>
             <Button asChild>
-              <a href="/rbi-registration">Submit RBI Form</a>
+              <Link to="/rbi-registration">Submit RBI Form</Link>
             </Button>
           </div>
         ) : (

@@ -40,8 +40,16 @@ export const MapboxLocationPicker = ({
 
   const initializeMap = async () => {
     if (!mapContainer.current) {
-      setError('Map container not found');
-      setLoading(false);
+      console.error('❌ Map container not found');
+      // Retry after a short delay
+      setTimeout(() => {
+        if (mapContainer.current) {
+          initializeMap();
+        } else {
+          setError('Map container not found');
+          setLoading(false);
+        }
+      }, 100);
       return;
     }
 
@@ -50,17 +58,26 @@ export const MapboxLocationPicker = ({
       setError(null);
 
       console.log('🗺️ Initializing Mapbox...');
-      initializeMapbox();
+      
+      // Initialize Mapbox with API key
+      (window as any).mapboxgl.accessToken = 'pk.eyJ1IjoiYmFyYW5nYXltbyIsImEiOiJjbWJxZHBzenAwMmdrMmtzZmloemphb284In0.U22j37ppYT1IMyC2lXVBzw';
 
       // Set default center to Philippines
       const center: [number, number] = [121.0244, 14.5547];
 
-      console.log('📍 Initial map center:', center);
+      console.log('📍 Creating map with center:', center);
 
-      const map = createMap(mapContainer.current, {
+      // Create map directly without helper function to avoid import issues
+      const map = new (window as any).mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/streets-v11',
         center,
-        zoom: 6
+        zoom: 6,
+        attributionControl: false,
       });
+
+      // Add navigation controls
+      map.addControl(new (window as any).mapboxgl.NavigationControl(), 'top-right');
 
       mapInstance.current = map;
 
@@ -69,13 +86,13 @@ export const MapboxLocationPicker = ({
         setLoading(false);
       });
 
-      map.on('error', (e) => {
+      map.on('error', (e: any) => {
         console.error('❌ Map load error:', e);
         setError('Failed to load map');
         setLoading(false);
       });
 
-      map.on('click', (e) => {
+      map.on('click', (e: any) => {
         console.log('🗺️ Map clicked:', e.lngLat);
         handleMapClick(e.lngLat.lng, e.lngLat.lat);
       });
@@ -95,10 +112,13 @@ export const MapboxLocationPicker = ({
         markerInstance.current.remove();
       }
 
-      const marker = createMarker(mapInstance.current, [lng, lat], {
+      // Create marker directly
+      const marker = new (window as any).mapboxgl.Marker({
         color: '#ef4444',
-        draggable: true
-      });
+        draggable: true,
+      })
+        .setLngLat([lng, lat])
+        .addTo(mapInstance.current);
 
       markerInstance.current = marker;
 
@@ -110,30 +130,55 @@ export const MapboxLocationPicker = ({
       updateLocation(lng, lat);
     } catch (error) {
       console.error('❌ Error on map click:', error);
-      toast.error('Failed to get location information');
+      toast('Failed to get location information', { 
+        description: 'Please try clicking on the map again.'
+      });
     }
   };
 
   const updateLocation = async (lng: number, lat: number) => {
     console.log('🔄 Updating location:', lng, lat);
     try {
-      const result = await reverseGeocode(lng, lat);
+      // Simple reverse geocoding using Mapbox API directly
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=pk.eyJ1IjoiYmFyYW5nYXltbyIsImEiOiJjbWJxZHBzenAwMmdrMmtzZmloemphb284In0.U22j37ppYT1IMyC2lXVBzw`
+      );
 
-      if (result) {
+      const data = await response.json();
+
+      if (data?.features?.length) {
+        const feature = data.features[0];
+        const address = feature.place_name;
+
+        let barangay: string | undefined = undefined;
+
+        if (feature.context) {
+          for (const context of feature.context) {
+            if (context.id.includes('neighborhood') || context.id.includes('locality')) {
+              barangay = context.text.replace(/^(Brgy\.?|Barangay)\s*/i, '');
+              break;
+            }
+          }
+        }
+
         const locationData = {
           coordinates: { lat, lng },
-          address: result.address,
-          barangay: result.barangay || 'Unknown Barangay'
+          address,
+          barangay: barangay || 'Unknown Barangay'
         };
 
         setSelectedLocation(locationData);
         console.log('📍 Location updated:', locationData);
       } else {
-        toast.error('Could not get address for this location');
+        toast('Could not get address for this location', {
+          description: 'Please try selecting a different location.'
+        });
       }
     } catch (error) {
       console.error('❌ Error updating location:', error);
-      toast.error('Failed to get location information');
+      toast('Failed to get location information', {
+        description: 'Please check your internet connection and try again.'
+      });
     }
   };
 
@@ -144,9 +189,21 @@ export const MapboxLocationPicker = ({
       setSearching(true);
       console.log('🔍 Searching for:', searchQuery);
 
-      const result = await geocodeAddress(searchQuery.trim());
+      // Direct geocoding API call
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery)}.json?access_token=pk.eyJ1IjoiYmFyYW5nYXltbyIsImEiOiJjbWJxZHBzenAwMmdrMmtzZmloemphb284In0.U22j37ppYT1IMyC2lXVBzw`
+      );
 
-      if (result) {
+      const data = await response.json();
+
+      if (data?.features?.length) {
+        const feature = data.features[0];
+        const result = {
+          lng: feature.center[0],
+          lat: feature.center[1],
+          place_name: feature.place_name,
+        };
+
         console.log('📍 Search result:', result);
 
         mapInstance.current.flyTo({
@@ -157,13 +214,19 @@ export const MapboxLocationPicker = ({
 
         handleMapClick(result.lng, result.lat);
 
-        toast.success('Location found!');
+        toast('Location found!', {
+          description: result.place_name
+        });
       } else {
-        toast.error('Location not found. Try a different search.');
+        toast('Location not found', {
+          description: 'Try a different search term.'
+        });
       }
     } catch (error) {
       console.error('❌ Search error:', error);
-      toast.error('Search failed. Please try again.');
+      toast('Search failed', {
+        description: 'Please try again.'
+      });
     } finally {
       setSearching(false);
     }
@@ -179,10 +242,45 @@ export const MapboxLocationPicker = ({
   };
 
   useEffect(() => {
-    // Initialize map when component mounts
-    if (mapContainer.current) {
-      initializeMap();
-    }
+    // Add Mapbox CSS and JS dynamically
+    const addMapboxResources = () => {
+      // Add CSS
+      if (!document.querySelector('link[href*="mapbox-gl.css"]')) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css';
+        document.head.appendChild(link);
+      }
+
+      // Add JS
+      if (!window.mapboxgl) {
+        const script = document.createElement('script');
+        script.src = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js';
+        script.onload = () => {
+          console.log('📦 Mapbox GL JS loaded');
+          // Wait a bit for the container to be ready
+          setTimeout(() => {
+            if (mapContainer.current) {
+              initializeMap();
+            }
+          }, 100);
+        };
+        script.onerror = () => {
+          setError('Failed to load Mapbox GL JS');
+          setLoading(false);
+        };
+        document.head.appendChild(script);
+      } else {
+        // Mapbox already loaded, initialize directly
+        setTimeout(() => {
+          if (mapContainer.current) {
+            initializeMap();
+          }
+        }, 100);
+      }
+    };
+
+    addMapboxResources();
 
     return () => {
       console.log('🧹 Cleaning up MapboxLocationPicker...');
