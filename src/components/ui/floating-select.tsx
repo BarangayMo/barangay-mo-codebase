@@ -58,7 +58,8 @@ export function FloatingSelect({
             )}
             disabled={disabled}
           >
-            <SelectValue placeholder={placeholder} />
+            <SelectValue placeholder={placeholder || label} />
+
           </SelectTrigger>
           <SelectContent>{children}</SelectContent>
         </Select>
