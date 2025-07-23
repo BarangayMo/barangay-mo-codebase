@@ -4,7 +4,7 @@ import { Layout } from "@/components/layout/Layout";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Loader2, Shield } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import PersonalDetailsForm from "@/components/rbi/PersonalDetailsForm";
 import AddressDetailsForm from "@/components/rbi/AddressDetailsForm";
@@ -40,6 +40,8 @@ export default function RbiRegistration() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [existingFormId, setExistingFormId] = useState<string | null>(null);
+  const [existingFormStatus, setExistingFormStatus] = useState<string | null>(null);
   const [formData, setFormData] = useState<RbiFormData>({
     personalDetails: {},
     address: {},
@@ -111,42 +113,63 @@ export default function RbiRegistration() {
       if (user?.id) {
         setIsLoading(true);
         try {
-          console.log('📥 Loading saved form data...');
+          console.log('📥 Loading saved and submitted form data...');
           
-          const { data, error } = await supabase
-            .from('rbi_draft_forms')
-            .select('form_data, last_completed_step')
+          // First check for existing submitted forms
+          const { data: submittedForm, error: submittedError } = await supabase
+            .from('rbi_forms')
+            .select('id, form_data, status, rbi_number')
             .eq('user_id', user.id)
+            .order('submitted_at', { ascending: false })
+            .limit(1)
             .single();
-            
-          if (data && !error) {
-            console.log('✅ Loaded saved data:', data);
-            // Cast the JSON data to RbiFormData type
-            setFormData(data.form_data as unknown as RbiFormData);
-            setCurrentStep(data.last_completed_step || 1);
+
+          if (submittedForm && !submittedError) {
+            console.log('✅ Found existing submitted form:', submittedForm);
+            setExistingFormId(submittedForm.id);
+            setExistingFormStatus(submittedForm.status);
+            setFormData(submittedForm.form_data as unknown as RbiFormData);
+            setCurrentStep(9); // Go to review page
             setLastSaved(new Date());
             
-            // Dismiss any existing toasts before showing new one to prevent stacking
             toast.dismiss();
             setTimeout(() => {
-              toast.success('Form Data Loaded', {
-                description: 'Your previously saved information has been loaded.',
+              toast.info('Existing Form Loaded', {
+                description: `Your RBI form (${submittedForm.status}) has been loaded for editing.`,
               });
             }, 100);
-          } else if (error && error.code !== 'PGRST116') {
-            // PGRST116 is "not found" error, which is expected for new users
-            console.error('Error loading saved data:', error);
-            // Dismiss any existing toasts before showing error to prevent stacking
-            toast.dismiss();
-            setTimeout(() => {
-              toast.error('Failed to load saved data', {
-                description: 'Starting with a fresh form.',
-              });
-            }, 100);
+          } else {
+            // Try loading draft form
+            const { data: draftData, error: draftError } = await supabase
+              .from('rbi_draft_forms')
+              .select('form_data, last_completed_step')
+              .eq('user_id', user.id)
+              .single();
+              
+            if (draftData && !draftError) {
+              console.log('✅ Loaded draft data:', draftData);
+              setFormData(draftData.form_data as unknown as RbiFormData);
+              setCurrentStep(draftData.last_completed_step || 1);
+              setLastSaved(new Date());
+              
+              toast.dismiss();
+              setTimeout(() => {
+                toast.success('Draft Loaded', {
+                  description: 'Your previously saved draft has been loaded.',
+                });
+              }, 100);
+            } else if (draftError && draftError.code !== 'PGRST116') {
+              console.error('Error loading saved data:', draftError);
+              toast.dismiss();
+              setTimeout(() => {
+                toast.error('Failed to load saved data', {
+                  description: 'Starting with a fresh form.',
+                });
+              }, 100);
+            }
           }
         } catch (error) {
           console.error("Error loading saved data:", error);
-          // Dismiss any existing toasts before showing error to prevent stacking
           toast.dismiss();
           setTimeout(() => {
             toast.error('Failed to load saved data', {
@@ -290,6 +313,34 @@ export default function RbiRegistration() {
     }
   };
   
+  // Comprehensive form validation
+  const validateAllRequiredFields = () => {
+    let isValid = true;
+    const newErrors: Record<string, any> = {};
+
+    // Validate all required fields across all steps
+    const allRequiredFields = [
+      { section: "personalDetails", fields: ["firstName", "lastName"] },
+      { section: "address", fields: ["street", "barangay"] },
+      { section: "otherDetails", fields: ["dateOfBirth", "sex"] },
+      { section: "education", fields: ["attainment"] },
+      { section: "health", fields: ["hasCondition"] }
+    ];
+
+    allRequiredFields.forEach(({ section, fields }) => {
+      fields.forEach(field => {
+        if (!formData[section] || !formData[section][field]) {
+          isValid = false;
+          if (!newErrors[section]) newErrors[section] = {};
+          newErrors[section][field] = "This field is required";
+        }
+      });
+    });
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
   const handleSubmit = async () => {
     if (!user?.id) {
       toast.error('Authentication Error', {
@@ -298,30 +349,56 @@ export default function RbiRegistration() {
       return;
     }
 
+    // Comprehensive validation before submission
+    if (!validateAllRequiredFields()) {
+      toast.error('Validation Error', {
+        description: 'Please fill in all required fields before submitting.'
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
-      console.log('🚀 Submitting RBI form...', formData);
+      console.log('🚀 Submitting RBI form...', { formData, existingFormId });
       
-      const { data, error } = await supabase
-        .from('rbi_forms')
-        .upsert({
-          user_id: user.id,
-          form_data: formData as unknown as Json,
-          status: 'submitted',
-          barangay_id: formData.address?.barangay || user.barangay || 'Unknown'
-        }, {
-          onConflict: 'user_id'
-        })
-        .select('rbi_number')
-        .single();
-        
-      if (error) {
-        console.error('Submission error:', error);
-        throw error;
+      let submitData;
+      if (existingFormId) {
+        // Update existing form
+        const { data, error } = await supabase
+          .from('rbi_forms')
+          .update({
+            form_data: formData as unknown as Json,
+            status: 'submitted',
+            barangay_id: formData.address?.barangay || user.barangay || 'Unknown',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingFormId)
+          .eq('user_id', user.id) // Security check
+          .select('id, rbi_number, status')
+          .single();
+          
+        if (error) throw error;
+        submitData = data;
+      } else {
+        // Create new form
+        const { data, error } = await supabase
+          .from('rbi_forms')
+          .insert({
+            id: crypto.randomUUID(), // Ensure unique ID
+            user_id: user.id,
+            form_data: formData as unknown as Json,
+            status: 'submitted',
+            barangay_id: formData.address?.barangay || user.barangay || 'Unknown'
+          })
+          .select('id, rbi_number, status')
+          .single();
+          
+        if (error) throw error;
+        submitData = data;
       }
       
-      console.log('✅ Form submitted successfully:', data);
+      console.log('✅ Form submitted successfully:', submitData);
       
       // Clean up draft form after successful submission
       try {
@@ -339,21 +416,30 @@ export default function RbiRegistration() {
         setRbiCompleted(true);
       }
       
-      toast.success('RBI Registration Complete!', {
-        description: `Your RBI form has been successfully submitted with number: ${data.rbi_number}`
-      });
+      const successMessage = existingFormId 
+        ? 'RBI Form Updated Successfully!' 
+        : 'RBI Registration Complete!';
+      const description = submitData.rbi_number 
+        ? `Your RBI form has been successfully ${existingFormId ? 'updated' : 'submitted'} with number: ${submitData.rbi_number}`
+        : `Your RBI form has been successfully ${existingFormId ? 'updated' : 'submitted'} and is under review.`;
+      
+      toast.success(successMessage, { description });
       
       navigate("/resident-home", {
         state: { 
-          rbiNumber: data.rbi_number,
+          rbiNumber: submitData.rbi_number,
           showSuccess: true 
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error submitting RBI form:", error);
-      toast.error('Submission Failed', {
-        description: 'There was an error submitting your form. Please try again.'
-      });
+      
+      let errorMessage = 'There was an error submitting your form. Please try again.';
+      if (error?.code === '23505') {
+        errorMessage = 'A form with this information already exists. Please contact support.';
+      }
+      
+      toast.error('Submission Failed', { description: errorMessage });
     } finally {
       setIsSubmitting(false);
     }
@@ -369,9 +455,17 @@ export default function RbiRegistration() {
         <div className="mb-4 sm:mb-6 md:mb-8">
           <div className="flex flex-col gap-2 sm:gap-3 mb-3 sm:mb-4">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
-              <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold font-outfit bg-gradient-to-r from-blue-700 to-blue-500 bg-clip-text text-transparent leading-tight">
-                Record of Barangay Inhabitant
-              </h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold font-outfit bg-gradient-to-r from-blue-700 to-blue-500 bg-clip-text text-transparent leading-tight">
+                  Record of Barangay Inhabitant
+                </h1>
+                {existingFormStatus && (
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-amber-50 text-amber-700 border border-amber-200">
+                    <Shield className="w-3 h-3" />
+                    <span className="font-medium">{existingFormStatus.toUpperCase()}</span>
+                  </div>
+                )}
+              </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <span className="text-xs md:text-sm font-medium px-2 md:px-3 py-1 bg-blue-50 text-blue-700 rounded-full whitespace-nowrap">
                   Step {currentStep} of {steps.length}
@@ -447,17 +541,20 @@ export default function RbiRegistration() {
             <Button 
               onClick={handleSubmit} 
               disabled={isSubmitting || isAutoSaving}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 h-12"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 h-12 font-semibold transition-all duration-200 shadow-md hover:shadow-lg"
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span className="hidden sm:inline">Submitting...</span>
+                  <span className="hidden sm:inline">
+                    {existingFormId ? 'Updating...' : 'Submitting...'}
+                  </span>
                   <span className="sm:hidden">Saving...</span>
                 </>
               ) : (
                 <>
-                  <span>Submit</span> <Check className="w-4 h-4" />
+                  <span>{existingFormId ? 'Update Form' : 'Submit Form'}</span> 
+                  <Check className="w-4 h-4" />
                 </>
               )}
             </Button>

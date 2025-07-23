@@ -1241,36 +1241,42 @@ export type Database = {
       }
       rbi_forms: {
         Row: {
+          admin_notes: string | null
           barangay_id: string | null
           form_data: Json
           id: string
           rbi_number: string | null
           reviewed_at: string | null
           reviewed_by: string | null
-          status: string
+          status: Database["public"]["Enums"]["rbi_status"]
           submitted_at: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
+          admin_notes?: string | null
           barangay_id?: string | null
           form_data: Json
           id?: string
           rbi_number?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
-          status?: string
+          status?: Database["public"]["Enums"]["rbi_status"]
           submitted_at?: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
+          admin_notes?: string | null
           barangay_id?: string | null
           form_data?: Json
           id?: string
           rbi_number?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
-          status?: string
+          status?: Database["public"]["Enums"]["rbi_status"]
           submitted_at?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -2251,6 +2257,13 @@ export type Database = {
       }
     }
     Enums: {
+      rbi_status:
+        | "draft"
+        | "submitted"
+        | "under_review"
+        | "approved"
+        | "rejected"
+        | "pending_documents"
       user_role: "resident" | "official" | "superadmin"
     }
     CompositeTypes: {
@@ -2379,6 +2392,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      rbi_status: [
+        "draft",
+        "submitted",
+        "under_review",
+        "approved",
+        "rejected",
+        "pending_documents",
+      ],
       user_role: ["resident", "official", "superadmin"],
     },
   },
