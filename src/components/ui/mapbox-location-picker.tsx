@@ -82,10 +82,10 @@ export const MapboxLocationPicker = ({
       console.log('🗺️ Initializing map...');
       
       // Set access token
-      window.mapboxgl.accessToken = MAPBOX_TOKEN;
+      (window as any).mapboxgl.accessToken = MAPBOX_TOKEN;
 
       // Default center to Philippines
-      const center = [121.0244, 14.5547];
+      const center: [number, number] = [121.0244, 14.5547];
 
       // Create map
       const map = new window.mapboxgl.Map({
