@@ -11,12 +11,9 @@ interface FloatingInputProps extends React.InputHTMLAttributes<HTMLInputElement>
 }
 
 export const FloatingInput = React.forwardRef<HTMLInputElement, FloatingInputProps>(
-  ({ label, id, error, className, icon, type, ...props }, ref) => {
+  ({ label, id, error, className, icon, ...props }, ref) => {
     const [isFocused, setIsFocused] = useState(false);
-    const isActive =
-      type === "date"
-        ? true // always float for date input
-        : isFocused || (props.value && props.value.toString().length > 0);
+    const isActive = isFocused || (props.value && props.value.toString().length > 0);
 
     return (
       <div className="relative">
@@ -29,7 +26,6 @@ export const FloatingInput = React.forwardRef<HTMLInputElement, FloatingInputPro
           <Input
             id={id}
             ref={ref}
-            type={type}
             aria-invalid={!!error}
             className={cn(
               "h-14 transition-all bg-background px-4 pt-5 pb-2 w-full rounded-md border",
@@ -46,7 +42,6 @@ export const FloatingInput = React.forwardRef<HTMLInputElement, FloatingInputPro
               props.onBlur?.(e);
             }}
             {...props}
-            placeholder={type === "date" ? undefined : props.placeholder} // Don't force placeholder for date
           />
           <Label
             htmlFor={id}
@@ -68,3 +63,4 @@ export const FloatingInput = React.forwardRef<HTMLInputElement, FloatingInputPro
   }
 );
 
+FloatingInput.displayName = "FloatingInput";
