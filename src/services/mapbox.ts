@@ -8,22 +8,20 @@ let isMapboxInitialized = false;
  * Initialize Mapbox with API key
  */
 export async function initializeMapbox(): Promise<void> {
-  if (isMapboxInitialized) {
-    return Promise.resolve();
-  }
+  if (isMapboxInitialized) return;
 
-  try {
-    // Get API key from Supabase
-    let apiKey = await getMapboxApiKey();
-    
-    // Fallback to hardcoded key if not found in database
-    if (!apiKey) {
-      console.log('⚠️ Mapbox API key not found in database, using fallback key');
-      apiKey = 'pk.eyJ1IjoiYmFyYW5nYXltbyIsImEiOiJjbWJxZHBzenAwMmdrMmtzZmloemphb284In0.U22j37ppYT1IMyC2lXVBzw';
-    }
+  // ✅ Directly set your working key
+  const apiKey = 'pk.YOUR.VALID.MAPBOX.PUBLIC.KEY';
+
+  mapboxgl.accessToken = apiKey;
+  isMapboxInitialized = true;
+
+  console.log('🗺️ Mapbox initialized with key:', apiKey);
+}
+
 
     // Set the access token
-    mapboxgl.accessToken = 'pk.eyJ1IjoiYmFyYW5nYXltbyIsImEiOiJjbWJxZHBzenAwMmdrMmtzZmloemphb284In0.U22j37ppYT1IMyC2lXVBzw';
+    mapboxgl.accessToken = apiKey;
     isMapboxInitialized = true;
     
     console.log('🗺️ Mapbox initialized successfully');
