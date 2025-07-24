@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
@@ -16,23 +15,27 @@ import {
   BookmarkCheck,
   Calendar,
   Users,
-  Globe
+  Globe,
+  MessageCircle
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { ShareButton } from "@/components/ui/share-button";
+import { useStartConversation } from "@/hooks/useStartConversation";
 
 export default function JobDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
   const { toast } = useToast();
+  const { startConversation } = useStartConversation();
   
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
+  const [messagingLoading, setMessagingLoading] = useState(false);
 
   useEffect(() => {
     const fetchJob = async () => {
@@ -132,6 +135,45 @@ export default function JobDetail() {
     } else {
       // Navigate to payment page for job application
       navigate(`/jobs/${id}/payment`);
+    }
+  };
+
+  const handleMessagePoster = async () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication required",
+        description: "Please login to message job posters",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!job?.assigned_to) {
+      toast({
+        title: "Unable to message poster",
+        description: "Job poster information is not available",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setMessagingLoading(true);
+    
+    try {
+      await startConversation(job.assigned_to);
+      toast({
+        title: "Starting conversation",
+        description: `Opening chat with ${job.company}`,
+      });
+    } catch (error) {
+      console.error('Error starting conversation:', error);
+      toast({
+        title: "Failed to start conversation",
+        description: "Please try again",
+        variant: "destructive"
+      });
+    } finally {
+      setMessagingLoading(false);
     }
   };
 
@@ -327,8 +369,8 @@ export default function JobDetail() {
               </div>
             </div>
 
-            {/* Apply Button */}
-            <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
+            {/* Action Buttons */}
+            <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6 space-y-3">
               <Button 
                 className="w-full bg-blue-600 hover:bg-blue-700"
                 size="lg"
@@ -336,8 +378,22 @@ export default function JobDetail() {
               >
                 Apply Now
               </Button>
-              <p className="text-xs text-gray-500 mt-2 text-center">
-                {job.application_url ? 'You will be redirected to the application page' : 'Complete payment to submit your application'}
+              
+              {job?.assigned_to && (
+                <Button 
+                  variant="outline"
+                  className="w-full"
+                  size="lg"
+                  onClick={handleMessagePoster}
+                  disabled={messagingLoading}
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  {messagingLoading ? 'Starting...' : 'Message Poster'}
+                </Button>
+              )}
+              
+              <p className="text-xs text-gray-500 text-center">
+                {job?.application_url ? 'You will be redirected to the application page' : 'Complete payment to submit your application'}
               </p>
             </div>
           </div>

@@ -18,13 +18,14 @@ export function ChatInterface() {
   const [newMessage, setNewMessage] = useState('');
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [sending, setSending] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (conversationId) {
-      fetchMessages(conversationId);
-      fetchConversationDetails();
+      fetchConversationData();
     }
   }, [conversationId]);
 
@@ -57,35 +58,62 @@ export function ChatInterface() {
     };
   }, [conversationId, user]);
 
-  const fetchConversationDetails = async () => {
+  const fetchConversationData = async () => {
     if (!conversationId || !user) return;
 
+    setLoading(true);
+    setError(null);
+
     try {
-      const { data: convData, error } = await supabase
+      // Fetch conversation details
+      const { data: convData, error: convError } = await supabase
         .from('conversations')
         .select('*')
         .eq('id', conversationId)
         .single();
 
-      if (error) throw error;
+      if (convError) {
+        console.error('Error fetching conversation:', convError);
+        setError('Failed to load conversation');
+        return;
+      }
 
+      if (!convData) {
+        setError('Conversation not found');
+        return;
+      }
+
+      // Determine other participant
       const otherParticipantId = convData.participant_one_id === user.id 
         ? convData.participant_two_id 
         : convData.participant_one_id;
 
-      // Get other participant info
-      const { data: participantData } = await supabase
+      // Fetch other participant info
+      const { data: participantData, error: participantError } = await supabase
         .from('profiles')
         .select('id, first_name, last_name, avatar_url')
         .eq('id', otherParticipantId)
         .single();
 
+      if (participantError) {
+        console.error('Error fetching participant:', participantError);
+        setError('Failed to load participant information');
+        return;
+      }
+
       setConversation({
         ...convData,
         other_participant: participantData
       } as Conversation);
+
+      // Fetch messages
+      await fetchMessages(conversationId);
+
     } catch (error) {
-      console.error('Error fetching conversation details:', error);
+      console.error('Error in fetchConversationData:', error);
+      setError('Failed to load conversation');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -116,11 +144,34 @@ export function ChatInterface() {
     }
   };
 
-  if (!conversation) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <p className="text-gray-600">Loading conversation...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!conversation) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <p className="text-gray-600">Conversation not found</p>
         </div>
       </div>
     );
@@ -162,45 +213,51 @@ export function ChatInterface() {
       {/* Messages area */}
       <ScrollArea className="flex-1 px-4 py-2" ref={scrollAreaRef}>
         <div className="space-y-4">
-          {messages.map((message, index) => {
-            const isOwn = message.sender_id === user?.id;
-            const showAvatar = !isOwn && (index === 0 || messages[index - 1].sender_id !== message.sender_id);
+          {messages.length === 0 ? (
+            <div className="flex items-center justify-center h-64">
+              <p className="text-gray-500">No messages yet. Start the conversation!</p>
+            </div>
+          ) : (
+            messages.map((message, index) => {
+              const isOwn = message.sender_id === user?.id;
+              const showAvatar = !isOwn && (index === 0 || messages[index - 1].sender_id !== message.sender_id);
 
-            return (
-              <div
-                key={message.id}
-                className={`flex ${isOwn ? 'justify-end' : 'justify-start'} space-x-2`}
-              >
-                {!isOwn && (
-                  <Avatar className={`w-8 h-8 ${showAvatar ? 'visible' : 'invisible'}`}>
-                    <AvatarImage 
-                      src={conversation.other_participant?.avatar_url || ''} 
-                      alt={`${conversation.other_participant?.first_name} ${conversation.other_participant?.last_name}`}
-                    />
-                    <AvatarFallback className="text-xs">
-                      {conversation.other_participant?.first_name?.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                )}
-                
-                <div className={`max-w-xs lg:max-w-md ${isOwn ? 'order-1' : 'order-2'}`}>
-                  <div
-                    className={`px-4 py-2 rounded-2xl ${
-                      isOwn
-                        ? 'bg-blue-500 text-white rounded-br-sm'
-                        : 'bg-gray-100 text-gray-900 rounded-bl-sm'
-                    }`}
-                  >
-                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+              return (
+                <div
+                  key={message.id}
+                  className={`flex ${isOwn ? 'justify-end' : 'justify-start'} space-x-2`}
+                >
+                  {!isOwn && (
+                    <Avatar className={`w-8 h-8 ${showAvatar ? 'visible' : 'invisible'}`}>
+                      <AvatarImage 
+                        src={conversation.other_participant?.avatar_url || ''} 
+                        alt={`${conversation.other_participant?.first_name} ${conversation.other_participant?.last_name}`}
+                      />
+                      <AvatarFallback className="text-xs">
+                        {conversation.other_participant?.first_name?.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
+                  
+                  <div className={`max-w-xs lg:max-w-md ${isOwn ? 'order-1' : 'order-2'}`}>
+                    <div
+                      className={`px-4 py-2 rounded-2xl ${
+                        isOwn
+                          ? 'bg-blue-500 text-white rounded-br-sm'
+                          : 'bg-gray-100 text-gray-900 rounded-bl-sm'
+                      }`}
+                    >
+                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    </div>
+                    <p className={`text-xs text-gray-500 mt-1 ${isOwn ? 'text-right' : 'text-left'}`}>
+                      {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
+                      {isOwn && !message.is_read && <span className="ml-1">•</span>}
+                    </p>
                   </div>
-                  <p className={`text-xs text-gray-500 mt-1 ${isOwn ? 'text-right' : 'text-left'}`}>
-                    {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
-                    {isOwn && !message.is_read && <span className="ml-1">•</span>}
-                  </p>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
           <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
