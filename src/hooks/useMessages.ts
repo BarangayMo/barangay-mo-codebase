@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,7 +38,14 @@ export interface Conversation {
     last_name: string;
     avatar_url?: string;
   };
-  last_message?: Message;
+  last_message?: {
+    id: string;
+    content: string;
+    created_at: string;
+    sender_id: string;
+    is_read: boolean;
+    message_type: 'text' | 'image' | 'file';
+  };
   unread_count?: number;
 }
 
@@ -62,7 +68,7 @@ export const useMessages = () => {
           *,
           participant_one:profiles!participant_one_id(id, first_name, last_name, avatar_url),
           participant_two:profiles!participant_two_id(id, first_name, last_name, avatar_url),
-          last_message:messages!last_message_id(id, content, created_at, sender_id, is_read)
+          last_message:messages!last_message_id(id, content, created_at, sender_id, is_read, message_type)
         `)
         .or(`participant_one_id.eq.${user.id},participant_two_id.eq.${user.id}`)
         .eq('is_archived', false)
@@ -93,7 +99,11 @@ export const useMessages = () => {
             participant_one: Array.isArray(conv.participant_one) ? conv.participant_one[0] : conv.participant_one,
             participant_two: Array.isArray(conv.participant_two) ? conv.participant_two[0] : conv.participant_two,
             last_message: conv.last_message ? {
-              ...conv.last_message,
+              id: conv.last_message.id,
+              content: conv.last_message.content,
+              created_at: conv.last_message.created_at,
+              sender_id: conv.last_message.sender_id,
+              is_read: conv.last_message.is_read,
               message_type: conv.last_message.message_type as 'text' | 'image' | 'file'
             } : undefined,
             unread_count: count || 0
