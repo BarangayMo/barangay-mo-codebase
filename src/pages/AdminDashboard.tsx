@@ -12,20 +12,16 @@ import { MembershipRequestsTab } from "@/components/dashboard/tabs/MembershipReq
 import { SupportTicketsTab } from "@/components/dashboard/tabs/SupportTicketsTab";
 import { TabsContent } from "@/components/ui/tabs";
 import { useMediaLibrary } from "@/hooks";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
 import { 
   BarChart, 
   Users, 
   Package, 
   UserPlus, 
-  MessageSquare,
-  Plus
+  MessageSquare
 } from "lucide-react";
 
 const AdminDashboard = () => {
   const [dateRange, setDateRange] = useState<'today' | 'week' | 'month' | 'quarter'>('week');
-  const navigate = useNavigate();
   
   // Preload media library data for faster access when user opens media library
   const { mediaFiles, loadingFiles } = useMediaLibrary({
@@ -62,16 +58,6 @@ const AdminDashboard = () => {
     { value: "support", label: "Support Tickets", icon: <MessageSquare className="h-4 w-4" /> },
   ];
 
-  const handleCreateNew = () => {
-    // Navigate to create new user page
-    navigate('/admin/users/create');
-  };
-
-  const handleMessagesClick = () => {
-    // Navigate to messages page
-    navigate('/messages');
-  };
-
   console.log(`Preloading media library data: ${loadingFiles ? 'Loading...' : `${mediaFiles?.length || 0} files loaded`}`);
 
   return (
@@ -81,19 +67,6 @@ const AdminDashboard = () => {
           title="BarangayMo Administrative Dashboard"
           description="Overview of your platform's performance and activities"
           breadcrumbItems={[{ label: "Dashboard" }]}
-          actionButton={{
-            label: "Create",
-            onClick: handleCreateNew,
-            icon: <Plus className="h-4 w-4" />,
-          }}
-          secondaryActions={[
-            {
-              label: "Messages",
-              onClick: handleMessagesClick,
-              icon: <MessageSquare className="h-4 w-4" />,
-              variant: "outline"
-            }
-          ]}
         />
 
         <EnhancedDashboardStats />
