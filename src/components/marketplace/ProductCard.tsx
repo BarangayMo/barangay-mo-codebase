@@ -1,4 +1,3 @@
-
 import { Star, MapPin, Eye, ShoppingCart, Heart } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,33 +33,33 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
   };
 
   return (
-    <Card className="group cursor-pointer transition-all duration-200 hover:shadow-lg border-gray-200 hover:border-gray-300 h-full flex flex-col">
+    <Card className="group cursor-pointer transition-all duration-300 hover:shadow-md border border-gray-200 hover:border-gray-300 flex flex-col overflow-hidden">
       <div className="relative">
         <img
           src={product.main_image_url}
           alt={product.name}
-          className="w-full h-36 sm:h-40 md:h-48 object-cover rounded-t-lg"
+          className="w-full aspect-[4/3] object-cover"
           onClick={() => navigate(`/marketplace/product/${product.id}`)}
         />
-        
+
         {product.original_price && product.price < product.original_price && (
-          <Badge className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1">
+          <Badge className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded">
             -{Math.round(((product.original_price - product.price) / product.original_price) * 100)}%
           </Badge>
         )}
-        
+
         <div className="absolute top-2 right-2 flex flex-col gap-1">
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 bg-white/90 hover:bg-white"
+            className="h-8 w-8 bg-white/90 hover:bg-white shadow-sm"
             onClick={handleWishlistToggle}
           >
             <Heart 
-              className={`h-4 w-4 ${isInWishlist(product.id) ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} 
+              className={`h-4 w-4 ${isInWishlist(product.id) ? 'fill-red-500 text-red-500' : 'text-gray-700'}`} 
             />
           </Button>
-          
+
           <ShareButton
             title={product.name}
             description={`Check out this product: ${product.name} for ₱${product.price}`}
@@ -69,26 +68,26 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
             variant="ghost"
             size="icon"
             showLabel={false}
-            className="h-8 w-8 bg-white/90 hover:bg-white text-gray-600"
+            className="h-8 w-8 bg-white/90 hover:bg-white shadow-sm text-gray-700"
           />
         </div>
       </div>
-      
-      <CardContent className="p-3 sm:p-4 flex-1 flex flex-col">
+
+      <CardContent className="p-4 flex flex-col flex-1">
         <h3 
-          className="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm sm:text-base hover:text-blue-600 transition-colors cursor-pointer min-h-[2.5rem] sm:min-h-[3rem]"
+          className="font-medium text-gray-900 mb-1 line-clamp-2 text-base hover:text-blue-600 transition-colors"
           onClick={() => navigate(`/marketplace/product/${product.id}`)}
         >
           {product.name}
         </h3>
-        
-        <div className="flex items-center gap-1 text-xs text-gray-600 mb-2">
+
+        <div className="flex items-center gap-1 text-xs text-gray-500 mb-2">
           <MapPin className="h-3 w-3 flex-shrink-0" />
           <span className="truncate">{product.vendors?.shop_name || 'N/A'}</span>
         </div>
-        
+
         <div className="flex items-center gap-1 mb-2">
-          <div className="flex items-center">
+          <div className="flex items-center gap-0.5">
             {[...Array(5)].map((_, i) => (
               <Star
                 key={i}
@@ -100,42 +99,41 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
               />
             ))}
           </div>
-          <span className="text-xs text-gray-600">({product.average_rating || 0})</span>
+          <span className="text-xs text-gray-500">({product.average_rating || 0})</span>
         </div>
-        
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-1 sm:gap-2 min-w-0">
-            <span className="text-sm sm:text-lg font-bold text-gray-900 truncate">
+
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <span className="text-base font-semibold text-gray-900">
               ₱{product.price}
             </span>
             {product.original_price && product.price < product.original_price && (
-              <span className="text-xs sm:text-sm text-gray-500 line-through truncate">
+              <span className="text-xs text-gray-500 line-through">
                 ₱{product.original_price}
               </span>
             )}
           </div>
-          <span className="text-xs text-gray-600 flex-shrink-0">{product.sold_count || 0} sold</span>
+          <span className="text-xs text-gray-500">{product.sold_count || 0} sold</span>
         </div>
-        
-        {/* Responsive button layout with proper spacing */}
-        <div className="flex flex-col gap-2 mt-auto">
+
+        <div className="mt-auto flex flex-col gap-2">
           <Button
             size="sm"
-            className="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm py-2 min-h-[32px] sm:min-h-[36px] w-full"
+            className="bg-blue-600 hover:bg-blue-700 text-white text-sm w-full"
             onClick={handleAddToCart}
           >
-            <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-            <span className="truncate">Add to Cart</span>
+            <ShoppingCart className="h-4 w-4 mr-1" />
+            Add to Cart
           </Button>
-          
+
           <Button
             variant="outline"
             size="sm"
-            className="border-gray-300 hover:bg-gray-50 text-gray-700 text-xs sm:text-sm py-2 min-h-[32px] sm:min-h-[36px] w-full"
+            className="border-gray-300 hover:bg-gray-50 text-gray-700 text-sm w-full"
             onClick={() => onQuickView?.(product)}
           >
-            <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-            <span className="truncate">Quick View</span>
+            <Eye className="h-4 w-4 mr-1" />
+            Quick View
           </Button>
         </div>
       </CardContent>
@@ -143,6 +141,5 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
   );
 }
 
-// Export types for other components to use
 export type { ProductCardType };
 export { type Product };
