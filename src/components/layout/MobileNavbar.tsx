@@ -1,3 +1,4 @@
+
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Home, MessageSquare, Store, Briefcase, LifeBuoy, User, Bell, ShoppingCart, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -80,10 +81,10 @@ export const MobileNavbar = () => {
         },
         {
           icon: Briefcase,
-          path: "/menu",
-          label: "Menu",
-          key: "menu",
-          isMenuTrigger: true
+          path: "/jobs",
+          label: "Jobs",
+          key: "jobs",
+          requiresRbi: true
         }
       ];
     }
@@ -129,13 +130,13 @@ export const MobileNavbar = () => {
       });
     }
 
-    // Always add menu as the last item - using Briefcase icon instead of Menu
+    // Always add jobs as the last item
     baseItems.push({
       icon: Briefcase,
-      path: "/menu",
-      label: "Menu",
-      key: "menu",
-      isMenuTrigger: true
+      path: "/jobs",
+      label: "Jobs",
+      key: "jobs",
+      requiresRbi: true
     });
 
     return baseItems;
