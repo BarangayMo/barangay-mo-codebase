@@ -80,7 +80,26 @@ export const useMessages = () => {
             .eq('recipient_id', user.id)
             .eq('is_read', false);
 
-          return { ...conv, unread_count: count || 0 };
+          // Type-safe conversation processing
+          const processedConv: Conversation = {
+            id: conv.id,
+            participant_one_id: conv.participant_one_id,
+            participant_two_id: conv.participant_two_id,
+            last_message_id: conv.last_message_id,
+            last_message_at: conv.last_message_at || new Date().toISOString(),
+            created_at: conv.created_at,
+            updated_at: conv.updated_at,
+            is_archived: conv.is_archived || false,
+            participant_one: Array.isArray(conv.participant_one) ? conv.participant_one[0] : conv.participant_one,
+            participant_two: Array.isArray(conv.participant_two) ? conv.participant_two[0] : conv.participant_two,
+            last_message: conv.last_message ? {
+              ...conv.last_message,
+              message_type: conv.last_message.message_type as 'text' | 'image' | 'file'
+            } : undefined,
+            unread_count: count || 0
+          };
+
+          return processedConv;
         })
       );
 
@@ -298,8 +317,17 @@ export const useMessages = () => {
           // If the message is for the currently selected conversation, add it to messages
           if (selectedConversation && payload.new.conversation_id === selectedConversation) {
             const typedMessage: Message = {
-              ...payload.new,
-              message_type: payload.new.message_type as 'text' | 'image' | 'file'
+              id: payload.new.id,
+              conversation_id: payload.new.conversation_id,
+              sender_id: payload.new.sender_id,
+              recipient_id: payload.new.recipient_id,
+              content: payload.new.content,
+              message_type: payload.new.message_type as 'text' | 'image' | 'file',
+              created_at: payload.new.created_at,
+              updated_at: payload.new.updated_at,
+              is_read: payload.new.is_read,
+              read_at: payload.new.read_at,
+              metadata: payload.new.metadata
             };
             setMessages(prev => [...prev, typedMessage]);
           }

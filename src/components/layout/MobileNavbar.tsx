@@ -214,7 +214,7 @@ export const MobileNavbar = () => {
             <div className="py-4">
               <div className="flex items-center gap-3 mb-6">
                 <Avatar>
-                  <AvatarImage src={user?.avatarUrl} />
+                  <AvatarImage src={user?.avatar} />
                   <AvatarFallback>
                     {user?.firstName?.[0]}{user?.lastName?.[0]}
                   </AvatarFallback>
