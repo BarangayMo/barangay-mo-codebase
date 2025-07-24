@@ -1,9 +1,11 @@
+
 import { useEffect, useState } from "react";
-import { AdminLayout } from "@/components/layout/AdminLayout";
+import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   User, 
   Mail, 
@@ -11,25 +13,59 @@ import {
   Calendar, 
   Edit,
   Shield,
-  Activity,
-  Settings,
+  Phone,
   Building,
-  Phone
+  Users,
+  FileText,
+  Settings
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useUserProfile } from "@/hooks/use-user-profile";
-import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 
 export default function OfficialProfile() {
-  const { user } = useAuth();
-  const { profile, isLoading } = useUserProfile();
-  const { toast } = useToast();
-  
+  const { user, session } = useAuth();
+
+  // Get official profile data
+  const { data: officialProfile, isLoading } = useQuery({
+    queryKey: ['official-profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) throw error;
+      return profile;
+    },
+    enabled: !!user?.id
+  });
+
+  // Get barangay details
+  const { data: barangayDetails } = useQuery({
+    queryKey: ['barangay-details', officialProfile?.barangay],
+    queryFn: async () => {
+      if (!officialProfile?.barangay) return null;
+      
+      const { data, error } = await supabase
+        .from('Barangays')
+        .select('*')
+        .eq('BARANGAY', officialProfile.barangay)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!officialProfile?.barangay
+  });
+
   if (isLoading) {
     return (
-      <AdminLayout title="My Profile">
+      <Layout>
         <div className="max-w-4xl mx-auto p-6">
           <div className="animate-pulse space-y-6">
             <div className="h-8 bg-gray-200 rounded w-1/3"></div>
@@ -39,7 +75,7 @@ export default function OfficialProfile() {
             </div>
           </div>
         </div>
-      </AdminLayout>
+      </Layout>
     );
   }
 
@@ -47,135 +83,265 @@ export default function OfficialProfile() {
     return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
   };
 
-  const getRoleColor = (role?: string) => {
-    switch (role) {
-      case 'official':
-        return 'bg-blue-100 text-blue-800';
-      case 'superadmin':
-        return 'bg-purple-100 text-purple-800';
-      case 'resident':
-      default:
-        return 'bg-green-100 text-green-800';
-    }
-  };
+  // Check email confirmation status
+  const isEmailConfirmed = session?.user?.email_confirmed_at ? true : false;
 
   return (
-    <AdminLayout title="My Profile">
-      <div className="max-w-4xl mx-auto p-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
-          <Link to="/edit-profile">
-            <Button variant="outline" className="flex items-center gap-2">
-              <Edit className="w-4 h-4" />
-              Edit Profile
-            </Button>
-          </Link>
+    <Layout>
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Red Header Section */}
+        <div className="bg-gradient-to-r from-red-600 to-red-700 text-white p-8 rounded-lg shadow-lg">
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-3xl font-bold">Barangay Profile</h1>
+            <Link to="/edit-profile">
+              <Button variant="outline" className="flex items-center gap-2 bg-white/10 border-white/20 hover:bg-white/20 text-white">
+                <Edit className="w-4 h-4" />
+                Edit Profile
+              </Button>
+            </Link>
+          </div>
+
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+            <Avatar className="w-32 h-32 border-4 border-white/20">
+              <AvatarImage src={officialProfile?.logo_url || barangayDetails?.Logo} />
+              <AvatarFallback className="text-3xl font-semibold bg-white/20 text-white">
+                {barangayDetails?.Logo ? (
+                  <img src={barangayDetails.Logo} alt="Barangay Logo" className="w-full h-full object-cover" />
+                ) : (
+                  getInitials(officialProfile?.first_name, officialProfile?.last_name)
+                )}
+              </AvatarFallback>
+            </Avatar>
+            
+            <div className="text-center md:text-left flex-1">
+              <h2 className="text-4xl font-bold mb-2">
+                {officialProfile?.barangay || 'Unknown Barangay'}
+              </h2>
+              <p className="text-xl text-red-100 mb-3">
+                {officialProfile?.municipality}, {officialProfile?.province}
+              </p>
+              <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30">
+                  <Shield className="w-3 h-3 mr-1" />
+                  {user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1)}
+                </Badge>
+                <Badge variant={isEmailConfirmed ? "default" : "secondary"} className="bg-white/20 text-white border-white/30">
+                  <Mail className="w-3 h-3 mr-1" />
+                  {isEmailConfirmed ? "Verified" : "Unverified"}
+                </Badge>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Profile Card */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center space-x-4">
-              <Avatar className="w-20 h-20">
-                <AvatarImage src={profile?.avatar_url} />
-                <AvatarFallback className="text-lg font-semibold">
-                  {getInitials(profile?.first_name, profile?.last_name)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <CardTitle className="text-2xl">
-                  {profile?.first_name} {profile?.last_name}
+        {/* Tabs Section */}
+        <Tabs defaultValue="details" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="address">Address</TabsTrigger>
+            <TabsTrigger value="council">Council</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="details" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building className="w-5 h-5 text-red-600" />
+                  Barangay Details
                 </CardTitle>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2">
-                  <Badge className={getRoleColor(profile?.role)} variant="secondary">
-                    <Shield className="w-3 h-3 mr-1" />
-                    {profile?.role?.charAt(0).toUpperCase() + profile?.role?.slice(1)}
-                  </Badge>
-                  {profile?.barangay && (
-                    <div className="flex items-start gap-1 text-gray-600 min-w-0">
-                      <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                      <span className="text-sm break-words leading-relaxed">
-                        {profile.barangay}
-                      </span>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="flex items-center text-gray-600">
+                    <Phone className="w-5 h-5 mr-3 text-red-500" />
+                    <div>
+                      <p className="text-sm text-gray-500">Contact Number</p>
+                      <p className="font-medium">{barangayDetails?.["Mobile Number"] || barangayDetails?.["Telephone No"] || "Not available"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center text-gray-600">
+                    <Calendar className="w-5 h-5 mr-3 text-red-500" />
+                    <div>
+                      <p className="text-sm text-gray-500">Founded</p>
+                      <p className="font-medium">{barangayDetails?.["Foundation Date"] || "Not specified"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center text-gray-600">
+                    <Users className="w-5 h-5 mr-3 text-red-500" />
+                    <div>
+                      <p className="text-sm text-gray-500">Population</p>
+                      <p className="font-medium">{barangayDetails?.Population || "Not specified"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center text-gray-600">
+                    <MapPin className="w-5 h-5 mr-3 text-red-500" />
+                    <div>
+                      <p className="text-sm text-gray-500">Land Area</p>
+                      <p className="font-medium">{barangayDetails?.["Land Area"] || "Not specified"}</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-red-600">
+                  <Phone className="w-5 h-5" />
+                  Emergency Contacts
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {barangayDetails?.["Ambulance Phone"] && (
+                  <div className="flex items-center justify-between py-3 border-b border-red-100">
+                    <span className="text-gray-600 font-medium">Ambulance</span>
+                    <span className="font-bold text-red-600">{barangayDetails["Ambulance Phone"]}</span>
+                  </div>
+                )}
+                {barangayDetails?.["Fire Department Phone"] && (
+                  <div className="flex items-center justify-between py-3 border-b border-red-100">
+                    <span className="text-gray-600 font-medium">Fire Department</span>
+                    <span className="font-bold text-red-600">{barangayDetails["Fire Department Phone"]}</span>
+                  </div>
+                )}
+                {barangayDetails?.["Local Police Contact"] && (
+                  <div className="flex items-center justify-between py-3 border-b border-red-100">
+                    <span className="text-gray-600 font-medium">Local Police</span>
+                    <span className="font-bold text-red-600">{barangayDetails["Local Police Contact"]}</span>
+                  </div>
+                )}
+                {barangayDetails?.["VAWC Hotline No"] && (
+                  <div className="flex items-center justify-between py-3">
+                    <span className="text-gray-600 font-medium">VAWC Hotline</span>
+                    <span className="font-bold text-red-600">{barangayDetails["VAWC Hotline No"]}</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="address" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-red-600">
+                  <MapPin className="w-5 h-5" />
+                  Address Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Region</label>
+                    <p className="text-gray-900 font-medium">{barangayDetails?.REGION || "Not specified"}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Province</label>
+                    <p className="text-gray-900 font-medium">{barangayDetails?.PROVINCE || "Not specified"}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">City/Municipality</label>
+                    <p className="text-gray-900 font-medium">{barangayDetails?.["CITY/MUNICIPALITY"] || "Not specified"}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Barangay</label>
+                    <p className="text-gray-900 font-medium">{barangayDetails?.BARANGAY || "Not specified"}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Street</label>
+                    <p className="text-gray-900 font-medium">{barangayDetails?.Street || "Not specified"}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">ZIP Code</label>
+                    <p className="text-gray-900 font-medium">{barangayDetails?.["ZIP Code"] || "Not specified"}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="council" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-red-600">
+                  <Users className="w-5 h-5" />
+                  Barangay Council
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {officialProfile?.officials_data ? (
+                    <div className="grid gap-4">
+                      {Object.entries(officialProfile.officials_data).map(([position, official]: [string, any]) => (
+                        <div key={position} className="flex items-center justify-between py-4 border-b border-red-100">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                              <User className="w-5 h-5 text-red-600" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-gray-900">
+                                {official?.firstName} {official?.middleName} {official?.lastName} {official?.suffix}
+                              </p>
+                              <p className="text-sm text-gray-600">{position}</p>
+                            </div>
+                          </div>
+                          <Badge variant="outline" className="border-red-200 text-red-700">{position}</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-500">No council information available</p>
                     </div>
                   )}
                 </div>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div className="flex items-center text-gray-600">
-                  <Mail className="w-5 h-5 mr-3 flex-shrink-0" />
-                  <span className="truncate">{user?.email}</span>
-                </div>
-                {profile?.phone_number && (
-                  <div className="flex items-center text-gray-600">
-                    <Phone className="w-5 h-5 mr-3 flex-shrink-0" />
-                    <span className="truncate">{profile.phone_number}</span>
-                  </div>
-                )}
-                {profile?.municipality && (
-                  <div className="flex items-center text-gray-600">
-                    <Building className="w-5 h-5 mr-3 flex-shrink-0" />
-                    <span className="truncate">{profile.municipality}</span>
-                  </div>
-                )}
-                {profile?.created_at && (
-                  <div className="flex items-center text-gray-600">
-                    <Calendar className="w-5 h-5 mr-3 flex-shrink-0" />
-                    <span className="truncate">Member since {new Date(profile.created_at).toLocaleDateString()}</span>
-                  </div>
-                )}
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-center text-gray-600">
-                  <User className="w-5 h-5 mr-3 flex-shrink-0" />
-                  <span className="truncate">ID: {profile?.id.slice(0, 8)}...</span>
-                </div>
-                <div className="flex items-center text-gray-600">
-                  <Activity className="w-5 h-5 mr-3 flex-shrink-0" />
-                  <span>Status: Active</span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
-        {/* Quick Actions */}
+        {/* Account Information */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="w-5 h-5" />
-              Quick Actions
+            <CardTitle className="flex items-center gap-2 text-red-600">
+              <User className="w-5 h-5" />
+              Account Information
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Link to="/official/residents">
-                <Button variant="outline" className="w-full h-20 flex flex-col gap-2">
-                  <User className="w-6 h-6" />
-                  <span>Manage Residents</span>
-                </Button>
-              </Link>
-              <Link to="/official/services">
-                <Button variant="outline" className="w-full h-20 flex flex-col gap-2">
-                  <Shield className="w-6 h-6" />
-                  <span>Services</span>
-                </Button>
-              </Link>
-              <Link to="/settings">
-                <Button variant="outline" className="w-full h-20 flex flex-col gap-2">
-                  <Settings className="w-6 h-6" />
-                  <span>Account Settings</span>
-                </Button>
-              </Link>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center text-gray-600">
+                  <Mail className="w-5 h-5 mr-3 text-red-500" />
+                  <div>
+                    <p className="text-sm text-gray-500">Email Address</p>
+                    <p className="font-medium">{user?.email}</p>
+                  </div>
+                </div>
+                <Badge variant={isEmailConfirmed ? "default" : "secondary"} className={isEmailConfirmed ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}>
+                  {isEmailConfirmed ? "Confirmed" : "Unconfirmed"}
+                </Badge>
+              </div>
+              <div className="flex items-center text-gray-600">
+                <User className="w-5 h-5 mr-3 text-red-500" />
+                <div>
+                  <p className="text-sm text-gray-500">Account ID</p>
+                  <p className="font-medium">{officialProfile?.id.slice(0, 8)}...</p>
+                </div>
+              </div>
+              {user?.createdAt && (
+                <div className="flex items-center text-gray-600">
+                  <Calendar className="w-5 h-5 mr-3 text-red-500" />
+                  <div>
+                    <p className="text-sm text-gray-500">Member Since</p>
+                    <p className="font-medium">{new Date(user.createdAt).toLocaleDateString()}</p>
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
       </div>
-    </AdminLayout>
+    </Layout>
   );
 }

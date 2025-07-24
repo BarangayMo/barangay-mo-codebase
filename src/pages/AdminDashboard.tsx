@@ -17,7 +17,7 @@ import {
   Users, 
   Package, 
   UserPlus, 
-  MessageSquare
+  MessageSquare 
 } from "lucide-react";
 
 const AdminDashboard = () => {

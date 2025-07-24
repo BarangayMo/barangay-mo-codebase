@@ -131,10 +131,10 @@ export default function ResidentProfile() {
                   <Mail className="w-5 h-5 mr-3 flex-shrink-0" />
                   <span className="truncate">{profile?.email}</span>
                 </div>
-                {user?.created_at && (
+                {user?.createdAt && (
                   <div className="flex items-center text-gray-600">
                     <Calendar className="w-5 h-5 mr-3 flex-shrink-0" />
-                    <span className="truncate">Member since {new Date(user.created_at).toLocaleDateString()}</span>
+                    <span className="truncate">Member since {new Date(user.createdAt).toLocaleDateString()}</span>
                   </div>
                 )}
               </div>

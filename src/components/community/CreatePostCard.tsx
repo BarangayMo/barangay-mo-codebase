@@ -8,13 +8,11 @@ import { Image, Video, Smile, MapPin, Users, Palette } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCreatePost } from "@/hooks/use-community-data";
-import { useResidentProfile } from "@/hooks/use-resident-profile";
 
 export const CreatePostCard = () => {
   const [content, setContent] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
   const { user } = useAuth();
-  const { profile } = useResidentProfile();
   const createPost = useCreatePost();
 
   const handleSubmit = async () => {
@@ -51,35 +49,35 @@ export const CreatePostCard = () => {
     { icon: Users, label: "Tag friends", color: "text-indigo-600" }
   ];
 
-  // Get user's name from profile or email
+  // Get user's name from either user profile or email
   const getUserDisplayName = () => {
-    if (profile?.first_name && profile?.last_name) {
-      return `${profile.first_name} ${profile.last_name}`;
+    if (user?.firstName && user?.lastName) {
+      return `${user.firstName} ${user.lastName}`;
     }
-    if (profile?.first_name) {
-      return profile.first_name;
+    if (user?.firstName) {
+      return user.firstName;
     }
-    if (profile?.last_name) {
-      return profile.last_name;
+    if (user?.lastName) {
+      return user.lastName;
     }
     return user?.email?.split('@')[0] || 'User';
   };
 
   const getUserInitials = () => {
-    if (profile?.first_name && profile?.last_name) {
-      return `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase();
+    if (user?.firstName && user?.lastName) {
+      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
     }
-    if (profile?.first_name) {
-      return profile.first_name.substring(0, 2).toUpperCase();
+    if (user?.firstName) {
+      return user.firstName.substring(0, 2).toUpperCase();
     }
-    if (profile?.last_name) {
-      return profile.last_name.substring(0, 2).toUpperCase();
+    if (user?.lastName) {
+      return user.lastName.substring(0, 2).toUpperCase();
     }
     return user?.email?.substring(0, 2).toUpperCase() || "U";
   };
 
   const getUserAvatarUrl = () => {
-    return profile?.settings?.avatar_url || "";
+    return user?.avatar || "";
   };
 
   return (

@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -65,40 +66,24 @@ export const useDashboardStats = () => {
         supabase.from('support_tickets').select('*', { count: 'exact' }).eq('status', 'open')
       ]);
 
-      // Calculate growth (comparing last 7 days vs previous 7 days)
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      
-      const fourteenDaysAgo = new Date();
-      fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+      // Calculate growth (simplified - comparing last 30 days vs previous 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-      const [recentUsers, previousUsers, recentProducts, previousProducts] = await Promise.all([
-        supabase.from('profiles').select('*', { count: 'exact' }).gte('created_at', sevenDaysAgo.toISOString()),
-        supabase.from('profiles').select('*', { count: 'exact' }).gte('created_at', fourteenDaysAgo.toISOString()).lt('created_at', sevenDaysAgo.toISOString()),
-        supabase.from('products').select('*', { count: 'exact' }).gte('created_at', sevenDaysAgo.toISOString()),
-        supabase.from('products').select('*', { count: 'exact' }).gte('created_at', fourteenDaysAgo.toISOString()).lt('created_at', sevenDaysAgo.toISOString())
+      const [recentUsers, recentProducts] = await Promise.all([
+        supabase.from('profiles').select('*', { count: 'exact' }).gte('created_at', thirtyDaysAgo.toISOString()),
+        supabase.from('products').select('*', { count: 'exact' }).gte('created_at', thirtyDaysAgo.toISOString())
       ]);
-
-      // Calculate percentage growth
-      const userGrowthRate = previousUsers.count && previousUsers.count > 0 
-        ? Math.round(((recentUsers.count || 0) - (previousUsers.count || 0)) / (previousUsers.count || 1) * 100)
-        : (recentUsers.count || 0) > 0 ? 100 : 0;
-
-      const productGrowthRate = previousProducts.count && previousProducts.count > 0 
-        ? Math.round(((recentProducts.count || 0) - (previousProducts.count || 0)) / (previousProducts.count || 1) * 100)
-        : (recentProducts.count || 0) > 0 ? 100 : 0;
 
       return {
         totalUsers: usersCount.count || 0,
         totalProducts: productsCount.count || 0,
         pendingMembershipRequests: membershipRequestsCount.count || 0,
         openSupportTickets: supportTicketsCount.count || 0,
-        userGrowth: userGrowthRate,
-        productGrowth: productGrowthRate,
+        userGrowth: recentUsers.count || 0,
+        productGrowth: recentProducts.count || 0,
       };
     },
-    refetchInterval: 30000, // Refetch every 30 seconds for real-time updates
-    staleTime: 10000, // Data is considered stale after 10 seconds
   });
 };
 

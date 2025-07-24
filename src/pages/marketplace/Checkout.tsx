@@ -1,371 +1,429 @@
 import { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/contexts/AuthContext";
-import { useUserProfile } from "@/hooks/use-user-profile";
-import { useCartSummary } from "@/hooks/useCartSummary";
+import { RoleButton } from "@/components/ui/role-button";
+import { ShoppingBag } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { CheckoutBillingAddress } from "@/components/checkout/CheckoutBillingAddress";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { CheckoutContactForm } from "@/components/checkout/CheckoutContactForm";
 import { CheckoutShippingForm } from "@/components/checkout/CheckoutShippingForm";
 import { CheckoutPaymentInfo } from "@/components/checkout/CheckoutPaymentInfo";
-import { CheckoutContactForm } from "@/components/checkout/CheckoutContactForm";
+import { CheckoutBillingAddress } from "@/components/checkout/CheckoutBillingAddress";
 import { CheckoutOrderSummary } from "@/components/checkout/CheckoutOrderSummary";
-import { 
-  ShoppingCart, 
-  User, 
-  MapPin, 
-  CreditCard, 
-  Truck,
-  CheckCircle
-} from "lucide-react";
 
+// Define interfaces for cart items and location state
+interface CartItem {
+  product_id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  image?: string | null;
+}
+interface CheckoutLocationState {
+  cartItems: CartItem[];
+  total: number;
+  specialInstructions?: string;
+}
+interface SavedShippingDetails {
+  firstName: string;
+  lastName: string;
+  address: string;
+  apartment: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  contactEmail: string;
+}
 export default function Checkout() {
-  const { user } = useAuth();
-  const { profile } = useUserProfile();
-  const { cartSummary } = useCartSummary();
-  const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  
-  const [currentStep, setCurrentStep] = useState(0);
-  const [isProcessing, setIsProcessing] = useState(false);
-  
+  const {
+    toast
+  } = useToast();
+  const {
+    user,
+    isAuthenticated
+  } = useAuth();
+  const {
+    cartItems = [],
+    total: subtotalFromCart = 0,
+    specialInstructions = ""
+  } = location.state as CheckoutLocationState || {};
+
+  // State for originally fetched user address details
+  const [savedShippingDetails, setSavedShippingDetails] = useState<SavedShippingDetails | null>(null);
+  const [useSavedAddress, setUseSavedAddress] = useState(true);
+
   // Form state
-  const [shippingInfo, setShippingInfo] = useState({
-    firstName: profile?.first_name || '',
-    lastName: profile?.last_name || '',
-    address: '',
-    city: '',
-    province: '',
-    zipCode: '',
-    phone: ''
-  });
-  
-  const [billingInfo, setBillingInfo] = useState({
-    firstName: profile?.first_name || '',
-    lastName: profile?.last_name || '',
-    address: '',
-    city: '',
-    province: '',
-    zipCode: '',
-    phone: ''
-  });
-  
-  const [paymentInfo, setPaymentInfo] = useState({
-    method: 'credit_card',
-    cardNumber: '',
-    expiryDate: '',
-    cvv: '',
-    nameOnCard: ''
-  });
-
-  const [contactInfo, setContactInfo] = useState({
-    email: user?.email || '',
-    phone: ''
-  });
-
-  const [useSameAddress, setUseSameAddress] = useState(true);
-
+  const [contactEmail, setContactEmail] = useState(user?.email || "");
+  const [saveInfo, setSaveInfo] = useState(false);
+  const [shippingCountry, setShippingCountry] = useState("Philippines"); // Default and disabled
+  const [shippingFirstName, setShippingFirstName] = useState(user?.firstName || "");
+  const [shippingLastName, setShippingLastName] = useState(user?.lastName || "");
+  const [shippingAddress, setShippingAddress] = useState("");
+  const [shippingApartment, setShippingApartment] = useState("");
+  const [shippingCity, setShippingCity] = useState("");
+  const [shippingState, setShippingState] = useState("Metro Manila"); // Default state
+  const [shippingPostalCode, setShippingPostalCode] = useState("");
+  const [deliveryNotes, setDeliveryNotes] = useState(specialInstructions);
+  const [billingAddressOption, setBillingAddressOption] = useState("same");
+  const [paymentMethod, setPaymentMethod] = useState("paystack");
+  const [isProcessing, setIsProcessing] = useState(false);
   useEffect(() => {
-    if (profile) {
-      setShippingInfo(prev => ({
-        ...prev,
-        firstName: profile.first_name || '',
-        lastName: profile.last_name || ''
-      }));
-      setBillingInfo(prev => ({
-        ...prev,
-        firstName: profile.first_name || '',
-        lastName: profile.last_name || ''
-      }));
-    }
-  }, [profile]);
-
-  useEffect(() => {
-    if (useSameAddress) {
-      setBillingInfo(shippingInfo);
-    }
-  }, [shippingInfo, useSameAddress]);
-
-  const steps = [
-    {
-      title: "Contact Information",
-      icon: User,
-      component: (
-        <CheckoutContactForm 
-          contactInfo={contactInfo}
-          setContactInfo={setContactInfo}
-        />
-      )
-    },
-    {
-      title: "Shipping Address",
-      icon: Truck,
-      component: (
-        <CheckoutShippingForm 
-          shippingInfo={shippingInfo}
-          setShippingInfo={setShippingInfo}
-        />
-      )
-    },
-    {
-      title: "Billing Address",
-      icon: MapPin,
-      component: (
-        <CheckoutBillingAddress 
-          billingInfo={billingInfo}
-          setBillingInfo={setBillingInfo}
-          useSameAddress={useSameAddress}
-          setUseSameAddress={setUseSameAddress}
-        />
-      )
-    },
-    {
-      title: "Payment Information",
-      icon: CreditCard,
-      component: (
-        <CheckoutPaymentInfo 
-          paymentInfo={paymentInfo}
-          setPaymentInfo={setPaymentInfo}
-        />
-      )
-    },
-    {
-      title: "Order Review",
-      icon: CheckCircle,
-      component: (
-        <CheckoutOrderSummary 
-          shippingInfo={shippingInfo}
-          billingInfo={billingInfo}
-          paymentInfo={paymentInfo}
-          contactInfo={contactInfo}
-          cartSummary={cartSummary}
-        />
-      )
-    }
-  ];
-
-  const canProceed = () => {
-    switch (currentStep) {
-      case 0:
-        return contactInfo.email && contactInfo.phone;
-      case 1:
-        return shippingInfo.firstName && shippingInfo.lastName && 
-               shippingInfo.address && shippingInfo.city && 
-               shippingInfo.province && shippingInfo.zipCode;
-      case 2:
-        return billingInfo.firstName && billingInfo.lastName && 
-               billingInfo.address && billingInfo.city && 
-               billingInfo.province && billingInfo.zipCode;
-      case 3:
-        return paymentInfo.method === 'cash_on_delivery' || 
-               (paymentInfo.cardNumber && paymentInfo.expiryDate && 
-                paymentInfo.cvv && paymentInfo.nameOnCard);
-      default:
-        return true;
-    }
-  };
-
-  const handleNext = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
-    }
-  };
-
-  const handlePrevious = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
-
-  const handlePlaceOrder = async () => {
-    setIsProcessing(true);
-    
-    try {
-      // Simulate order processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      toast({
-        title: "Order placed successfully!",
-        description: "You will receive a confirmation email shortly.",
-      });
-      
-      // Navigate to order confirmation page
-      navigate('/marketplace/order-confirmation', {
-        state: {
-          orderNumber: 'ORD-' + Date.now(),
-          shippingInfo,
-          billingInfo,
-          paymentInfo,
-          contactInfo,
-          cartSummary
+    if (user?.id) {
+      const fetchUserSettings = async () => {
+        const {
+          data,
+          error
+        } = await supabase.from('user_settings').select('address, phone_number').eq('user_id', user.id).maybeSingle();
+        if (error) {
+          console.error("Error fetching user settings:", error);
         }
-      });
-    } catch (error) {
+        const initialDetails: SavedShippingDetails = {
+          firstName: user.firstName || "",
+          lastName: user.lastName || "",
+          address: "",
+          apartment: "",
+          city: "",
+          state: "Metro Manila",
+          // Default, can be overridden by saved data
+          postalCode: "",
+          country: "Philippines",
+          contactEmail: user.email || ""
+        };
+        let foundSavedAddress = false;
+        if (data?.address && typeof data.address === 'object') {
+          const addr = data.address as any;
+          initialDetails.address = addr.street || "";
+          initialDetails.apartment = addr.apartment || "";
+          initialDetails.city = addr.city || "";
+          initialDetails.state = addr.state || "Metro Manila";
+          initialDetails.postalCode = addr.postalCode || "";
+          initialDetails.country = addr.country || "Philippines";
+          foundSavedAddress = true;
+        }
+        if (data?.phone_number && !initialDetails.contactEmail) {
+          // Use phone if email not primary
+          initialDetails.contactEmail = data.phone_number;
+        }
+        setSavedShippingDetails(initialDetails);
+        if (foundSavedAddress) {
+          setShippingFirstName(initialDetails.firstName);
+          setShippingLastName(initialDetails.lastName);
+          setShippingAddress(initialDetails.address);
+          setShippingApartment(initialDetails.apartment);
+          setShippingCity(initialDetails.city);
+          setShippingState(initialDetails.state);
+          setShippingPostalCode(initialDetails.postalCode);
+          setContactEmail(initialDetails.contactEmail);
+          setUseSavedAddress(true);
+        } else {
+          // No saved address, but still prefill names and email from user object
+          setShippingFirstName(user.firstName || "");
+          setShippingLastName(user.lastName || "");
+          setContactEmail(user.email || "");
+          setUseSavedAddress(false);
+        }
+      };
+      fetchUserSettings();
+    } else {
+      setUseSavedAddress(false); // No user, not using saved address
+    }
+  }, [user]);
+  const handleUseSavedAddressChange = (checked: boolean) => {
+    setUseSavedAddress(checked);
+    if (checked && savedShippingDetails) {
+      // User wants to use saved address, populate form from savedShippingDetails
+      setShippingFirstName(savedShippingDetails.firstName);
+      setShippingLastName(savedShippingDetails.lastName);
+      setShippingAddress(savedShippingDetails.address);
+      setShippingApartment(savedShippingDetails.apartment);
+      setShippingCity(savedShippingDetails.city);
+      setShippingState(savedShippingDetails.state);
+      setShippingPostalCode(savedShippingDetails.postalCode);
+      setContactEmail(savedShippingDetails.contactEmail);
+    } else {
+      // User wants to enter a new address. Fields are now enabled.
+      // Optionally clear them if you want a fresh start, e.g.:
+      // setShippingFirstName(user?.firstName || ""); setShippingLastName(user?.lastName || ""); 
+      // setShippingAddress(""); // etc.
+      // For now, current values (possibly from user object if no saved address) remain for editing.
+    }
+  };
+  const handleSaveInformation = async () => {
+    if (!user || !user.id) return;
+    const addressPayload = {
+      street: shippingAddress,
+      apartment: shippingApartment,
+      city: shippingCity,
+      state: shippingState,
+      postalCode: shippingPostalCode,
+      country: shippingCountry // Will be "Philippines"
+    };
+
+    // Update profiles table for names
+    const {
+      error: profileError
+    } = await supabase.from('profiles').update({
+      first_name: shippingFirstName,
+      last_name: shippingLastName
+    }).eq('id', user.id);
+    if (profileError) {
       toast({
-        title: "Order failed",
-        description: "Please try again or contact support.",
+        title: "Error",
+        description: "Could not update name information.",
         variant: "destructive"
       });
-    } finally {
-      setIsProcessing(false);
+    }
+    let phonePayload = {};
+    if (contactEmail && !contactEmail.includes('@')) {
+      phonePayload = {
+        phone_number: contactEmail
+      };
+    } else if (contactEmail && contactEmail.includes('@') && user.email !== contactEmail) {
+      // If user entered a new email in contact field, we are not updating auth.users.email here.
+      // This example focuses on shipping contact which might be phone or existing email.
+      // To update user.email, supabase.auth.updateUser({ email: contactEmail }) would be needed,
+      // typically with verification. For simplicity, we assume contactEmail is either phone or matches user.email.
+    }
+    const {
+      data: existingSettings,
+      error: fetchError
+    } = await supabase.from('user_settings').select('user_id').eq('user_id', user.id).maybeSingle();
+    if (fetchError) {
+      console.error("Error checking user_settings:", fetchError);
+      toast({
+        title: "Error",
+        description: "Could not save information.",
+        variant: "destructive"
+      });
+      return;
+    }
+    let settingsError;
+    if (existingSettings) {
+      const {
+        error
+      } = await supabase.from('user_settings').update({
+        address: addressPayload,
+        ...phonePayload
+      }).eq('user_id', user.id);
+      settingsError = error;
+    } else {
+      const {
+        error
+      } = await supabase.from('user_settings').insert({
+        user_id: user.id,
+        address: addressPayload,
+        ...phonePayload
+      });
+      settingsError = error;
+    }
+    if (settingsError) {
+      toast({
+        title: "Error",
+        description: "Could not save shipping information.",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Information Saved",
+        description: "Your information has been saved for next time."
+      });
+      // Re-fetch or update savedShippingDetails if information was successfully saved
+      const newSavedDetails: SavedShippingDetails = {
+        firstName: shippingFirstName,
+        lastName: shippingLastName,
+        address: shippingAddress,
+        apartment: shippingApartment,
+        city: shippingCity,
+        state: shippingState,
+        postalCode: shippingPostalCode,
+        country: shippingCountry,
+        contactEmail: contactEmail
+      };
+      setSavedShippingDetails(newSavedDetails);
     }
   };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isAuthenticated || !user) {
+      toast({
+        title: "Authentication Error",
+        description: "Please log in to proceed.",
+        variant: "destructive"
+      });
+      navigate("/login", {
+        state: {
+          from: location
+        }
+      });
+      return;
+    }
+    if (cartItems.length === 0) {
+      toast({
+        title: "Empty Cart",
+        description: "Your cart is empty.",
+        variant: "default"
+      });
+      return;
+    }
 
-  if (!cartSummary || cartSummary.items.length === 0) {
-    return (
-      <Layout>
-        <div className="max-w-4xl mx-auto p-6">
-          <div className="text-center">
-            <ShoppingCart className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Your cart is empty</h2>
-            <p className="text-gray-600 mb-6">Add some items to your cart to proceed with checkout.</p>
-            <Button onClick={() => navigate('/marketplace')}>
-              Continue Shopping
-            </Button>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
+    // Basic validation for required fields if not using saved address
+    if (!useSavedAddress) { // Only validate if user is NOT using a saved address (i.e., fields are enabled)
+        // Check if any of the required fields that are NOT disabled are empty
+        if (!shippingLastName || !shippingAddress || !shippingCity || !shippingState ) {
+            toast({
+                title: "Missing Information",
+                description: "Please fill in all required delivery fields.",
+                variant: "destructive"
+            });
+            return;
+        }
+    } // If useSavedAddress is true, we assume saved details are sufficient or user is aware.
 
+    if (saveInfo) {
+      await handleSaveInformation();
+    }
+    setIsProcessing(true);
+
+    // Simulate processing
+    setTimeout(() => {
+      setIsProcessing(false);
+      navigate("/marketplace/order-confirmation", {
+        state: {
+          orderDetails: {
+            cartItems,
+            total: finalTotal,
+            deliveryNotes,
+            shippingAddress: {
+              firstName: shippingFirstName,
+              lastName: shippingLastName,
+              address: shippingAddress,
+              apartment: shippingApartment,
+              city: shippingCity,
+              state: shippingState,
+              postalCode: shippingPostalCode,
+              country: shippingCountry,
+              contact: contactEmail
+            }
+          }
+        }
+      });
+      toast({
+        title: "Order placed successfully",
+        description: "Thank you for your purchase!"
+      });
+    }, 1500);
+  };
+  const shippingCost = 0;
+  const taxRate = 0.075;
+  const estimatedTaxes = subtotalFromCart * taxRate;
+  const finalTotal = subtotalFromCart + shippingCost + estimatedTaxes;
   return (
-    <Layout>
-      <div className="max-w-6xl mx-auto p-6">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Checkout</h1>
-          <p className="text-gray-600">Complete your order in a few simple steps</p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2">
-            {/* Step Progress */}
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-4">
-                {steps.map((step, index) => (
-                  <div key={index} className="flex items-center">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                      index <= currentStep 
-                        ? 'bg-blue-600 text-white' 
-                        : 'bg-gray-200 text-gray-600'
-                    }`}>
-                      {index < currentStep ? (
-                        <CheckCircle className="w-4 h-4" />
-                      ) : (
-                        index + 1
-                      )}
-                    </div>
-                    {index < steps.length - 1 && (
-                      <div className={`w-12 h-0.5 mx-2 ${
-                        index < currentStep ? 'bg-blue-600' : 'bg-gray-200'
-                      }`} />
-                    )}
-                  </div>
-                ))}
+    <Layout hideFooter={true}>
+      <div className="min-h-screen bg-gray-50 overflow-x-hidden">
+        {/* Custom Header */}
+        <header className="py-3 sm:py-4 px-3 sm:px-6 lg:px-12 xl:px-24 bg-white border-b">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2 sm:gap-4">
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold tracking-tight text-gray-900">Checkout</h1>
               </div>
-              <div className="flex justify-between text-sm text-gray-600">
-                {steps.map((step, index) => (
-                  <span key={index} className={`${
-                    index === currentStep ? 'font-medium text-blue-600' : ''
-                  }`}>
-                    {step.title}
+              <Link to="/marketplace/cart" className="relative">
+                <ShoppingBag className="h-5 w-5 sm:h-6 sm:w-6 text-gray-500 hover:text-gray-700" />
+                {cartItems.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs w-4 h-4 rounded-full flex items-center justify-center">
+                    {cartItems.length}
                   </span>
-                ))}
+                )}
+              </Link>
+            </div>
+          </div>
+        </header>
+
+        <main className="py-4 sm:py-6 lg:py-8 px-3 sm:px-6 lg:px-8 xl:px-12 pb-24 md:pb-8">
+          <div className="max-w-7xl mx-auto">
+            {/* Back Button - positioned closer to left edge */}
+            <div className="mb-4 sm:mb-6">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('/marketplace')}
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 -ml-2"
+              >
+                ← Back
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 lg:gap-8 xl:gap-12">
+              {/* Left Column: Form */}
+              <div className="order-2 lg:order-1">
+                <form onSubmit={handleSubmit} className="space-y-6 lg:space-y-8">
+                  <CheckoutContactForm
+                    contactEmail={contactEmail}
+                    setContactEmail={setContactEmail}
+                    saveInfo={saveInfo}
+                    setSaveInfo={setSaveInfo}
+                    isEmailDisabled={useSavedAddress && !!savedShippingDetails?.contactEmail}
+                  />
+                  <CheckoutShippingForm
+                    shippingCountry={shippingCountry}
+                    shippingFirstName={shippingFirstName} setShippingFirstName={setShippingFirstName}
+                    shippingLastName={shippingLastName} setShippingLastName={setShippingLastName}
+                    shippingAddress={shippingAddress} setShippingAddress={setShippingAddress}
+                    shippingApartment={shippingApartment} setShippingApartment={setShippingApartment}
+                    shippingCity={shippingCity} setShippingCity={setShippingCity}
+                    shippingState={shippingState} setShippingState={setShippingState}
+                    shippingPostalCode={shippingPostalCode} setShippingPostalCode={setShippingPostalCode}
+                    deliveryNotes={deliveryNotes} setDeliveryNotes={setDeliveryNotes}
+                    useSavedAddress={useSavedAddress} handleUseSavedAddressChange={handleUseSavedAddressChange}
+                    isSavedAddressCheckboxDisabled={!savedShippingDetails && !user?.id}
+                    areAddressFieldsDisabled={useSavedAddress}
+                  />
+                  <CheckoutPaymentInfo />
+                  <CheckoutBillingAddress
+                    billingAddressOption={billingAddressOption}
+                    setBillingAddressOption={setBillingAddressOption}
+                  />
+                  <RoleButton 
+                    type="submit" 
+                    size="lg" 
+                    className="w-full mt-6" 
+                    disabled={isProcessing || cartItems.length === 0}
+                  >
+                    {isProcessing ? "Processing..." : "Pay now"}
+                  </RoleButton>
+                </form>
+              </div>
+
+              {/* Right Column: Order Summary - sticky on larger screens */}
+              <div className="order-1 lg:order-2">
+                <div className="lg:sticky lg:top-4">
+                  <CheckoutOrderSummary
+                    cartItems={cartItems}
+                    subtotal={subtotalFromCart}
+                    shippingCost={shippingCost}
+                    estimatedTaxes={estimatedTaxes}
+                    finalTotal={finalTotal}
+                  />
+                </div>
               </div>
             </div>
-
-            {/* Step Content */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  {React.createElement(steps[currentStep].icon, { className: "w-5 h-5" })}
-                  {steps[currentStep].title}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {steps[currentStep].component}
-              </CardContent>
-            </Card>
-
-            {/* Navigation */}
-            <div className="flex justify-between mt-6">
-              <Button
-                variant="outline"
-                onClick={handlePrevious}
-                disabled={currentStep === 0}
-              >
-                Previous
-              </Button>
-              
-              {currentStep === steps.length - 1 ? (
-                <Button
-                  onClick={handlePlaceOrder}
-                  disabled={!canProceed() || isProcessing}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  {isProcessing ? "Processing..." : "Place Order"}
-                </Button>
-              ) : (
-                <Button
-                  onClick={handleNext}
-                  disabled={!canProceed()}
-                >
-                  Next
-                </Button>
-              )}
-            </div>
           </div>
+        </main>
 
-          {/* Order Summary Sidebar */}
-          <div className="lg:col-span-1">
-            <Card className="sticky top-6">
-              <CardHeader>
-                <CardTitle>Order Summary</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {cartSummary.items.map((item) => (
-                    <div key={item.id} className="flex justify-between items-center">
-                      <div className="flex-1">
-                        <p className="font-medium text-sm">{item.name}</p>
-                        <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
-                      </div>
-                      <p className="font-medium">₱{(item.price * item.quantity).toFixed(2)}</p>
-                    </div>
-                  ))}
-                </div>
-                
-                <Separator className="my-4" />
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Subtotal</span>
-                    <span>₱{cartSummary.subtotal.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Shipping</span>
-                    <span>₱{cartSummary.shipping.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Tax</span>
-                    <span>₱{cartSummary.tax.toFixed(2)}</span>
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between font-bold text-lg">
-                    <span>Total</span>
-                    <span>₱{cartSummary.total.toFixed(2)}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+        {/* Custom Footer */}
+        <footer className="py-6 sm:py-8 px-3 sm:px-6 lg:px-12 xl:px-24 mt-8 sm:mt-12 border-t bg-gray-50">
+          <div className="max-w-7xl mx-auto flex flex-wrap gap-x-3 sm:gap-x-4 lg:gap-x-6 gap-y-2 justify-center text-xs text-gray-500">
+            <Link to="#" className="hover:text-primary">Refund policy</Link>
+            <Link to="#" className="hover:text-primary">Privacy policy</Link>
+            <Link to="#" className="hover:text-primary">Terms of service</Link>
+            <Link to="#" className="hover:text-primary">Contact information</Link>
           </div>
-        </div>
+        </footer>
       </div>
     </Layout>
   );

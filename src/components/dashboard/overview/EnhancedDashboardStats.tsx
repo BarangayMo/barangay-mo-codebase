@@ -31,7 +31,7 @@ export const EnhancedDashboardStats = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-      <div onClick={() => navigate('/admin/users')} className="cursor-pointer">
+      <div onClick={() => navigate('/admin/users/residents')} className="cursor-pointer">
         <StatsCard 
           title="Total Users"
           value={stats.totalUsers.toLocaleString()}
@@ -50,26 +50,20 @@ export const EnhancedDashboardStats = () => {
           className="transition-all hover:shadow-md"
         />
       </div>
-      <div onClick={() => navigate('/admin/membership-requests')} className="cursor-pointer">
-        <StatsCard 
-          title="Membership Requests"
-          value={stats.pendingMembershipRequests.toString()}
-          change={{ value: stats.pendingMembershipRequests, isPositive: stats.pendingMembershipRequests > 0 }}
-          icon={<UserPlus className="h-5 w-5 text-purple-500" />}
-          iconColor="bg-purple-50"
-          className="transition-all hover:shadow-md"
-        />
-      </div>
-      <div onClick={() => navigate('/admin/support-tickets')} className="cursor-pointer">
-        <StatsCard 
-          title="Support Tickets"
-          value={stats.openSupportTickets.toString()}
-          change={{ value: stats.openSupportTickets, isPositive: stats.openSupportTickets > 0 }}
-          icon={<MessageSquare className="h-5 w-5 text-amber-500" />}
-          iconColor="bg-amber-50"
-          className="transition-all hover:shadow-md"
-        />
-      </div>
+      <StatsCard 
+        title="Membership Requests"
+        value={stats.pendingMembershipRequests.toString()}
+        change={{ value: stats.pendingMembershipRequests, isPositive: false }}
+        icon={<UserPlus className="h-5 w-5 text-purple-500" />}
+        iconColor="bg-purple-50"
+      />
+      <StatsCard 
+        title="Support Tickets"
+        value={stats.openSupportTickets.toString()}
+        change={{ value: stats.openSupportTickets, isPositive: false }}
+        icon={<MessageSquare className="h-5 w-5 text-amber-500" />}
+        iconColor="bg-amber-50"
+      />
     </div>
   );
 };

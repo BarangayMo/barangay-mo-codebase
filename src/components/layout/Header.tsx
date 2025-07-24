@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Bell, User, ShoppingBag, Menu, LogOut, Home, MessageSquare, BarChart3, FolderOpen, Settings, UsersIcon, Hospital, ClipboardList, Siren, FileText, Store, LifeBuoy, Info, Phone, Heart } from "lucide-react";
@@ -9,7 +8,6 @@ import { LocationDropdown } from "./header/LocationDropdown";
 import { DesktopNavItems } from "./header/DesktopNavItems";
 import { ProfileMenu } from "./ProfileMenu";
 import { LanguageSelector } from "./LanguageSelector";
-import { CreateDropdown } from "./header/CreateDropdown";
 import { useCartSummary } from "@/hooks/useCartSummary";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useRbiAccess } from "@/hooks/use-rbi-access";
@@ -60,7 +58,6 @@ export const Header = () => {
     },
     enabled: !!user?.id && userRole === "official"
   });
-  
   const getDashboardRoute = () => {
     switch (userRole) {
       case "official":
@@ -73,20 +70,10 @@ export const Header = () => {
         return "/";
     }
   };
-  
-  const handleLogout = async () => {
-    try {
-      await logout();
-      setIsMobileMenuOpen(false);
-      // Force redirect to home page after logout
-      window.location.href = '/';
-    } catch (error) {
-      console.error('Logout error:', error);
-      // Force redirect even if logout fails
-      window.location.href = '/';
-    }
+  const handleLogout = () => {
+    logout();
+    setIsMobileMenuOpen(false);
   };
-  
   const showCartIcon = (location.pathname.startsWith('/marketplace') || location.pathname.startsWith('/resident-home')) && (userRole !== 'resident' || hasRbiAccess);
 
   // Consistent mobile header for all users
@@ -387,20 +374,6 @@ export const Header = () => {
                   <Button size="sm" asChild className={`bg-gradient-to-r ${userRole === "resident" ? "from-[#1a237e] to-[#534bae]" : "from-[#ea384c] to-[#ff6b78]"} text-white hover:opacity-90 transition-opacity`}>
                     <Link to={getDashboardRoute()}>Dashboard</Link>
                   </Button>
-                  
-                  {/* Messages Button for Superadmins */}
-                  {userRole === "superadmin" && (
-                    <Button size="sm" variant="outline" asChild className="flex items-center gap-2">
-                      <Link to="/messages">
-                        <MessageSquare className="h-4 w-4" />
-                        Messages
-                      </Link>
-                    </Button>
-                  )}
-                  
-                  {/* Create Dropdown for Superadmins */}
-                  {userRole === "superadmin" && <CreateDropdown />}
-                  
                   <LanguageSelector />
                 </>}
               <div className="flex items-center gap-0 md:gap-1">
