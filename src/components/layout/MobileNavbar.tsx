@@ -1,6 +1,5 @@
-
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, MessageSquare, Store, Menu, LifeBuoy, User, Briefcase, Bell, ShoppingCart, Settings } from "lucide-react";
+import { Home, MessageSquare, Store, Briefcase, LifeBuoy, User, Bell, ShoppingCart, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRbiAccess } from "@/hooks/use-rbi-access";
 import { cn } from "@/lib/utils";
@@ -80,7 +79,7 @@ export const MobileNavbar = () => {
           key: "services"
         },
         {
-          icon: Menu,
+          icon: Briefcase,
           path: "/menu",
           label: "Menu",
           key: "menu",
@@ -130,9 +129,9 @@ export const MobileNavbar = () => {
       });
     }
 
-    // Always add menu as the last item
+    // Always add menu as the last item - using Briefcase icon instead of Menu
     baseItems.push({
-      icon: Menu,
+      icon: Briefcase,
       path: "/menu",
       label: "Menu",
       key: "menu",
