@@ -4,13 +4,13 @@ import { FC } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Star, Heart, Share2, ShoppingCart } from "lucide-react";
+import { Star, Heart, ShoppingCart } from "lucide-react";
 import { DEFAULT_PRODUCT_IMAGE } from "@/lib/constants";
 import { useWishlist } from "@/hooks/useWishlist";
-import { useShare } from "@/hooks/useShare";
 import { useCartActions } from "@/hooks/useCartActions";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { ShareButton } from "@/components/ui/share-button";
 
 // Define the product data structure
 export interface ProductCardType {
@@ -51,7 +51,6 @@ export const ProductCard: FC<ProductCardProps> = ({ product }) => {
   } = product;
 
   const { isInWishlist, toggleWishlist, isAddingToWishlist } = useWishlist();
-  const { shareProduct } = useShare();
   const { addToCart, isAddingToCart } = useCartActions();
 
   const discountPercentage = original_price && price < original_price
@@ -65,13 +64,6 @@ export const ProductCard: FC<ProductCardProps> = ({ product }) => {
     e.stopPropagation();
     console.log('🔄 Wishlist button clicked for product:', id);
     toggleWishlist(id);
-  };
-
-  const handleShareClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('🔄 Share button clicked for product:', id, name);
-    shareProduct(id, name);
   };
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -154,14 +146,18 @@ export const ProductCard: FC<ProductCardProps> = ({ product }) => {
             >
               <Heart className={cn("h-3.5 w-3.5", isInWishlist(id) && "fill-current")} />
             </Button>
-            <Button
-              size="icon"
-              variant="secondary"
-              className="h-8 w-8 rounded-full bg-white/90 text-gray-600 hover:bg-white shadow-md hover:shadow-lg transition-all"
-              onClick={handleShareClick}
-            >
-              <Share2 className="h-3.5 w-3.5" />
-            </Button>
+            <div onClick={(e) => e.stopPropagation()}>
+              <ShareButton
+                title={name}
+                description={`Check out this amazing product: ${name} - ₱${price.toFixed(2)}`}
+                itemId={id}
+                itemType="product"
+                variant="secondary"
+                size="icon"
+                showLabel={false}
+                className="h-8 w-8 rounded-full bg-white/90 text-gray-600 hover:bg-white shadow-md hover:shadow-lg transition-all"
+              />
+            </div>
           </div>
           
           {!is_active && (

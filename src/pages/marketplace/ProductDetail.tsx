@@ -7,14 +7,14 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Star, ShoppingCart, Heart, Share2, ChevronLeft, Minus, Plus } from 'lucide-react';
+import { Star, ShoppingCart, Heart, ChevronLeft, Minus, Plus } from 'lucide-react';
 import { DEFAULT_PRODUCT_IMAGE } from '@/lib/constants';
 import { useWishlist } from '@/hooks/useWishlist';
-import { useShare } from '@/hooks/useShare';
 import { useCartActions } from '@/hooks/useCartActions';
 import { cn } from '@/lib/utils';
 import { ProductCardType } from '@/components/marketplace/ProductCard';
 import { useToast } from '@/hooks/use-toast';
+import { ShareButton } from '@/components/ui/share-button';
 
 interface ProductDetailType extends ProductCardType {
   description?: string;
@@ -61,7 +61,6 @@ export default function ProductDetail() {
   const [selectedImage, setSelectedImage] = useState<string>("");
   
   const { isInWishlist, toggleWishlist, isAddingToWishlist } = useWishlist();
-  const { shareProduct } = useShare();
   const { addToCart, isAddingToCart } = useCartActions();
 
   const { data: product, isLoading, error } = useQuery({
@@ -179,10 +178,6 @@ export default function ProductDetail() {
 
   const handleWishlistClick = () => {
     toggleWishlist(product.id);
-  };
-
-  const handleShareClick = () => {
-    shareProduct(product.id, product.name);
   };
 
   return (
@@ -360,15 +355,15 @@ export default function ProductDetail() {
                   <Heart className={cn("h-4 w-4", isInWishlist(product.id) && "fill-current")} />
                   <span>{isInWishlist(product.id) ? "Remove from Wishlist" : "Add to Wishlist"}</span>
                 </Button>
-                <Button
+                <ShareButton
+                  title={product.name}
+                  description={`Check out this amazing product: ${product.name} - ₱${product.price.toFixed(2)}`}
+                  itemId={product.id}
+                  itemType="product"
                   variant="ghost"
                   size="sm"
-                  onClick={handleShareClick}
                   className="flex items-center space-x-2 text-gray-600"
-                >
-                  <Share2 className="h-4 w-4" />
-                  <span>Share</span>
-                </Button>
+                />
               </div>
             </div>
 
