@@ -6,27 +6,61 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowLeft, Send, MoreVertical } from 'lucide-react';
-import { useMessages, type Conversation } from '@/hooks/useMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
+
+interface Message {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  recipient_id: string;
+  content: string;
+  message_type: string;
+  is_read: boolean;
+  read_at: string | null;
+  created_at: string;
+  updated_at: string;
+  metadata: any;
+}
+
+interface Conversation {
+  id: string;
+  participant_one_id: string;
+  participant_two_id: string;
+  last_message_id: string | null;
+  last_message_at: string | null;
+  is_archived: boolean;
+  created_at: string;
+  updated_at: string;
+  other_participant?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    avatar_url: string | null;
+  };
+}
 
 export function ChatInterface() {
-  const { conversationId } = useParams<{ conversationId: string }>();
+  const { id: conversationId } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const { messages, fetchMessages, sendMessage } = useMessages();
+  const { toast } = useToast();
+  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (conversationId && user) {
-      console.log('Loading conversation:', conversationId);
-      fetchConversationData();
+      console.log('Loading conversation and messages for ID:', conversationId);
+      loadConversationAndMessages();
+    } else {
+      setLoading(false);
+      setError('Missing conversation ID or user authentication');
     }
   }, [conversationId, user]);
 
@@ -38,6 +72,7 @@ export function ChatInterface() {
   useEffect(() => {
     if (!conversationId || !user) return;
 
+    console.log('Setting up real-time subscription for conversation:', conversationId);
     const channel = supabase
       .channel(`conversation_${conversationId}`)
       .on(
@@ -49,8 +84,8 @@ export function ChatInterface() {
           filter: `conversation_id=eq.${conversationId}`
         },
         () => {
-          console.log('New message received, refreshing...');
-          fetchMessages(conversationId);
+          console.log('New message received, refreshing messages...');
+          fetchMessages();
         }
       )
       .subscribe();
@@ -60,86 +95,140 @@ export function ChatInterface() {
     };
   }, [conversationId, user]);
 
-  const fetchConversationData = async () => {
-    if (!conversationId || !user) {
-      setError('Missing conversation ID or user');
-      setLoading(false);
-      return;
-    }
+  const loadConversationAndMessages = async () => {
+    if (!conversationId || !user) return;
 
     setLoading(true);
     setError(null);
 
     try {
-      console.log('Fetching conversation data for:', conversationId);
-      
-      // Fetch conversation details with a simpler query
+      // First, fetch and validate the conversation
+      console.log('Fetching conversation details...');
       const { data: convData, error: convError } = await supabase
         .from('conversations')
         .select('*')
         .eq('id', conversationId)
-        .single();
+        .maybeSingle();
 
       if (convError) {
         console.error('Error fetching conversation:', convError);
-        setError('Failed to load conversation');
-        setLoading(false);
-        return;
+        throw new Error('Failed to load conversation details');
       }
 
       if (!convData) {
         setError('Conversation not found');
-        setLoading(false);
         return;
       }
-
-      console.log('Conversation data:', convData);
 
       // Check if user is a participant
-      const isParticipant = convData.participant_one_id === user.id || convData.participant_two_id === user.id;
+      const isParticipant = 
+        convData.participant_one_id === user.id || 
+        convData.participant_two_id === user.id;
+
       if (!isParticipant) {
-        setError('You are not a participant in this conversation');
-        setLoading(false);
+        setError('You are not authorized to view this conversation');
         return;
       }
 
-      // Determine other participant
-      const otherParticipantId = convData.participant_one_id === user.id 
-        ? convData.participant_two_id 
-        : convData.participant_one_id;
+      // Get other participant info
+      const otherParticipantId = 
+        convData.participant_one_id === user.id 
+          ? convData.participant_two_id 
+          : convData.participant_one_id;
 
-      console.log('Other participant ID:', otherParticipantId);
-
-      // Fetch other participant info
+      console.log('Fetching other participant info for ID:', otherParticipantId);
       const { data: participantData, error: participantError } = await supabase
         .from('profiles')
         .select('id, first_name, last_name, avatar_url')
         .eq('id', otherParticipantId)
-        .single();
+        .maybeSingle();
 
       if (participantError) {
         console.error('Error fetching participant:', participantError);
-        setError('Failed to load participant information');
-        setLoading(false);
-        return;
+        throw new Error('Failed to load participant information');
       }
 
-      console.log('Participant data:', participantData);
+      if (!participantData) {
+        console.warn('Participant not found, using placeholder');
+      }
 
       setConversation({
         ...convData,
-        other_participant: participantData
-      } as Conversation);
+        other_participant: participantData || {
+          id: otherParticipantId,
+          first_name: 'Unknown',
+          last_name: 'User',
+          avatar_url: null
+        }
+      });
 
-      // Fetch messages for this conversation
-      console.log('Fetching messages for conversation:', conversationId);
-      await fetchMessages(conversationId);
+      // Now fetch messages
+      await fetchMessages();
 
-    } catch (error) {
-      console.error('Error in fetchConversationData:', error);
-      setError('Failed to load conversation');
+    } catch (error: any) {
+      console.error('Error in loadConversationAndMessages:', error);
+      setError(error.message || 'Failed to load conversation');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMessages = async () => {
+    if (!conversationId || !user) return;
+
+    try {
+      console.log('Fetching messages for conversation:', conversationId);
+      
+      // Fetch messages where user is either sender or recipient
+      const { data: messagesData, error: messagesError } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
+        .order('created_at', { ascending: true });
+
+      if (messagesError) {
+        console.error('Error fetching messages:', messagesError);
+        throw messagesError;
+      }
+
+      console.log('Fetched messages:', messagesData?.length || 0);
+      setMessages(messagesData || []);
+
+      // Mark unread messages as read
+      if (messagesData && messagesData.length > 0) {
+        await markMessagesAsRead();
+      }
+
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load messages",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const markMessagesAsRead = async () => {
+    if (!conversationId || !user) return;
+
+    try {
+      const { error } = await supabase
+        .from('messages')
+        .update({ 
+          is_read: true, 
+          read_at: new Date().toISOString() 
+        })
+        .eq('conversation_id', conversationId)
+        .eq('recipient_id', user.id)
+        .eq('is_read', false);
+
+      if (error) {
+        console.error('Error marking messages as read:', error);
+      }
+    } catch (error) {
+      console.error('Error in markMessagesAsRead:', error);
     }
   };
 
@@ -148,22 +237,45 @@ export function ChatInterface() {
   };
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !conversationId || !conversation || sending) return;
+    if (!newMessage.trim() || !conversationId || !conversation || sending || !user) return;
 
     setSending(true);
-    const recipientId = conversation.participant_one_id === user?.id 
+    const recipientId = conversation.participant_one_id === user.id 
       ? conversation.participant_two_id 
       : conversation.participant_one_id;
 
-    console.log('Sending message to:', recipientId);
-    const success = await sendMessage(conversationId, newMessage, recipientId);
-    
-    if (success) {
+    try {
+      console.log('Sending message to:', recipientId);
+      
+      const { error } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: conversationId,
+          sender_id: user.id,
+          recipient_id: recipientId,
+          content: newMessage.trim(),
+          message_type: 'text'
+        });
+
+      if (error) {
+        console.error('Error sending message:', error);
+        throw error;
+      }
+      
       setNewMessage('');
       // Refresh messages after sending
-      await fetchMessages(conversationId);
+      await fetchMessages();
+      
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send message",
+        variant: "destructive"
+      });
+    } finally {
+      setSending(false);
     }
-    setSending(false);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -177,6 +289,7 @@ export function ChatInterface() {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading conversation...</p>
         </div>
       </div>
@@ -188,7 +301,7 @@ export function ChatInterface() {
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <p className="text-red-600 mb-4">{error}</p>
-          <Button variant="outline" onClick={() => fetchConversationData()}>
+          <Button variant="outline" onClick={() => loadConversationAndMessages()}>
             Try Again
           </Button>
         </div>
@@ -201,7 +314,7 @@ export function ChatInterface() {
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <p className="text-gray-600">Conversation not found</p>
-          <Button variant="outline" onClick={() => fetchConversationData()} className="mt-4">
+          <Button variant="outline" onClick={() => loadConversationAndMessages()} className="mt-4">
             Reload
           </Button>
         </div>
@@ -225,14 +338,14 @@ export function ChatInterface() {
             alt={`${conversation.other_participant?.first_name} ${conversation.other_participant?.last_name}`}
           />
           <AvatarFallback>
-            {conversation.other_participant?.first_name?.charAt(0)}
-            {conversation.other_participant?.last_name?.charAt(0)}
+            {conversation.other_participant?.first_name?.charAt(0) || 'U'}
+            {conversation.other_participant?.last_name?.charAt(0) || ''}
           </AvatarFallback>
         </Avatar>
         
         <div className="flex-1">
           <h2 className="font-semibold text-gray-900">
-            {conversation.other_participant?.first_name} {conversation.other_participant?.last_name}
+            {conversation.other_participant?.first_name || 'Unknown'} {conversation.other_participant?.last_name || 'User'}
           </h2>
           <p className="text-sm text-gray-500">Active now</p>
         </div>
@@ -243,7 +356,7 @@ export function ChatInterface() {
       </div>
 
       {/* Messages area */}
-      <ScrollArea className="flex-1 px-4 py-2" ref={scrollAreaRef}>
+      <ScrollArea className="flex-1 px-4 py-2">
         <div className="space-y-4">
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-64">
@@ -266,7 +379,7 @@ export function ChatInterface() {
                         alt={`${conversation.other_participant?.first_name} ${conversation.other_participant?.last_name}`}
                       />
                       <AvatarFallback className="text-xs">
-                        {conversation.other_participant?.first_name?.charAt(0)}
+                        {conversation.other_participant?.first_name?.charAt(0) || 'U'}
                       </AvatarFallback>
                     </Avatar>
                   )}
