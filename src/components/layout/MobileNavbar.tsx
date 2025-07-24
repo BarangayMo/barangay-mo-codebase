@@ -13,6 +13,15 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
+interface NavItem {
+  icon: any;
+  path: string;
+  label: string;
+  key: string;
+  requiresRbi?: boolean;
+  isMenuTrigger?: boolean;
+}
+
 export const MobileNavbar = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -43,7 +52,7 @@ export const MobileNavbar = () => {
   const isMarketplacePage = pathname.startsWith('/marketplace');
 
   // Different nav items based on user role
-  const getNavItems = () => {
+  const getNavItems = (): NavItem[] => {
     if (userRole === "official") {
       return [
         {
@@ -81,7 +90,7 @@ export const MobileNavbar = () => {
     }
 
     // Default nav items for residents
-    const baseItems = [
+    const baseItems: NavItem[] = [
       {
         icon: Home,
         path: getHomeRoute(),
