@@ -62,7 +62,7 @@ export function ChatInterface() {
 
     try {
       const { data, error } = await supabase
-        .from('conversations')
+        .from('conversations' as any)
         .select(`
           *,
           participant_one:profiles!conversations_participant_one_id_fkey(
@@ -90,7 +90,7 @@ export function ChatInterface() {
       setConversation({
         ...data,
         other_participant: otherParticipant
-      });
+      } as Conversation);
     } catch (error) {
       console.error('Error fetching conversation details:', error);
     }
