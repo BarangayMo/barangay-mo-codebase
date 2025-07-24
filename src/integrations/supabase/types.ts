@@ -628,47 +628,6 @@ export type Database = {
         }
         Relationships: []
       }
-      conversations: {
-        Row: {
-          created_at: string
-          id: string
-          is_archived: boolean | null
-          last_message_at: string | null
-          last_message_id: string | null
-          participant_one_id: string
-          participant_two_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_archived?: boolean | null
-          last_message_at?: string | null
-          last_message_id?: string | null
-          participant_one_id: string
-          participant_two_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_archived?: boolean | null
-          last_message_at?: string | null
-          last_message_id?: string | null
-          participant_one_id?: string
-          participant_two_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_conversations_last_message"
-            columns: ["last_message_id"]
-            isOneToOne: false
-            referencedRelation: "messages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       job_applications: {
         Row: {
           age: number | null
@@ -867,48 +826,6 @@ export type Database = {
           id?: string
           uploaded_at?: string
           user_id?: string
-        }
-        Relationships: []
-      }
-      messages: {
-        Row: {
-          content: string
-          conversation_id: string
-          created_at: string
-          id: string
-          is_read: boolean
-          message_type: string
-          metadata: Json | null
-          read_at: string | null
-          recipient_id: string
-          sender_id: string
-          updated_at: string
-        }
-        Insert: {
-          content: string
-          conversation_id: string
-          created_at?: string
-          id?: string
-          is_read?: boolean
-          message_type?: string
-          metadata?: Json | null
-          read_at?: string | null
-          recipient_id: string
-          sender_id: string
-          updated_at?: string
-        }
-        Update: {
-          content?: string
-          conversation_id?: string
-          created_at?: string
-          id?: string
-          is_read?: boolean
-          message_type?: string
-          metadata?: Json | null
-          read_at?: string | null
-          recipient_id?: string
-          sender_id?: string
-          updated_at?: string
         }
         Relationships: []
       }
