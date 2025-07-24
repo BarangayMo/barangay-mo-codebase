@@ -15,7 +15,12 @@ import { useCartActions } from '@/hooks/useCartActions';
 import { cn } from '@/lib/utils';
 import { ProductCardType } from '@/components/marketplace/ProductCard';
 
-const fetchProductDetail = async (productId: string): Promise<ProductCardType> => {
+interface ProductDetailType extends ProductCardType {
+  description?: string;
+  additional_images?: string[];
+}
+
+const fetchProductDetail = async (productId: string): Promise<ProductDetailType> => {
   console.log('🔄 Fetching product detail for ID:', productId);
   
   const { data, error } = await supabase
@@ -23,12 +28,10 @@ const fetchProductDetail = async (productId: string): Promise<ProductCardType> =
     .select(`
       id,
       name,
-      description,
       price,
       original_price,
       stock_quantity,
       main_image_url,
-      additional_images,
       average_rating,
       rating_count,
       sold_count,
@@ -46,7 +49,7 @@ const fetchProductDetail = async (productId: string): Promise<ProductCardType> =
   }
 
   console.log('✅ Product detail fetched:', data);
-  return data as ProductCardType;
+  return data as ProductDetailType;
 };
 
 export default function ProductDetail() {
@@ -106,7 +109,7 @@ export default function ProductDetail() {
   }
 
   const discountPercentage = product.original_price && product.price < product.original_price
-    ? Math.round(((product.original_price - product.price) / product.price) * 100)
+    ? Math.round(((product.original_price - product.price) / product.original_price) * 100)
     : 0;
 
   const images = product.additional_images ? [product.main_image_url, ...product.additional_images] : [product.main_image_url];
@@ -120,7 +123,13 @@ export default function ProductDetail() {
   };
 
   const handleAddToCart = () => {
-    addToCart(product.id, quantity);
+    addToCart({
+      product_id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.main_image_url,
+      quantity: quantity
+    });
   };
 
   const handleWishlistClick = () => {
