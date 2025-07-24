@@ -24,10 +24,11 @@ export function ChatInterface() {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (conversationId) {
+    if (conversationId && user) {
+      console.log('Loading conversation:', conversationId);
       fetchConversationData();
     }
-  }, [conversationId]);
+  }, [conversationId, user]);
 
   useEffect(() => {
     scrollToBottom();
@@ -48,6 +49,7 @@ export function ChatInterface() {
           filter: `conversation_id=eq.${conversationId}`
         },
         () => {
+          console.log('New message received, refreshing...');
           fetchMessages(conversationId);
         }
       )
@@ -59,13 +61,19 @@ export function ChatInterface() {
   }, [conversationId, user]);
 
   const fetchConversationData = async () => {
-    if (!conversationId || !user) return;
+    if (!conversationId || !user) {
+      setError('Missing conversation ID or user');
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     setError(null);
 
     try {
-      // Fetch conversation details
+      console.log('Fetching conversation data for:', conversationId);
+      
+      // Fetch conversation details with a simpler query
       const { data: convData, error: convError } = await supabase
         .from('conversations')
         .select('*')
@@ -75,11 +83,23 @@ export function ChatInterface() {
       if (convError) {
         console.error('Error fetching conversation:', convError);
         setError('Failed to load conversation');
+        setLoading(false);
         return;
       }
 
       if (!convData) {
         setError('Conversation not found');
+        setLoading(false);
+        return;
+      }
+
+      console.log('Conversation data:', convData);
+
+      // Check if user is a participant
+      const isParticipant = convData.participant_one_id === user.id || convData.participant_two_id === user.id;
+      if (!isParticipant) {
+        setError('You are not a participant in this conversation');
+        setLoading(false);
         return;
       }
 
@@ -87,6 +107,8 @@ export function ChatInterface() {
       const otherParticipantId = convData.participant_one_id === user.id 
         ? convData.participant_two_id 
         : convData.participant_one_id;
+
+      console.log('Other participant ID:', otherParticipantId);
 
       // Fetch other participant info
       const { data: participantData, error: participantError } = await supabase
@@ -98,15 +120,19 @@ export function ChatInterface() {
       if (participantError) {
         console.error('Error fetching participant:', participantError);
         setError('Failed to load participant information');
+        setLoading(false);
         return;
       }
+
+      console.log('Participant data:', participantData);
 
       setConversation({
         ...convData,
         other_participant: participantData
       } as Conversation);
 
-      // Fetch messages
+      // Fetch messages for this conversation
+      console.log('Fetching messages for conversation:', conversationId);
       await fetchMessages(conversationId);
 
     } catch (error) {
@@ -129,10 +155,13 @@ export function ChatInterface() {
       ? conversation.participant_two_id 
       : conversation.participant_one_id;
 
+    console.log('Sending message to:', recipientId);
     const success = await sendMessage(conversationId, newMessage, recipientId);
     
     if (success) {
       setNewMessage('');
+      // Refresh messages after sending
+      await fetchMessages(conversationId);
     }
     setSending(false);
   };
@@ -159,7 +188,7 @@ export function ChatInterface() {
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <p className="text-red-600 mb-4">{error}</p>
-          <Button variant="outline" onClick={() => window.location.reload()}>
+          <Button variant="outline" onClick={() => fetchConversationData()}>
             Try Again
           </Button>
         </div>
@@ -172,6 +201,9 @@ export function ChatInterface() {
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <p className="text-gray-600">Conversation not found</p>
+          <Button variant="outline" onClick={() => fetchConversationData()} className="mt-4">
+            Reload
+          </Button>
         </div>
       </div>
     );

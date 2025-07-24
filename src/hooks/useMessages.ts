@@ -123,8 +123,12 @@ export const useMessages = () => {
 
   // Fetch messages for a specific conversation
   const fetchMessages = async (conversationId: string) => {
-    if (!user) return;
+    if (!user || !conversationId) {
+      console.error('Missing user or conversationId for fetchMessages');
+      return;
+    }
 
+    console.log('Fetching messages for conversation:', conversationId);
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -133,7 +137,12 @@ export const useMessages = () => {
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching messages:', error);
+        throw error;
+      }
+      
+      console.log('Fetched messages:', data);
       setMessages((data || []) as Message[]);
 
       // Mark messages as read
@@ -145,6 +154,7 @@ export const useMessages = () => {
         description: "Failed to load messages",
         variant: "destructive"
       });
+      setMessages([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -155,6 +165,8 @@ export const useMessages = () => {
     if (!user) return null;
 
     try {
+      console.log('Looking for conversation between', user.id, 'and', participantId);
+      
       // Check if conversation already exists
       const { data: existing, error: findError } = await supabase
         .from('conversations')
@@ -162,10 +174,17 @@ export const useMessages = () => {
         .or(`and(participant_one_id.eq.${user.id},participant_two_id.eq.${participantId}),and(participant_one_id.eq.${participantId},participant_two_id.eq.${user.id})`)
         .maybeSingle();
 
+      if (findError) {
+        console.error('Error finding conversation:', findError);
+        throw findError;
+      }
+
       if (existing) {
+        console.log('Found existing conversation:', existing.id);
         return existing.id;
       }
 
+      console.log('Creating new conversation');
       // Create new conversation
       const { data: newConv, error: createError } = await supabase
         .from('conversations')
@@ -176,10 +195,15 @@ export const useMessages = () => {
         .select('id')
         .single();
 
-      if (createError) throw createError;
+      if (createError) {
+        console.error('Error creating conversation:', createError);
+        throw createError;
+      }
+      
+      console.log('Created new conversation:', newConv.id);
       return newConv.id;
     } catch (error) {
-      console.error('Error creating conversation:', error);
+      console.error('Error in createOrFindConversation:', error);
       return null;
     }
   };
@@ -189,6 +213,8 @@ export const useMessages = () => {
     if (!user || !content.trim()) return false;
 
     try {
+      console.log('Sending message:', { conversationId, content, recipientId });
+      
       const { error } = await supabase
         .from('messages')
         .insert({
@@ -199,7 +225,12 @@ export const useMessages = () => {
           message_type: 'text'
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error sending message:', error);
+        throw error;
+      }
+      
+      console.log('Message sent successfully');
       return true;
     } catch (error) {
       console.error('Error sending message:', error);
