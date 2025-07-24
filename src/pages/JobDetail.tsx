@@ -1,359 +1,349 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import {
-  ArrowLeft, ArrowRight, ArrowLeftRight, Building, MapPin, Banknote, Clock,
-  GraduationCap, Briefcase, Bookmark, Share2, Users, Star, MessageCircle
-} from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
+import { supabase } from "@/integrations/supabase/client";
+import { 
+  MapPin, 
+  Building, 
+  Clock, 
+  Banknote, 
+  ChevronLeft, 
+  Bookmark, 
+  BookmarkCheck,
+  Calendar,
+  Users,
+  Globe
+} from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { formatDistanceToNow } from "date-fns";
+import { ShareButton } from "@/components/ui/share-button";
 
 export default function JobDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuth();
+  const { toast } = useToast();
+  
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isSaved, setIsSaved] = useState(false);
-  const [savingStatus, setSavingStatus] = useState(false);
-  const [activeTab, setActiveTab] = useState("description");
-  const [otherJobs, setOtherJobs] = useState([]);
-  const [reviewForm, setReviewForm] = useState({ name: "", rating: "", comment: "" });
-  const [applyDialogOpen, setApplyDialogOpen] = useState(false);
-  const { toast } = useToast();
-  const { isAuthenticated, user } = useAuth();
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [bookmarkLoading, setBookmarkLoading] = useState(false);
 
   useEffect(() => {
-    const fetchJobDetails = async () => {
+    const fetchJob = async () => {
       try {
-        const { data, error } = await supabase.from('jobs').select('*').eq('id', id).single();
+        const { data, error } = await supabase
+          .from('jobs')
+          .select('*')
+          .eq('id', id)
+          .single();
+          
         if (error) throw error;
+        
         setJob(data);
-
+        
+        // Check if job is bookmarked
         if (isAuthenticated && user) {
-          const { data: savedJob, error: savedJobError } = await supabase
+          const { data: bookmarkData } = await supabase
             .from('saved_jobs')
             .select('id')
-            .eq('job_id', id)
             .eq('user_id', user.id)
-            .maybeSingle();
-
-          if (!savedJobError) setIsSaved(!!savedJob);
+            .eq('job_id', id)
+            .single();
+            
+          setIsBookmarked(!!bookmarkData);
         }
-
-        const { data: others } = await supabase
-          .from('jobs')
-          .select('id, title, company, location')
-          .neq('id', id)
-          .limit(3);
-        setOtherJobs(others || []);
       } catch (error) {
-        console.error('Error fetching job details:', error);
-        toast({ title: "Error", description: "Failed to fetch job details", variant: "destructive" });
+        console.error('Error fetching job:', error);
+        toast({
+          title: "Failed to fetch job",
+          description: "Please try refreshing the page",
+          variant: "destructive"
+        });
       } finally {
         setLoading(false);
       }
     };
-
-    if (id) fetchJobDetails();
+    
+    fetchJob();
   }, [id, isAuthenticated, user, toast]);
 
-  const handleSaveJob = async () => {
+  const handleBookmark = async () => {
     if (!isAuthenticated) {
-      toast({ title: "Authentication required", description: "Please login to save this job", variant: "destructive" });
-      return;
-    }
-
-    setSavingStatus(true);
-    try {
-      if (isSaved) {
-        await supabase.from('saved_jobs').delete().eq('user_id', user.id).eq('job_id', id);
-        setIsSaved(false);
-        toast({ title: "Job removed", description: "Job removed from your saved list" });
-      } else {
-        await supabase.from('saved_jobs').insert({ user_id: user.id, job_id: id });
-        setIsSaved(true);
-        toast({ title: "Job saved", description: "Job added to your saved list" });
-      }
-    } catch (error) {
-      console.error('Error saving job:', error);
-      toast({ title: "Error", description: "Failed to save job", variant: "destructive" });
-    } finally {
-      setSavingStatus(false);
-    }
-  };
-
-  const handleShareJob = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: job?.title || "Job Post",
-        text: `Check out this job: ${job?.title}`,
-        url: window.location.href,
-      }).catch(() => {
-        toast({ title: "Share cancelled", description: "Sharing was cancelled or unsupported." });
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      toast({ title: "Link copied", description: "Job link copied to clipboard" });
-    }
-  };
-
-  const handleReviewSubmit = (e) => {
-    e.preventDefault();
-    toast({ title: "Review submitted", description: "Thanks for your feedback!" });
-    setReviewForm({ name: "", rating: "", comment: "" });
-  };
-
-  const handleApplyClick = () => {
-    if (!isAuthenticated) {
-      toast({ 
-        title: "Authentication required", 
-        description: "Please login to apply for this job", 
-        variant: "destructive" 
+      toast({
+        title: "Authentication required",
+        description: "Please login to bookmark jobs",
+        variant: "destructive"
       });
       return;
     }
     
-    setApplyDialogOpen(true);
+    setBookmarkLoading(true);
+    
+    try {
+      if (isBookmarked) {
+        // Remove bookmark
+        await supabase
+          .from('saved_jobs')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('job_id', id);
+          
+        setIsBookmarked(false);
+        toast({
+          title: "Job removed from saved",
+          description: "Job has been removed from your saved list"
+        });
+      } else {
+        // Add bookmark
+        await supabase
+          .from('saved_jobs')
+          .insert({
+            user_id: user.id,
+            job_id: id
+          });
+          
+        setIsBookmarked(true);
+        toast({
+          title: "Job saved",
+          description: "Job has been added to your saved list"
+        });
+      }
+    } catch (error) {
+      console.error('Error bookmarking job:', error);
+      toast({
+        title: "Action failed",
+        description: "Please try again",
+        variant: "destructive"
+      });
+    } finally {
+      setBookmarkLoading(false);
+    }
   };
-  
-  const handleApplyConfirm = () => {
-    setApplyDialogOpen(false);
-    navigate(`/jobs/${id}/payment`);
-  };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <Skeleton className="h-8 w-32 mb-6" />
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-3/4" />
+            <Skeleton className="h-6 w-1/2" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-20 w-full" />
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!job) {
+    return (
+      <Layout>
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Job Not Found</h1>
+            <p className="text-gray-600 mb-6">The job you're looking for doesn't exist or has been removed.</p>
+            <Button onClick={() => navigate('/jobs')}>
+              Back to Jobs
+            </Button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          {loading ? <Skeleton className="h-96 w-full" /> : job && (
-            <div className="bg-white p-4 sm:p-6 md:p-8 rounded-2xl shadow-md border border-gray-100 space-y-6 sm:space-y-8">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">{job.title} <Badge className="bg-indigo-100 text-indigo-600">Open</Badge></h1>
-                  <p className="text-gray-500 flex items-center mt-1"><MapPin size={14} className="mr-1" /> {job.location || '—'}</p>
-                </div>
-                <div className="flex items-center flex-wrap gap-2">
-                  <Button 
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white"
-                    onClick={handleApplyClick}
-                  >
-                    Apply Now
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={handleSaveJob} disabled={savingStatus}>
-                    <Bookmark size={14} className="mr-2" fill={isSaved ? "currentColor" : "none"} /> {isSaved ? 'Saved' : 'Save Job'}
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={handleShareJob}>
-                    <Share2 size={14} className="mr-2" /> Share
-                  </Button>
-                </div>
-              </div>
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          onClick={() => navigate('/jobs')}
+          className="mb-6 -ml-3"
+        >
+          <ChevronLeft className="h-4 w-4 mr-1" />
+          Back to Jobs
+        </Button>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm text-gray-700 p-4 bg-white rounded-lg border">
-                <div><p className="text-gray-500">Category</p><p className="font-medium">{job.category || 'Product'}</p></div>
-                <div><p className="text-gray-500">Availability</p><p className="font-medium">{job.availability || '—'}</p></div>
-                <div><p className="text-gray-500">Work Approach</p><p className="font-medium">{job.approach || 'Onsite'}</p></div>
-                <div><p className="text-gray-500">Experience</p><p className="font-medium">{job.experience || '—'}</p></div>
-                <div><p className="text-gray-500">Salary</p><p className="font-medium">{job.salary || '—'}</p></div>
-                <div><p className="text-gray-500">License</p><p className="font-medium">{job.license || 'Required'}</p></div>
-              </div>
-
-              <div className="flex items-center gap-4 text-sm text-gray-600">
-                <div className="flex items-center gap-1"><Users size={16} /> <span>{job.applicants || '154'} Applicants</span></div>
-                <div className="flex items-center gap-1"><ArrowLeftRight size={16} /> <span>{job.matched || '40'} Matched</span></div>
-              </div>
-
-              <div className="border-b text-sm font-medium text-gray-500 flex gap-6 mt-4 overflow-x-auto">
-                {['description', 'review', 'other'].map((tab) => (
-                  <div
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`cursor-pointer pb-2 transition-all whitespace-nowrap ${activeTab === tab ? 'text-indigo-600 border-b-2 border-indigo-600' : ''}`}
-                  >
-                    {tab === 'description' ? 'Job Description' : tab === 'review' ? 'Reviews' : 'Other Jobs'}
-                  </div>
-                ))}
-              </div>
-
-              {activeTab === 'description' && (
-                <div className="space-y-6 pt-4">
-                  <div>
-                    <h2 className="font-semibold text-gray-800 mb-2">About</h2>
-                    <p className="text-gray-600 text-sm whitespace-pre-line">{job.description}</p>
-                  </div>
-                  <div>
-                    <h2 className="font-semibold text-gray-800 mb-2">Key Responsibilities</h2>
-                    <ul className="list-disc pl-6 text-sm text-gray-700 space-y-1">
-                      {job.responsibilities?.map((item, idx) => (<li key={idx}>{item}</li>))}
-                    </ul>
-                  </div>
-                  <div>
-                    <h2 className="font-semibold text-gray-800 mb-2">Education</h2>
-                    <p className="text-gray-600 text-sm">{job.education}</p>
-                  </div>
-                  <div>
-                    <h2 className="font-semibold text-gray-800 mb-2">Skills</h2>
-                    <div className="flex flex-wrap gap-2">
-                      {job.skills?.map((skill, idx) => (
-                        <Badge key={idx} className="bg-gray-100 text-gray-800 border-none">{skill}</Badge>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <h2 className="font-semibold text-gray-800 mb-2">Preferred Qualifications</h2>
-                    <ul className="list-disc pl-6 text-sm text-gray-700 space-y-1">
-                      {job.qualifications?.map((item, idx) => (<li key={idx}>{item}</li>))}
-                    </ul>
-                  </div>
+        {/* Job Header */}
+        <div className="bg-white rounded-xl shadow-sm border p-6 mb-6">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-4">
+              {job.logo_url ? (
+                <img 
+                  src={job.logo_url} 
+                  alt={`${job.company} logo`} 
+                  className="w-16 h-16 object-contain rounded-lg"
+                />
+              ) : (
+                <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Building className="h-8 w-8 text-blue-600" />
                 </div>
               )}
-
-              {activeTab === 'review' && (
-                <div className="pt-4 space-y-6">
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="font-semibold text-gray-800 mb-4">Leave a Review</h3>
-                    <form onSubmit={handleReviewSubmit} className="space-y-4">
-                      <Input
-                        placeholder="Your Name"
-                        value={reviewForm.name}
-                        onChange={(e) => setReviewForm({ ...reviewForm, name: e.target.value })}
-                      />
-                      <Input
-                        placeholder="Rating (1–5)"
-                        type="number"
-                        max={5}
-                        min={1}
-                        value={reviewForm.rating}
-                        onChange={(e) => setReviewForm({ ...reviewForm, rating: e.target.value })}
-                      />
-                      <Textarea
-                        placeholder="Write your feedback..."
-                        value={reviewForm.comment}
-                        onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
-                      />
-                      <Button type="submit" className="w-full bg-indigo-600 text-white">Submit Review</Button>
-                    </form>
-                  </div>
-                </div>
-              )}
-
-              {activeTab === 'other' && (
-                <div className="pt-4 space-y-3 text-sm text-gray-700">
-                  {otherJobs.length > 0 ? otherJobs.map((ojob) => (
-                    <div key={ojob.id} className="p-4 rounded-lg border hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/jobs/${ojob.id}`)}>
-                      <h4 className="font-medium text-gray-800">{ojob.title}</h4>
-                      <p className="text-gray-500 text-sm">{ojob.company} — {ojob.location}</p>
-                    </div>
-                  )) : <p>No other jobs available.</p>}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        <aside className="space-y-6 sticky top-24 self-start">
-          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="h-12 w-12 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-semibold text-sm">
-                {job?.poster_name?.[0]?.toUpperCase() || 'U'}
-              </div>
+              
               <div>
-                <p className="font-semibold text-gray-900">{job?.poster_name || 'Job Poster'}</p>
-                <p className="text-sm text-gray-500">Joined Jan 2023</p>
-              </div>
-            </div>
-            <div className="text-sm text-gray-700 space-y-2">
-              <div className="flex items-center gap-2">
-                <Star size={14} className="text-yellow-400" />
-                <span>4.8 rating</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Briefcase size={14} />
-                <span>18 Jobs Posted</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Users size={14} />
-                <span>32 Reviews</span>
-              </div>
-            </div>
-            <Button variant="outline" size="sm" className="mt-4 w-full flex items-center justify-center gap-2" onClick={() => navigate(`/messages/new?recipient=${job?.assigned_to || job?.id || 'job-poster'}`)}>
-              <MessageCircle size={14} /> Message
-            </Button>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-            <h3 className="text-sm font-medium text-gray-900 mb-4">More from other employers</h3>
-            <div className="space-y-3 text-sm text-gray-700">
-              {otherJobs.length > 0 ? otherJobs.map((ojob) => (
-                <div key={ojob.id} className="p-4 rounded-lg border hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/jobs/${ojob.id}`)}>
-                  <h4 className="font-medium text-gray-800">{ojob.title}</h4>
-                  <p className="text-gray-500 text-sm">{ojob.company} — {ojob.location}</p>
+                <h1 className="text-2xl font-bold text-gray-900 mb-1">{job.title}</h1>
+                <p className="text-lg text-gray-600 font-medium mb-2">{job.company}</p>
+                <div className="flex items-center gap-4 text-sm text-gray-500">
+                  <div className="flex items-center gap-1">
+                    <MapPin size={14} />
+                    <span>{job.location}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Calendar size={14} />
+                    <span>Posted {formatDistanceToNow(new Date(job.created_at), { addSuffix: true })}</span>
+                  </div>
                 </div>
-              )) : <p>No other jobs found.</p>}
-            </div>
-          </div>
-        </aside>
-      </div>
-      
-      {/* Apply Dialog */}
-      <Dialog open={applyDialogOpen} onOpenChange={setApplyDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Apply for this Job</DialogTitle>
-            <DialogDescription>
-              Confirm your application for {job?.title} at {job?.company}.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 my-6">
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium">Application Fee</h4>
-                <span className="font-semibold text-indigo-600">₱50.00</span>
               </div>
-              <p className="text-sm text-gray-500">
-                This fee helps ensure serious applications and supports our platform operations.
-              </p>
             </div>
             
-            {user && (
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p className="text-gray-500">Name</p>
-                  <p className="font-medium">{user.firstName} {user.lastName || ''}</p>
+            <div className="flex items-center gap-2">
+              <ShareButton
+                title={job.title}
+                description={`Check out this job opportunity: ${job.title} at ${job.company}`}
+                itemId={job.id}
+                itemType="job"
+                variant="outline"
+                size="sm"
+                className="text-gray-600"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleBookmark}
+                disabled={bookmarkLoading}
+                className={`${isBookmarked ? 'text-blue-600 border-blue-200 bg-blue-50' : 'text-gray-600'}`}
+              >
+                {isBookmarked ? (
+                  <BookmarkCheck className="h-4 w-4 mr-1" />
+                ) : (
+                  <Bookmark className="h-4 w-4 mr-1" />
+                )}
+                {isBookmarked ? 'Saved' : 'Save'}
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Job Details */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Job Description */}
+            <div className="bg-white rounded-xl shadow-sm border p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Job Description</h2>
+              <div className="prose max-w-none">
+                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                  {job.description || 'No description available.'}
+                </p>
+              </div>
+            </div>
+
+            {/* Requirements */}
+            {job.requirements && (
+              <div className="bg-white rounded-xl shadow-sm border p-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">Requirements</h2>
+                <div className="prose max-w-none">
+                  <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    {job.requirements}
+                  </p>
                 </div>
-                <div>
-                  <p className="text-gray-500">Email</p>
-                  <p className="font-medium">{user.email}</p>
+              </div>
+            )}
+
+            {/* Responsibilities */}
+            {job.responsibilities && (
+              <div className="bg-white rounded-xl shadow-sm border p-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">Responsibilities</h2>
+                <div className="prose max-w-none">
+                  <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    {job.responsibilities}
+                  </p>
                 </div>
               </div>
             )}
           </div>
-          
-          <DialogFooter className="flex flex-col sm:flex-row gap-2">
-            <Button 
-              variant="outline" 
-              onClick={() => setApplyDialogOpen(false)}
-              className="sm:flex-1"
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleApplyConfirm} 
-              className="bg-indigo-600 hover:bg-indigo-700 sm:flex-1"
-            >
-              Confirm & Pay ₱50
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Job Information */}
+            <div className="bg-white rounded-xl shadow-sm border p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Job Information</h3>
+              <div className="space-y-3">
+                {job.salary && (
+                  <div className="flex items-center gap-3">
+                    <Banknote className="h-5 w-5 text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-500">Salary</p>
+                      <p className="font-medium text-gray-900">{job.salary}</p>
+                    </div>
+                  </div>
+                )}
+                
+                {job.work_approach && (
+                  <div className="flex items-center gap-3">
+                    <Globe className="h-5 w-5 text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-500">Work Type</p>
+                      <p className="font-medium text-gray-900">{job.work_approach}</p>
+                    </div>
+                  </div>
+                )}
+                
+                {job.availability && (
+                  <div className="flex items-center gap-3">
+                    <Clock className="h-5 w-5 text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-500">Availability</p>
+                      <p className="font-medium text-gray-900">{job.availability}</p>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="flex items-center gap-3">
+                  <Users className="h-5 w-5 text-gray-400" />
+                  <div>
+                    <p className="text-sm text-gray-500">Category</p>
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                      {job.category}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Apply Button */}
+            <div className="bg-white rounded-xl shadow-sm border p-6">
+              <Button 
+                className="w-full bg-blue-600 hover:bg-blue-700"
+                size="lg"
+                onClick={() => {
+                  if (job.application_url) {
+                    window.open(job.application_url, '_blank');
+                  } else {
+                    toast({
+                      title: "Application method not specified",
+                      description: "Please contact the employer directly",
+                      variant: "destructive"
+                    });
+                  }
+                }}
+              >
+                Apply Now
+              </Button>
+              <p className="text-xs text-gray-500 mt-2 text-center">
+                {job.application_url ? 'You will be redirected to the application page' : 'Contact employer directly'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
     </Layout>
   );
 }

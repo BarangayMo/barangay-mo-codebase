@@ -1,16 +1,10 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Share2, Copy, MessageCircle, Mail, Phone } from 'lucide-react';
+import { Share2, Copy, MessageCircle, Mail, Phone, Facebook, Twitter, Linkedin, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface ShareButtonProps {
   title: string;
@@ -48,7 +42,7 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
       case 'product':
         return `${baseUrl}/marketplace/product/${itemId}`;
       case 'job':
-        return `${baseUrl}/job/${itemId}`;
+        return `${baseUrl}/jobs/${itemId}`;
       case 'announcement':
         return `${baseUrl}/announcement/${itemId}`;
       case 'post':
@@ -95,21 +89,41 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
         return true;
       }
     } catch (error) {
-      if (error instanceof Error && error.name !== 'AbortError') {
-        console.error('Native sharing failed:', error);
+      if (error instanceof Error && error.name === 'AbortError') {
+        // User cancelled the share - don't show error toast
+        setIsOpen(false);
+        return true;
       }
+      console.error('Native sharing failed:', error);
     }
     return false;
   };
 
-  // WhatsApp sharing
+  // Social media sharing functions
+  const handleFacebookShare = () => {
+    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+    window.open(facebookUrl, '_blank', 'width=600,height=400');
+    setIsOpen(false);
+  };
+
+  const handleTwitterShare = () => {
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+    window.open(twitterUrl, '_blank', 'width=600,height=400');
+    setIsOpen(false);
+  };
+
+  const handleLinkedInShare = () => {
+    const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
+    window.open(linkedinUrl, '_blank', 'width=600,height=400');
+    setIsOpen(false);
+  };
+
   const handleWhatsAppShare = () => {
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`;
     window.open(whatsappUrl, '_blank');
     setIsOpen(false);
   };
 
-  // Email sharing
   const handleEmailShare = () => {
     const emailSubject = encodeURIComponent(title);
     const emailBody = encodeURIComponent(`${shareText}\n\n${shareUrl}`);
@@ -118,7 +132,6 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
     setIsOpen(false);
   };
 
-  // SMS sharing
   const handleSMSShare = () => {
     const smsText = encodeURIComponent(`${shareText} ${shareUrl}`);
     const smsUrl = `sms:?body=${smsText}`;
@@ -131,67 +144,137 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
     // Try native sharing first on mobile
     const nativeShareSuccess = await handleNativeShare();
     if (!nativeShareSuccess) {
-      // If native sharing fails or isn't available, show the dropdown menu
+      // If native sharing fails or isn't available, show the modal
       setIsOpen(true);
     }
   };
 
   return (
-    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant={variant}
-          size={size}
-          onClick={handleShare}
-          className={cn(
-            "flex items-center gap-2",
-            className
-          )}
-        >
-          <Share2 className="h-4 w-4" />
-          {showLabel && size !== 'icon' && <span>Share</span>}
-        </Button>
-      </DropdownMenuTrigger>
-      
-      <DropdownMenuContent 
-        align="end" 
-        className="w-48 bg-white border shadow-lg rounded-lg"
-        sideOffset={4}
+    <>
+      <Button
+        variant={variant}
+        size={size}
+        onClick={handleShare}
+        className={cn(
+          "flex items-center gap-2",
+          className
+        )}
       >
-        <DropdownMenuItem 
-          onClick={handleCopyLink}
-          className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 cursor-pointer"
-        >
-          <Copy className="h-4 w-4" />
-          <span>Copy Link</span>
-        </DropdownMenuItem>
-        
-        <DropdownMenuSeparator />
-        
-        <DropdownMenuItem 
-          onClick={handleWhatsAppShare}
-          className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 cursor-pointer"
-        >
-          <MessageCircle className="h-4 w-4" />
-          <span>WhatsApp</span>
-        </DropdownMenuItem>
-        
-        <DropdownMenuItem 
-          onClick={handleEmailShare}
-          className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 cursor-pointer"
-        >
-          <Mail className="h-4 w-4" />
-          <span>Email</span>
-        </DropdownMenuItem>
-        
-        <DropdownMenuItem 
-          onClick={handleSMSShare}
-          className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 cursor-pointer"
-        >
-          <Phone className="h-4 w-4" />
-          <span>Messages (SMS)</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        <Share2 className="h-4 w-4" />
+        {showLabel && size !== 'icon' && <span>Share</span>}
+      </Button>
+
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span>Share</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsOpen(false)}
+                className="h-6 w-6"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Social Media Icons Grid */}
+            <div className="grid grid-cols-4 gap-4">
+              <div className="flex flex-col items-center">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleFacebookShare}
+                  className="h-12 w-12 rounded-full bg-blue-600 hover:bg-blue-700 text-white border-0"
+                >
+                  <Facebook className="h-6 w-6" />
+                </Button>
+                <span className="text-xs mt-1">Facebook</span>
+              </div>
+              
+              <div className="flex flex-col items-center">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleTwitterShare}
+                  className="h-12 w-12 rounded-full bg-black hover:bg-gray-800 text-white border-0"
+                >
+                  <Twitter className="h-6 w-6" />
+                </Button>
+                <span className="text-xs mt-1">X</span>
+              </div>
+              
+              <div className="flex flex-col items-center">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleLinkedInShare}
+                  className="h-12 w-12 rounded-full bg-blue-700 hover:bg-blue-800 text-white border-0"
+                >
+                  <Linkedin className="h-6 w-6" />
+                </Button>
+                <span className="text-xs mt-1">LinkedIn</span>
+              </div>
+              
+              <div className="flex flex-col items-center">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleWhatsAppShare}
+                  className="h-12 w-12 rounded-full bg-green-500 hover:bg-green-600 text-white border-0"
+                >
+                  <MessageCircle className="h-6 w-6" />
+                </Button>
+                <span className="text-xs mt-1">WhatsApp</span>
+              </div>
+              
+              <div className="flex flex-col items-center">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleEmailShare}
+                  className="h-12 w-12 rounded-full bg-gray-600 hover:bg-gray-700 text-white border-0"
+                >
+                  <Mail className="h-6 w-6" />
+                </Button>
+                <span className="text-xs mt-1">Email</span>
+              </div>
+              
+              <div className="flex flex-col items-center">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleSMSShare}
+                  className="h-12 w-12 rounded-full bg-gray-600 hover:bg-gray-700 text-white border-0"
+                >
+                  <Phone className="h-6 w-6" />
+                </Button>
+                <span className="text-xs mt-1">Messages</span>
+              </div>
+            </div>
+
+            {/* Copy Link Section */}
+            <div className="flex items-center gap-2 p-2 bg-gray-100 rounded-lg">
+              <input
+                type="text"
+                value={shareUrl}
+                readOnly
+                className="flex-1 bg-transparent text-sm border-none outline-none text-gray-700"
+              />
+              <Button
+                onClick={handleCopyLink}
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Copy
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };

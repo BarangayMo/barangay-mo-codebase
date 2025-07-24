@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { SavedJobsTab } from "@/components/jobs/SavedJobsTab";
+import { ShareButton } from "@/components/ui/share-button";
 
 export default function Jobs() {
   const [jobs, setJobs] = useState([]);
@@ -268,7 +268,7 @@ export default function Jobs() {
                       </div>
                     </div>
                     
-                    <div className="mt-4 flex justify-between">
+                    <div className="mt-4 flex justify-between items-center">
                       <Button 
                         onClick={() => viewJobDetails(job.id)} 
                         className="bg-blue-600 hover:bg-blue-700"
@@ -276,14 +276,26 @@ export default function Jobs() {
                         View Details
                       </Button>
                       
-                      <Button
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => handleSaveJob(job.id)}
-                        className={`rounded-full ${savedJobs[job.id] ? 'text-blue-600' : 'text-gray-400'}`}
-                      >
-                        <Bookmark className={`h-5 w-5 ${savedJobs[job.id] ? 'fill-blue-600' : ''}`} />
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <ShareButton
+                          title={job.title}
+                          description={`Check out this job opportunity: ${job.title} at ${job.company}`}
+                          itemId={job.id}
+                          itemType="job"
+                          variant="ghost"
+                          size="icon"
+                          showLabel={false}
+                          className="text-gray-400 hover:text-gray-600"
+                        />
+                        <Button
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => handleSaveJob(job.id)}
+                          className={`rounded-full ${savedJobs[job.id] ? 'text-blue-600' : 'text-gray-400'}`}
+                        >
+                          <Bookmark className={`h-5 w-5 ${savedJobs[job.id] ? 'fill-blue-600' : ''}`} />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
