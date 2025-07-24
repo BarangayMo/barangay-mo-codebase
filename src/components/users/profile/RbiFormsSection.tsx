@@ -117,18 +117,18 @@ const RbiFormsSection = () => {
                 key={form.id}
                 className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
+                <div className="flex items-start justify-between mb-3 gap-2">
+                  <div className="flex-1 min-w-0">
                     {form.rbi_number ? (
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="font-mono font-semibold text-lg text-blue-600">
+                        <span className="font-mono font-semibold text-lg text-blue-600 break-all">
                           {form.rbi_number}
                         </span>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleCopyRbiNumber(form.rbi_number!)}
-                          className="h-8 w-8 p-0"
+                          className="h-8 w-8 p-0 flex-shrink-0"
                         >
                           <Copy className="w-4 h-4 text-gray-500" />
                         </Button>
@@ -139,24 +139,26 @@ const RbiFormsSection = () => {
                       </div>
                     )}
                     
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-600">
                       <div className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        <span>Submitted: {format(new Date(form.submitted_at), 'MMM dd, yyyy')}</span>
+                        <Calendar className="w-4 h-4 flex-shrink-0" />
+                        <span className="truncate">Submitted: {format(new Date(form.submitted_at), 'MMM dd, yyyy')}</span>
                       </div>
                       {form.reviewed_at && (
                         <div className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          <span>Reviewed: {format(new Date(form.reviewed_at), 'MMM dd, yyyy')}</span>
+                          <Clock className="w-4 h-4 flex-shrink-0" />
+                          <span className="truncate">Reviewed: {format(new Date(form.reviewed_at), 'MMM dd, yyyy')}</span>
                         </div>
                       )}
                     </div>
                   </div>
                   
-                  <Badge className={`${getStatusColor(form.status)} flex items-center gap-1`}>
-                    {getStatusIcon(form.status)}
-                    <span className="capitalize">{form.status}</span>
-                  </Badge>
+                  <div className="flex-shrink-0">
+                    <Badge className={`${getStatusColor(form.status)} flex items-center gap-1 text-xs px-2 py-1`}>
+                      {getStatusIcon(form.status)}
+                      <span className="capitalize whitespace-nowrap">{form.status}</span>
+                    </Badge>
+                  </div>
                 </div>
 
                 {form.status === 'submitted' && (
