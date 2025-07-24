@@ -126,15 +126,7 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
             Add to Cart
           </Button>
 
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-gray-300 hover:bg-gray-50 text-gray-700 text-sm w-full"
-            onClick={() => onQuickView?.(product)}
-          >
-            <Eye className="h-4 w-4 mr-1" />
-            Quick View
-          </Button>
+         
         </div>
       </CardContent>
     </Card>
