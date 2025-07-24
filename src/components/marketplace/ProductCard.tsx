@@ -1,3 +1,5 @@
+
+//my-change
 import { Star, MapPin, Eye, ShoppingCart, Heart } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
