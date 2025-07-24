@@ -1,3 +1,4 @@
+
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Home, MessageSquare, Store, Menu, LifeBuoy, User, Briefcase, Bell, ShoppingCart, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -175,13 +176,20 @@ export const MobileNavbar = () => {
 
   const navItems = getNavItems();
 
-  // Menu items for the sliding panel - Now including Jobs
+  // Menu items for the sliding panel - Jobs link is prominently placed
   const menuItems = [
     {
       icon: Home,
       path: getHomeRoute(),
       label: "Home",
       key: "home"
+    },
+    {
+      icon: Briefcase,
+      path: "/jobs",
+      label: "Jobs",
+      key: "jobs",
+      requiresRbi: true
     },
     {
       icon: MessageSquare,
@@ -202,13 +210,6 @@ export const MobileNavbar = () => {
       path: "/marketplace",
       label: "Marketplace",
       key: "marketplace",
-      requiresRbi: true
-    },
-    {
-      icon: Briefcase,
-      path: "/jobs",
-      label: "Jobs",
-      key: "jobs",
       requiresRbi: true
     },
     {
@@ -269,10 +270,24 @@ export const MobileNavbar = () => {
                 <button
                   key={key}
                   onClick={() => handleMenuNavigation(path, requiresRbi)}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                  className={cn(
+                    "w-full flex items-center gap-3 px-3 py-2 text-left rounded-lg transition-colors",
+                    pathname === path
+                      ? "bg-resident/10 text-resident font-medium"
+                      : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                  )}
                 >
-                  <Icon className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                  <span className="text-gray-900 dark:text-gray-100">{label}</span>
+                  <Icon className={cn(
+                    "h-5 w-5",
+                    pathname === path
+                      ? "text-resident"
+                      : "text-gray-600 dark:text-gray-400"
+                  )} />
+                  <span className={cn(
+                    pathname === path
+                      ? "text-resident"
+                      : "text-gray-900 dark:text-gray-100"
+                  )}>{label}</span>
                 </button>
               ))}
               <div className="border-t pt-2 mt-4">
