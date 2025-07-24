@@ -176,7 +176,7 @@ export const MobileNavbar = () => {
 
   const navItems = getNavItems();
 
-  // Menu items for the sliding panel
+  // Menu items for the sliding panel - Now including Jobs
   const menuItems = [
     {
       icon: Home,
