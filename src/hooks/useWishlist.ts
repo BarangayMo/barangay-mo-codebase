@@ -1,9 +1,8 @@
-
 import * as React from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { ProductCardType } from '@/components/marketplace/ProductCard';
+import { ProductCardType } from '@/types/marketplace';
 
 const WISHLIST_STORAGE_KEY = 'marketplace_wishlist';
 
@@ -62,7 +61,7 @@ export const useWishlist = () => {
     (supabaseWishlist?.map(item => item.product_id) || []) : 
     localWishlist;
 
-  // Add to wishlist mutation - removed toast notifications
+  // Add to wishlist mutation
   const addToWishlistMutation = useMutation({
     mutationFn: async (productId: string) => {
       console.log('🔄 Adding product to wishlist:', productId);
@@ -101,15 +100,13 @@ export const useWishlist = () => {
       if (user) {
         queryClient.invalidateQueries({ queryKey: ['wishlist', user.id] });
       }
-      // Removed toast notifications for instant experience
     },
     onError: (error: any) => {
       console.error('❌ Add to wishlist error:', error);
-      // Removed toast notifications for instant experience
     },
   });
 
-  // Remove from wishlist mutation - removed toast notifications
+  // Remove from wishlist mutation
   const removeFromWishlistMutation = useMutation({
     mutationFn: async (productId: string) => {
       console.log('🔄 Removing product from wishlist:', productId);
@@ -140,11 +137,9 @@ export const useWishlist = () => {
       if (user) {
         queryClient.invalidateQueries({ queryKey: ['wishlist', user.id] });
       }
-      // Removed toast notifications for instant experience
     },
     onError: (error) => {
       console.error('❌ Remove from wishlist error:', error);
-      // Removed toast notifications for instant experience
     },
   });
 

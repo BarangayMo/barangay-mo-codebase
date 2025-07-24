@@ -3,15 +3,15 @@ import { Star, MapPin, Eye, ShoppingCart, Heart } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Product } from "@/types/marketplace";
+import { Product, ProductCardType } from "@/types/marketplace";
 import { useNavigate } from "react-router-dom";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useCartActions } from "@/hooks/useCartActions";
 import { ShareButton } from "@/components/ui/share-button";
 
 interface ProductCardProps {
-  product: Product;
-  onQuickView?: (product: Product) => void;
+  product: ProductCardType;
+  onQuickView?: (product: ProductCardType) => void;
 }
 
 export function ProductCard({ product, onQuickView }: ProductCardProps) {
@@ -21,12 +21,11 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
 
   const handleAddToCart = () => {
     addToCart({
-      id: product.id,
+      product_id: product.id,
       name: product.name,
       price: product.price,
-      image: product.image,
-      quantity: 1,
-      vendor: product.vendor
+      image: product.main_image_url,
+      quantity: 1
     });
   };
 
@@ -38,15 +37,15 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
     <Card className="group cursor-pointer transition-all duration-200 hover:shadow-lg border-gray-200 hover:border-gray-300">
       <div className="relative">
         <img
-          src={product.image}
+          src={product.main_image_url}
           alt={product.name}
           className="w-full h-48 object-cover rounded-t-lg"
           onClick={() => navigate(`/marketplace/product/${product.id}`)}
         />
         
-        {product.discount && (
+        {product.original_price && product.price < product.original_price && (
           <Badge className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1">
-            -{product.discount}%
+            -{Math.round(((product.original_price - product.price) / product.original_price) * 100)}%
           </Badge>
         )}
         
@@ -64,7 +63,7 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
           
           <ShareButton
             title={product.name}
-            description={`Check out this product: ${product.name} for ${product.price}`}
+            description={`Check out this product: ${product.name} for ₱${product.price}`}
             itemId={product.id}
             itemType="product"
             variant="ghost"
@@ -85,7 +84,7 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
         
         <div className="flex items-center gap-1 text-xs text-gray-600 mb-2">
           <MapPin className="h-3 w-3" />
-          <span>{product.vendor}</span>
+          <span>{product.vendors?.shop_name || 'N/A'}</span>
         </div>
         
         <div className="flex items-center gap-1 mb-2">
@@ -94,53 +93,57 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
               <Star
                 key={i}
                 className={`h-3 w-3 ${
-                  i < Math.floor(product.rating) 
+                  i < Math.floor(product.average_rating || 0) 
                     ? 'fill-yellow-400 text-yellow-400' 
                     : 'text-gray-300'
                 }`}
               />
             ))}
           </div>
-          <span className="text-xs text-gray-600">({product.rating})</span>
+          <span className="text-xs text-gray-600">({product.average_rating || 0})</span>
         </div>
         
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <span className="text-lg font-bold text-gray-900">
-              {product.price}
+              ₱{product.price}
             </span>
-            {product.originalPrice && (
+            {product.original_price && product.price < product.original_price && (
               <span className="text-sm text-gray-500 line-through">
-                {product.originalPrice}
+                ₱{product.original_price}
               </span>
             )}
           </div>
-          <span className="text-xs text-gray-600">{product.sold || 0} sold</span>
+          <span className="text-xs text-gray-600">{product.sold_count || 0} sold</span>
         </div>
         
         {/* Mobile-first responsive button layout */}
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <Button
             size="sm"
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm py-2"
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm py-2 min-h-[36px]"
             onClick={handleAddToCart}
           >
             <ShoppingCart className="h-4 w-4 mr-1" />
-            Add to Cart
+            <span className="truncate">Add to Cart</span>
           </Button>
           
           <Button
             variant="outline"
             size="sm"
-            className="flex-1 border-gray-300 hover:bg-gray-50 text-gray-700 text-sm py-2"
+            className="flex-1 border-gray-300 hover:bg-gray-50 text-gray-700 text-sm py-2 min-h-[36px]"
             onClick={() => onQuickView?.(product)}
           >
             <Eye className="h-4 w-4 mr-1" />
-            <span className="hidden sm:inline">Quick View</span>
-            <span className="sm:hidden">View</span>
+            <span className="hidden sm:inline truncate">Quick View</span>
+            <span className="sm:hidden truncate">View</span>
           </Button>
         </div>
       </CardContent>
     </Card>
   );
 }
+
+// Export types for other components to use
+export type { ProductCardType };
+export { type Product };

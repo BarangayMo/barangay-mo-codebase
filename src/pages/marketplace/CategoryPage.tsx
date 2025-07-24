@@ -1,9 +1,11 @@
+
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { SearchBar } from "@/components/marketplace/SearchBar";
 import { FilterButton } from "@/components/marketplace/FilterButton";
-import { ProductCard, ProductCardType } from "@/components/marketplace/ProductCard";
+import { ProductCard } from "@/components/marketplace/ProductCard";
+import { ProductCardType } from "@/types/marketplace";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryWithDebug } from "@/hooks/use-query-with-debug";
 import { Skeleton } from "@/components/ui/skeleton";

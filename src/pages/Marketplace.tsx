@@ -7,7 +7,7 @@ import { MobileNavigation } from "@/components/marketplace/MobileNavigation";
 import { FilterButton } from "@/components/marketplace/FilterButton";
 import { MarketHero } from "@/components/marketplace/MarketHero";
 import { ProductList } from "@/components/marketplace/ProductList";
-import { ProductCardType } from "@/components/marketplace/ProductCard";
+import { ProductCardType } from "@/types/marketplace";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryWithDebug } from "@/hooks/use-query-with-debug";
 import { Skeleton } from "@/components/ui/skeleton";

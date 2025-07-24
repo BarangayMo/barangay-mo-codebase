@@ -12,14 +12,9 @@ import { DEFAULT_PRODUCT_IMAGE } from '@/lib/constants';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useCartActions } from '@/hooks/useCartActions';
 import { cn } from '@/lib/utils';
-import { ProductCardType } from '@/components/marketplace/ProductCard';
+import { ProductDetailType } from '@/types/marketplace';
 import { useToast } from '@/hooks/use-toast';
 import { ShareButton } from '@/components/ui/share-button';
-
-interface ProductDetailType extends ProductCardType {
-  description?: string;
-  additional_images?: string[];
-}
 
 const fetchProductDetail = async (productId: string): Promise<ProductDetailType> => {
   console.log('🔄 Fetching product detail for ID:', productId);

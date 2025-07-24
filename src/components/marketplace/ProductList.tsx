@@ -1,5 +1,5 @@
-
-import { ProductCard, ProductCardType } from "./ProductCard"; // Use the updated ProductCardType
+import { ProductCard } from "./ProductCard";
+import { ProductCardType } from "@/types/marketplace";
 import { FC } from "react";
 import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
