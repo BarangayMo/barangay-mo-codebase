@@ -61,35 +61,28 @@ export function ChatInterface() {
     if (!conversationId || !user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('conversations' as any)
-        .select(`
-          *,
-          participant_one:profiles!conversations_participant_one_id_fkey(
-            id,
-            first_name,
-            last_name,
-            avatar_url
-          ),
-          participant_two:profiles!conversations_participant_two_id_fkey(
-            id,
-            first_name,
-            last_name,
-            avatar_url
-          )
-        `)
+      const { data: convData, error } = await supabase
+        .from('conversations')
+        .select('*')
         .eq('id', conversationId)
         .single();
 
       if (error) throw error;
 
-      const otherParticipant = data.participant_one_id === user.id 
-        ? data.participant_two 
-        : data.participant_one;
+      const otherParticipantId = convData.participant_one_id === user.id 
+        ? convData.participant_two_id 
+        : convData.participant_one_id;
+
+      // Get other participant info
+      const { data: participantData } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, avatar_url')
+        .eq('id', otherParticipantId)
+        .single();
 
       setConversation({
-        ...data,
-        other_participant: otherParticipant
+        ...convData,
+        other_participant: participantData
       } as Conversation);
     } catch (error) {
       console.error('Error fetching conversation details:', error);

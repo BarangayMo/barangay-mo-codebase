@@ -56,45 +56,44 @@ export const useMessages = () => {
     
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('conversations' as any)
-        .select(`
-          *,
-          last_message:messages!conversations_last_message_id_fkey(
-            content,
-            sender_id,
-            is_read,
-            created_at
-          ),
-          participant_one:profiles!conversations_participant_one_id_fkey(
-            id,
-            first_name,
-            last_name,
-            avatar_url
-          ),
-          participant_two:profiles!conversations_participant_two_id_fkey(
-            id,
-            first_name,
-            last_name,
-            avatar_url
-          )
-        `)
+      const { data: convData, error: convError } = await supabase
+        .from('conversations')
+        .select('*')
         .or(`participant_one_id.eq.${user.id},participant_two_id.eq.${user.id}`)
         .eq('is_archived', false)
         .order('last_message_at', { ascending: false });
 
-      if (error) throw error;
+      if (convError) throw convError;
 
       // Process conversations to add other participant and unread count
       const processedConversations = await Promise.all(
-        (data || []).map(async (conv: any) => {
-          const otherParticipant = conv.participant_one_id === user.id 
-            ? conv.participant_two 
-            : conv.participant_one;
+        (convData || []).map(async (conv: any) => {
+          const otherParticipantId = conv.participant_one_id === user.id 
+            ? conv.participant_two_id 
+            : conv.participant_one_id;
+
+          // Get other participant info
+          const { data: participantData } = await supabase
+            .from('profiles')
+            .select('id, first_name, last_name, avatar_url')
+            .eq('id', otherParticipantId)
+            .single();
+
+          // Get last message if exists
+          let lastMessage = null;
+          if (conv.last_message_id) {
+            const { data: messageData } = await supabase
+              .from('messages')
+              .select('content, sender_id, is_read, created_at')
+              .eq('id', conv.last_message_id)
+              .single();
+            
+            lastMessage = messageData;
+          }
 
           // Get unread count for this conversation
           const { count } = await supabase
-            .from('messages' as any)
+            .from('messages')
             .select('*', { count: 'exact', head: true })
             .eq('conversation_id', conv.id)
             .eq('recipient_id', user.id)
@@ -102,7 +101,8 @@ export const useMessages = () => {
 
           return {
             ...conv,
-            other_participant: otherParticipant,
+            other_participant: participantData,
+            last_message: lastMessage,
             unread_count: count || 0
           };
         })
@@ -128,7 +128,7 @@ export const useMessages = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('messages' as any)
+        .from('messages')
         .select('*')
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
@@ -157,10 +157,10 @@ export const useMessages = () => {
     try {
       // Check if conversation already exists
       const { data: existing, error: findError } = await supabase
-        .from('conversations' as any)
+        .from('conversations')
         .select('id')
         .or(`and(participant_one_id.eq.${user.id},participant_two_id.eq.${participantId}),and(participant_one_id.eq.${participantId},participant_two_id.eq.${user.id})`)
-        .single();
+        .maybeSingle();
 
       if (existing) {
         return existing.id;
@@ -168,7 +168,7 @@ export const useMessages = () => {
 
       // Create new conversation
       const { data: newConv, error: createError } = await supabase
-        .from('conversations' as any)
+        .from('conversations')
         .insert({
           participant_one_id: user.id,
           participant_two_id: participantId
@@ -190,7 +190,7 @@ export const useMessages = () => {
 
     try {
       const { error } = await supabase
-        .from('messages' as any)
+        .from('messages')
         .insert({
           conversation_id: conversationId,
           sender_id: user.id,
@@ -218,7 +218,7 @@ export const useMessages = () => {
 
     try {
       const { error } = await supabase
-        .from('messages' as any)
+        .from('messages')
         .update({ 
           is_read: true, 
           read_at: new Date().toISOString() 
@@ -239,7 +239,7 @@ export const useMessages = () => {
 
     try {
       const { error } = await supabase
-        .from('messages' as any)
+        .from('messages')
         .update({ 
           is_read: isRead, 
           read_at: isRead ? new Date().toISOString() : null 
