@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
@@ -58,20 +57,20 @@ export default function Index() {
                     Connecting communities, empowering residents, and streamlining local governance in the Philippines.
                   </p>
                   
-                  {!isAuthenticated && (
-                    <div className="flex flex-col md:flex-row gap-4 justify-center md:justify-start mb-10 md:mb-8 px-4 md:px-0">
+                  <div className="flex flex-col md:flex-row gap-4 justify-center md:justify-start mb-10 md:mb-8 px-4 md:px-0">
+                    {!isAuthenticated && (
                       <Button size="lg" className="bg-white text-blue-600 hover:bg-white/90 font-medium shadow-lg h-14 text-lg rounded-xl">
                         <Link to="/register" className="flex items-center gap-2">
                           Join Your Community
                           <ArrowRight className="w-5 h-5" />
                         </Link>
                       </Button>
-                      
-                      <Button size="lg" variant="outline" className="bg-transparent backdrop-blur-sm border-white text-white hover:bg-white/10 h-14 text-lg rounded-xl">
-                        <Link to="/about">Learn More</Link>
-                      </Button>
-                    </div>
-                  )}
+                    )}
+                    
+                    <Button size="lg" variant="outline" className="bg-transparent backdrop-blur-sm border-white text-white hover:bg-white/10 h-14 text-lg rounded-xl">
+                      <Link to="/about">Learn More</Link>
+                    </Button>
+                  </div>
                   
                   <div className="mt-8 flex flex-col items-center md:items-start gap-4 md:gap-3 justify-center md:justify-start">
                     <div className="flex items-center gap-3">
@@ -170,6 +169,7 @@ export default function Index() {
           </div>
         </section>
         
+        {/* Call to action section - only show if not authenticated */}
         {!isAuthenticated && (
           <section className="py-12 md:py-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-3xl md:rounded-[40px] mx-4 mb-8 md:mb-0">
             <div className="container mx-auto px-6 md:px-4 text-center">

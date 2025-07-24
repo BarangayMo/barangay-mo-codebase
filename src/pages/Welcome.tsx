@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
@@ -115,8 +114,8 @@ export default function Welcome() {
             Connect with your barangay, access services, and participate in local democracy.
           </p>
           
-          {!isAuthenticated && (
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+            {!isAuthenticated && (
               <Link to="/register">
                 <Button 
                   size="lg" 
@@ -125,17 +124,17 @@ export default function Welcome() {
                   Get Started Today
                 </Button>
               </Link>
-              <Button 
-                variant="outline" 
-                size="lg" 
-                onClick={() => setShowVideoModal(true)}
-                className="border-red-600 text-red-600 hover:bg-red-50 px-8 py-3 text-lg"
-              >
-                <Play className="h-5 w-5 mr-2" />
-                Watch Demo
-              </Button>
-            </div>
-          )}
+            )}
+            <Button 
+              variant="outline" 
+              size="lg" 
+              onClick={() => setShowVideoModal(true)}
+              className="border-red-600 text-red-600 hover:bg-red-50 px-8 py-3 text-lg"
+            >
+              <Play className="h-5 w-5 mr-2" />
+              Watch Demo
+            </Button>
+          </div>
         </div>
 
         {/* Feature Cards */}
