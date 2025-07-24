@@ -1,4 +1,5 @@
-import { Link, useLocation } from "react-router-dom";
+
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Bell, User, ShoppingBag, Menu, LogOut, Home, MessageSquare, BarChart3, FolderOpen, Settings, UsersIcon, Hospital, ClipboardList, Siren, FileText, Store, LifeBuoy, Info, Phone, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { LocationDropdown } from "./header/LocationDropdown";
 import { DesktopNavItems } from "./header/DesktopNavItems";
 import { ProfileMenu } from "./ProfileMenu";
 import { LanguageSelector } from "./LanguageSelector";
+import { CreateDropdown } from "./header/CreateDropdown";
 import { useCartSummary } from "@/hooks/useCartSummary";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useRbiAccess } from "@/hooks/use-rbi-access";
@@ -30,6 +32,7 @@ export const Header = () => {
   } = useAuth();
   const isMobile = useIsMobile();
   const location = useLocation();
+  const navigate = useNavigate();
   const {
     cartItemCount
   } = useCartSummary();
@@ -58,6 +61,7 @@ export const Header = () => {
     },
     enabled: !!user?.id && userRole === "official"
   });
+
   const getDashboardRoute = () => {
     switch (userRole) {
       case "official":
@@ -70,10 +74,16 @@ export const Header = () => {
         return "/";
     }
   };
+
   const handleLogout = () => {
     logout();
     setIsMobileMenuOpen(false);
   };
+
+  const handleMessagesClick = () => {
+    navigate("/messages");
+  };
+
   const showCartIcon = (location.pathname.startsWith('/marketplace') || location.pathname.startsWith('/resident-home')) && (userRole !== 'resident' || hasRbiAccess);
 
   // Consistent mobile header for all users
@@ -327,7 +337,6 @@ export const Header = () => {
                 </Link>
               </Button>}
             
-            {/* Cart Icon - show for marketplace or home */}
             {showCartIcon && <Button asChild variant="ghost" size="icon" className="relative w-8 h-8">
                 <Link to="/marketplace/cart">
                   <ShoppingBag className="h-5 w-5" />
@@ -374,6 +383,23 @@ export const Header = () => {
                   <Button size="sm" asChild className={`bg-gradient-to-r ${userRole === "resident" ? "from-[#1a237e] to-[#534bae]" : "from-[#ea384c] to-[#ff6b78]"} text-white hover:opacity-90 transition-opacity`}>
                     <Link to={getDashboardRoute()}>Dashboard</Link>
                   </Button>
+                  
+                  {/* Add Create dropdown for superadmin */}
+                  {userRole === "superadmin" && <CreateDropdown />}
+                  
+                  {/* Add Messages button for superadmin */}
+                  {userRole === "superadmin" && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleMessagesClick}
+                      className="flex items-center gap-2"
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      Messages
+                    </Button>
+                  )}
+                  
                   <LanguageSelector />
                 </>}
               <div className="flex items-center gap-0 md:gap-1">
