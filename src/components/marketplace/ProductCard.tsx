@@ -1,5 +1,3 @@
-
-//my-change
 import { Star, MapPin, Eye, ShoppingCart, Heart } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -35,12 +33,12 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
   };
 
   return (
-    <Card className="group cursor-pointer transition-all duration-300 hover:shadow-md border border-gray-200 hover:border-gray-300 flex flex-col overflow-hidden">
-      <div className="relative">
+    <Card className="group flex flex-col border border-gray-200 hover:border-gray-300 hover:shadow transition-all duration-200 w-full max-w-full">
+      <div className="relative w-full overflow-hidden">
         <img
           src={product.main_image_url}
           alt={product.name}
-          className="w-full aspect-[4/3] object-cover"
+          className="w-full aspect-[4/3] sm:aspect-[4/3] object-cover"
           onClick={() => navigate(`/marketplace/product/${product.id}`)}
         />
 
@@ -54,7 +52,7 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 bg-white/90 hover:bg-white shadow-sm"
+            className="h-8 w-8 bg-white/90 hover:bg-white shadow"
             onClick={handleWishlistToggle}
           >
             <Heart 
@@ -70,14 +68,14 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
             variant="ghost"
             size="icon"
             showLabel={false}
-            className="h-8 w-8 bg-white/90 hover:bg-white shadow-sm text-gray-700"
+            className="h-8 w-8 bg-white/90 hover:bg-white shadow text-gray-700"
           />
         </div>
       </div>
 
       <CardContent className="p-4 flex flex-col flex-1">
         <h3 
-          className="font-medium text-gray-900 mb-1 line-clamp-2 text-base hover:text-blue-600 transition-colors"
+          className="font-medium text-gray-900 mb-1 text-base line-clamp-2 hover:text-blue-600 transition-colors cursor-pointer"
           onClick={() => navigate(`/marketplace/product/${product.id}`)}
         >
           {product.name}
@@ -118,7 +116,7 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
           <span className="text-xs text-gray-500">{product.sold_count || 0} sold</span>
         </div>
 
-        <div className="mt-auto flex flex-col gap-2">
+        <div className="flex flex-col gap-2">
           <Button
             size="sm"
             className="bg-blue-600 hover:bg-blue-700 text-white text-sm w-full"
