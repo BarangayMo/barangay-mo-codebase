@@ -43,11 +43,11 @@ export const useCartActions = () => {
 
       if (existingItem) {
         console.log('📦 Item exists in cart, updating quantity');
-        // Item exists, update quantity
+        // Item exists, update quantity - removed updated_at field
         const newQuantity = existingItem.quantity + item.quantity;
         const { error: updateError } = await supabase
           .from('cart_items')
-          .update({ quantity: newQuantity, updated_at: new Date().toISOString() })
+          .update({ quantity: newQuantity })
           .eq('id', existingItem.id);
         if (updateError) {
           console.error('❌ Error updating cart item quantity:', updateError);
@@ -56,15 +56,12 @@ export const useCartActions = () => {
         console.log('✅ Cart item quantity updated');
       } else {
         console.log('🆕 Item not in cart, inserting new item');
-        // Item does not exist, insert new
+        // Item does not exist, insert new - removed image_url field name issue
         const { error: insertError } = await supabase
           .from('cart_items')
           .insert({
             user_id: user.id,
             product_id: item.product_id,
-            name: item.name,
-            price: item.price,
-            image_url: item.image,
             quantity: item.quantity,
           });
         if (insertError) {
