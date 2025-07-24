@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,7 @@ import { useShare } from '@/hooks/useShare';
 import { useCartActions } from '@/hooks/useCartActions';
 import { cn } from '@/lib/utils';
 import { ProductCardType } from '@/components/marketplace/ProductCard';
+import { useToast } from '@/hooks/use-toast';
 
 interface ProductDetailType extends ProductCardType {
   description?: string;
@@ -54,6 +55,8 @@ const fetchProductDetail = async (productId: string): Promise<ProductDetailType>
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState<string>("");
   
@@ -123,12 +126,54 @@ export default function ProductDetail() {
   };
 
   const handleAddToCart = () => {
+    console.log('🛒 Adding to cart:', {
+      product_id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.main_image_url,
+      quantity: quantity
+    });
+    
     addToCart({
       product_id: product.id,
       name: product.name,
       price: product.price,
       image: product.main_image_url,
       quantity: quantity
+    });
+  };
+
+  const handleBuyNow = () => {
+    console.log('🚀 Buy Now clicked for product:', product.id);
+    
+    // Create a cart item object for the checkout
+    const cartItem = {
+      cart_item_id: `temp_${Date.now()}`, // Temporary ID for buy now
+      product_id: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: quantity,
+      image: product.main_image_url,
+      seller: product.vendors?.shop_name || "N/A",
+      stock_quantity: product.stock_quantity,
+      max_quantity: product.stock_quantity
+    };
+
+    // Calculate total
+    const total = product.price * quantity;
+    
+    // Navigate to checkout with the single item
+    navigate("/marketplace/checkout", {
+      state: {
+        cartItems: [cartItem],
+        total: total,
+        specialInstructions: ""
+      }
+    });
+    
+    toast({
+      title: "Proceeding to Checkout",
+      description: `${product.name} - Quantity: ${quantity}`,
     });
   };
 
@@ -294,6 +339,8 @@ export default function ProductDetail() {
                   size="lg"
                   variant="outline"
                   className="px-6"
+                  onClick={handleBuyNow}
+                  disabled={!product.is_active || product.stock_quantity === 0}
                 >
                   Buy Now
                 </Button>

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -10,11 +11,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Textarea } from "@/components/ui/textarea";
-import { Minus, Plus, Trash2, Loader2, ShoppingBag } from 'lucide-react'; // Removed X
+import { Minus, Plus, Trash2, Loader2, ShoppingBag } from 'lucide-react';
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatCurrency } from '@/lib/utils'; // Import formatCurrency
+import { formatCurrency } from '@/lib/utils';
 
 const DEFAULT_PRODUCT_IMAGE = "/lovable-uploads/fde1e978-0d35-49ec-9f4b-1f03b096b981.png";
+
 interface CartProductDetails {
   id: string;
   name: string;
@@ -25,6 +27,7 @@ interface CartProductDetails {
     shop_name: string;
   } | null;
 }
+
 interface CartItemDisplay {
   cart_item_id: string;
   product_id: string;
@@ -36,7 +39,10 @@ interface CartItemDisplay {
   stock_quantity: number;
   max_quantity: number;
 }
+
 const fetchCartItemsForDrawer = async (userId: string): Promise<CartItemDisplay[]> => {
+  console.log('🔄 Fetching cart items for drawer, user:', userId);
+  
   const {
     data: cartData,
     error: cartError
@@ -54,12 +60,18 @@ const fetchCartItemsForDrawer = async (userId: string): Promise<CartItemDisplay[
     `).eq('user_id', userId).order('added_at', {
     ascending: false
   });
+  
   if (cartError) {
-    console.error("Error fetching cart items for drawer:", cartError);
+    console.error("❌ Error fetching cart items for drawer:", cartError);
     throw cartError;
   }
-  if (!cartData) return [];
-  return cartData.filter(item => item.products !== null).map(item => {
+  
+  if (!cartData) {
+    console.log('📭 No cart data found');
+    return [];
+  }
+  
+  const processedItems = cartData.filter(item => item.products !== null).map(item => {
     const product = item.products as CartProductDetails;
     return {
       cart_item_id: item.id,
@@ -73,10 +85,15 @@ const fetchCartItemsForDrawer = async (userId: string): Promise<CartItemDisplay[
       max_quantity: product.stock_quantity
     };
   });
+  
+  console.log('✅ Processed cart items:', processedItems.length);
+  return processedItems;
 };
+
 interface CartDrawerContentProps {
-  onClose?: () => void; // Add onClose prop
+  onClose?: () => void;
 }
+
 export const CartDrawerContent = ({
   onClose
 }: CartDrawerContentProps) => {
@@ -89,6 +106,7 @@ export const CartDrawerContent = ({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [specialInstructions, setSpecialInstructions] = useState("");
+  
   const {
     data: cartItems,
     isLoading,
@@ -96,8 +114,12 @@ export const CartDrawerContent = ({
   } = useQuery<CartItemDisplay[]>({
     queryKey: ['cartDrawerItems', user?.id],
     queryFn: () => fetchCartItemsForDrawer(user!.id),
-    enabled: !!user
+    enabled: !!user,
+    staleTime: 30 * 1000, // 30 seconds
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
+  
   const updateQuantityMutation = useMutation({
     mutationFn: async ({
       cartItemId,
@@ -129,6 +151,9 @@ export const CartDrawerContent = ({
       queryClient.invalidateQueries({
         queryKey: ['cartSummary', user?.id]
       });
+      queryClient.invalidateQueries({
+        queryKey: ['cartItems', user?.id]
+      });
     },
     onError: (error: any) => {
       if (error.message !== "Exceeds stock limit") {
@@ -140,6 +165,7 @@ export const CartDrawerContent = ({
       }
     }
   });
+  
   const removeItemMutation = useMutation({
     mutationFn: async (cartItemId: string) => {
       const {
@@ -158,6 +184,9 @@ export const CartDrawerContent = ({
       queryClient.invalidateQueries({
         queryKey: ['cartSummary', user?.id]
       });
+      queryClient.invalidateQueries({
+        queryKey: ['cartItems', user?.id]
+      });
     },
     onError: (error: any) => {
       toast({
@@ -167,6 +196,7 @@ export const CartDrawerContent = ({
       });
     }
   });
+  
   const handleUpdateQuantity = (id: string, newQuantity: number) => {
     if (newQuantity < 1) return;
     updateQuantityMutation.mutate({
@@ -174,11 +204,14 @@ export const CartDrawerContent = ({
       newQuantity
     });
   };
+  
   const handleRemoveItem = (id: string) => {
     removeItemMutation.mutate(id);
   };
+  
   const subtotal = cartItems?.reduce((sum, item) => sum + item.price * item.quantity, 0) || 0;
   const total = subtotal;
+  
   const handleCheckout = () => {
     if (!cartItems || cartItems.length === 0) {
       toast({
@@ -188,10 +221,11 @@ export const CartDrawerContent = ({
       });
       return;
     }
+    
     if (onClose) {
-      // Use onClose prop to close the drawer
       onClose();
     }
+    
     navigate("/marketplace/checkout", {
       state: {
         cartItems,
@@ -200,19 +234,23 @@ export const CartDrawerContent = ({
       }
     });
   };
+  
   if (!user) {
     return <div className="p-6 text-center">Please log in to view your cart.</div>;
   }
-  return <div className="flex flex-col h-full">
+
+  return (
+    <div className="flex flex-col h-full">
       <SheetHeader className="p-4 border-b">
         <SheetTitle className="text-xl font-semibold">
           Your cart ({cartItems?.length || 0})
         </SheetTitle>
-        {/* Removed the explicit SheetClose X button here */}
       </SheetHeader>
 
-      {isLoading && <div className="flex-1 p-4 space-y-4">
-          {[1, 2].map(i => <div key={i} className="flex gap-3 items-center">
+      {isLoading && (
+        <div className="flex-1 p-4 space-y-4">
+          {[1, 2].map(i => (
+            <div key={i} className="flex gap-3 items-center">
               <Skeleton className="w-16 h-16 rounded" />
               <div className="flex-1 space-y-1.5">
                 <Skeleton className="h-4 w-3/4" />
@@ -220,98 +258,150 @@ export const CartDrawerContent = ({
                 <Skeleton className="h-6 w-1/4" />
               </div>
               <Skeleton className="h-5 w-12" />
-            </div>)}
-        </div>}
+            </div>
+          ))}
+        </div>
+      )}
 
-      {cartError && <div className="flex-1 p-6 text-center text-red-500">
+      {cartError && (
+        <div className="flex-1 p-6 text-center text-red-500">
           <p>Error loading cart items.</p>
-        </div>}
+        </div>
+      )}
 
-      {!isLoading && !cartError && (!cartItems || cartItems.length === 0) && <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+      {!isLoading && !cartError && (!cartItems || cartItems.length === 0) && (
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
           <ShoppingBag className="h-16 w-16 text-gray-300 mb-4" />
           <h3 className="text-lg font-medium">Your cart is empty</h3>
           <p className="text-sm text-muted-foreground mb-4">Add some products to get started.</p>
           <SheetClose asChild>
-             <Button asChild variant="outline" onClick={onClose}> {/* Also call onClose here if sheet should close */}
-                <Link to="/marketplace">Continue Shopping</Link>
+            <Button asChild variant="outline" onClick={onClose}>
+              <Link to="/marketplace">Continue Shopping</Link>
             </Button>
           </SheetClose>
-        </div>}
+        </div>
+      )}
 
-      {!isLoading && !cartError && cartItems && cartItems.length > 0 && <ScrollArea className="flex-1">
+      {!isLoading && !cartError && cartItems && cartItems.length > 0 && (
+        <ScrollArea className="flex-1">
           <div className="p-4 space-y-1">
             <div className="grid grid-cols-[auto_1fr_auto] items-center text-xs text-muted-foreground uppercase mb-2 px-1">
               <span>Product</span>
-              <span></span> {/* Empty cell for alignment */}
+              <span></span>
               <span className="text-right">Total</span>
             </div>
             <div className="space-y-4">
-            {cartItems.map(item => <div key={item.cart_item_id} className="flex gap-3 items-start p-1 border-b pb-3 last:border-b-0">
-                <SheetClose asChild onClick={onClose}>
-                  <Link to={`/marketplace/product/${item.product_id}`} className="flex-shrink-0">
-                    <img src={item.image || DEFAULT_PRODUCT_IMAGE} alt={item.name} className="w-16 h-16 object-contain border rounded" onError={e => e.currentTarget.src = DEFAULT_PRODUCT_IMAGE} />
-                  </Link>
-                </SheetClose>
-                <div className="flex-1 min-w-0">
+              {cartItems.map(item => (
+                <div key={item.cart_item_id} className="flex gap-3 items-start p-1 border-b pb-3 last:border-b-0">
                   <SheetClose asChild onClick={onClose}>
-                    <Link to={`/marketplace/product/${item.product_id}`} className="hover:underline">
-                      <h4 className="text-sm font-medium truncate">{item.name}</h4>
+                    <Link to={`/marketplace/product/${item.product_id}`} className="flex-shrink-0">
+                      <img 
+                        src={item.image || DEFAULT_PRODUCT_IMAGE} 
+                        alt={item.name} 
+                        className="w-16 h-16 object-contain border rounded" 
+                        onError={e => e.currentTarget.src = DEFAULT_PRODUCT_IMAGE} 
+                      />
                     </Link>
                   </SheetClose>
-                  <p className="text-xs text-muted-foreground">{formatCurrency(item.price, 'NGN')}</p>
-                  {/* Quantity Controls */}
-                  <div className="flex items-center mt-1.5">
-                    <Button variant="outline" size="icon" className="w-7 h-7" onClick={() => handleUpdateQuantity(item.cart_item_id, item.quantity - 1)} disabled={item.quantity <= 1 || updateQuantityMutation.isPending && updateQuantityMutation.variables?.cartItemId === item.cart_item_id}>
-                      <Minus className="h-3.5 w-3.5" />
-                    </Button>
-                    <div className="w-8 h-7 flex items-center justify-center text-sm">
-                      {updateQuantityMutation.isPending && updateQuantityMutation.variables?.cartItemId === item.cart_item_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : item.quantity}
+                  <div className="flex-1 min-w-0">
+                    <SheetClose asChild onClick={onClose}>
+                      <Link to={`/marketplace/product/${item.product_id}`} className="hover:underline">
+                        <h4 className="text-sm font-medium truncate">{item.name}</h4>
+                      </Link>
+                    </SheetClose>
+                    <p className="text-xs text-muted-foreground">{formatCurrency(item.price, 'NGN')}</p>
+                    <div className="flex items-center mt-1.5">
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className="w-7 h-7" 
+                        onClick={() => handleUpdateQuantity(item.cart_item_id, item.quantity - 1)} 
+                        disabled={item.quantity <= 1 || updateQuantityMutation.isPending && updateQuantityMutation.variables?.cartItemId === item.cart_item_id}
+                      >
+                        <Minus className="h-3.5 w-3.5" />
+                      </Button>
+                      <div className="w-8 h-7 flex items-center justify-center text-sm">
+                        {updateQuantityMutation.isPending && updateQuantityMutation.variables?.cartItemId === item.cart_item_id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          item.quantity
+                        )}
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className="w-7 h-7" 
+                        onClick={() => handleUpdateQuantity(item.cart_item_id, item.quantity + 1)} 
+                        disabled={item.quantity >= item.max_quantity || updateQuantityMutation.isPending && updateQuantityMutation.variables?.cartItemId === item.cart_item_id}
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="w-7 h-7 ml-auto text-muted-foreground hover:text-destructive" 
+                        onClick={() => handleRemoveItem(item.cart_item_id)} 
+                        disabled={removeItemMutation.isPending && removeItemMutation.variables === item.cart_item_id}
+                      >
+                        {removeItemMutation.isPending && removeItemMutation.variables === item.cart_item_id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-3.5 w-3.5" />
+                        )}
+                      </Button>
                     </div>
-                    <Button variant="outline" size="icon" className="w-7 h-7" onClick={() => handleUpdateQuantity(item.cart_item_id, item.quantity + 1)} disabled={item.quantity >= item.max_quantity || updateQuantityMutation.isPending && updateQuantityMutation.variables?.cartItemId === item.cart_item_id}>
-                      <Plus className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="w-7 h-7 ml-auto text-muted-foreground hover:text-destructive" onClick={() => handleRemoveItem(item.cart_item_id)} disabled={removeItemMutation.isPending && removeItemMutation.variables === item.cart_item_id}>
-                      {removeItemMutation.isPending && removeItemMutation.variables === item.cart_item_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-                    </Button>
+                    {item.quantity > item.max_quantity && (
+                      <p className="text-xs text-red-500 mt-1">Max {item.max_quantity} in stock</p>
+                    )}
                   </div>
-                  {item.quantity > item.max_quantity && <p className="text-xs text-red-500 mt-1">Max {item.max_quantity} in stock</p>}
+                  <div className="text-sm font-medium text-right">
+                    {formatCurrency(item.price * item.quantity, 'NGN')}
+                  </div>
                 </div>
-                <div className="text-sm font-medium text-right">
-                  {formatCurrency(item.price * item.quantity, 'NGN')}
-                </div>
-              </div>)}
+              ))}
             </div>
           </div>
-        </ScrollArea>}
+        </ScrollArea>
+      )}
 
-      {cartItems && cartItems.length > 0 && <SheetFooter className="p-4 border-t bg-background">
-  <div className="flex flex-col gap-4 w-full">
-    {/* Order special instructions */}
-    <Accordion type="single" collapsible className="w-full">
-      <AccordionItem value="instructions">
-        <AccordionTrigger className="text-sm">Order special instructions</AccordionTrigger>
-        <AccordionContent>
-          <Textarea placeholder="Add a note for the seller..." value={specialInstructions} onChange={e => setSpecialInstructions(e.target.value)} className="min-h-[80px]" />
-        </AccordionContent>
-      </AccordionItem>
-    </Accordion>
+      {cartItems && cartItems.length > 0 && (
+        <SheetFooter className="p-4 border-t bg-background">
+          <div className="flex flex-col gap-4 w-full">
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="instructions">
+                <AccordionTrigger className="text-sm">Order special instructions</AccordionTrigger>
+                <AccordionContent>
+                  <Textarea 
+                    placeholder="Add a note for the seller..." 
+                    value={specialInstructions} 
+                    onChange={e => setSpecialInstructions(e.target.value)} 
+                    className="min-h-[80px]" 
+                  />
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
 
-    {/* Estimated total */}
-    <div className="w-full space-y-1">
-      <div className="flex justify-between text-lg font-semibold">
-        <span>Estimated total</span>
-        <span>{formatCurrency(total, 'NGN')}</span>
-      </div>
-      <p className="text-xs text-muted-foreground">
-        Taxes, discounts and shipping calculated at checkout.
-      </p>
+            <div className="w-full space-y-1">
+              <div className="flex justify-between text-lg font-semibold">
+                <span>Estimated total</span>
+                <span>{formatCurrency(total, 'NGN')}</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Taxes, discounts and shipping calculated at checkout.
+              </p>
+            </div>
+
+            <RoleButton 
+              size="lg" 
+              className="w-full" 
+              onClick={handleCheckout} 
+              disabled={isLoading || !cartItems || cartItems.length === 0 || updateQuantityMutation.isPending || removeItemMutation.isPending}
+            >
+              Checkout
+            </RoleButton>
+          </div>
+        </SheetFooter>
+      )}
     </div>
-
-    {/* Checkout button */}
-    <RoleButton size="lg" className="w-full" onClick={handleCheckout} disabled={isLoading || !cartItems || cartItems.length === 0 || updateQuantityMutation.isPending || removeItemMutation.isPending}>Checkout</RoleButton>
-  </div>
-    </SheetFooter>}
-
-
-    </div>;
+  );
 };

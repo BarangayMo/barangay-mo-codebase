@@ -1,13 +1,16 @@
+
 import * as React from "react";
 import { FC } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Star, Heart, Share2 } from "lucide-react";
+import { Star, Heart, Share2, ShoppingCart } from "lucide-react";
 import { DEFAULT_PRODUCT_IMAGE } from "@/lib/constants";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useShare } from "@/hooks/useShare";
+import { useCartActions } from "@/hooks/useCartActions";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 // Define the product data structure
 export interface ProductCardType {
@@ -31,6 +34,8 @@ interface ProductCardProps {
 }
 
 export const ProductCard: FC<ProductCardProps> = ({ product }) => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const {
     id,
     name,
@@ -41,11 +46,13 @@ export const ProductCard: FC<ProductCardProps> = ({ product }) => {
     rating_count,
     sold_count,
     vendors,
-    is_active
+    is_active,
+    stock_quantity
   } = product;
 
   const { isInWishlist, toggleWishlist, isAddingToWishlist } = useWishlist();
   const { shareProduct } = useShare();
+  const { addToCart, isAddingToCart } = useCartActions();
 
   const discountPercentage = original_price && price < original_price
     ? Math.round(((original_price - price) / original_price) * 100)
@@ -67,9 +74,59 @@ export const ProductCard: FC<ProductCardProps> = ({ product }) => {
     shareProduct(id, name);
   };
 
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('🛒 Add to cart clicked for product:', id);
+    
+    addToCart({
+      product_id: id,
+      name: name,
+      price: price,
+      image: main_image_url,
+      quantity: 1
+    });
+  };
+
+  const handleBuyNow = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('🚀 Buy Now clicked for product:', id);
+    
+    // Create a cart item object for the checkout
+    const cartItem = {
+      cart_item_id: `temp_${Date.now()}`, // Temporary ID for buy now
+      product_id: id,
+      name: name,
+      price: price,
+      quantity: 1,
+      image: main_image_url,
+      seller: vendors?.shop_name || "N/A",
+      stock_quantity: stock_quantity,
+      max_quantity: stock_quantity
+    };
+
+    // Calculate total
+    const total = price * 1;
+    
+    // Navigate to checkout with the single item
+    navigate("/marketplace/checkout", {
+      state: {
+        cartItems: [cartItem],
+        total: total,
+        specialInstructions: ""
+      }
+    });
+    
+    toast({
+      title: "Proceeding to Checkout",
+      description: `${name} - Quantity: 1`,
+    });
+  };
+
   return (
-    <Link to={`/marketplace/product/${id}`} className="group">
-      <div className="border rounded-lg overflow-hidden bg-white hover:shadow-md transition-shadow">
+    <div className="group border rounded-lg overflow-hidden bg-white hover:shadow-md transition-shadow">
+      <Link to={`/marketplace/product/${id}`} className="block">
         <div className="relative aspect-square bg-gray-100 group/image">
           <img
             src={main_image_url || DEFAULT_PRODUCT_IMAGE}
@@ -113,37 +170,62 @@ export const ProductCard: FC<ProductCardProps> = ({ product }) => {
             </div>
           )}
         </div>
-        <div className="p-3">
+      </Link>
+      
+      <div className="p-3">
+        <Link to={`/marketplace/product/${id}`}>
           <div className="text-sm font-medium line-clamp-2 group-hover:text-blue-600 transition-colors">
             {name}
           </div>
-          <div className="mt-1">
-            <span className="text-red-600 font-semibold">₱{price.toFixed(2)}</span>
-            {original_price && discountPercentage > 0 && (
-              <span className="text-gray-400 text-xs line-through ml-2">
-                ₱{original_price.toFixed(2)}
-              </span>
-            )}
-          </div>
-          <div className="mt-1 flex items-center text-xs text-gray-500">
-            {vendors?.shop_name && (
-              <span className="line-clamp-1">{vendors.shop_name}</span>
-            )}
-          </div>
-          <div className="mt-1 flex items-center justify-between text-xs text-gray-500">
-            {average_rating !== undefined && (
-              <div className="flex items-center">
-                <Star className={cn("h-3 w-3 mr-1", average_rating > 0 ? "fill-yellow-400 text-yellow-400" : "text-gray-300")} />
-                <span>{average_rating?.toFixed(1) || 'N/A'}</span>
-                {rating_count !== undefined && <span className="ml-1">({rating_count})</span>}
-              </div>
-            )}
-            {sold_count !== undefined && (
-              <span>{sold_count} sold</span>
-            )}
-          </div>
+        </Link>
+        <div className="mt-1">
+          <span className="text-red-600 font-semibold">₱{price.toFixed(2)}</span>
+          {original_price && discountPercentage > 0 && (
+            <span className="text-gray-400 text-xs line-through ml-2">
+              ₱{original_price.toFixed(2)}
+            </span>
+          )}
+        </div>
+        <div className="mt-1 flex items-center text-xs text-gray-500">
+          {vendors?.shop_name && (
+            <span className="line-clamp-1">{vendors.shop_name}</span>
+          )}
+        </div>
+        <div className="mt-1 flex items-center justify-between text-xs text-gray-500">
+          {average_rating !== undefined && (
+            <div className="flex items-center">
+              <Star className={cn("h-3 w-3 mr-1", average_rating > 0 ? "fill-yellow-400 text-yellow-400" : "text-gray-300")} />
+              <span>{average_rating?.toFixed(1) || 'N/A'}</span>
+              {rating_count !== undefined && <span className="ml-1">({rating_count})</span>}
+            </div>
+          )}
+          {sold_count !== undefined && (
+            <span>{sold_count} sold</span>
+          )}
+        </div>
+        
+        {/* Action buttons */}
+        <div className="mt-3 flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex-1 text-xs"
+            onClick={handleAddToCart}
+            disabled={!is_active || stock_quantity === 0 || isAddingToCart}
+          >
+            <ShoppingCart className="h-3 w-3 mr-1" />
+            {isAddingToCart ? "Adding..." : "Add to Cart"}
+          </Button>
+          <Button
+            size="sm"
+            className="flex-1 text-xs"
+            onClick={handleBuyNow}
+            disabled={!is_active || stock_quantity === 0}
+          >
+            Buy Now
+          </Button>
         </div>
       </div>
-    </Link>
+    </div>
   );
 };
