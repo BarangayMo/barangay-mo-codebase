@@ -18,7 +18,7 @@ interface HeaderProps {
 
 export const Header = ({ onMenuClick, className }: HeaderProps) => {
   const { isAuthenticated, user } = useAuth();
-  const { totalItems } = useCartSummary();
+  const cartSummary = useCartSummary();
   const navigate = useNavigate();
 
   const handleCartClick = () => {
@@ -28,6 +28,9 @@ export const Header = ({ onMenuClick, className }: HeaderProps) => {
   const handleMessagesClick = () => {
     navigate("/messages");
   };
+
+  // Get cart count safely
+  const cartCount = cartSummary?.cartItemCount || 0;
 
   return (
     <header className={`bg-white border-b border-gray-200 ${className || ""}`}>
@@ -71,7 +74,7 @@ export const Header = ({ onMenuClick, className }: HeaderProps) => {
                 </div>
 
                 {/* Notifications */}
-                <NotificationDropdown />
+                <NotificationDropdown onClose={() => {}} />
 
                 {/* Shopping Cart */}
                 <div className="relative">
@@ -82,9 +85,9 @@ export const Header = ({ onMenuClick, className }: HeaderProps) => {
                     className="relative"
                   >
                     <ShoppingCart className="h-5 w-5" />
-                    {totalItems > 0 && (
+                    {cartCount > 0 && (
                       <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                        {totalItems > 9 ? '9+' : totalItems}
+                        {cartCount > 9 ? '9+' : cartCount}
                       </span>
                     )}
                   </Button>
@@ -93,7 +96,7 @@ export const Header = ({ onMenuClick, className }: HeaderProps) => {
             )}
 
             {isAuthenticated ? (
-              <ProfileMenu user={user} />
+              <ProfileMenu />
             ) : (
               <Button asChild>
                 <Link to="/login">Login</Link>

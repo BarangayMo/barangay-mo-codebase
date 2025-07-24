@@ -60,9 +60,9 @@ export const useMessages = () => {
         .from('conversations')
         .select(`
           *,
-          participant_one:participant_one_id(id, first_name, last_name, avatar_url),
-          participant_two:participant_two_id(id, first_name, last_name, avatar_url),
-          last_message:last_message_id(id, content, created_at, sender_id, is_read)
+          participant_one:profiles!participant_one_id(id, first_name, last_name, avatar_url),
+          participant_two:profiles!participant_two_id(id, first_name, last_name, avatar_url),
+          last_message:messages!last_message_id(id, content, created_at, sender_id, is_read)
         `)
         .or(`participant_one_id.eq.${user.id},participant_two_id.eq.${user.id}`)
         .eq('is_archived', false)
@@ -110,7 +110,13 @@ export const useMessages = () => {
 
       if (error) throw error;
 
-      setMessages(data || []);
+      // Cast the data to match our Message interface
+      const typedMessages: Message[] = (data || []).map(msg => ({
+        ...msg,
+        message_type: msg.message_type as 'text' | 'image' | 'file'
+      }));
+
+      setMessages(typedMessages);
     } catch (error) {
       console.error('Error fetching messages:', error);
       toast({
@@ -140,13 +146,19 @@ export const useMessages = () => {
 
       if (error) throw error;
 
+      // Cast the data to match our Message interface
+      const typedMessage: Message = {
+        ...data,
+        message_type: data.message_type as 'text' | 'image' | 'file'
+      };
+
       // Add message to local state
-      setMessages(prev => [...prev, data]);
+      setMessages(prev => [...prev, typedMessage]);
       
       // Refresh conversations to update last message
       fetchConversations();
       
-      return data;
+      return typedMessage;
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -285,7 +297,11 @@ export const useMessages = () => {
           
           // If the message is for the currently selected conversation, add it to messages
           if (selectedConversation && payload.new.conversation_id === selectedConversation) {
-            setMessages(prev => [...prev, payload.new as Message]);
+            const typedMessage: Message = {
+              ...payload.new,
+              message_type: payload.new.message_type as 'text' | 'image' | 'file'
+            };
+            setMessages(prev => [...prev, typedMessage]);
           }
         }
       )

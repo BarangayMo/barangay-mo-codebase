@@ -17,10 +17,13 @@ export const MobileNavbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { hasRbiAccess } = useRbiAccess();
-  const { totalItems } = useCartSummary();
+  const cartSummary = useCartSummary();
   const [isOpen, setIsOpen] = useState(false);
 
   const pathname = location.pathname;
+
+  // Get cart count safely
+  const cartCount = cartSummary?.cartItemCount || 0;
 
   // Define different navigation based on user role
   const getHomeRoute = () => {
@@ -55,8 +58,8 @@ export const MobileNavbar = () => {
     if (user?.role === "resident") {
       baseItems.push(
         { icon: MessageSquare, path: "/messages", label: "Messages", key: "messages" },
-        { icon: Store, path: "/marketplace", label: "Marketplace", key: "marketplace", requiresRbi: true },
-        { icon: Briefcase, path: "/jobs", label: "Jobs", key: "jobs", requiresRbi: true },
+        { icon: Store, path: "/marketplace", label: "Marketplace", key: "marketplace" },
+        { icon: Briefcase, path: "/jobs", label: "Jobs", key: "jobs" },
         { icon: Bell, path: "/notifications", label: "Notifications", key: "notifications" }
       );
     } else if (user?.role === "official") {
@@ -170,10 +173,10 @@ export const MobileNavbar = () => {
     <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
       <div className="flex items-center justify-around py-2">
         {/* Dynamic nav items */}
-        {navItems.slice(0, 3).map(({ icon: Icon, path, label, key, requiresRbi }) => (
+        {navItems.slice(0, 3).map(({ icon: Icon, path, label, key }) => (
           <button
             key={key}
-            onClick={() => handleNavigation(path, requiresRbi)}
+            onClick={() => handleNavigation(path)}
             className={cn(
               "flex flex-col items-center justify-center p-2 min-w-0 flex-1 relative",
               pathname === path ? "text-resident" : "text-gray-600"
@@ -191,9 +194,9 @@ export const MobileNavbar = () => {
           className="flex flex-col items-center justify-center p-2 min-w-0 flex-1 relative text-gray-600"
         >
           <ShoppingCart className="h-5 w-5 mb-1" />
-          {totalItems > 0 && (
+          {cartCount > 0 && (
             <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
-              {totalItems > 9 ? '9+' : totalItems}
+              {cartCount > 9 ? '9+' : cartCount}
             </Badge>
           )}
           <span className="text-xs truncate">Cart</span>
@@ -211,13 +214,13 @@ export const MobileNavbar = () => {
             <div className="py-4">
               <div className="flex items-center gap-3 mb-6">
                 <Avatar>
-                  <AvatarImage src={user?.avatar_url} />
+                  <AvatarImage src={user?.avatarUrl} />
                   <AvatarFallback>
-                    {user?.first_name?.[0]}{user?.last_name?.[0]}
+                    {user?.firstName?.[0]}{user?.lastName?.[0]}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-semibold">{user?.first_name} {user?.last_name}</p>
+                  <p className="font-semibold">{user?.firstName} {user?.lastName}</p>
                   <p className="text-sm text-gray-600">{user?.email}</p>
                 </div>
               </div>

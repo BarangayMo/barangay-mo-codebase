@@ -1,6 +1,6 @@
 
 import { useState, useMemo } from 'react';
-import { Search, Filter, Check, MarkAsUnread } from 'lucide-react';
+import { Search, Filter, Check, Mail } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -191,7 +191,7 @@ export function MessageInbox({ onConversationSelect, activeConversationId }: Mes
                                 </>
                               ) : (
                                 <>
-                                  <MarkAsUnread className="w-4 h-4 mr-2" />
+                                  <Mail className="w-4 h-4 mr-2" />
                                   Mark as Unread
                                 </>
                               )}
