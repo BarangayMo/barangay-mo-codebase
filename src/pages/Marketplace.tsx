@@ -143,45 +143,49 @@ export default function Marketplace() {
             <FilterButton onFiltersChange={setFilters} />
           </div>
           
-          {/* Category filters - responsive */}
-          <div className="flex items-center gap-2 md:gap-4 overflow-x-auto pb-2 scrollbar-none">
+          {/* Category filters - responsive with proper overflow handling */}
+          <div className="flex items-center gap-2 md:gap-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
             {/* Desktop Filter Button */}
             <div className="hidden md:block flex-shrink-0">
               <FilterButton onFiltersChange={setFilters} />
             </div>
             
             {isLoadingCategories ? (
-              Array.from({ length: 5 }).map((_, index) => 
-                <Skeleton key={index} className="h-8 md:h-10 w-16 md:w-24 rounded-full flex-shrink-0" />
-              )
+              <div className="flex gap-2 md:gap-4">
+                {Array.from({ length: 5 }).map((_, index) => 
+                  <Skeleton key={index} className="h-8 md:h-10 w-16 md:w-24 rounded-full flex-shrink-0" />
+                )}
+              </div>
             ) : categoriesError ? (
               <div className="text-center w-full">
                 <p className="text-red-500 text-sm">Error loading categories.</p>
                 <p className="text-xs text-gray-500">Error: {categoriesError.message}</p>
               </div>
             ) : (
-              displayCategories.map((cat) => (
-                <button
-                  key={cat.id}
-                  className={`px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm whitespace-nowrap flex-shrink-0 transition-colors ${
-                    activeFilter === cat.name
-                      ? "bg-resident text-white font-medium"
-                      : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                  }`}
-                  onClick={() => setActiveFilter(cat.name)}
-                >
-                  {cat.name}
-                </button>
-              ))
+              <div className="flex gap-2 md:gap-4">
+                {displayCategories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    className={`px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm whitespace-nowrap flex-shrink-0 transition-colors ${
+                      activeFilter === cat.name
+                        ? "bg-resident text-white font-medium"
+                        : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                    }`}
+                    onClick={() => setActiveFilter(cat.name)}
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
             )}
           </div>
         </div>
 
         {isLoadingProducts ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
-            {Array.from({ length: 10 }).map((_, index) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
+            {Array.from({ length: 12 }).map((_, index) => (
               <div key={index} className="space-y-2">
-                <Skeleton className="h-36 w-full" />
+                <Skeleton className="h-36 sm:h-40 md:h-48 w-full rounded-lg" />
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-4 w-1/2" />
                 <Skeleton className="h-8 w-full" />
@@ -191,9 +195,9 @@ export default function Marketplace() {
         ) : productsError ? (
           <div className="text-center py-10">
             <p className="text-red-500 mb-2">Error loading products: {productsError.message}</p>
-            <details className="text-left bg-red-50 p-4 rounded">
+            <details className="text-left bg-red-50 p-4 rounded max-w-2xl mx-auto">
               <summary className="cursor-pointer text-sm font-medium">Technical Details</summary>
-              <pre className="text-xs mt-2 overflow-auto">{JSON.stringify(productsError, null, 2)}</pre>
+              <pre className="text-xs mt-2 overflow-auto whitespace-pre-wrap">{JSON.stringify(productsError, null, 2)}</pre>
             </details>
           </div>
         ) : hasRbiAccess && products && products.length > 0 ? (

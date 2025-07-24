@@ -34,12 +34,12 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
   };
 
   return (
-    <Card className="group cursor-pointer transition-all duration-200 hover:shadow-lg border-gray-200 hover:border-gray-300">
+    <Card className="group cursor-pointer transition-all duration-200 hover:shadow-lg border-gray-200 hover:border-gray-300 h-full flex flex-col">
       <div className="relative">
         <img
           src={product.main_image_url}
           alt={product.name}
-          className="w-full h-48 object-cover rounded-t-lg"
+          className="w-full h-36 sm:h-40 md:h-48 object-cover rounded-t-lg"
           onClick={() => navigate(`/marketplace/product/${product.id}`)}
         />
         
@@ -74,17 +74,17 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
         </div>
       </div>
       
-      <CardContent className="p-4">
+      <CardContent className="p-3 sm:p-4 flex-1 flex flex-col">
         <h3 
-          className="font-semibold text-gray-900 mb-1 line-clamp-2 hover:text-blue-600 transition-colors cursor-pointer"
+          className="font-semibold text-gray-900 mb-2 line-clamp-2 text-sm sm:text-base hover:text-blue-600 transition-colors cursor-pointer min-h-[2.5rem] sm:min-h-[3rem]"
           onClick={() => navigate(`/marketplace/product/${product.id}`)}
         >
           {product.name}
         </h3>
         
         <div className="flex items-center gap-1 text-xs text-gray-600 mb-2">
-          <MapPin className="h-3 w-3" />
-          <span>{product.vendors?.shop_name || 'N/A'}</span>
+          <MapPin className="h-3 w-3 flex-shrink-0" />
+          <span className="truncate">{product.vendors?.shop_name || 'N/A'}</span>
         </div>
         
         <div className="flex items-center gap-1 mb-2">
@@ -104,39 +104,38 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
         </div>
         
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-gray-900">
+          <div className="flex items-center gap-1 sm:gap-2 min-w-0">
+            <span className="text-sm sm:text-lg font-bold text-gray-900 truncate">
               ₱{product.price}
             </span>
             {product.original_price && product.price < product.original_price && (
-              <span className="text-sm text-gray-500 line-through">
+              <span className="text-xs sm:text-sm text-gray-500 line-through truncate">
                 ₱{product.original_price}
               </span>
             )}
           </div>
-          <span className="text-xs text-gray-600">{product.sold_count || 0} sold</span>
+          <span className="text-xs text-gray-600 flex-shrink-0">{product.sold_count || 0} sold</span>
         </div>
         
-        {/* Mobile-first responsive button layout */}
-        <div className="flex flex-col gap-2 sm:flex-row">
+        {/* Responsive button layout with proper spacing */}
+        <div className="flex flex-col gap-2 mt-auto">
           <Button
             size="sm"
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm py-2 min-h-[36px]"
+            className="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm py-2 min-h-[32px] sm:min-h-[36px] w-full"
             onClick={handleAddToCart}
           >
-            <ShoppingCart className="h-4 w-4 mr-1" />
+            <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
             <span className="truncate">Add to Cart</span>
           </Button>
           
           <Button
             variant="outline"
             size="sm"
-            className="flex-1 border-gray-300 hover:bg-gray-50 text-gray-700 text-sm py-2 min-h-[36px]"
+            className="border-gray-300 hover:bg-gray-50 text-gray-700 text-xs sm:text-sm py-2 min-h-[32px] sm:min-h-[36px] w-full"
             onClick={() => onQuickView?.(product)}
           >
-            <Eye className="h-4 w-4 mr-1" />
-            <span className="hidden sm:inline truncate">Quick View</span>
-            <span className="sm:hidden truncate">View</span>
+            <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+            <span className="truncate">Quick View</span>
           </Button>
         </div>
       </CardContent>

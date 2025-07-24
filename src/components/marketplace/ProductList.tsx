@@ -1,3 +1,4 @@
+
 import { ProductCard } from "./ProductCard";
 import { ProductCardType } from "@/types/marketplace";
 import { FC } from "react";
@@ -46,7 +47,7 @@ export const ProductList: FC<ProductListProps> = ({ products, activeFilter, sear
       return <div className="text-center py-10 text-gray-500">No products found in "{activeFilter}".</div>;
     }
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
         {filteredProducts.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
@@ -89,31 +90,31 @@ export const ProductList: FC<ProductListProps> = ({ products, activeFilter, sear
   }
 
   return (
-    <>
+    <div className="space-y-8">
       {displayedCategories.map((categoryName) => {
         const categoryProducts = productsByCategory[categoryName];
         if (categoryProducts.length === 0) return null;
 
         return (
-          <div key={categoryName} className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">{categoryName}</h2>
+          <div key={categoryName} className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">{categoryName}</h2>
               <Link 
-                to={`/marketplace/category/${categoryName.toLowerCase().replace(/\s+/g, '-')}`} // Create a slug for URL
-                className="text-sm flex items-center gap-1 text-gray-500 hover:text-primary"
+                to={`/marketplace/category/${categoryName.toLowerCase().replace(/\s+/g, '-')}`}
+                className="text-sm flex items-center gap-1 text-gray-500 hover:text-primary transition-colors"
               >
                 See all <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
             
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
-              {categoryProducts.slice(0, 5).map((product) => ( // Show up to 5 products per category on "All" view
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
+              {categoryProducts.slice(0, 6).map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
           </div>
         );
       })}
-    </>
+    </div>
   );
 };

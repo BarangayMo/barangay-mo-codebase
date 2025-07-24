@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { supabase } from "@/integrations/supabase/client";
-import { Briefcase, Search, MapPin, Building, Clock, Banknote, Bookmark, BookmarkCheck } from "lucide-react";
+import { Briefcase, Search, MapPin, Building, Clock, Banknote, Bookmark, BookmarkCheck, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { SavedJobsTab } from "@/components/jobs/SavedJobsTab";
 import { ShareButton } from "@/components/ui/share-button";
+import { useStartConversation } from "@/hooks/useStartConversation";
 
 export default function Jobs() {
   const [jobs, setJobs] = useState([]);
@@ -21,6 +22,7 @@ export default function Jobs() {
   const { isAuthenticated, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { startConversation } = useStartConversation();
 
   // Fetch jobs
   useEffect(() => {
@@ -137,6 +139,35 @@ export default function Jobs() {
 
   const viewJobDetails = (jobId) => {
     navigate(`/jobs/${jobId}`);
+  };
+
+  const handleMessagePoster = async (job) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication required",
+        description: "Please login to message job posters",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // For now, we'll use a placeholder user ID for the job poster
+    // In a real implementation, you'd have a user_id field in the jobs table
+    const posterUserId = job.assigned_to || user.id; // Fallback to current user for demo
+    
+    try {
+      await startConversation(posterUserId);
+      toast({
+        title: "Starting conversation",
+        description: `Opening chat with ${job.company}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to start conversation",
+        description: "Please try again",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -268,14 +299,23 @@ export default function Jobs() {
                       </div>
                     </div>
                     
-                    {/* Mobile-responsive action buttons */}
-                    <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
-                      <Button 
-                        onClick={() => viewJobDetails(job.id)} 
-                        className="bg-blue-600 hover:bg-blue-700 text-sm flex-1 sm:flex-none"
-                      >
-                        View Details
-                      </Button>
+                    {/* Updated action buttons with message option */}
+                    <div className="flex flex-col gap-2">
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={() => viewJobDetails(job.id)} 
+                          className="bg-blue-600 hover:bg-blue-700 text-sm flex-1"
+                        >
+                          View Details
+                        </Button>
+                        <Button
+                          onClick={() => handleMessagePoster(job)}
+                          variant="outline"
+                          className="text-sm px-3"
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                        </Button>
+                      </div>
                       
                       <div className="flex items-center gap-2 justify-end">
                         <ShareButton
