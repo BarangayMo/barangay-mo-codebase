@@ -1,18 +1,20 @@
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/hooks/use-user-profile";
 
 export const Logo = () => {
-  const { user, userRole } = useAuth();
+  const { userRole } = useAuth();
+  const { profile } = useUserProfile();
   
-  console.log('Logo component - user data:', user);
+  console.log('Logo component - profile data:', profile);
   console.log('Logo component - userRole:', userRole);
-  console.log('Logo component - officials_data:', user?.officials_data);
+  console.log('Logo component - officials_data:', profile?.officials_data);
   
   // Get actual location data from user profile
   const getLocationText = () => {
-    const municipality = user?.municipality;
-    const province = user?.province;
-    const barangay = user?.barangay;
+    const municipality = profile?.municipality;
+    const province = profile?.province;
+    const barangay = profile?.barangay;
     
     console.log('Location data:', { municipality, province, barangay });
     
@@ -27,10 +29,10 @@ export const Logo = () => {
 
   // Get Punong Barangay name from officials data
   const getPunongBarangayName = () => {
-    console.log('Getting Punong Barangay name from:', user?.officials_data);
+    console.log('Getting Punong Barangay name from:', profile?.officials_data);
     
-    if (user?.officials_data && Array.isArray(user.officials_data)) {
-      const punongBarangay = user.officials_data.find(
+    if (profile?.officials_data && Array.isArray(profile.officials_data)) {
+      const punongBarangay = profile.officials_data.find(
         (official: any) => official.position === "Punong Barangay" || 
                           official.POSITION === "Punong Barangay"
       );
@@ -55,10 +57,10 @@ export const Logo = () => {
 
   // Show logo if available, otherwise show initials
   const getLogoDisplay = () => {
-    if (user?.logo_url) {
+    if (profile?.logo_url) {
       return (
         <img 
-          src={user.logo_url} 
+          src={profile.logo_url} 
           alt="Barangay Logo" 
           className="w-8 h-8 rounded-full object-cover border border-gray-200"
         />

@@ -49,8 +49,8 @@ export function useResidentProfile() {
       
       setProfile({
         id: profileData.id,
-        first_name: profileData.first_name || user?.firstName || '',
-        last_name: profileData.last_name || user?.lastName || '',
+        first_name: profileData.first_name || '',
+        last_name: profileData.last_name || '',
         email: user?.email || '',
         barangay: profileData.barangay || '',
         settings: settingsData || undefined,

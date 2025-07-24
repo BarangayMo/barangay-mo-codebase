@@ -20,8 +20,8 @@ export function ProfileMenu() {
   const { profile } = useResidentProfile();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const firstName = profile?.first_name || user?.firstName || '';
-  const lastName = profile?.last_name || user?.lastName || '';
+  const firstName = profile?.first_name || '';
+  const lastName = profile?.last_name || '';
   const initials = firstName?.[0] || '' + lastName?.[0] || '';
   
   // Fix type handling for address.avatar_url

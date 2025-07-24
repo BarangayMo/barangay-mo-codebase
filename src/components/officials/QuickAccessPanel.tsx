@@ -10,7 +10,7 @@ import {
   BarChart3,
   ChevronRight
 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/hooks/use-user-profile";
 
 const quickAccessItems = [
   {
@@ -52,23 +52,23 @@ const quickAccessItems = [
 ];
 
 export const QuickAccessPanel = () => {
-  const { user } = useAuth();
+  const { profile } = useUserProfile();
   
   // Get actual location data from user profile
   const getLocationText = () => {
-    if (user?.municipality && user?.province) {
-      return `${user.municipality}, ${user.province}`;
+    if (profile?.municipality && profile?.province) {
+      return `${profile.municipality}, ${profile.province}`;
     }
-    if (user?.barangay) {
-      return user.barangay;
+    if (profile?.barangay) {
+      return profile.barangay;
     }
     return "Location";
   };
 
   // Get Punong Barangay name from officials data
   const getPunongBarangayName = () => {
-    if (user?.officials_data && Array.isArray(user.officials_data)) {
-      const punongBarangay = user.officials_data.find(
+    if (profile?.officials_data && Array.isArray(profile.officials_data)) {
+      const punongBarangay = profile.officials_data.find(
         (official: any) => official.position === "Punong Barangay"
       );
       if (punongBarangay) {

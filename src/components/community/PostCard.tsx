@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -11,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { ShareButton } from "@/components/ui/share-button";
+import { useResidentProfile } from "@/hooks/use-resident-profile";
 
 interface PostCardProps {
   post: CommunityPost;
@@ -23,6 +23,7 @@ export const PostCard = ({ post }: PostCardProps) => {
   const [optimisticLiked, setOptimisticLiked] = useState(post.user_has_liked);
   const [optimisticLikesCount, setOptimisticLikesCount] = useState(post.likes_count);
   const { user } = useAuth();
+  const { profile } = useResidentProfile();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -102,14 +103,14 @@ export const PostCard = ({ post }: PostCardProps) => {
   };
 
   const getCurrentUserInitials = () => {
-    if (user?.firstName && user?.lastName) {
-      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+    if (profile?.first_name && profile?.last_name) {
+      return `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase();
     }
-    if (user?.firstName) {
-      return user.firstName.substring(0, 2).toUpperCase();
+    if (profile?.first_name) {
+      return profile.first_name.substring(0, 2).toUpperCase();
     }
-    if (user?.lastName) {
-      return user.lastName.substring(0, 2).toUpperCase();
+    if (profile?.last_name) {
+      return profile.last_name.substring(0, 2).toUpperCase();
     }
     return user?.email?.substring(0, 2).toUpperCase() || "U";
   };
@@ -331,7 +332,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                 )}
                 <div className="flex gap-2">
                   <Avatar className="h-7 w-7">
-                    <AvatarImage src={user?.avatar || ""} />
+                    <AvatarImage src={profile?.settings?.avatar_url || ""} />
                     <AvatarFallback className="text-xs bg-blue-500 text-white">
                       {getCurrentUserInitials()}
                     </AvatarFallback>

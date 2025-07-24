@@ -11,10 +11,13 @@ interface AuthContextType {
   userRole: UserRole | null;
   loading: boolean;
   isAuthenticated: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, userData: any) => Promise<void>;
+  isEmailVerified: boolean;
+  signIn: (email: string, password: string) => Promise<{ error?: any }>;
+  signUp: (email: string, password: string, userData: any) => Promise<{ error?: any }>;
   signOut: () => Promise<void>;
   logout: () => Promise<void>;
+  login: (email: string, password: string) => Promise<{ error?: any }>;
+  register: (email: string, password: string, userData: any) => Promise<{ error?: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -91,9 +94,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       password,
     });
 
-    if (error) {
-      throw error;
-    }
+    return { error };
+  };
+
+  const login = async (email: string, password: string) => {
+    return await signIn(email, password);
   };
 
   const signUp = async (email: string, password: string, userData: any) => {
@@ -105,9 +110,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       },
     });
 
-    if (error) {
-      throw error;
-    }
+    return { error };
+  };
+
+  const register = async (email: string, password: string, userData: any) => {
+    return await signUp(email, password, userData);
   };
 
   const signOut = async () => {
@@ -150,10 +157,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     userRole,
     loading,
     isAuthenticated: !!user,
+    isEmailVerified: !!user?.email_confirmed_at,
     signIn,
     signUp,
     signOut,
     logout,
+    login,
+    register,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
