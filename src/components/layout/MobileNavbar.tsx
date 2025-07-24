@@ -176,7 +176,7 @@ export const MobileNavbar = () => {
 
   const navItems = getNavItems();
 
-  // Menu items for the sliding panel - Jobs link is prominently placed
+  // Menu items for the sliding panel - Jobs link prominently placed near the top
   const menuItems = [
     {
       icon: Home,
