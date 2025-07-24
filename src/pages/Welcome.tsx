@@ -53,18 +53,20 @@ export default function Welcome() {
             <Link to="/about" className="text-gray-600 hover:text-red-600 transition-colors">About</Link>
             <Link to="/contact" className="text-gray-600 hover:text-red-600 transition-colors">Contact</Link>
           </nav>
-          <div className="flex items-center gap-3">
-            <Link to="/mpin">
-              <Button variant="outline" className="border-red-600 text-red-600 hover:bg-red-50">
-                Login
-              </Button>
-            </Link>
-            <Link to="/register">
-              <Button className="bg-red-600 hover:bg-red-700 text-white">
-                Register
-              </Button>
-            </Link>
-          </div>
+          {!isAuthenticated && (
+            <div className="flex items-center gap-3">
+              <Link to="/mpin">
+                <Button variant="outline" className="border-red-600 text-red-600 hover:bg-red-50">
+                  Login
+                </Button>
+              </Link>
+              <Link to="/register">
+                <Button className="bg-red-600 hover:bg-red-700 text-white">
+                  Register
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -84,18 +86,20 @@ export default function Welcome() {
             <Link to="/about" className="text-gray-600 hover:text-red-600 transition-colors">About</Link>
             <Link to="/contact" className="text-gray-600 hover:text-red-600 transition-colors">Contact</Link>
           </nav>
-          <div className="flex flex-col gap-3">
-            <Link to="/mpin">
-              <Button variant="outline" className="w-full border-red-600 text-red-600 hover:bg-red-50">
-                Login
-              </Button>
-            </Link>
-            <Link to="/register">
-              <Button className="w-full bg-red-600 hover:bg-red-700 text-white">
-                Register
-              </Button>
-            </Link>
-          </div>
+          {!isAuthenticated && (
+            <div className="flex flex-col gap-3">
+              <Link to="/mpin">
+                <Button variant="outline" className="w-full border-red-600 text-red-600 hover:bg-red-50">
+                  Login
+                </Button>
+              </Link>
+              <Link to="/register">
+                <Button className="w-full bg-red-600 hover:bg-red-700 text-white">
+                  Register
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       )}
 
@@ -111,25 +115,27 @@ export default function Welcome() {
             Connect with your barangay, access services, and participate in local democracy.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-            <Link to="/register">
+          {!isAuthenticated && (
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+              <Link to="/register">
+                <Button 
+                  size="lg" 
+                  className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 text-lg"
+                >
+                  Get Started Today
+                </Button>
+              </Link>
               <Button 
+                variant="outline" 
                 size="lg" 
-                className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 text-lg"
+                onClick={() => setShowVideoModal(true)}
+                className="border-red-600 text-red-600 hover:bg-red-50 px-8 py-3 text-lg"
               >
-                Get Started Today
+                <Play className="h-5 w-5 mr-2" />
+                Watch Demo
               </Button>
-            </Link>
-            <Button 
-              variant="outline" 
-              size="lg" 
-              onClick={() => setShowVideoModal(true)}
-              className="border-red-600 text-red-600 hover:bg-red-50 px-8 py-3 text-lg"
-            >
-              <Play className="h-5 w-5 mr-2" />
-              Watch Demo
-            </Button>
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Feature Cards */}
