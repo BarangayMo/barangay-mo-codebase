@@ -124,8 +124,8 @@ export const MobileNavbar = () => {
   const navItems = getNavItems();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md bg-white/90 border-t border-white/20 shadow-lg rounded-t-xl pb-2">
-      <div className="flex items-center justify-center px-4 py-1 max-w-md mx-auto">
+    <nav className="fixed bottom-0 left-0 right-0 z-[100] backdrop-blur-md bg-white/95 border-t border-white/20 shadow-lg rounded-t-xl pb-safe">
+      <div className="flex items-center justify-center px-2 py-1 max-w-md mx-auto">
         <div className="flex items-center justify-between w-full max-w-sm">
         {navItems.map(({ icon: Icon, path, label, key, requiresRbi }: any) => {
             const handleClick = (e: React.MouseEvent) => {
@@ -141,11 +141,11 @@ export const MobileNavbar = () => {
               <Link 
                 key={key} 
                 to={path} 
-                className="flex flex-col items-center justify-center p-2 min-w-0"
+                className="flex flex-col items-center justify-center p-1.5 min-w-0 flex-1 relative z-10"
                 onClick={handleClick}
               >
                 <Icon className={cn(
-                  "h-6 w-6 transition-colors mb-0.5",
+                  "h-5 w-5 sm:h-6 sm:w-6 transition-colors mb-0.5",
                   pathname === path 
                     ? userRole === "official" 
                       ? "text-red-600" 
@@ -155,7 +155,7 @@ export const MobileNavbar = () => {
                     : "text-black"
                 )} />
                 <span className={cn(
-                  "text-sm text-center leading-tight",
+                  "text-xs sm:text-sm text-center leading-tight",
                   pathname === path 
                     ? userRole === "official" 
                       ? "text-red-600 font-medium" 
