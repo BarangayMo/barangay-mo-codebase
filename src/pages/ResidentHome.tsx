@@ -1,6 +1,7 @@
+
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Layout } from "@/components/layout/Layout";
-import { ShoppingCart, Briefcase, FileText, AlertCircle, CheckCircle } from "lucide-react";
+import { ShoppingCart, Briefcase, AlertCircle, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Helmet } from "react-helmet";
@@ -20,31 +21,34 @@ export default function ResidentHome() {
   const { hasRbiAccess } = useRbiAccess();
   
   const firstName = profile?.first_name || user?.firstName || "Resident";
-  const rbiNumber = profile?.settings?.rbi_number || "Complete RBI to get number";
-  const avatarUrl = profile?.settings?.avatar_url && typeof profile.settings.address === 'object'
-    ? (profile.settings.address as any)?.avatar_url
-    : `https://api.dicebear.com/7.x/initials/svg?seed=${profile?.first_name || ''} ${profile?.last_name || ''}` ||
-      "/placeholder.svg";
   
   // Check RBI completion status
   const hasCompletedRbi = rbiForms && rbiForms.length > 0;
   const approvedRbi = rbiForms?.find(form => form.status === 'approved');
   
-  // Use actual barangay data from profile or show completion message
-  const barangayName = hasCompletedRbi && profile?.barangay 
+  // Display RBI number if approved, otherwise show completion message
+  const rbiNumber = approvedRbi?.rbi_number || "Complete RBI to get number";
+  
+  const avatarUrl = profile?.settings?.avatar_url && typeof profile.settings.address === 'object'
+    ? (profile.settings.address as any)?.avatar_url
+    : `https://api.dicebear.com/7.x/initials/svg?seed=${profile?.first_name || ''} ${profile?.last_name || ''}` ||
+      "/placeholder.svg";
+  
+  // Use actual barangay data from profile when approved
+  const barangayName = approvedRbi && profile?.barangay 
     ? profile.barangay 
     : "Complete RBI Registration";
-  const barangayLocation = hasCompletedRbi 
+  const barangayLocation = approvedRbi 
     ? "City of Olongapo, Zambales" 
     : "Select your address to see barangay details";
-  const barangayPopulation = hasCompletedRbi ? "35,000" : "—";
-  const barangayPuroks = hasCompletedRbi ? "14" : "—";
-  const barangayAge = hasCompletedRbi ? "45" : "—";
+  const barangayPopulation = approvedRbi ? "35,000" : "—";
+  const barangayPuroks = approvedRbi ? "14" : "—";
+  const barangayAge = approvedRbi ? "45" : "—";
 
+  // Updated Quick Actions - removed Documents, renamed Market to Marketplace
   const quickActions = [
-    { icon: ShoppingCart, label: "Market", path: "/marketplace" },
+    { icon: ShoppingCart, label: "Marketplace", path: "/marketplace" },
     { icon: Briefcase, label: "Jobs", path: "/jobs" },
-    { icon: FileText, label: "Documents", path: "/services/documents" },
   ];
 
   const handleQuickActionClick = (path: string, e: React.MouseEvent) => {
@@ -86,7 +90,9 @@ export default function ResidentHome() {
                 ) : (
                   <>
                     <div className="text-lg text-white font-semibold">Hi! {firstName}</div>
-                    <div className="text-xs text-white/90">{rbiNumber}</div>
+                    <div className={`text-xs text-white/90 ${approvedRbi?.rbi_number ? 'font-bold' : ''}`}>
+                      {rbiNumber}
+                    </div>
                   </>
                 )}
               </div>
@@ -190,7 +196,7 @@ export default function ResidentHome() {
                 <Link to="/services">More Services →</Link>
               </Button>
             </div>
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-3 max-w-4xl">
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-3 max-w-4xl">
               {quickActions.map((action, index) => (
                 <Link 
                   key={index}
@@ -214,11 +220,10 @@ export default function ResidentHome() {
                 <span className="ml-2 text-xs bg-green-400 text-white px-2 py-0.5 rounded-full font-semibold">New</span>
               </div>
               <div className="text-white/90 text-sm mb-1">
-                Join us for the monthly clean-up drive on June 15th at the community center.
+                Join us for the monthly clean-up drive on June 15th at the community center. This is a great opportunity for everyone to come together and help maintain the cleanliness and beauty of our barangay. We will provide all necessary cleaning equipment and refreshments will be served after the activity.
               </div>
-              <div className="text-xs text-white/70 flex items-center justify-between">
+              <div className="text-xs text-white/70">
                 <span>June 10, 2025</span>
-                <span className="underline underline-offset-2">Read more</span>
               </div>
             </div>
           </div>
