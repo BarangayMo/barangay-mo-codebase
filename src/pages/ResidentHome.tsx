@@ -1,232 +1,291 @@
-
-import { useIsMobile } from "@/hooks/use-mobile";
 import { Layout } from "@/components/layout/Layout";
-import { ShoppingCart, Briefcase, AlertCircle, CheckCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Helmet } from "react-helmet";
-import { useAuth } from "@/contexts/AuthContext";
-import { useResidentProfile } from "@/hooks/use-resident-profile";
-import { useRbiForms } from "@/hooks/use-rbi-forms";
-import { useRbiAccess } from "@/hooks/use-rbi-access";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/hooks/use-user-profile";
+import { useRbiStatus } from "@/hooks/use-rbi-status";
+import { 
+  FileText, 
+  Users, 
+  Calendar, 
+  MapPin, 
+  Bell, 
+  MessageCircle, 
+  ShoppingCart,
+  Briefcase,
+  CheckCircle,
+  AlertTriangle,
+  Clock
+} from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function ResidentHome() {
-  const isMobile = useIsMobile();
   const { user } = useAuth();
-  const { profile, isLoading } = useResidentProfile();
-  const { rbiForms, isLoading: rbiLoading } = useRbiForms();
-  const { hasRbiAccess } = useRbiAccess();
-  
-  const firstName = profile?.first_name || user?.firstName || "Resident";
-  
-  // Check RBI completion status
-  const hasCompletedRbi = rbiForms && rbiForms.length > 0;
-  const approvedRbi = rbiForms?.find(form => form.status === 'approved');
-  
-  // Display RBI number if approved, otherwise show completion message
-  const rbiNumber = approvedRbi?.rbi_number || "Complete RBI to get number";
-  
-  const avatarUrl = profile?.settings?.avatar_url && typeof profile.settings.address === 'object'
-    ? (profile.settings.address as any)?.avatar_url
-    : `https://api.dicebear.com/7.x/initials/svg?seed=${profile?.first_name || ''} ${profile?.last_name || ''}` ||
-      "/placeholder.svg";
-  
-  // Use actual barangay data from profile when approved
-  const barangayName = approvedRbi && profile?.barangay 
-    ? profile.barangay 
-    : "Complete RBI Registration";
-  const barangayLocation = approvedRbi 
-    ? "City of Olongapo, Zambales" 
-    : "Select your address to see barangay details";
-  const barangayPopulation = approvedRbi ? "35,000" : "—";
-  const barangayPuroks = approvedRbi ? "14" : "—";
-  const barangayAge = approvedRbi ? "45" : "—";
+  const { profile } = useUserProfile();
+  const { rbiStatus, isLoading: rbiLoading } = useRbiStatus();
 
-  // Updated Quick Actions - removed Documents, renamed Market to Marketplace
+  const firstName = profile?.first_name || 'Resident';
+
   const quickActions = [
-    { icon: ShoppingCart, label: "Marketplace", path: "/marketplace" },
-    { icon: Briefcase, label: "Jobs", path: "/jobs" },
+    {
+      title: "Barangay Services",
+      description: "Access essential services",
+      icon: FileText,
+      href: "/services",
+      color: "bg-blue-100 text-blue-600"
+    },
+    {
+      title: "Community Forum",
+      description: "Connect with neighbors",
+      icon: Users,
+      href: "/community",
+      color: "bg-green-100 text-green-600"
+    },
+    {
+      title: "Events Calendar",
+      description: "Stay updated on events",
+      icon: Calendar,
+      href: "/events",
+      color: "bg-orange-100 text-orange-600"
+    },
+    {
+      title: "Marketplace",
+      description: "Buy and sell local products",
+      icon: ShoppingCart,
+      href: "/marketplace",
+      color: "bg-red-100 text-red-600"
+    },
+    {
+      title: "Job Listings",
+      description: "Find local job opportunities",
+      icon: Briefcase,
+      href: "/jobs",
+      color: "bg-purple-100 text-purple-600"
+    },
+    {
+      title: "Report Incident",
+      description: "Report safety concerns",
+      icon: AlertTriangle,
+      href: "/report-incident",
+      color: "bg-yellow-100 text-yellow-600"
+    }
   ];
 
-  const handleQuickActionClick = (path: string, e: React.MouseEvent) => {
-    if (!hasRbiAccess && (path.includes('/marketplace') || path.includes('/jobs') || path.includes('/services'))) {
-      e.preventDefault();
-      toast.dismiss(); // Dismiss any existing toasts first
-      toast.error("Restricted Access", {
-        description: "Submit your RBI form to access these options",
-        duration: 4000,
-      });
-      return false;
+  const announcements = [
+    {
+      title: "Road Closure Notice",
+      description: "Main street will be closed for repairs on July 15th.",
+      date: "July 10, 2024"
+    },
+    {
+      title: "Community Meeting",
+      description: "Discuss upcoming barangay projects on July 20th.",
+      date: "July 5, 2024"
+    },
+    {
+      title: "Free Health Clinic",
+      description: "Free check-ups available at the barangay hall on July 25th.",
+      date: "June 30, 2024"
     }
-    return true;
-  };
+  ];
+
+  const upcomingEvents = [
+    {
+      title: "Barangay Fiesta",
+      location: "Barangay Plaza",
+      day: "15",
+      month: "Jul",
+      time: "6:00 PM"
+    },
+    {
+      title: "Clean-Up Drive",
+      location: "Riverside Area",
+      day: "22",
+      month: "Jul",
+      time: "8:00 AM"
+    },
+    {
+      title: "Sports Tournament",
+      location: "Sports Complex",
+      day: "29",
+      month: "Jul",
+      time: "2:00 PM"
+    }
+  ];
+
+  const recentServices = [
+    {
+      title: "Barangay Clearance",
+      description: "Requested on July 1, 2024",
+      status: "Completed"
+    },
+    {
+      title: "Business Permit",
+      description: "Requested on June 25, 2024",
+      status: "Pending"
+    },
+    {
+      title: "Resident ID",
+      description: "Requested on June 20, 2024",
+      status: "Completed"
+    }
+  ];
 
   return (
     <Layout>
-      <Helmet>
-        <title>Resident Dashboard - Barangay Management System</title>
-      </Helmet>
-      <div className="min-h-screen pt-12 bg-[url('https://static.wixstatic.com/media/b17ef9_2fba412130514c60a718736b8cc42bf6~mv2.jpg')] bg-cover bg-fixed overflow-hidden relative">
-        <div className="absolute inset-0 bg-black/70" />
-        
-        <div className="relative z-10 h-full px-4 pt-1 max-w-6xl mx-auto">
-          {/* Header with larger icons */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              {isLoading ? (
-                <Skeleton className="rounded-full w-16 h-16" />
-              ) : (
-                <img src={avatarUrl} alt="Profile" className="rounded-full w-16 h-16 border-2 border-green-400" />
-              )}
-              <div>
-                {isLoading ? (
-                  <>
-                    <Skeleton className="h-6 w-32 mb-1" />
-                    <Skeleton className="h-4 w-24" />
-                  </>
+      <div className="max-w-7xl mx-auto p-6 space-y-6">
+        {/* Welcome Header */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-100 rounded-lg p-6 border border-blue-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Welcome back, {firstName}!
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Here's what's happening in your barangay today
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="bg-white">
+                <MapPin className="w-4 h-4 mr-1" />
+                {profile?.barangay || 'Barangay'}
+              </Badge>
+            </div>
+          </div>
+        </div>
+
+        {/* RBI Status Alert */}
+        {!rbiLoading && (
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {rbiStatus?.status === 'approved' ? (
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                ) : rbiStatus?.status === 'pending' ? (
+                  <Clock className="w-5 h-5 text-yellow-600" />
                 ) : (
-                  <>
-                    <div className="text-lg text-white font-semibold">Hi! {firstName}</div>
-                    <div className={`text-xs text-white/90 ${approvedRbi?.rbi_number ? 'font-bold' : ''}`}>
-                      {rbiNumber}
-                    </div>
-                  </>
+                  <AlertTriangle className="w-5 h-5 text-red-600" />
                 )}
-              </div>
-            </div>
-            <div className="rounded-full border-2 border-white p-2">
-              <svg width="40" height="40" fill="none" className="text-white" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
-                <circle cx="8" cy="8" r="1" fill="currentColor"/>
-                <circle cx="16" cy="8" r="1" fill="currentColor"/>
-                <circle cx="8" cy="16" r="1" fill="currentColor"/>
-                <path stroke="currentColor" strokeWidth="2" d="M15.5 15.5h.01"/>
-              </svg>
-            </div>
-          </div>
-
-          {/* RBI Progress Section */}
-          {!rbiLoading && (
-            <div className="rounded-2xl bg-white/20 backdrop-blur-xl shadow-lg px-5 py-3 mb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {hasCompletedRbi ? (
-                    <>
-                      <CheckCircle className="h-5 w-5 text-green-400" />
-                      <span className="text-white font-medium">RBI Registration Complete</span>
-                      {approvedRbi && (
-                        <Badge className="bg-green-500 text-white">Approved</Badge>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <AlertCircle className="h-5 w-5 text-yellow-400" />
-                      <span className="text-white font-medium">Complete RBI Registration</span>
-                    </>
-                  )}
+                <div>
+                  <p className="font-medium">
+                    {rbiStatus?.status === 'approved' ? 'RBI Form Approved' :
+                     rbiStatus?.status === 'pending' ? 'RBI Form Under Review' :
+                     'Complete Your RBI Form'}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    {rbiStatus?.status === 'approved' ? 'You have full access to all barangay services' :
+                     rbiStatus?.status === 'pending' ? 'Your application is being reviewed by officials' :
+                     'Complete your Resident Basic Information form to access all services'}
+                  </p>
                 </div>
-                {!hasCompletedRbi && (
-                  <Button 
-                    asChild 
-                    size="sm"
-                    className="bg-resident hover:bg-resident-dark text-white"
-                  >
-                    <Link to="/rbi-registration">Start RBI</Link>
+              </div>
+              {rbiStatus?.status !== 'approved' && (
+                <Link to="/rbi-registration">
+                  <Button size="sm">
+                    {rbiStatus?.status === 'pending' ? 'View Status' : 'Complete RBI'}
                   </Button>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Barangay Info Section */}
-          <div className="rounded-2xl bg-white/20 backdrop-blur-xl shadow-lg px-5 py-4 mb-4">
-            {isLoading ? (
-              <div className="space-y-3">
-                <Skeleton className="h-6 w-48" />
-                <Skeleton className="h-4 w-36" />
-                <div className="h-6"></div>
-                <div className="flex justify-between">
-                  <Skeleton className="h-10 w-20" />
-                  <Skeleton className="h-10 w-20" />
-                  <Skeleton className="h-10 w-20" />
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="font-semibold text-lg text-white">{barangayName}</div>
-                <div className="text-xs uppercase opacity-90 mt-1 text-white">
-                  {barangayLocation}
-                </div>
-                {!hasCompletedRbi && (
-                  <div className="text-sm text-yellow-300 mt-2 flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4" />
-                    Complete your RBI registration to see your barangay details
-                  </div>
-                )}
-                <div className="flex justify-between mt-3">
-                  <div className="text-center">
-                    <div className="text-xl font-bold text-white">{barangayPopulation}</div>
-                    <div className="text-xs text-white">Population</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xl font-bold text-white">{barangayPuroks}</div>
-                    <div className="text-xs text-white">Puroks</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xl font-bold text-white">{barangayAge}</div>
-                    <div className="text-xs text-white">Years</div>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Quick Actions */}
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="text-white font-semibold text-lg">Quick Actions</div>
-              <Button 
-                asChild 
-                variant="ghost"
-                className="text-white hover:text-white hover:bg-white/10"
-              >
-                <Link to="/services">More Services →</Link>
-              </Button>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-3 max-w-4xl">
-              {quickActions.map((action, index) => (
-                <Link 
-                  key={index}
-                  to={action.path} 
-                  className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/20 backdrop-blur-lg py-5 hover:bg-white/40 transition-all aspect-square"
-                  onClick={(e) => handleQuickActionClick(action.path, e)}
-                >
-                  <action.icon className="text-white h-7 w-7" />
-                  <span className="text-white text-sm font-medium text-center px-2">{action.label}</span>
                 </Link>
-              ))}
+              )}
             </div>
           </div>
+        )}
 
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {quickActions.map((action, index) => (
+            <Link key={index} to={action.href}>
+              <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${action.color}`}>
+                      <action.icon className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">{action.title}</h3>
+                      <p className="text-sm text-gray-600">{action.description}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+
+        {/* Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Announcements */}
-          <div className="max-w-4xl pb-24">
-            <div className="text-white font-semibold mb-2 text-lg">Announcements</div>
-            <div className="rounded-2xl bg-white/20 backdrop-blur-xl p-4 mb-2">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="font-semibold text-white">Barangay Clean-up Drive</span>
-                <span className="ml-2 text-xs bg-green-400 text-white px-2 py-0.5 rounded-full font-semibold">New</span>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="w-5 h-5" />
+                Latest Announcements
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {announcements.map((announcement, index) => (
+                  <div key={index} className="border-b pb-3 last:border-b-0">
+                    <h4 className="font-medium text-sm">{announcement.title}</h4>
+                    <p className="text-xs text-gray-600 mt-1">{announcement.description}</p>
+                    <span className="text-xs text-gray-500">{announcement.date}</span>
+                  </div>
+                ))}
               </div>
-              <div className="text-white/90 text-sm mb-1">
-                Join us for the monthly clean-up drive on June 15th at the community center. This is a great opportunity for everyone to come together and help maintain the cleanliness and beauty of our barangay. We will provide all necessary cleaning equipment and refreshments will be served after the activity.
+            </CardContent>
+          </Card>
+
+          {/* Upcoming Events */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="w-5 h-5" />
+                Upcoming Events
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {upcomingEvents.map((event, index) => (
+                  <div key={index} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
+                    <div className="text-center">
+                      <div className="text-sm font-bold text-blue-600">{event.day}</div>
+                      <div className="text-xs text-gray-600">{event.month}</div>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-sm">{event.title}</h4>
+                      <p className="text-xs text-gray-600">{event.location}</p>
+                      <p className="text-xs text-gray-500">{event.time}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="text-xs text-white/70">
-                <span>June 10, 2025</span>
+            </CardContent>
+          </Card>
+
+          {/* Recent Services */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                Recent Services
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {recentServices.map((service, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 border rounded-lg">
+                    <div>
+                      <h4 className="font-medium text-sm">{service.title}</h4>
+                      <p className="text-xs text-gray-600">{service.description}</p>
+                    </div>
+                    <Badge variant={service.status === 'Completed' ? 'default' : 'secondary'}>
+                      {service.status}
+                    </Badge>
+                  </div>
+                ))}
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </Layout>

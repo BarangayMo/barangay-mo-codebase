@@ -18,6 +18,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   login: (email: string, password: string) => Promise<{ error?: any }>;
   register: (email: string, password: string, userData: any) => Promise<{ error?: any }>;
+  setRbiCompleted: (completed: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,6 +36,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
+  const [rbiCompleted, setRbiCompletedState] = useState(false);
 
   useEffect(() => {
     // Get initial session
@@ -151,6 +153,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const setRbiCompleted = (completed: boolean) => {
+    setRbiCompletedState(completed);
+  };
+
   const value: AuthContextType = {
     user,
     session,
@@ -164,6 +170,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout,
     login,
     register,
+    setRbiCompleted,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
