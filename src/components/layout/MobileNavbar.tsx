@@ -110,13 +110,6 @@ export const MobileNavbar = () => {
         label: "Market",
         key: "marketplace",
         requiresRbi: true
-      },
-      {
-        icon: Briefcase,
-        path: "/jobs",
-        label: "Jobs",
-        key: "jobs",
-        requiresRbi: true
       }
     ];
 
