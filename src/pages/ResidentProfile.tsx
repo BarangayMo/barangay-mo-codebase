@@ -107,15 +107,17 @@ export default function ResidentProfile() {
                 <CardTitle className="text-2xl">
                   {profile?.first_name} {profile?.last_name}
                 </CardTitle>
-                <div className="flex items-center gap-4 mt-2">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2">
                   <Badge className={getRoleColor(user?.role)} variant="secondary">
                     <Shield className="w-3 h-3 mr-1" />
                     {user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1)}
                   </Badge>
                   {profile?.barangay && (
-                    <div className="flex items-center text-gray-600 min-w-0">
-                      <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
-                      <span className="truncate text-sm">{profile.barangay}</span>
+                    <div className="flex items-start gap-1 text-gray-600 min-w-0">
+                      <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <span className="text-sm break-words leading-relaxed">
+                        {profile.barangay}
+                      </span>
                     </div>
                   )}
                 </div>

@@ -117,7 +117,7 @@ const RbiFormsSection = () => {
                 key={form.id}
                 className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
               >
-                <div className="flex items-start justify-between mb-3 gap-2">
+                <div className="flex items-start justify-between mb-3 gap-3">
                   <div className="flex-1 min-w-0">
                     {form.rbi_number ? (
                       <div className="flex items-center gap-2 mb-2">
@@ -154,9 +154,9 @@ const RbiFormsSection = () => {
                   </div>
                   
                   <div className="flex-shrink-0">
-                    <Badge className={`${getStatusColor(form.status)} flex items-center gap-1 text-xs px-2 py-1`}>
+                    <Badge className={`${getStatusColor(form.status)} flex items-center gap-1 text-xs px-2 py-1 whitespace-nowrap`}>
                       {getStatusIcon(form.status)}
-                      <span className="capitalize whitespace-nowrap">{form.status}</span>
+                      <span className="capitalize">{form.status}</span>
                     </Badge>
                   </div>
                 </div>
