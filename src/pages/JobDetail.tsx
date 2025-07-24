@@ -151,7 +151,16 @@ export default function JobDetail() {
     if (!job?.assigned_to) {
       toast({
         title: "Unable to message poster",
-        description: "Job poster information is not available",
+        description: "This job doesn't have a contact person assigned",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (job.assigned_to === user.id) {
+      toast({
+        title: "Cannot message yourself",
+        description: "You cannot start a conversation with yourself",
         variant: "destructive"
       });
       return;
@@ -169,7 +178,7 @@ export default function JobDetail() {
       console.error('Error starting conversation:', error);
       toast({
         title: "Failed to start conversation",
-        description: "Please try again",
+        description: "Please try again later",
         variant: "destructive"
       });
     } finally {
@@ -379,7 +388,7 @@ export default function JobDetail() {
                 Apply Now
               </Button>
               
-              {job?.assigned_to && (
+              {job?.assigned_to && job.assigned_to !== user?.id && (
                 <Button 
                   variant="outline"
                   className="w-full"

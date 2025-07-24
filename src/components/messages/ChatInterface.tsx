@@ -1,6 +1,5 @@
-
 import { useState, useEffect, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,6 +45,7 @@ export function ChatInterface() {
   const { id: conversationId } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [conversation, setConversation] = useState<Conversation | null>(null);
@@ -285,6 +285,16 @@ export function ChatInterface() {
     }
   };
 
+  const handleBackToJobs = () => {
+    // Check if user came from jobs page by checking the referrer or use a more sophisticated routing solution
+    const referrer = document.referrer;
+    if (referrer && referrer.includes('/jobs')) {
+      navigate('/jobs');
+    } else {
+      navigate('/jobs');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -332,20 +342,31 @@ export function ChatInterface() {
           </Link>
         </Button>
         
+        {/* Add back to jobs button */}
+        <Button 
+          variant="ghost" 
+          size="sm"
+          onClick={handleBackToJobs}
+          className="hidden md:flex items-center gap-2 text-sm"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Jobs
+        </Button>
+        
         <Avatar className="w-10 h-10">
           <AvatarImage 
-            src={conversation.other_participant?.avatar_url || ''} 
-            alt={`${conversation.other_participant?.first_name} ${conversation.other_participant?.last_name}`}
+            src={conversation?.other_participant?.avatar_url || ''} 
+            alt={`${conversation?.other_participant?.first_name} ${conversation?.other_participant?.last_name}`}
           />
           <AvatarFallback>
-            {conversation.other_participant?.first_name?.charAt(0) || 'U'}
-            {conversation.other_participant?.last_name?.charAt(0) || ''}
+            {conversation?.other_participant?.first_name?.charAt(0) || 'U'}
+            {conversation?.other_participant?.last_name?.charAt(0) || ''}
           </AvatarFallback>
         </Avatar>
         
         <div className="flex-1">
           <h2 className="font-semibold text-gray-900">
-            {conversation.other_participant?.first_name || 'Unknown'} {conversation.other_participant?.last_name || 'User'}
+            {conversation?.other_participant?.first_name || 'Unknown'} {conversation?.other_participant?.last_name || 'User'}
           </h2>
           <p className="text-sm text-gray-500">Active now</p>
         </div>

@@ -151,20 +151,36 @@ export default function Jobs() {
       return;
     }
 
-    // For now, we'll use a placeholder user ID for the job poster
-    // In a real implementation, you'd have a user_id field in the jobs table
-    const posterUserId = job.assigned_to || user.id; // Fallback to current user for demo
+    // Check if job has an assigned_to field and it's not the current user
+    if (!job.assigned_to) {
+      toast({
+        title: "Unable to message poster",
+        description: "This job doesn't have a contact person assigned",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (job.assigned_to === user.id) {
+      toast({
+        title: "Cannot message yourself",
+        description: "You cannot start a conversation with yourself",
+        variant: "destructive"
+      });
+      return;
+    }
     
     try {
-      await startConversation(posterUserId);
+      await startConversation(job.assigned_to);
       toast({
         title: "Starting conversation",
         description: `Opening chat with ${job.company}`,
       });
     } catch (error) {
+      console.error('Error starting conversation:', error);
       toast({
         title: "Failed to start conversation",
-        description: "Please try again",
+        description: "Please try again later",
         variant: "destructive"
       });
     }
@@ -299,7 +315,7 @@ export default function Jobs() {
                       </div>
                     </div>
                     
-                    {/* Updated action buttons with message option */}
+                    {/* Updated action buttons with improved message handling */}
                     <div className="flex flex-col gap-2">
                       <div className="flex gap-2">
                         <Button 
@@ -308,13 +324,15 @@ export default function Jobs() {
                         >
                           View Details
                         </Button>
-                        <Button
-                          onClick={() => handleMessagePoster(job)}
-                          variant="outline"
-                          className="text-sm px-3"
-                        >
-                          <MessageCircle className="h-4 w-4" />
-                        </Button>
+                        {job?.assigned_to && job.assigned_to !== user?.id && (
+                          <Button
+                            onClick={() => handleMessagePoster(job)}
+                            variant="outline"
+                            className="text-sm px-3"
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                       
                       <div className="flex items-center gap-2 justify-end">
