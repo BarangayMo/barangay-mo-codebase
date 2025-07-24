@@ -215,68 +215,69 @@ export default function Jobs() {
             ) : (
               filteredJobs.map((job) => (
                 <div key={job.id} className="border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-white">
-                  <div className="p-6">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-900 mb-1">{job.title}</h3>
+                  <div className="p-4 sm:p-6">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex-1 mr-3">
+                        <h3 className="text-lg font-bold text-gray-900 mb-1 line-clamp-2">{job.title}</h3>
                         <p className="text-gray-600 font-medium">{job.company}</p>
                       </div>
                       {job.logo_url ? (
                         <img 
                           src={job.logo_url} 
                           alt={`${job.company} logo`} 
-                          className="w-12 h-12 object-contain rounded-md"
+                          className="w-12 h-12 object-contain rounded-md flex-shrink-0"
                         />
                       ) : (
-                        <div className="w-12 h-12 bg-blue-100 rounded-md flex items-center justify-center">
+                        <div className="w-12 h-12 bg-blue-100 rounded-md flex items-center justify-center flex-shrink-0">
                           <Building className="h-6 w-6 text-blue-600" />
                         </div>
                       )}
                     </div>
                     
-                    <div className="mt-4 space-y-2">
-                      <div className="flex items-center text-gray-600">
-                        <MapPin size={16} className="mr-2 text-gray-400" />
-                        <span>{job.location}</span>
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center text-gray-600 text-sm">
+                        <MapPin size={14} className="mr-2 text-gray-400 flex-shrink-0" />
+                        <span className="truncate">{job.location}</span>
                       </div>
                       
                       {job.salary && (
-                        <div className="flex items-center text-gray-600">
-                          <Banknote size={16} className="mr-2 text-gray-400" />
-                          <span>{job.salary}</span>
+                        <div className="flex items-center text-gray-600 text-sm">
+                          <Banknote size={14} className="mr-2 text-gray-400 flex-shrink-0" />
+                          <span className="truncate">{job.salary}</span>
                         </div>
                       )}
                       
                       {job.availability && (
-                        <div className="flex items-center text-gray-600">
-                          <Clock size={16} className="mr-2 text-gray-400" />
-                          <span>{job.availability}</span>
+                        <div className="flex items-center text-gray-600 text-sm">
+                          <Clock size={14} className="mr-2 text-gray-400 flex-shrink-0" />
+                          <span className="truncate">{job.availability}</span>
                         </div>
                       )}
                     </div>
                     
-                    <div className="mt-4 pt-4 border-t">
+                    <div className="mb-4 pt-2 border-t">
                       <div className="flex flex-wrap gap-2">
-                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
                           {job.category}
                         </Badge>
                         {job.work_approach && (
-                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
                             {job.work_approach}
                           </Badge>
                         )}
                       </div>
                     </div>
                     
-                    <div className="mt-4 flex justify-between items-center">
+                    {/* Mobile-responsive action buttons */}
+                    <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
                       <Button 
                         onClick={() => viewJobDetails(job.id)} 
-                        className="bg-blue-600 hover:bg-blue-700"
+                        className="bg-blue-600 hover:bg-blue-700 text-sm flex-1 sm:flex-none"
                       >
                         View Details
                       </Button>
                       
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 justify-end">
                         <ShareButton
                           title={job.title}
                           description={`Check out this job opportunity: ${job.title} at ${job.company}`}
@@ -285,15 +286,15 @@ export default function Jobs() {
                           variant="ghost"
                           size="icon"
                           showLabel={false}
-                          className="text-gray-400 hover:text-gray-600"
+                          className="text-gray-400 hover:text-gray-600 h-9 w-9 flex-shrink-0"
                         />
                         <Button
                           variant="ghost" 
                           size="icon"
                           onClick={() => handleSaveJob(job.id)}
-                          className={`rounded-full ${savedJobs[job.id] ? 'text-blue-600' : 'text-gray-400'}`}
+                          className={`rounded-full h-9 w-9 flex-shrink-0 ${savedJobs[job.id] ? 'text-blue-600' : 'text-gray-400'}`}
                         >
-                          <Bookmark className={`h-5 w-5 ${savedJobs[job.id] ? 'fill-blue-600' : ''}`} />
+                          <Bookmark className={`h-4 w-4 ${savedJobs[job.id] ? 'fill-blue-600' : ''}`} />
                         </Button>
                       </div>
                     </div>

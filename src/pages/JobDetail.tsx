@@ -172,38 +172,38 @@ export default function JobDetail() {
         </Button>
 
         {/* Job Header */}
-        <div className="bg-white rounded-xl shadow-sm border p-6 mb-6">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-4">
+        <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6 mb-6">
+          <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+            <div className="flex items-start gap-4 flex-1">
               {job.logo_url ? (
                 <img 
                   src={job.logo_url} 
                   alt={`${job.company} logo`} 
-                  className="w-16 h-16 object-contain rounded-lg"
+                  className="w-16 h-16 object-contain rounded-lg flex-shrink-0"
                 />
               ) : (
-                <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
+                <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                   <Building className="h-8 w-8 text-blue-600" />
                 </div>
               )}
               
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-1">{job.title}</h1>
-                <p className="text-lg text-gray-600 font-medium mb-2">{job.company}</p>
-                <div className="flex items-center gap-4 text-sm text-gray-500">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 break-words">{job.title}</h1>
+                <p className="text-base sm:text-lg text-gray-600 font-medium mb-2 break-words">{job.company}</p>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-500">
                   <div className="flex items-center gap-1">
-                    <MapPin size={14} />
-                    <span>{job.location}</span>
+                    <MapPin size={14} className="flex-shrink-0" />
+                    <span className="truncate">{job.location}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Calendar size={14} />
+                    <Calendar size={14} className="flex-shrink-0" />
                     <span>Posted {formatDistanceToNow(new Date(job.created_at), { addSuffix: true })}</span>
                   </div>
                 </div>
               </div>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
               <ShareButton
                 title={job.title}
                 description={`Check out this job opportunity: ${job.title} at ${job.company}`}
@@ -211,14 +211,14 @@ export default function JobDetail() {
                 itemType="job"
                 variant="outline"
                 size="sm"
-                className="text-gray-600"
+                className="text-gray-600 flex-shrink-0"
               />
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleBookmark}
                 disabled={bookmarkLoading}
-                className={`${isBookmarked ? 'text-blue-600 border-blue-200 bg-blue-50' : 'text-gray-600'}`}
+                className={`flex-shrink-0 ${isBookmarked ? 'text-blue-600 border-blue-200 bg-blue-50' : 'text-gray-600'}`}
               >
                 {isBookmarked ? (
                   <BookmarkCheck className="h-4 w-4 mr-1" />
@@ -236,7 +236,7 @@ export default function JobDetail() {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Job Description */}
-            <div className="bg-white rounded-xl shadow-sm border p-6">
+            <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Job Description</h2>
               <div className="prose max-w-none">
                 <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
@@ -247,7 +247,7 @@ export default function JobDetail() {
 
             {/* Requirements */}
             {job.requirements && (
-              <div className="bg-white rounded-xl shadow-sm border p-6">
+              <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Requirements</h2>
                 <div className="prose max-w-none">
                   <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
@@ -259,7 +259,7 @@ export default function JobDetail() {
 
             {/* Responsibilities */}
             {job.responsibilities && (
-              <div className="bg-white rounded-xl shadow-sm border p-6">
+              <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Responsibilities</h2>
                 <div className="prose max-w-none">
                   <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
@@ -273,44 +273,44 @@ export default function JobDetail() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Job Information */}
-            <div className="bg-white rounded-xl shadow-sm border p-6">
+            <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-4">Job Information</h3>
               <div className="space-y-3">
                 {job.salary && (
                   <div className="flex items-center gap-3">
-                    <Banknote className="h-5 w-5 text-gray-400" />
-                    <div>
+                    <Banknote className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
                       <p className="text-sm text-gray-500">Salary</p>
-                      <p className="font-medium text-gray-900">{job.salary}</p>
+                      <p className="font-medium text-gray-900 break-words">{job.salary}</p>
                     </div>
                   </div>
                 )}
                 
                 {job.work_approach && (
                   <div className="flex items-center gap-3">
-                    <Globe className="h-5 w-5 text-gray-400" />
-                    <div>
+                    <Globe className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
                       <p className="text-sm text-gray-500">Work Type</p>
-                      <p className="font-medium text-gray-900">{job.work_approach}</p>
+                      <p className="font-medium text-gray-900 break-words">{job.work_approach}</p>
                     </div>
                   </div>
                 )}
                 
                 {job.availability && (
                   <div className="flex items-center gap-3">
-                    <Clock className="h-5 w-5 text-gray-400" />
-                    <div>
+                    <Clock className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
                       <p className="text-sm text-gray-500">Availability</p>
-                      <p className="font-medium text-gray-900">{job.availability}</p>
+                      <p className="font-medium text-gray-900 break-words">{job.availability}</p>
                     </div>
                   </div>
                 )}
                 
                 <div className="flex items-center gap-3">
-                  <Users className="h-5 w-5 text-gray-400" />
-                  <div>
+                  <Users className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm text-gray-500">Category</p>
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 mt-1">
                       {job.category}
                     </Badge>
                   </div>
@@ -319,7 +319,7 @@ export default function JobDetail() {
             </div>
 
             {/* Apply Button */}
-            <div className="bg-white rounded-xl shadow-sm border p-6">
+            <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
               <Button 
                 className="w-full bg-blue-600 hover:bg-blue-700"
                 size="lg"
