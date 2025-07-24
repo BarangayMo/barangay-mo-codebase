@@ -126,6 +126,15 @@ export default function JobDetail() {
     }
   };
 
+  const handleApply = () => {
+    if (job.application_url) {
+      window.open(job.application_url, '_blank');
+    } else {
+      // Navigate to payment page for job application
+      navigate(`/jobs/${id}/payment`);
+    }
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -323,22 +332,12 @@ export default function JobDetail() {
               <Button 
                 className="w-full bg-blue-600 hover:bg-blue-700"
                 size="lg"
-                onClick={() => {
-                  if (job.application_url) {
-                    window.open(job.application_url, '_blank');
-                  } else {
-                    toast({
-                      title: "Application method not specified",
-                      description: "Please contact the employer directly",
-                      variant: "destructive"
-                    });
-                  }
-                }}
+                onClick={handleApply}
               >
                 Apply Now
               </Button>
               <p className="text-xs text-gray-500 mt-2 text-center">
-                {job.application_url ? 'You will be redirected to the application page' : 'Contact employer directly'}
+                {job.application_url ? 'You will be redirected to the application page' : 'Complete payment to submit your application'}
               </p>
             </div>
           </div>
