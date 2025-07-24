@@ -327,8 +327,27 @@ export default function Checkout() {
       <div className="min-h-screen bg-gray-50 overflow-x-hidden">
         {/* Custom Header */}
         <header className="py-4 px-4 sm:px-6 md:px-12 lg:px-24 bg-white border-b">
-          <div className="max-w-7xl mx-auto flex justify-between items-center">
-            <div className="flex items-center gap-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-4">
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900">Checkout</h1>
+              </div>
+              <Link to="/marketplace/cart" className="relative">
+                <ShoppingBag className="h-6 w-6 text-gray-500 hover:text-gray-700" />
+                {cartItems.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs w-4 h-4 rounded-full flex items-center justify-center">
+                    {cartItems.length}
+                  </span>
+                )}
+              </Link>
+            </div>
+          </div>
+        </header>
+
+        <main className="py-8 px-4 sm:px-6 md:px-8 lg:px-12 pb-24 md:pb-8">
+          <div className="max-w-7xl mx-auto">
+            {/* Repositioned Back Button - closer to left edge */}
+            <div className="mb-6 -ml-2">
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -337,62 +356,51 @@ export default function Checkout() {
               >
                 ← Back
               </Button>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900">Checkout</h1>
             </div>
-            <Link to="/marketplace/cart" className="relative">
-              <ShoppingBag className="h-6 w-6 text-gray-500 hover:text-gray-700" />
-              {cartItems.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs w-4 h-4 rounded-full flex items-center justify-center">
-                  {cartItems.length}
-                </span>
-              )}
-            </Link>
-          </div>
-        </header>
+            
+            <div className="grid md:grid-cols-[2fr_1fr] gap-8 lg:gap-12">
+              {/* Left Column: Form */}
+              <form onSubmit={handleSubmit} className="space-y-8">
+                <CheckoutContactForm
+                  contactEmail={contactEmail}
+                  setContactEmail={setContactEmail}
+                  saveInfo={saveInfo}
+                  setSaveInfo={setSaveInfo}
+                  isEmailDisabled={useSavedAddress && !!savedShippingDetails?.contactEmail}
+                />
+                <CheckoutShippingForm
+                  shippingCountry={shippingCountry}
+                  shippingFirstName={shippingFirstName} setShippingFirstName={setShippingFirstName}
+                  shippingLastName={shippingLastName} setShippingLastName={setShippingLastName}
+                  shippingAddress={shippingAddress} setShippingAddress={setShippingAddress}
+                  shippingApartment={shippingApartment} setShippingApartment={setShippingApartment}
+                  shippingCity={shippingCity} setShippingCity={setShippingCity}
+                  shippingState={shippingState} setShippingState={setShippingState}
+                  shippingPostalCode={shippingPostalCode} setShippingPostalCode={setShippingPostalCode}
+                  deliveryNotes={deliveryNotes} setDeliveryNotes={setDeliveryNotes}
+                  useSavedAddress={useSavedAddress} handleUseSavedAddressChange={handleUseSavedAddressChange}
+                  isSavedAddressCheckboxDisabled={!savedShippingDetails && !user?.id}
+                  areAddressFieldsDisabled={useSavedAddress}
+                />
+                <CheckoutPaymentInfo />
+                <CheckoutBillingAddress
+                  billingAddressOption={billingAddressOption}
+                  setBillingAddressOption={setBillingAddressOption}
+                />
+                <RoleButton type="submit" size="lg" className="w-full mt-6" disabled={isProcessing || cartItems.length === 0}>
+                  {isProcessing ? "Processing..." : "Pay now"}
+                </RoleButton>
+              </form>
 
-        <main className="py-8 px-4 sm:px-6 md:px-8 lg:px-12 pb-24 md:pb-8">
-          <div className="max-w-7xl mx-auto grid md:grid-cols-[2fr_1fr] gap-8 lg:gap-12">
-            {/* Left Column: Form */}
-            <form onSubmit={handleSubmit} className="space-y-8">
-              <CheckoutContactForm
-                contactEmail={contactEmail}
-                setContactEmail={setContactEmail}
-                saveInfo={saveInfo}
-                setSaveInfo={setSaveInfo}
-                isEmailDisabled={useSavedAddress && !!savedShippingDetails?.contactEmail}
+              {/* Right Column: Order Summary - md:sticky ensures it sticks on medium screens and up */}
+              <CheckoutOrderSummary
+                cartItems={cartItems}
+                subtotal={subtotalFromCart}
+                shippingCost={shippingCost}
+                estimatedTaxes={estimatedTaxes}
+                finalTotal={finalTotal}
               />
-              <CheckoutShippingForm
-                shippingCountry={shippingCountry}
-                shippingFirstName={shippingFirstName} setShippingFirstName={setShippingFirstName}
-                shippingLastName={shippingLastName} setShippingLastName={setShippingLastName}
-                shippingAddress={shippingAddress} setShippingAddress={setShippingAddress}
-                shippingApartment={shippingApartment} setShippingApartment={setShippingApartment}
-                shippingCity={shippingCity} setShippingCity={setShippingCity}
-                shippingState={shippingState} setShippingState={setShippingState}
-                shippingPostalCode={shippingPostalCode} setShippingPostalCode={setShippingPostalCode}
-                deliveryNotes={deliveryNotes} setDeliveryNotes={setDeliveryNotes}
-                useSavedAddress={useSavedAddress} handleUseSavedAddressChange={handleUseSavedAddressChange}
-                isSavedAddressCheckboxDisabled={!savedShippingDetails && !user?.id}
-                areAddressFieldsDisabled={useSavedAddress}
-              />
-              <CheckoutPaymentInfo />
-              <CheckoutBillingAddress
-                billingAddressOption={billingAddressOption}
-                setBillingAddressOption={setBillingAddressOption}
-              />
-              <RoleButton type="submit" size="lg" className="w-full mt-6" disabled={isProcessing || cartItems.length === 0}>
-                {isProcessing ? "Processing..." : "Pay now"}
-              </RoleButton>
-            </form>
-
-            {/* Right Column: Order Summary - md:sticky ensures it sticks on medium screens and up */}
-            <CheckoutOrderSummary
-              cartItems={cartItems}
-              subtotal={subtotalFromCart}
-              shippingCost={shippingCost}
-              estimatedTaxes={estimatedTaxes}
-              finalTotal={finalTotal}
-            />
+            </div>
           </div>
         </main>
 

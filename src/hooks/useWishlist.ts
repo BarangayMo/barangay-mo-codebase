@@ -1,8 +1,8 @@
+
 import * as React from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
 import { ProductCardType } from '@/components/marketplace/ProductCard';
 
 const WISHLIST_STORAGE_KEY = 'marketplace_wishlist';
@@ -62,7 +62,7 @@ export const useWishlist = () => {
     (supabaseWishlist?.map(item => item.product_id) || []) : 
     localWishlist;
 
-  // Add to wishlist mutation
+  // Add to wishlist mutation - removed toast notifications
   const addToWishlistMutation = useMutation({
     mutationFn: async (productId: string) => {
       console.log('🔄 Adding product to wishlist:', productId);
@@ -101,19 +101,15 @@ export const useWishlist = () => {
       if (user) {
         queryClient.invalidateQueries({ queryKey: ['wishlist', user.id] });
       }
-      toast.success('Added to Wishlist ✅');
+      // Removed toast notifications for instant experience
     },
     onError: (error: any) => {
       console.error('❌ Add to wishlist error:', error);
-      if (error.message === 'ALREADY_IN_WISHLIST') {
-        toast.warning('Already in Wishlist ⚠️');
-      } else {
-        toast.error('Failed to add to wishlist');
-      }
+      // Removed toast notifications for instant experience
     },
   });
 
-  // Remove from wishlist mutation
+  // Remove from wishlist mutation - removed toast notifications
   const removeFromWishlistMutation = useMutation({
     mutationFn: async (productId: string) => {
       console.log('🔄 Removing product from wishlist:', productId);
@@ -144,11 +140,11 @@ export const useWishlist = () => {
       if (user) {
         queryClient.invalidateQueries({ queryKey: ['wishlist', user.id] });
       }
-      toast.success('Removed from Wishlist 🗑️');
+      // Removed toast notifications for instant experience
     },
     onError: (error) => {
       console.error('❌ Remove from wishlist error:', error);
-      toast.error('Failed to remove from wishlist');
+      // Removed toast notifications for instant experience
     },
   });
 

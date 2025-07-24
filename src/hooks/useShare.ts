@@ -1,4 +1,3 @@
-import { toast } from 'sonner';
 
 export const useShare = () => {
   const shareProduct = async (productId: string, productName: string) => {
@@ -17,13 +16,10 @@ export const useShare = () => {
         console.log('🔄 Using Web Share API...');
         await navigator.share(shareData);
         console.log('✅ Product shared successfully via Web Share API');
-        toast.success('Shared successfully! 📤');
+        // Removed toast for instant experience
       } catch (error) {
         console.error('❌ Error sharing via Web Share API:', error);
-        // If user cancelled, don't show error toast
-        if ((error as Error).name !== 'AbortError') {
-          toast.error('Failed to share product');
-        }
+        // Removed toast notifications for instant experience
       }
     } else {
       // Fallback to clipboard
@@ -31,10 +27,10 @@ export const useShare = () => {
         console.log('🔄 Web Share API not supported, copying to clipboard...');
         await navigator.clipboard.writeText(shareUrl);
         console.log('✅ Product link copied to clipboard');
-        toast.success('Link copied! 📋');
+        // Removed toast for instant experience
       } catch (error) {
         console.error('❌ Error copying to clipboard:', error);
-        toast.error('Failed to copy link');
+        // Removed toast notifications for instant experience
       }
     }
   };
