@@ -2,6 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useMessages } from './useMessages';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useStartConversation = () => {
   const navigate = useNavigate();
@@ -23,7 +24,45 @@ export const useStartConversation = () => {
     }
 
     try {
-      const conversationId = await createOrFindConversation(userId);
+      console.log('Starting conversation with user ID:', userId);
+      
+      // Check if conversation already exists
+      const { data: existingConversation, error: searchError } = await supabase
+        .from('conversations')
+        .select('id')
+        .or(`and(participant_one_id.eq.${user.id},participant_two_id.eq.${userId}),and(participant_one_id.eq.${userId},participant_two_id.eq.${user.id})`)
+        .maybeSingle();
+
+      if (searchError && searchError.code !== 'PGRST116') {
+        console.error('Error searching for existing conversation:', searchError);
+        throw new Error('Failed to search for existing conversation');
+      }
+
+      let conversationId;
+
+      if (existingConversation) {
+        conversationId = existingConversation.id;
+        console.log('Found existing conversation:', conversationId);
+      } else {
+        // Create new conversation
+        const { data: newConversation, error: createError } = await supabase
+          .from('conversations')
+          .insert({
+            participant_one_id: user.id,
+            participant_two_id: userId,
+          })
+          .select('id')
+          .single();
+
+        if (createError) {
+          console.error('Error creating conversation:', createError);
+          throw new Error('Failed to create conversation');
+        }
+
+        conversationId = newConversation.id;
+        console.log('Created new conversation:', conversationId);
+      }
+
       if (conversationId) {
         navigate(`/messages/${conversationId}`);
       } else {

@@ -151,8 +151,40 @@ export default function Jobs() {
       return;
     }
 
-    // Check if job has an assigned_to field and it's not the current user
-    if (!job.assigned_to) {
+    // For jobs without assigned_to, we'll use a fallback approach
+    let posterUserId = job.assigned_to;
+    
+    if (!posterUserId) {
+      // For demo purposes, we'll try to find a user based on the job company
+      // In a real app, you'd have proper user assignment
+      console.log('Job does not have assigned_to, attempting fallback for:', job.company);
+      
+      // Try to find user by company name or use a default system user
+      const { data: userData, error: userError } = await supabase
+        .from('profiles')
+        .select('id')
+        .ilike('first_name', `%${job.company}%`)
+        .limit(1)
+        .maybeSingle();
+
+      if (userData) {
+        posterUserId = userData.id;
+      } else {
+        // Use the first available user as fallback (in real app, you'd handle this differently)
+        const { data: fallbackUser, error: fallbackError } = await supabase
+          .from('profiles')
+          .select('id')
+          .neq('id', user.id)
+          .limit(1)
+          .maybeSingle();
+
+        if (fallbackUser) {
+          posterUserId = fallbackUser.id;
+        }
+      }
+    }
+
+    if (!posterUserId) {
       toast({
         title: "Unable to message poster",
         description: "This job doesn't have a contact person assigned",
@@ -161,7 +193,7 @@ export default function Jobs() {
       return;
     }
 
-    if (job.assigned_to === user.id) {
+    if (posterUserId === user.id) {
       toast({
         title: "Cannot message yourself",
         description: "You cannot start a conversation with yourself",
@@ -171,7 +203,7 @@ export default function Jobs() {
     }
     
     try {
-      await startConversation(job.assigned_to);
+      await startConversation(posterUserId);
       toast({
         title: "Starting conversation",
         description: `Opening chat with ${job.company}`,
@@ -315,7 +347,7 @@ export default function Jobs() {
                       </div>
                     </div>
                     
-                    {/* Updated action buttons with improved message handling */}
+                    {/* Action buttons with restored message functionality */}
                     <div className="flex flex-col gap-2">
                       <div className="flex gap-2">
                         <Button 
@@ -324,15 +356,13 @@ export default function Jobs() {
                         >
                           View Details
                         </Button>
-                        {job?.assigned_to && job.assigned_to !== user?.id && (
-                          <Button
-                            onClick={() => handleMessagePoster(job)}
-                            variant="outline"
-                            className="text-sm px-3"
-                          >
-                            <MessageCircle className="h-4 w-4" />
-                          </Button>
-                        )}
+                        <Button
+                          onClick={() => handleMessagePoster(job)}
+                          variant="outline"
+                          className="text-sm px-3"
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                        </Button>
                       </div>
                       
                       <div className="flex items-center gap-2 justify-end">

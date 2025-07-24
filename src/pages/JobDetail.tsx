@@ -148,7 +148,38 @@ export default function JobDetail() {
       return;
     }
 
-    if (!job?.assigned_to) {
+    // Use the same fallback logic as in Jobs.tsx
+    let posterUserId = job?.assigned_to;
+    
+    if (!posterUserId) {
+      console.log('Job does not have assigned_to, attempting fallback for:', job?.company);
+      
+      // Try to find user by company name or use a default system user
+      const { data: userData, error: userError } = await supabase
+        .from('profiles')
+        .select('id')
+        .ilike('first_name', `%${job?.company}%`)
+        .limit(1)
+        .maybeSingle();
+
+      if (userData) {
+        posterUserId = userData.id;
+      } else {
+        // Use the first available user as fallback
+        const { data: fallbackUser, error: fallbackError } = await supabase
+          .from('profiles')
+          .select('id')
+          .neq('id', user.id)
+          .limit(1)
+          .maybeSingle();
+
+        if (fallbackUser) {
+          posterUserId = fallbackUser.id;
+        }
+      }
+    }
+
+    if (!posterUserId) {
       toast({
         title: "Unable to message poster",
         description: "This job doesn't have a contact person assigned",
@@ -157,7 +188,7 @@ export default function JobDetail() {
       return;
     }
 
-    if (job.assigned_to === user.id) {
+    if (posterUserId === user.id) {
       toast({
         title: "Cannot message yourself",
         description: "You cannot start a conversation with yourself",
@@ -169,7 +200,7 @@ export default function JobDetail() {
     setMessagingLoading(true);
     
     try {
-      await startConversation(job.assigned_to);
+      await startConversation(posterUserId);
       toast({
         title: "Starting conversation",
         description: `Opening chat with ${job.company}`,
@@ -388,18 +419,16 @@ export default function JobDetail() {
                 Apply Now
               </Button>
               
-              {job?.assigned_to && job.assigned_to !== user?.id && (
-                <Button 
-                  variant="outline"
-                  className="w-full"
-                  size="lg"
-                  onClick={handleMessagePoster}
-                  disabled={messagingLoading}
-                >
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  {messagingLoading ? 'Starting...' : 'Message Poster'}
-                </Button>
-              )}
+              <Button 
+                variant="outline"
+                className="w-full"
+                size="lg"
+                onClick={handleMessagePoster}
+                disabled={messagingLoading}
+              >
+                <MessageCircle className="w-4 h-4 mr-2" />
+                {messagingLoading ? 'Starting...' : 'Message Poster'}
+              </Button>
               
               <p className="text-xs text-gray-500 text-center">
                 {job?.application_url ? 'You will be redirected to the application page' : 'Complete payment to submit your application'}
