@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { Save, ArrowLeft, Calendar, User, Building2, MapPin, DollarSign, Clock, Tag, Briefcase, Target, Users, Sparkles, Globe, Search, Eye, ChevronDown } from "lucide-react";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { MediaUpload } from "@/components/ui/media-upload";
@@ -26,6 +27,7 @@ export default function JobEditPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [autoSaveStatus, setAutoSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
@@ -57,7 +59,10 @@ export default function JobEditPage() {
 
   useEffect(() => {
     const fetchJob = async () => {
-      if (!id) return;
+      if (!id || id === "new") {
+        setLoading(false);
+        return;
+      }
       
       try {
         const { data, error } = await supabase
@@ -115,8 +120,10 @@ export default function JobEditPage() {
     fetchJob();
   }, [id, toast]);
 
-  // Auto-save as draft functionality
+  // Auto-save as draft functionality (only for existing jobs)
   useEffect(() => {
+    if (!id || id === "new") return; // Don't auto-save for new jobs
+    
     const autoSaveInterval = setInterval(async () => {
       if (autoSaveStatus === 'unsaved') {
         setAutoSaveStatus('saving');
@@ -131,7 +138,7 @@ export default function JobEditPage() {
     }, 30000); // Auto-save every 30 seconds
 
     return () => clearInterval(autoSaveInterval);
-  }, [autoSaveStatus]);
+  }, [autoSaveStatus, id]);
 
   const handleSaveDraft = async () => {
     try {
@@ -167,43 +174,96 @@ export default function JobEditPage() {
 
   const handleSave = async () => {
     setSaving(true);
+    const isNewJob = !id || id === "new";
+    
     try {
-      const { error } = await supabase
-        .from('jobs')
-        .update({
-          title: job.title,
-          description: job.description,
-          company: job.company,
-          location: job.location,
-          category: job.category,
-          salary: job.salary,
-          experience: job.experience,
-          work_approach: job.work_approach,
-          responsibilities: job.responsibilities,
-          qualifications: job.qualifications,
-          skills: job.skills,
-          is_open: job.is_open,
-          logo_url: job.logo_url,
-          slug: job.slug,
-          seo_title: job.seo_title,
-          seo_description: job.seo_description,
-          assigned_to: job.assigned_to,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id);
+      
+      if (isNewJob) {
+        // Create new job
+        const { data, error } = await supabase
+          .from('jobs')
+          .insert({
+            title: job.title,
+            description: job.description,
+            company: job.company,
+            location: job.location,
+            category: job.category,
+            salary: job.salary,
+            experience: job.experience,
+            work_approach: job.work_approach,
+            responsibilities: job.responsibilities,
+            qualifications: job.qualifications,
+            skills: job.skills,
+            is_open: job.is_open,
+            logo_url: job.logo_url,
+            slug: job.slug,
+            seo_title: job.seo_title,
+            seo_description: job.seo_description,
+            assigned_to: job.assigned_to,
+            created_by: user?.id, // Set the creator
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+          
+        if (error) throw error;
         
-      if (error) throw error;
-      
-      toast({
-        title: "Job updated successfully",
-        description: "The job posting has been saved and published",
-      });
-      
-      navigate('/admin/jobs/all');
+        toast({
+          title: "Job created successfully",
+          description: "The job posting has been created and published",
+        });
+        
+        // Navigate back to the appropriate jobs list based on user role
+        if (user?.role === 'resident') {
+          navigate('/resident/jobs');
+        } else {
+          navigate('/admin/jobs/all');
+        }
+      } else {
+        // Update existing job
+        const { error } = await supabase
+          .from('jobs')
+          .update({
+            title: job.title,
+            description: job.description,
+            company: job.company,
+            location: job.location,
+            category: job.category,
+            salary: job.salary,
+            experience: job.experience,
+            work_approach: job.work_approach,
+            responsibilities: job.responsibilities,
+            qualifications: job.qualifications,
+            skills: job.skills,
+            is_open: job.is_open,
+            logo_url: job.logo_url,
+            slug: job.slug,
+            seo_title: job.seo_title,
+            seo_description: job.seo_description,
+            assigned_to: job.assigned_to,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', id);
+          
+        if (error) throw error;
+        
+        toast({
+          title: "Job updated successfully",
+          description: "The job posting has been saved and published",
+        });
+        
+        // Navigate back to the appropriate jobs list based on user role
+        if (user?.role === 'resident') {
+          navigate('/resident/jobs');
+        } else {
+          navigate('/admin/jobs/all');
+        }
+      }
     } catch (error) {
-      console.error('Error updating job:', error);
+      console.error('Error saving job:', error);
       toast({
-        title: "Failed to update job",
+        title: isNewJob ? "Failed to create job" : "Failed to update job",
         description: "Please try again",
         variant: "destructive"
       });
@@ -263,16 +323,22 @@ export default function JobEditPage() {
   }
 
   return (
-    <AdminLayout title="Edit Job">
+    <AdminLayout title={id === "new" ? "Create Job" : "Edit Job"}>
       <div className="p-6 max-w-7xl mx-auto">
         <DashboardPageHeader
-          title="Edit Job"
-          description={`${job.job_code} • ${job.title}`}
-          breadcrumbItems={[
-            { label: "Jobs", href: "/admin/jobs" },
-            { label: "All Jobs", href: "/admin/jobs/all" },
-            { label: "Edit Job" }
-          ]}
+          title={id === "new" ? "Create Job" : "Edit Job"}
+          description={id === "new" ? "Create a new job posting" : `${job.job_code} • ${job.title}`}
+          breadcrumbItems={
+            user?.role === 'resident' ? [
+              { label: "Dashboard", href: "/resident" },
+              { label: "Jobs", href: "/resident/jobs" },
+              { label: id === "new" ? "Create Job" : "Edit Job" }
+            ] : [
+              { label: "Jobs", href: "/admin/jobs" },
+              { label: "All Jobs", href: "/admin/jobs/all" },
+              { label: id === "new" ? "Create Job" : "Edit Job" }
+            ]
+          }
           actionButton={{
             label: saving ? "Publishing..." : "Save & Publish",
             onClick: () => handleSave(),
@@ -283,29 +349,31 @@ export default function JobEditPage() {
           secondaryActions={[
             {
               label: "Back to List",
-              onClick: () => navigate('/admin/jobs/all'),
+              onClick: () => navigate(user?.role === 'resident' ? '/resident/jobs' : '/admin/jobs/all'),
               icon: <ArrowLeft className="h-4 w-4" />,
               variant: "ghost"
             }
           ]}
         />
 
-        {/* Auto-save status */}
-        <div className="mb-4 flex justify-between items-center">
-          <span className="text-xs text-muted-foreground">
-            {autoSaveStatus === 'saved' && lastSavedAt && `Draft saved at ${lastSavedAt.toLocaleTimeString()}`}
-            {autoSaveStatus === 'saving' && "Saving draft..."}
-            {autoSaveStatus === 'unsaved' && "Unsaved changes"}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleSaveDraft}
-            disabled={autoSaveStatus === 'saving'}
-          >
-            Save Draft
-          </Button>
-        </div>
+        {/* Auto-save status - only show for existing jobs */}
+        {id && id !== "new" && (
+          <div className="mb-4 flex justify-between items-center">
+            <span className="text-xs text-muted-foreground">
+              {autoSaveStatus === 'saved' && lastSavedAt && `Draft saved at ${lastSavedAt.toLocaleTimeString()}`}
+              {autoSaveStatus === 'saving' && "Saving draft..."}
+              {autoSaveStatus === 'unsaved' && "Unsaved changes"}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSaveDraft}
+              disabled={autoSaveStatus === 'saving'}
+            >
+              Save Draft
+            </Button>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Main Content */}
