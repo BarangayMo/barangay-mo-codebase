@@ -12,7 +12,7 @@ import { useRbiAccess } from "@/hooks/use-rbi-access";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { User } from "lucide-react";
+import { User, Users } from "lucide-react";
 
 export default function ResidentHome() {
   const isMobile = useIsMobile();
@@ -50,6 +50,7 @@ export default function ResidentHome() {
   const quickActions = [
     { icon: ShoppingCart, label: "Marketplace", path: "/marketplace" },
     { icon: Briefcase, label: "Jobs", path: "/jobs" },
+    { icon: Users, label: "Community", path: "/community" },
     { icon: User, label: "Barangay Official", path: "/official-profile" },
   ];
 
@@ -204,7 +205,7 @@ export default function ResidentHome() {
                 <Link to="/services">More Services →</Link>
               </Button>
             </div>
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-3 max-w-4xl">
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3 max-w-4xl">
               {quickActions.map((action, index) => (
                 <Link 
                   key={index}
