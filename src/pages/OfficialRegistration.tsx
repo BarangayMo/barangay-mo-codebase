@@ -88,8 +88,10 @@ export default function OfficialRegistration() {
     email: "",
     phoneNumber: "",
     landlineNumber: "",
-    position: ""
+    position: "",
+    password: ""
   });
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -125,6 +127,7 @@ export default function OfficialRegistration() {
       phone_number: formData.phoneNumber,
       landline_number: formData.landlineNumber || undefined,
       position: formData.position,
+      password: formData.password,
       barangay: barangay!,
       municipality: municipality!,
       province: province!,
@@ -343,6 +346,28 @@ export default function OfficialRegistration() {
                 />
               </div>
 
+              <div>
+                <Label htmlFor="password" className="text-gray-700 text-sm">Password *</Label>
+                <div className="relative mt-1">
+                  <Input 
+                    id="password" 
+                    name="password" 
+                    type={showPassword ? "text" : "password"} 
+                    value={formData.password} 
+                    onChange={handleInputChange} 
+                    required 
+                    className="h-12 text-sm border-gray-300 pr-10 focus:border-red-500 focus:ring-red-500" 
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => setShowPassword(!showPassword)} 
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
               <div className="text-center text-xs text-gray-600 leading-4">
                 By submitting this form, you agree with the{" "}
                 <a href="/terms" className="text-red-600 hover:underline">
@@ -523,6 +548,28 @@ export default function OfficialRegistration() {
               onChange={handleInputChange} 
               className="mt-1 h-12 border-gray-300 focus:border-red-500 focus:ring-red-500" 
             />
+          </div>
+
+          <div>
+            <Label htmlFor="password-desktop" className="text-gray-700">Password *</Label>
+            <div className="relative mt-1">
+              <Input 
+                id="password-desktop" 
+                name="password" 
+                type={showPassword ? "text" : "password"} 
+                value={formData.password} 
+                onChange={handleInputChange} 
+                required 
+                className="h-12 border-gray-300 pr-10 focus:border-red-500 focus:ring-red-500" 
+              />
+              <button 
+                type="button" 
+                onClick={() => setShowPassword(!showPassword)} 
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
 
           <div className="text-center text-sm text-gray-600 leading-5">
