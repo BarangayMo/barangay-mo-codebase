@@ -194,28 +194,45 @@ serve(async (req) => {
       );
     }
 
-    // Check if email already exists in auth.users
+    // Check if email already exists in auth.users using a more targeted approach
     console.log('Checking if email already exists in auth.users:', official.email);
-    const { data: existingAuthUser, error: existingUserError } = await supabaseAdmin.auth.admin.listUsers();
     
-    if (existingUserError) {
-      console.error('Error checking existing auth users:', existingUserError);
-    } else {
-      const emailExists = existingAuthUser.users.some(user => user.email === official.email);
-      if (emailExists) {
-        console.error('Email already exists in auth.users:', official.email);
+    // Try to get user by email first - this is more reliable than listing all users
+    const { data: existingUserByEmail, error: emailCheckError } = await supabaseAdmin.auth.admin.getUserByEmail(official.email);
+    
+    if (emailCheckError) {
+      // If error is 'User not found', that's good - email doesn't exist
+      if (emailCheckError.message?.includes('User not found') || emailCheckError.status === 404) {
+        console.log('Email not found in auth system, proceeding with user creation');
+      } else {
+        console.error('Error checking email existence:', emailCheckError);
         return new Response(
           JSON.stringify({ 
             success: false,
-            error: 'Email already registered',
-            reason: `The email ${official.email} is already registered in the authentication system. This official may have already been approved or the email is in use by another account.`
+            error: 'Email validation failed',
+            reason: 'Unable to verify if email is already registered. Please try again.',
+            details: emailCheckError.message
           }),
           {
-            status: 400,
+            status: 500,
             headers: corsHeaders,
           }
         );
       }
+    } else if (existingUserByEmail?.user) {
+      // Email already exists
+      console.error('Email already exists in auth.users:', official.email);
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'Email already registered',
+          reason: `The email ${official.email} is already registered in the authentication system. This official may have already been approved or the email is in use by another account.`
+        }),
+        {
+          status: 400,
+          headers: corsHeaders,
+        }
+      );
     }
 
     // Create Supabase Auth user
@@ -259,9 +276,13 @@ serve(async (req) => {
       let errorMessage = 'Unable to create user account. ';
       let errorReason = authError.message || 'Unknown auth error';
       
-      if (authError.message?.includes('already exists') || authError.message?.includes('already registered')) {
-        errorMessage += 'This email is already registered.';
-        errorReason = `Email ${official.email} already exists in the authentication system`;
+      if (authError.message?.includes('already exists') || 
+          authError.message?.includes('already registered') ||
+          authError.message?.includes('User already registered') ||
+          authError.message?.includes('email address is already taken') ||
+          authError.message?.includes('Database error creating new user')) {
+        errorMessage = 'This email is already registered.';
+        errorReason = `The email ${official.email} is already registered in the authentication system. This official may have already been approved or the email is in use by another account.`;
       } else if (authError.message?.includes('invalid') || authError.message?.includes('format')) {
         errorMessage += 'Invalid email format.';
         errorReason = 'The email format is invalid';
