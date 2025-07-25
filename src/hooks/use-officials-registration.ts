@@ -31,62 +31,105 @@ export interface OfficialRegistration {
 // Hook for submitting official registration (public)
 export const useSubmitOfficialRegistration = () => {
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   return useMutation({
     mutationFn: async (data: OfficialRegistration) => {
-      console.log('Submitting official registration:', data);
+      // Prevent multiple simultaneous submissions
+      if (isSubmitting) {
+        throw new Error('Registration is already being submitted. Please wait.');
+      }
       
-      // Clean and validate the data before sending
-      const cleanData = {
-        first_name: data.first_name?.trim() || '',
-        middle_name: data.middle_name && typeof data.middle_name === 'string' && data.middle_name.trim() !== '' ? data.middle_name.trim() : undefined,
-        last_name: data.last_name?.trim() || '',
-        suffix: data.suffix && typeof data.suffix === 'string' && data.suffix.trim() !== '' ? data.suffix.trim() : undefined,
-        phone_number: data.phone_number?.trim() || '',
-        landline_number: data.landline_number && typeof data.landline_number === 'string' && data.landline_number.trim() !== '' ? data.landline_number.trim() : undefined,
-        email: data.email?.trim() || '',
-        position: data.position?.trim() || '',
-        password: data.password?.trim() || '',
-        barangay: data.barangay?.trim() || '',
-        municipality: data.municipality?.trim() || '',
-        province: data.province?.trim() || '',
-        region: data.region?.trim() || ''
-      };
+      setIsSubmitting(true);
+      
+      try {
+        console.log('Submitting official registration:', data);
+        
+        // Clean and validate the data before sending
+        const cleanData = {
+          first_name: data.first_name?.trim() || '',
+          middle_name: data.middle_name && typeof data.middle_name === 'string' && data.middle_name.trim() !== '' ? data.middle_name.trim() : undefined,
+          last_name: data.last_name?.trim() || '',
+          suffix: data.suffix && typeof data.suffix === 'string' && data.suffix.trim() !== '' ? data.suffix.trim() : undefined,
+          phone_number: data.phone_number?.trim() || '',
+          landline_number: data.landline_number && typeof data.landline_number === 'string' && data.landline_number.trim() !== '' ? data.landline_number.trim() : undefined,
+          email: data.email?.trim() || '',
+          position: data.position?.trim() || '',
+          password: data.password?.trim() || '',
+          barangay: data.barangay?.trim() || '',
+          municipality: data.municipality?.trim() || '',
+          province: data.province?.trim() || '',
+          region: data.region?.trim() || ''
+        };
 
-      console.log('Cleaned data for submission:', cleanData);
+        console.log('Cleaned data for submission:', cleanData);
       
-      // Use the Edge Function to submit the registration
-      const { data: result, error } = await supabase.functions.invoke(
-        'submit-official-registration',
-        {
-          body: cleanData
+        // Use the Edge Function to submit the registration
+        const { data: result, error } = await supabase.functions.invoke(
+          'submit-official-registration',
+          {
+            body: cleanData
+          }
+        );
+
+        if (error) {
+          console.error('Edge function error:', error);
+          
+          // Handle rate limiting (429 errors)
+          if (error.message?.includes('429') || error.message?.includes('rate limit')) {
+            console.error('Rate limit reached - registration submission throttled');
+            throw new Error('Too many registration attempts. Please wait a moment before trying again.');
+          }
+          
+          throw new Error(error.message || 'Failed to submit registration');
         }
-      );
 
-      if (error) {
-        console.error('Edge function error:', error);
-        throw new Error(error.message || 'Failed to submit registration');
+        if (result?.error) {
+          console.error('Registration error from server:', result);
+          throw new Error(result.message || result.error || 'Registration failed');
+        }
+
+        console.log('Registration successful:', result);
+        return result;
+      } finally {
+        setIsSubmitting(false);
       }
-
-      if (result?.error) {
-        console.error('Registration error from server:', result);
-        throw new Error(result.message || result.error || 'Registration failed');
-      }
-
-      console.log('Registration successful:', result);
-      return result;
     },
+    retry: (failureCount, error: any) => {
+      // Don't retry on validation errors (400) or rate limiting (429)
+      if (error.message?.includes('rate limit') || 
+          error.message?.includes('Missing required fields') ||
+          error.message?.includes('Invalid email format') ||
+          error.message?.includes('Password too weak') ||
+          error.message?.includes('already registered') ||
+          error.message?.includes('already exists')) {
+        return false;
+      }
+      // Only retry network/server errors up to 2 times
+      return failureCount < 2;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
     onSuccess: () => {
+      setIsSubmitting(false);
       toast({
         title: "Registration Submitted",
         description: "Your official registration has been submitted for review. You will be notified once it's processed.",
       });
     },
     onError: (error: any) => {
+      setIsSubmitting(false);
       console.error('Registration submission error:', error);
+      
+      let errorMessage = error.message || "Failed to submit registration. Please try again.";
+      
+      // Provide specific guidance for rate limiting
+      if (error.message?.includes('rate limit')) {
+        errorMessage = "Too many attempts. Please wait a few minutes before trying again.";
+      }
+      
       toast({
         title: "Submission Failed",
-        description: error.message || "Failed to submit registration. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     },

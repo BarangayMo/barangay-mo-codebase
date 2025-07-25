@@ -67,8 +67,17 @@ serve(async (req) => {
 
     // Parse and validate request body
     let registrationData: OfficialRegistrationData;
+    let rawBody: string = '';
+    
     try {
+      // Get raw body for logging
+      const requestClone = req.clone();
+      rawBody = await requestClone.text();
+      console.log('Received body:', rawBody);
+      
       registrationData = await req.json();
+      console.log('Parsed data:', registrationData);
+      
       console.log('Registration data received:', { 
         email: registrationData.email, 
         position: registrationData.position,
@@ -110,11 +119,19 @@ serve(async (req) => {
     });
     
     if (missingFields.length > 0) {
-      console.error('Missing required fields:', missingFields);
+      console.error('400 Error - Missing required fields:');
+      console.error('Raw input:', rawBody);
+      console.error('Parsed data:', registrationData);
+      console.error('Expected fields:', requiredFields);
+      console.error('Missing fields:', missingFields);
+      console.error('Received fields:', Object.keys(registrationData || {}));
+      
       return new Response(
         JSON.stringify({ 
           error: 'Missing required fields', 
           missingFields: missingFields,
+          receivedFields: Object.keys(registrationData || {}),
+          expectedFields: requiredFields,
           message: `Please fill in all required fields: ${missingFields.join(', ')}`
         }),
         {
@@ -127,11 +144,15 @@ serve(async (req) => {
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(registrationData.email.trim())) {
-      console.error('Invalid email format:', registrationData.email);
+      console.error('400 Error - Invalid email format:');
+      console.error('Email provided:', registrationData.email);
+      console.error('Email regex pattern:', emailRegex.source);
+      
       return new Response(
         JSON.stringify({ 
           error: 'Invalid email format',
-          message: 'Please enter a valid email address'
+          message: 'Please enter a valid email address',
+          emailProvided: registrationData.email
         }),
         {
           status: 400,
@@ -179,11 +200,16 @@ serve(async (req) => {
 
     // Validate password strength
     if (!registrationData.password || registrationData.password.length < 8) {
-      console.error('Password validation failed');
+      console.error('400 Error - Password validation failed:');
+      console.error('Password length:', registrationData.password?.length || 0);
+      console.error('Minimum required length: 8');
+      
       return new Response(
         JSON.stringify({ 
           error: 'Password too weak',
-          message: 'Password must be at least 8 characters long'
+          message: 'Password must be at least 8 characters long',
+          passwordLength: registrationData.password?.length || 0,
+          minimumLength: 8
         }),
         {
           status: 400,
