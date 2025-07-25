@@ -460,6 +460,7 @@ serve(async (req) => {
     console.error('Unexpected error in official registration:', error);
     return new Response(
       JSON.stringify({ 
+        success: false,
         error: 'Internal server error',
         message: 'An unexpected error occurred. Please try again later.',
         details: Deno.env.get('NODE_ENV') === 'development' ? error.message : undefined
