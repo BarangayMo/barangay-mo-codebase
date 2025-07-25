@@ -51,6 +51,12 @@ export default function ResidentHome() {
     { icon: Briefcase, label: "Jobs", path: "/jobs" },
   ];
 
+  // Management Actions for Residents
+  const managementActions = [
+    { icon: Briefcase, label: "My Jobs", path: "/resident/jobs" },
+    { icon: ShoppingCart, label: "My Products", path: "/resident/products" },
+  ];
+
   const handleQuickActionClick = (path: string, e: React.MouseEvent) => {
     if (!hasRbiAccess && (path.includes('/marketplace') || path.includes('/jobs') || path.includes('/services'))) {
       e.preventDefault();
@@ -210,6 +216,25 @@ export default function ResidentHome() {
               ))}
             </div>
           </div>
+
+          {/* Management Actions */}
+          {hasRbiAccess && (
+            <div className="mb-4">
+              <div className="text-white font-semibold text-lg mb-3">Management</div>
+              <div className="grid grid-cols-2 gap-3 max-w-md">
+                {managementActions.map((action, index) => (
+                  <Link 
+                    key={index}
+                    to={action.path} 
+                    className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/20 backdrop-blur-lg py-5 hover:bg-white/40 transition-all aspect-square"
+                  >
+                    <action.icon className="text-white h-7 w-7" />
+                    <span className="text-white text-sm font-medium text-center px-2">{action.label}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Announcements */}
           <div className="max-w-4xl pb-24">
