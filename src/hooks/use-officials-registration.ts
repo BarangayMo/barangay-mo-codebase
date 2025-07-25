@@ -39,11 +39,11 @@ export const useSubmitOfficialRegistration = () => {
         .from('officials')
         .insert([{
           first_name: data.first_name,
-          middle_name: data.middle_name || null,
+          middle_name: data.middle_name && typeof data.middle_name === 'string' ? data.middle_name : null,
           last_name: data.last_name,
-          suffix: data.suffix || null,
+          suffix: data.suffix && typeof data.suffix === 'string' ? data.suffix : null,
           phone_number: data.phone_number,
-          landline_number: data.landline_number || null,
+          landline_number: data.landline_number && typeof data.landline_number === 'string' ? data.landline_number : null,
           email: data.email,
           position: data.position,
           barangay: data.barangay,
