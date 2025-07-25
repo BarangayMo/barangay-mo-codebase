@@ -84,7 +84,6 @@ const ProductEditPage = () => {
         shop_name: `${user.firstName || 'User'} ${user.lastName || 'Shop'}`,
         contact_email: user.email || '',
         contact_phone: '',
-        address: '',
         description: '',
         status: 'active',
         is_verified: true
