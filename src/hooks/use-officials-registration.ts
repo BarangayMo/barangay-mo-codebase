@@ -45,14 +45,11 @@ export const useSubmitOfficialRegistration = () => {
       try {
         console.log('Submitting official registration:', data);
         
-        // Clean and validate the data before sending
-        const cleanData = {
+        // Clean and validate the data before sending - remove undefined values
+        const cleanData: Record<string, any> = {
           first_name: data.first_name?.trim() || '',
-          middle_name: data.middle_name && typeof data.middle_name === 'string' && data.middle_name.trim() !== '' ? data.middle_name.trim() : undefined,
           last_name: data.last_name?.trim() || '',
-          suffix: data.suffix && typeof data.suffix === 'string' && data.suffix.trim() !== '' ? data.suffix.trim() : undefined,
           phone_number: data.phone_number?.trim() || '',
-          landline_number: data.landline_number && typeof data.landline_number === 'string' && data.landline_number.trim() !== '' ? data.landline_number.trim() : undefined,
           email: data.email?.trim() || '',
           position: data.position?.trim() || '',
           password: data.password?.trim() || '',
@@ -62,13 +59,27 @@ export const useSubmitOfficialRegistration = () => {
           region: data.region?.trim() || ''
         };
 
+        // Add optional fields only if they have values
+        if (data.middle_name && typeof data.middle_name === 'string' && data.middle_name.trim() !== '') {
+          cleanData.middle_name = data.middle_name.trim();
+        }
+        if (data.suffix && typeof data.suffix === 'string' && data.suffix.trim() !== '') {
+          cleanData.suffix = data.suffix.trim();
+        }
+        if (data.landline_number && typeof data.landline_number === 'string' && data.landline_number.trim() !== '') {
+          cleanData.landline_number = data.landline_number.trim();
+        }
+
         console.log('Cleaned data for submission:', cleanData);
       
         // Use the Edge Function to submit the registration
         const { data: result, error } = await supabase.functions.invoke(
           'submit-official-registration',
           {
-            body: cleanData
+            body: JSON.stringify(cleanData),
+            headers: {
+              'Content-Type': 'application/json',
+            }
           }
         );
 

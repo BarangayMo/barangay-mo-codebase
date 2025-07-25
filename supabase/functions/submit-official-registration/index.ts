@@ -113,26 +113,49 @@ serve(async (req) => {
       'region'
     ];
     
-    const missingFields = requiredFields.filter(field => {
-      const value = registrationData[field as keyof OfficialRegistrationData];
-      return !value || (typeof value === 'string' && value.trim() === '');
-    });
+    // Check each required field individually for specific error messages
+    const fieldValidationErrors = [];
     
-    if (missingFields.length > 0) {
+    for (const field of requiredFields) {
+      const value = registrationData[field as keyof OfficialRegistrationData];
+      if (!value || (typeof value === 'string' && value.trim() === '')) {
+        let fieldDisplayName = field.replace('_', ' ').toLowerCase();
+        switch (field) {
+          case 'first_name': fieldDisplayName = 'First Name'; break;
+          case 'last_name': fieldDisplayName = 'Last Name'; break;
+          case 'phone_number': fieldDisplayName = 'Phone Number'; break;
+          case 'email': fieldDisplayName = 'Email'; break;
+          case 'position': fieldDisplayName = 'Position'; break;
+          case 'password': fieldDisplayName = 'Password'; break;
+          case 'barangay': fieldDisplayName = 'Barangay'; break;
+          case 'municipality': fieldDisplayName = 'Municipality'; break;
+          case 'province': fieldDisplayName = 'Province'; break;
+          case 'region': fieldDisplayName = 'Region'; break;
+        }
+        fieldValidationErrors.push({
+          field: field,
+          displayName: fieldDisplayName,
+          message: `${fieldDisplayName} is required and cannot be empty`
+        });
+      }
+    }
+    
+    if (fieldValidationErrors.length > 0) {
       console.error('400 Error - Missing required fields:');
       console.error('Raw input:', rawBody);
       console.error('Parsed data:', registrationData);
       console.error('Expected fields:', requiredFields);
-      console.error('Missing fields:', missingFields);
+      console.error('Field validation errors:', fieldValidationErrors);
       console.error('Received fields:', Object.keys(registrationData || {}));
       
       return new Response(
         JSON.stringify({ 
           error: 'Missing required fields', 
-          missingFields: missingFields,
+          fieldErrors: fieldValidationErrors,
+          missingFields: fieldValidationErrors.map(err => err.field),
           receivedFields: Object.keys(registrationData || {}),
           expectedFields: requiredFields,
-          message: `Please fill in all required fields: ${missingFields.join(', ')}`
+          message: `The following fields are required: ${fieldValidationErrors.map(err => err.displayName).join(', ')}`
         }),
         {
           status: 400,
