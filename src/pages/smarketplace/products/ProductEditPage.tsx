@@ -109,10 +109,7 @@ const ProductEditPage = () => {
       const vendorData = {
         user_id: user.id,
         shop_name: `${user.name || user.firstName || 'User'} Shop`,
-        contact_email: user.email || '',
-        contact_phone: '',
-        description: '',
-        status: 'active',
+        shop_description: `Welcome to ${user.name || user.firstName || 'User'}'s shop!`,
         is_verified: true
       };
 
