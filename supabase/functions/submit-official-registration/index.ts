@@ -87,10 +87,16 @@ serve(async (req) => {
       });
     } catch (parseError) {
       console.error('Failed to parse request JSON:', parseError);
+      console.error('Raw body received:', rawBody);
+      console.error('Request headers:', Object.fromEntries(req.headers.entries()));
+      
       return new Response(
         JSON.stringify({ 
+          success: false,
           error: 'Invalid JSON in request body',
-          details: 'Request must contain valid JSON data'
+          message: 'Request must contain valid JSON data',
+          details: 'Please ensure your request body contains valid JSON and Content-Type is application/json',
+          receivedBody: rawBody
         }),
         {
           status: 400,
@@ -155,6 +161,7 @@ serve(async (req) => {
       
       return new Response(
         JSON.stringify({ 
+          success: false,
           error: 'Missing required fields', 
           fieldErrors: fieldValidationErrors,
           missingFields: fieldValidationErrors.map(err => err.field),
@@ -178,6 +185,7 @@ serve(async (req) => {
       
       return new Response(
         JSON.stringify({ 
+          success: false,
           error: 'Invalid email format',
           message: 'Please enter a valid email address',
           emailProvided: registrationData.email
@@ -203,6 +211,7 @@ serve(async (req) => {
       console.error('Error checking existing official:', checkError);
       return new Response(
         JSON.stringify({ 
+          success: false,
           error: 'Database error',
           message: 'Unable to verify registration status. Please try again.'
         }),
@@ -245,6 +254,7 @@ serve(async (req) => {
       
       return new Response(
         JSON.stringify({ 
+          success: false,
           error: 'Password too weak',
           message: 'Password must be at least 8 characters long',
           passwordLength: registrationData.password?.length || 0,
@@ -274,6 +284,7 @@ serve(async (req) => {
       console.error('Email already exists in auth.users:', registrationData.email);
       return new Response(
         JSON.stringify({ 
+          success: false,
           error: 'Email already registered',
           message: `The email ${registrationData.email} is already registered in the authentication system.`
         }),
@@ -330,6 +341,7 @@ serve(async (req) => {
       
       return new Response(
         JSON.stringify({ 
+          success: false,
           error: 'Failed to create user account',
           message: errorMessage,
           reason: errorReason

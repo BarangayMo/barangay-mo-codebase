@@ -83,18 +83,41 @@ export const useSubmitOfficialRegistration = () => {
         if (error) {
           console.error('Edge function error:', error);
           
+          // Try to get detailed error information from the response
+          let errorDetails = null;
+          try {
+            if (error.context && error.context.body) {
+              // Try to parse the response body if available
+              errorDetails = typeof error.context.body === 'string' 
+                ? JSON.parse(error.context.body) 
+                : error.context.body;
+            }
+          } catch (parseError) {
+            console.error('Failed to parse error response:', parseError);
+          }
+          
+          console.error('Full Edge Function response details:', errorDetails);
+          
           // Handle rate limiting (429 errors)
           if (error.message?.includes('429') || error.message?.includes('rate limit')) {
             console.error('Rate limit reached - registration submission throttled');
             throw new Error('Too many registration attempts. Please wait a moment before trying again.');
           }
           
+          // If we have detailed error information, use it
+          if (errorDetails) {
+            const errorMessage = errorDetails.message || errorDetails.error || 'Failed to submit registration';
+            console.error('Detailed error message:', errorMessage);
+            throw new Error(errorMessage);
+          }
+          
           throw new Error(error.message || 'Failed to submit registration');
         }
 
-        if (result?.error) {
+        if (result?.error || result?.success === false) {
           console.error('Registration error from server:', result);
-          throw new Error(result.message || result.error || 'Registration failed');
+          const errorMessage = result.message || result.error || 'Registration failed';
+          throw new Error(errorMessage);
         }
 
         console.log('Registration successful:', result);
