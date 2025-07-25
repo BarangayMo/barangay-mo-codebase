@@ -27,7 +27,7 @@ import { useStartConversation } from "@/hooks/useStartConversation";
 export default function JobDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, userRole } = useAuth();
   const { toast } = useToast();
   const { startConversation } = useStartConversation();
   
@@ -419,16 +419,18 @@ export default function JobDetail() {
                 Apply Now
               </Button>
               
-              <Button 
-                variant="outline"
-                className="w-full"
-                size="lg"
-                onClick={handleMessagePoster}
-                disabled={messagingLoading}
-              >
-                <MessageCircle className="w-4 h-4 mr-2" />
-                {messagingLoading ? 'Starting...' : 'Message Poster'}
-              </Button>
+              {userRole !== 'resident' && (
+                <Button 
+                  variant="outline"
+                  className="w-full"
+                  size="lg"
+                  onClick={handleMessagePoster}
+                  disabled={messagingLoading}
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  {messagingLoading ? 'Starting...' : 'Message Poster'}
+                </Button>
+              )}
               
               <p className="text-xs text-gray-500 text-center">
                 {job?.application_url ? 'You will be redirected to the application page' : 'Complete payment to submit your application'}

@@ -102,6 +102,11 @@ import RbiForms from "@/pages/officials/RbiForms";
 // Import Wishlist component
 import Wishlist from "@/pages/Wishlist";
 
+// Import resident-specific pages
+import ResidentJobsPage from "@/pages/resident/ResidentJobsPage";
+import ResidentProductsPage from "@/pages/resident/ResidentProductsPage";
+import OfficialProfileView from "@/pages/resident/OfficialProfileView";
+
 // Import auth components
 import { EmailConfirmationHandler } from "@/components/auth/EmailConfirmationHandler";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
@@ -199,6 +204,11 @@ export function AppRoutes() {
       <Route path="/jobs" element={<RbiProtectedRoute><Jobs /></RbiProtectedRoute>} />
       <Route path="/jobs/:id" element={<RbiProtectedRoute><JobDetail /></RbiProtectedRoute>} />
       <Route path="/jobs/:id/payment" element={<RbiProtectedRoute><JobPayment /></RbiProtectedRoute>} />
+      
+      {/* Resident-specific job and product management routes */}
+      <Route path="/resident/jobs" element={<RbiProtectedRoute><ResidentJobsPage /></RbiProtectedRoute>} />
+      <Route path="/resident/products" element={<RbiProtectedRoute><ResidentProductsPage /></RbiProtectedRoute>} />
+      <Route path="/resident/official-profile" element={<RbiProtectedRoute><OfficialProfileView /></RbiProtectedRoute>} />
       
       <Route path="/marketplace" element={<RbiProtectedRoute><Marketplace /></RbiProtectedRoute>} />
       <Route path="/marketplace/category/:categorySlug" element={<RbiProtectedRoute><CategoryPage /></RbiProtectedRoute>} />
