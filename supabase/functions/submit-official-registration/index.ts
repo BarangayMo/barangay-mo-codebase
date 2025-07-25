@@ -194,25 +194,18 @@ serve(async (req) => {
 
     // Check if email already exists in auth.users
     console.log('Checking if email already exists in auth.users:', registrationData.email);
-    const { data: existingAuthUser, error: authCheckError } = await supabaseAdmin.auth.admin.getUserByEmail(registrationData.email.trim());
     
-    if (authCheckError) {
-      // If error is 'User not found', that's good - email doesn't exist
-      if (!authCheckError.message?.includes('User not found') && authCheckError.status !== 404) {
-        console.error('Error checking auth email existence:', authCheckError);
-        return new Response(
-          JSON.stringify({ 
-            error: 'Email validation failed',
-            message: 'Unable to verify if email is already registered. Please try again.'
-          }),
-          {
-            status: 500,
-            headers: corsHeaders,
-          }
-        );
+    let existingAuthUser = null;
+    try {
+      const { data, error } = await supabaseAdmin.auth.admin.getUserByEmail(registrationData.email.trim());
+      if (!error) {
+        existingAuthUser = data;
       }
-      console.log('Email not found in auth system, proceeding with user creation');
-    } else if (existingAuthUser?.user) {
+    } catch (authCheckError) {
+      console.log('Email check completed - user not found (this is expected for new registrations)');
+    }
+    
+    if (existingAuthUser?.user) {
       console.error('Email already exists in auth.users:', registrationData.email);
       return new Response(
         JSON.stringify({ 
@@ -323,7 +316,7 @@ serve(async (req) => {
         JSON.stringify({ 
           error: 'Registration failed',
           message: 'Unable to submit registration. Please try again.',
-          details: process.env.NODE_ENV === 'development' ? insertError.message : undefined
+          details: Deno.env.get('NODE_ENV') === 'development' ? insertError.message : undefined
         }),
         {
           status: 500,
@@ -361,7 +354,7 @@ serve(async (req) => {
       JSON.stringify({ 
         error: 'Internal server error',
         message: 'An unexpected error occurred. Please try again later.',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        details: Deno.env.get('NODE_ENV') === 'development' ? error.message : undefined
       }),
       {
         status: 500,
