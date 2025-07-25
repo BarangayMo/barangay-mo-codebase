@@ -20,7 +20,6 @@ interface ProductFormData {
   description: string;
   price: string;
   stock_quantity: string;
-  sku: string;
   category_id: string;
   is_active: boolean;
   vendor_id?: string;
@@ -40,7 +39,6 @@ const ProductEditPage = () => {
     description: "",
     price: "",
     stock_quantity: "",
-    sku: "",
     category_id: "",
     is_active: true,
     main_image_url: "",
@@ -216,7 +214,6 @@ const ProductEditPage = () => {
         description: product.description || "",
         price: product.price?.toString() || "",
         stock_quantity: product.stock_quantity?.toString() || "",
-        sku: product.sku || "",
         category_id: product.category_id || "",
         is_active: product.is_active ?? true,
         vendor_id: product.vendor_id || "",
@@ -240,7 +237,6 @@ const ProductEditPage = () => {
         description: data.description,
         price: parseFloat(data.price) || 0,
         stock_quantity: parseInt(data.stock_quantity) || 0,
-        sku: data.sku,
         category_id: data.category_id || null,
         is_active: data.is_active,
         vendor_id: currentVendor.id,
@@ -413,27 +409,18 @@ const ProductEditPage = () => {
               <CardTitle>Product Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Product Name *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
-                    placeholder="Enter product name"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="sku">SKU</Label>
-                  <Input
-                    id="sku"
-                    value={formData.sku}
-                    onChange={(e) => handleInputChange('sku', e.target.value)}
-                    placeholder="Enter SKU"
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="name">Product Name *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  placeholder="Enter product name"
+                  required
+                />
+                <p className="text-sm text-muted-foreground">
+                  SKU will be automatically generated when the product is created
+                </p>
               </div>
 
               <div className="space-y-2">

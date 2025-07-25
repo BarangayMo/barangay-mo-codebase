@@ -1136,7 +1136,7 @@ export type Database = {
           seo_description: string | null
           seo_title: string | null
           shipping_info: string | null
-          sku: string | null
+          sku: string
           sold_count: number | null
           specifications: Json | null
           stock_quantity: number
@@ -1165,7 +1165,7 @@ export type Database = {
           seo_description?: string | null
           seo_title?: string | null
           shipping_info?: string | null
-          sku?: string | null
+          sku?: string
           sold_count?: number | null
           specifications?: Json | null
           stock_quantity?: number
@@ -1194,7 +1194,7 @@ export type Database = {
           seo_description?: string | null
           seo_title?: string | null
           shipping_info?: string | null
-          sku?: string | null
+          sku?: string
           sold_count?: number | null
           specifications?: Json | null
           stock_quantity?: number
@@ -2343,6 +2343,10 @@ export type Database = {
     }
     Functions: {
       generate_job_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_product_sku: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
