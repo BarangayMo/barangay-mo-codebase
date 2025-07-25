@@ -189,12 +189,14 @@ serve(async (req) => {
       );
     }
 
-    // Check if email already exists in officials table
+    // Check for existing official with same email OR same barangay+position combination
     console.log('Checking for existing registration with email:', registrationData.email);
+    console.log('Checking for existing registration in barangay:', registrationData.barangay, 'with position:', registrationData.position);
+    
     const { data: existingOfficial, error: checkError } = await supabaseAdmin
       .from('officials')
-      .select('id, email, status')
-      .eq('email', registrationData.email.trim())
+      .select('id, email, status, barangay, position')
+      .or(`email.eq.${registrationData.email.trim()},and(barangay.eq.${registrationData.barangay?.trim()},position.eq.${registrationData.position.trim()})`)
       .maybeSingle();
 
     if (checkError) {
@@ -212,11 +214,20 @@ serve(async (req) => {
     }
 
     if (existingOfficial) {
-      console.log('Official already exists with email:', registrationData.email, 'Status:', existingOfficial.status);
+      console.log('Official already exists:', existingOfficial);
+      
+      let message = '';
+      if (existingOfficial.email === registrationData.email.trim()) {
+        message = `A registration with email ${registrationData.email} already exists with status: ${existingOfficial.status}`;
+      } else {
+        message = `An official with position "${registrationData.position}" already exists in barangay "${registrationData.barangay}" with status: ${existingOfficial.status}`;
+      }
+      
       return new Response(
         JSON.stringify({ 
-          error: 'Registration already exists',
-          message: `A registration with email ${registrationData.email} already exists with status: ${existingOfficial.status}`,
+          success: false,
+          error: 'Official already exists',
+          message: message,
           status: existingOfficial.status
         }),
         {
@@ -366,8 +377,39 @@ serve(async (req) => {
 
     if (insertError) {
       console.error('Error inserting official registration:', insertError);
+      console.error('Insert error code:', insertError.code);
+      console.error('Insert error details:', insertError.details);
+      
+      // Handle duplicate key violations specifically
+      if (insertError.code === '23505' || insertError.message?.includes('duplicate key')) {
+        console.log('Duplicate key violation detected - cleaning up created auth user');
+        
+        // Cleanup: Delete the auth user we just created since DB insert failed
+        try {
+          await supabaseAdmin.auth.admin.deleteUser(authUser.user.id);
+          console.log('Successfully cleaned up auth user:', authUser.user.id);
+        } catch (cleanupError) {
+          console.error('Failed to cleanup auth user:', cleanupError);
+        }
+        
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            error: 'Official already exists',
+            message: 'An official with this email or position already exists in this barangay.',
+            code: 'DUPLICATE_OFFICIAL'
+          }),
+          {
+            status: 409,
+            headers: corsHeaders,
+          }
+        );
+      }
+      
+      // Handle other database errors
       return new Response(
         JSON.stringify({ 
+          success: false,
           error: 'Registration failed',
           message: 'Unable to submit registration. Please try again.',
           details: Deno.env.get('NODE_ENV') === 'development' ? insertError.message : undefined
