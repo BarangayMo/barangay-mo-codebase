@@ -27,6 +27,13 @@ export function ConversationsList() {
     markConversationAsRead
   } = useMessages();
 
+  // Filter conversations for residents to only show barangay official
+  const filteredConversations = userRole === 'resident' 
+    ? conversations.filter(conv => 
+        conv.other_participant?.id === barangayOfficial?.id
+      )
+    : conversations;
+
   useEffect(() => {
     fetchConversations();
   }, []);
@@ -104,7 +111,7 @@ export function ConversationsList() {
 
       {/* Conversations list */}
       <ScrollArea className="flex-1">
-        {conversations.length === 0 ? (
+        {filteredConversations.length === 0 ? (
           <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -126,7 +133,7 @@ export function ConversationsList() {
           </div>
         ) : (
           <div className="divide-y">
-            {conversations.map((conversation) => (
+            {filteredConversations.map((conversation) => (
               <div
                 key={conversation.id}
                 className="p-4 hover:bg-gray-50 cursor-pointer flex items-center space-x-3"

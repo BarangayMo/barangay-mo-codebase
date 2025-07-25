@@ -208,7 +208,7 @@ export function AppRoutes() {
       {/* Resident-specific job and product management routes */}
       <Route path="/resident/jobs" element={<RbiProtectedRoute><ResidentJobsPage /></RbiProtectedRoute>} />
       <Route path="/resident/products" element={<RbiProtectedRoute><ResidentProductsPage /></RbiProtectedRoute>} />
-      <Route path="/resident/official-profile" element={<RbiProtectedRoute><OfficialProfileView /></RbiProtectedRoute>} />
+      <Route path="/official-profile" element={<RbiProtectedRoute><OfficialProfileView /></RbiProtectedRoute>} />
       
       <Route path="/marketplace" element={<RbiProtectedRoute><Marketplace /></RbiProtectedRoute>} />
       <Route path="/marketplace/category/:categorySlug" element={<RbiProtectedRoute><CategoryPage /></RbiProtectedRoute>} />
