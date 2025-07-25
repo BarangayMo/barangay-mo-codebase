@@ -17,6 +17,7 @@ interface OfficialRegistrationData {
   landline_number?: string;
   email: string;
   position: string;
+  password: string;
   barangay: string;
   municipality: string;
   province: string;
@@ -96,6 +97,7 @@ serve(async (req) => {
       'phone_number', 
       'email', 
       'position', 
+      'password',
       'barangay', 
       'municipality', 
       'province', 
@@ -175,6 +177,42 @@ serve(async (req) => {
       );
     }
 
+    // Validate password strength
+    if (!registrationData.password || registrationData.password.length < 8) {
+      console.error('Password validation failed');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Password too weak',
+          message: 'Password must be at least 8 characters long'
+        }),
+        {
+          status: 400,
+          headers: corsHeaders,
+        }
+      );
+    }
+
+    // Hash the password before storing
+    console.log('Hashing password for security');
+    const { data: hashedPassword, error: hashError } = await supabaseAdmin
+      .rpc('hash_password', { password_text: registrationData.password });
+
+    if (hashError || !hashedPassword) {
+      console.error('Error hashing password:', hashError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Password processing failed',
+          message: 'Unable to process password securely. Please try again.'
+        }),
+        {
+          status: 500,
+          headers: corsHeaders,
+        }
+      );
+    }
+
+    console.log('Password hashed successfully');
+
     // Insert the official registration using service role (bypasses RLS)
     console.log('Inserting new official registration');
     const insertData = {
@@ -186,6 +224,7 @@ serve(async (req) => {
       landline_number: registrationData.landline_number?.trim() || null,
       email: registrationData.email.trim().toLowerCase(),
       position: registrationData.position.trim(),
+      password_hash: hashedPassword,
       barangay: registrationData.barangay.trim(),
       municipality: registrationData.municipality.trim(),
       province: registrationData.province.trim(),

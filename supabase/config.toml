@@ -31,6 +31,11 @@ verify_jwt = false
 # Make this function public since unauthenticated users need to submit registrations
 verify_jwt = false
 
+# Configure the Auth setting for the Edge Function approve-official
+[functions.approve-official]
+# This function requires authentication (Super-admin only)
+verify_jwt = true
+
 # Configure the Dashboard
 [inbucket]
 # The inbucket port to use. Defaults to 54324.

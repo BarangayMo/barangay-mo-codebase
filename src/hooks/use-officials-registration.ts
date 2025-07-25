@@ -13,6 +13,7 @@ export interface OfficialRegistration {
   landline_number?: string;
   email: string;
   position: string;
+  password?: string;
   barangay: string;
   municipality: string;
   province: string;
@@ -45,6 +46,7 @@ export const useSubmitOfficialRegistration = () => {
         landline_number: data.landline_number && typeof data.landline_number === 'string' && data.landline_number.trim() !== '' ? data.landline_number.trim() : undefined,
         email: data.email?.trim() || '',
         position: data.position?.trim() || '',
+        password: data.password?.trim() || '',
         barangay: data.barangay?.trim() || '',
         municipality: data.municipality?.trim() || '',
         province: data.province?.trim() || '',
@@ -129,20 +131,32 @@ export const useApproveOfficial = () => {
     mutationFn: async (officialId: string) => {
       console.log('Approving official:', officialId);
       
-      const { error } = await supabase.rpc('approve_official', {
-        official_id: officialId
-      });
+      // Use the Edge Function to approve the official
+      const { data: result, error } = await supabase.functions.invoke(
+        'approve-official',
+        {
+          body: { official_id: officialId }
+        }
+      );
 
       if (error) {
-        console.error('Error approving official:', error);
-        throw error;
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Failed to approve official');
       }
+
+      if (result?.error) {
+        console.error('Approval error from server:', result);
+        throw new Error(result.message || result.error || 'Approval failed');
+      }
+
+      console.log('Official approved successfully:', result);
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['official-registrations'] });
       toast({
         title: "Official Approved",
-        description: "The official registration has been approved. The official will need to complete their account setup by registering with their approved email.",
+        description: "The official registration has been approved. An email verification has been sent to the official.",
       });
     },
     onError: (error: any) => {
