@@ -56,18 +56,51 @@ const ProductEditPage = () => {
     },
   });
 
-  // Fetch user's vendor info
-  const { data: vendor } = useQuery({
+  // Fetch or create user's vendor info
+  const { data: vendor, isLoading: isVendorLoading } = useQuery({
     queryKey: ['user-vendor', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
-      const { data, error } = await supabase
+      
+      // First try to find existing vendor
+      const { data: existingVendor, error: fetchError } = await supabase
         .from('vendors')
         .select('*')
         .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        throw fetchError;
+      }
+      
+      // If vendor exists, return it
+      if (existingVendor) {
+        return existingVendor;
+      }
+      
+      // If no vendor exists, create one
+      const vendorData = {
+        user_id: user.id,
+        shop_name: `${user.firstName || 'User'} ${user.lastName || 'Shop'}`,
+        contact_email: user.email || '',
+        contact_phone: '',
+        address: '',
+        description: '',
+        status: 'active',
+        is_verified: true
+      };
+      
+      const { data: newVendor, error: createError } = await supabase
+        .from('vendors')
+        .insert([vendorData])
+        .select()
         .single();
-      if (error) throw error;
-      return data;
+      
+      if (createError) {
+        throw createError;
+      }
+      
+      return newVendor;
     },
     enabled: !!user?.id,
   });
@@ -108,7 +141,7 @@ const ProductEditPage = () => {
   const saveProductMutation = useMutation({
     mutationFn: async (data: ProductFormData) => {
       if (!vendor?.id) {
-        throw new Error('Vendor information not found');
+        throw new Error('Vendor information not found. Please try again.');
       }
 
       const productData = {
@@ -141,6 +174,7 @@ const ProductEditPage = () => {
       handleBackToProducts();
     },
     onError: (error) => {
+      console.error('Product save error:', error);
       toast.error('Failed to save product: ' + error.message);
     },
   });
@@ -170,6 +204,16 @@ const ProductEditPage = () => {
       return;
     }
 
+    if (isVendorLoading) {
+      toast.error('Please wait while we set up your vendor information');
+      return;
+    }
+
+    if (!vendor) {
+      toast.error('Unable to create vendor information. Please try again.');
+      return;
+    }
+
     saveProductMutation.mutate(formData);
   };
 
@@ -184,6 +228,21 @@ const ProductEditPage = () => {
   const handleCancel = () => {
     handleBackToProducts();
   };
+
+  if (isVendorLoading) {
+    return (
+      <Layout>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Setting up your vendor information...</p>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -309,7 +368,7 @@ const ProductEditPage = () => {
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <Button
               type="submit"
-              disabled={saveProductMutation.isPending}
+              disabled={saveProductMutation.isPending || isVendorLoading}
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
             >
               <Save className="h-4 w-4" />
