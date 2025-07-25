@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { DraggableArrayInput } from "@/components/ui/draggable-array-input";
-import { EnhancedRichTextEditor } from "@/components/ui/rich-text-editor";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { MediaUpload } from "@/components/ui/media-upload";
 
 interface Job {
@@ -139,18 +140,27 @@ export default function JobEditPage() {
         created_by: user?.id,
       };
 
-      let query = supabase.from('jobs');
-
       if (isEditing) {
-        query = query.update(payload).eq('id', id);
+        const { data, error } = await supabase
+          .from('jobs')
+          .update(payload)
+          .eq('id', id)
+          .select()
+          .single();
+
+        if (error) {
+          throw error;
+        }
       } else {
-        query = query.insert([payload]);
-      }
+        const { data, error } = await supabase
+          .from('jobs')
+          .insert([payload])
+          .select()
+          .single();
 
-      const { data, error } = await query.select().single();
-
-      if (error) {
-        throw error;
+        if (error) {
+          throw error;
+        }
       }
 
       toast({
@@ -212,7 +222,7 @@ export default function JobEditPage() {
   return (
     <Layout>
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Simple back button instead of breadcrumbs */}
+        {/* Simple back button */}
         <div className="flex items-center gap-4 mb-6">
           <Button
             variant="ghost"
@@ -367,7 +377,7 @@ export default function JobEditPage() {
           {/* Job Description */}
           <div>
             <Label htmlFor="description">Job Description</Label>
-            <EnhancedRichTextEditor
+            <RichTextEditor
               value={formData.description}
               onChange={(value) => setFormData({ ...formData, description: value })}
               placeholder="Describe the job role, requirements, and what makes this position unique..."
@@ -378,7 +388,7 @@ export default function JobEditPage() {
           <div>
             <Label>Key Responsibilities</Label>
             <DraggableArrayInput
-              value={formData.responsibilities}
+              values={formData.responsibilities}
               onChange={(value) => setFormData({ ...formData, responsibilities: value })}
               placeholder="Add a key responsibility..."
             />
@@ -388,7 +398,7 @@ export default function JobEditPage() {
           <div>
             <Label>Required Qualifications</Label>
             <DraggableArrayInput
-              value={formData.qualifications}
+              values={formData.qualifications}
               onChange={(value) => setFormData({ ...formData, qualifications: value })}
               placeholder="Add a required qualification..."
             />
@@ -398,7 +408,7 @@ export default function JobEditPage() {
           <div>
             <Label>Required Skills</Label>
             <DraggableArrayInput
-              value={formData.skills}
+              values={formData.skills}
               onChange={(value) => setFormData({ ...formData, skills: value })}
               placeholder="Add a required skill..."
             />
@@ -408,28 +418,12 @@ export default function JobEditPage() {
           <div>
             <Label>Company Logo</Label>
             <MediaUpload
-              onUpload={(url) => setFormData({ ...formData, logo_url: url })}
+              value={formData.logo_url}
+              onChange={(url) => setFormData({ ...formData, logo_url: url })}
+              onRemove={() => setFormData({ ...formData, logo_url: '' })}
               accept="image/*"
-              maxSize={5 * 1024 * 1024} // 5MB
               className="mt-2"
             />
-            {formData.logo_url && (
-              <div className="mt-4 flex items-center gap-4">
-                <img
-                  src={formData.logo_url}
-                  alt="Company logo preview"
-                  className="w-16 h-16 object-cover rounded-lg border"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setFormData({ ...formData, logo_url: '' })}
-                >
-                  Remove Logo
-                </Button>
-              </div>
-            )}
           </div>
 
           {/* Submit Button */}
