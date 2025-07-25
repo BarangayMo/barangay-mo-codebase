@@ -45,7 +45,7 @@ export const CheckoutOrderSummary: React.FC<CheckoutOrderSummaryProps> = ({
             <div className="flex-1 min-w-0">
               <h3 className="text-sm font-medium text-gray-800 truncate">{item.name}</h3>
             </div>
-            <span className="text-sm font-medium text-gray-800">{formatCurrency(item.price * item.quantity, 'NGN')}</span>
+            <span className="text-sm font-medium text-gray-800">{formatCurrency(item.price * item.quantity, 'PHP')}</span>
           </div>
         ))}
       </div>
@@ -55,27 +55,27 @@ export const CheckoutOrderSummary: React.FC<CheckoutOrderSummaryProps> = ({
           <div className="space-y-2 pt-6 border-t mt-6">
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Subtotal</span>
-              <span className="font-medium text-gray-800">{formatCurrency(subtotal, 'NGN')}</span>
+              <span className="font-medium text-gray-800">{formatCurrency(subtotal, 'PHP')}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Shipping</span>
               {shippingCost === 0 ? (
                 <span className="font-medium text-green-600">FREE</span>
               ) : (
-                <span className="font-medium text-gray-800">{formatCurrency(shippingCost, 'NGN')}</span>
+                <span className="font-medium text-gray-800">{formatCurrency(shippingCost, 'PHP')}</span>
               )}
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Estimated taxes (7.5%)</span> {/* Consider making tax rate dynamic */}
-              <span className="font-medium text-gray-800">{formatCurrency(estimatedTaxes, 'NGN')}</span>
+              <span className="font-medium text-gray-800">{formatCurrency(estimatedTaxes, 'PHP')}</span>
             </div>
           </div>
 
           <div className="flex justify-between items-center text-lg font-semibold pt-4 border-t mt-4">
             <span className="text-gray-800">Total</span>
             <div className="flex items-baseline">
-              <span className="text-xs text-gray-500 mr-1">NGN</span>
-              <span className="text-gray-900">{formatCurrency(finalTotal, 'NGN').replace('NGN', '').trim()}</span>
+              <span className="text-xs text-gray-500 mr-1">PHP</span>
+              <span className="text-gray-900">{formatCurrency(finalTotal, 'PHP').replace('PHP', '').trim()}</span>
             </div>
           </div>
         </>

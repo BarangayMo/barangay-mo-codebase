@@ -309,7 +309,7 @@ export const CartDrawerContent = ({
                         <h4 className="text-sm font-medium truncate">{item.name}</h4>
                       </Link>
                     </SheetClose>
-                    <p className="text-xs text-muted-foreground">{formatCurrency(item.price, 'NGN')}</p>
+                    <p className="text-xs text-muted-foreground">{formatCurrency(item.price, 'PHP')}</p>
                     <div className="flex items-center mt-1.5">
                       <Button 
                         variant="outline" 
@@ -355,7 +355,7 @@ export const CartDrawerContent = ({
                     )}
                   </div>
                   <div className="text-sm font-medium text-right">
-                    {formatCurrency(item.price * item.quantity, 'NGN')}
+                    {formatCurrency(item.price * item.quantity, 'PHP')}
                   </div>
                 </div>
               ))}
@@ -384,7 +384,7 @@ export const CartDrawerContent = ({
             <div className="w-full space-y-1">
               <div className="flex justify-between text-lg font-semibold">
                 <span>Estimated total</span>
-                <span>{formatCurrency(total, 'NGN')}</span>
+                <span>{formatCurrency(total, 'PHP')}</span>
               </div>
               <p className="text-xs text-muted-foreground">
                 Taxes, discounts and shipping calculated at checkout.
