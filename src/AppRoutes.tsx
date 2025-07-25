@@ -62,6 +62,7 @@ import ResidentsPage from "@/pages/users/ResidentsPage";
 import OfficialsPage from "@/pages/users/OfficialsPage";
 import UserProfilePage from "@/pages/users/UserProfilePage";
 import SettingsPage from "@/pages/admin/SettingsPage";
+import OfficialRegistrationsPage from "@/pages/admin/OfficialRegistrationsPage";
 
 // Import marketplace customer-facing pages
 import ProductDetail from "@/pages/marketplace/ProductDetail";
@@ -196,6 +197,7 @@ export function AppRoutes() {
       <Route path="/admin/users/:id" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
       
       <Route path="/admin/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+      <Route path="/admin/official-registrations" element={<ProtectedRoute><OfficialRegistrationsPage /></ProtectedRoute>} />
       
       <Route path="/notifications" element={<RbiProtectedRoute><Notifications /></RbiProtectedRoute>} />
       <Route path="/settings" element={<RbiProtectedRoute><Settings /></RbiProtectedRoute>} />
