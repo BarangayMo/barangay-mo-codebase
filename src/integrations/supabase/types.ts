@@ -1055,6 +1055,7 @@ export type Database = {
           last_name: string
           middle_name: string | null
           municipality: string
+          password_hash: string | null
           phone_number: string
           position: string
           province: string
@@ -1079,6 +1080,7 @@ export type Database = {
           last_name: string
           middle_name?: string | null
           municipality: string
+          password_hash?: string | null
           phone_number: string
           position: string
           province: string
@@ -1103,6 +1105,7 @@ export type Database = {
           last_name?: string
           middle_name?: string | null
           municipality?: string
+          password_hash?: string | null
           phone_number?: string
           position?: string
           province?: string
@@ -2437,6 +2440,14 @@ export type Database = {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
       }
+      hash_password: {
+        Args: { password_text: string }
+        Returns: string
+      }
+      is_approved_official: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
       update_role_user_counts: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -2444,6 +2455,10 @@ export type Database = {
       update_user_last_login: {
         Args: { user_id: string }
         Returns: undefined
+      }
+      verify_password: {
+        Args: { password_text: string; password_hash: string }
+        Returns: boolean
       }
     }
     Enums: {

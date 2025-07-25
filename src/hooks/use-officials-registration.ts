@@ -131,20 +131,31 @@ export const useApproveOfficial = () => {
     mutationFn: async (officialId: string) => {
       console.log('Approving official:', officialId);
       
-      const { error } = await supabase.rpc('approve_official', {
-        official_id: officialId
-      });
+      // Use the new edge function that creates auth user with password
+      const { data: result, error } = await supabase.functions.invoke(
+        'approve-official-with-auth',
+        {
+          body: { official_id: officialId }
+        }
+      );
 
       if (error) {
         console.error('Error approving official:', error);
-        throw error;
+        throw new Error(error.message || 'Failed to approve official');
       }
+
+      if (result?.error) {
+        console.error('Approval error from server:', result);
+        throw new Error(result.error || 'Approval failed');
+      }
+
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['official-registrations'] });
       toast({
         title: "Official Approved",
-        description: "The official registration has been approved. The official will need to complete their account setup by registering with their approved email.",
+        description: "The official registration has been approved and an account has been created. The official can now login with their email and password.",
       });
     },
     onError: (error: any) => {
