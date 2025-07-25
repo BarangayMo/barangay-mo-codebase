@@ -12,7 +12,6 @@ export interface OfficialRegistration {
   phone_number: string;
   landline_number?: string;
   email: string;
-  password?: string; // Only used for form submission
   position: string;
   barangay: string;
   municipality: string;
@@ -45,7 +44,6 @@ export const useSubmitOfficialRegistration = () => {
         phone_number: data.phone_number?.trim() || '',
         landline_number: data.landline_number && typeof data.landline_number === 'string' && data.landline_number.trim() !== '' ? data.landline_number.trim() : undefined,
         email: data.email?.trim() || '',
-        password: data.password?.trim() || '',
         position: data.position?.trim() || '',
         barangay: data.barangay?.trim() || '',
         municipality: data.municipality?.trim() || '',
@@ -129,34 +127,22 @@ export const useApproveOfficial = () => {
 
   return useMutation({
     mutationFn: async (officialId: string) => {
-      console.log('Approving official via edge function:', officialId);
+      console.log('Approving official:', officialId);
       
-      // Use the Edge Function to approve and create Supabase Auth user
-      const { data: result, error } = await supabase.functions.invoke(
-        'approve-official',
-        {
-          body: { officialId }
-        }
-      );
+      const { error } = await supabase.rpc('approve_official', {
+        official_id: officialId
+      });
 
       if (error) {
-        console.error('Edge function error:', error);
-        throw new Error(error.message || 'Failed to approve official');
+        console.error('Error approving official:', error);
+        throw error;
       }
-
-      if (result?.error) {
-        console.error('Approval error from server:', result);
-        throw new Error(result.message || result.error || 'Approval failed');
-      }
-
-      console.log('Official approval successful:', result);
-      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['official-registrations'] });
       toast({
         title: "Official Approved",
-        description: "The official registration has been approved. The official will receive an email verification link to complete their account setup.",
+        description: "The official registration has been approved. The official will need to complete their account setup by registering with their approved email.",
       });
     },
     onError: (error: any) => {
