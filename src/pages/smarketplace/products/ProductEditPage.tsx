@@ -47,6 +47,8 @@ const ProductEditPage = () => {
     additional_images: [],
   });
 
+  const [vendorCreationError, setVendorCreationError] = useState<string | null>(null);
+
   // Handle image upload
   const handleImageUpload = async (file: File, isMainImage = false) => {
     try {
@@ -97,29 +99,13 @@ const ProductEditPage = () => {
     },
   });
 
-  // Fetch or create user's vendor info
-  const { data: vendor, isLoading: isVendorLoading } = useQuery({
-    queryKey: ['user-vendor', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      
-      // First try to find existing vendor
-      const { data: existingVendor, error: fetchError } = await supabase
-        .from('vendors')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        throw fetchError;
+  // Create vendor mutation
+  const createVendorMutation = useMutation({
+    mutationFn: async () => {
+      if (!user?.id) {
+        throw new Error('User not authenticated');
       }
-      
-      // If vendor exists, return it
-      if (existingVendor) {
-        return existingVendor;
-      }
-      
-      // If no vendor exists, create one
+
       const vendorData = {
         user_id: user.id,
         shop_name: `${user.name || user.firstName || 'User'} Shop`,
@@ -129,21 +115,85 @@ const ProductEditPage = () => {
         status: 'active',
         is_verified: true
       };
-      
-      const { data: newVendor, error: createError } = await supabase
+
+      const { data, error } = await supabase
         .from('vendors')
         .insert([vendorData])
         .select()
         .single();
+
+      if (error) {
+        // Check if it's a duplicate error
+        if (error.code === '23505') {
+          // Unique constraint violation - vendor already exists
+          const { data: existingVendor, error: fetchError } = await supabase
+            .from('vendors')
+            .select('*')
+            .eq('user_id', user.id)
+            .single();
+
+          if (fetchError) {
+            throw new Error('Failed to retrieve existing vendor information');
+          }
+
+          return existingVendor;
+        }
+        throw error;
+      }
+
+      return data;
+    },
+    onError: (error) => {
+      console.error('Vendor creation error:', error);
+      setVendorCreationError(error.message);
+    },
+    onSuccess: () => {
+      setVendorCreationError(null);
+      // Invalidate vendor query to refresh
+      queryClient.invalidateQueries({ queryKey: ['user-vendor', user?.id] });
+    },
+  });
+
+  // Fetch or create user's vendor info
+  const { data: vendor, isLoading: isVendorLoading, error: vendorError } = useQuery({
+    queryKey: ['user-vendor', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
       
-      if (createError) {
-        throw createError;
+      console.log('Fetching vendor for user:', user.id);
+      
+      // First try to find existing vendor
+      const { data: existingVendor, error: fetchError } = await supabase
+        .from('vendors')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        console.error('Error fetching vendor:', fetchError);
+        throw new Error('Failed to fetch vendor information');
       }
       
-      return newVendor;
+      // If vendor exists, return it
+      if (existingVendor) {
+        console.log('Found existing vendor:', existingVendor);
+        return existingVendor;
+      }
+      
+      // If no vendor exists, we'll need to create one
+      console.log('No vendor found, will need to create one');
+      return null;
     },
     enabled: !!user?.id,
   });
+
+  // Auto-create vendor if none exists
+  useEffect(() => {
+    if (user?.id && vendor === null && !isVendorLoading && !vendorError && !createVendorMutation.isPending) {
+      console.log('Auto-creating vendor for user');
+      createVendorMutation.mutate();
+    }
+  }, [user?.id, vendor, isVendorLoading, vendorError, createVendorMutation]);
 
   // Fetch existing product if editing
   const { data: product } = useQuery({
@@ -182,8 +232,10 @@ const ProductEditPage = () => {
   // Save product mutation
   const saveProductMutation = useMutation({
     mutationFn: async (data: ProductFormData) => {
-      if (!vendor?.id) {
-        throw new Error('Vendor information not found. Please try again.');
+      const currentVendor = vendor || (createVendorMutation.data);
+      
+      if (!currentVendor?.id) {
+        throw new Error('Vendor information not available. Please try again.');
       }
 
       const productData = {
@@ -194,7 +246,7 @@ const ProductEditPage = () => {
         sku: data.sku,
         category_id: data.category_id || null,
         is_active: data.is_active,
-        vendor_id: vendor.id,
+        vendor_id: currentVendor.id,
         main_image_url: data.main_image_url || null,
         gallery_image_urls: data.additional_images || [],
       };
@@ -248,12 +300,14 @@ const ProductEditPage = () => {
       return;
     }
 
-    if (isVendorLoading) {
+    const currentVendor = vendor || createVendorMutation.data;
+    
+    if (isVendorLoading || createVendorMutation.isPending) {
       toast.error('Please wait while we set up your vendor information');
       return;
     }
 
-    if (!vendor) {
+    if (!currentVendor) {
       toast.error('Unable to create vendor information. Please try again.');
       return;
     }
@@ -273,7 +327,8 @@ const ProductEditPage = () => {
     handleBackToProducts();
   };
 
-  if (isVendorLoading) {
+  // Loading state for vendor setup
+  if (isVendorLoading || createVendorMutation.isPending) {
     return (
       <Layout>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
@@ -287,6 +342,43 @@ const ProductEditPage = () => {
       </Layout>
     );
   }
+
+  // Error state for vendor creation
+  if (vendorCreationError || (vendorError && !vendor)) {
+    return (
+      <Layout>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
+                <h3 className="text-lg font-medium text-red-800 mb-2">Setup Required</h3>
+                <p className="text-red-600 mb-4">
+                  {vendorCreationError || 'Unable to set up vendor information. This is required to create products.'}
+                </p>
+                <div className="flex gap-2 justify-center">
+                  <Button
+                    onClick={() => createVendorMutation.mutate()}
+                    disabled={createVendorMutation.isPending}
+                    className="bg-red-600 hover:bg-red-700"
+                  >
+                    {createVendorMutation.isPending ? 'Retrying...' : 'Try Again'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleBackToProducts}
+                  >
+                    Back to Products
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  const currentVendor = vendor || createVendorMutation.data;
 
   return (
     <Layout>
@@ -311,6 +403,11 @@ const ProductEditPage = () => {
           <p className="text-gray-500 mt-1 sm:mt-2 text-sm sm:text-base">
             {isEditing ? 'Update your product information' : 'Create a new product for your marketplace'}
           </p>
+          {currentVendor && (
+            <p className="text-sm text-gray-600 mt-2">
+              Shop: <span className="font-medium">{currentVendor.shop_name}</span>
+            </p>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -512,7 +609,7 @@ const ProductEditPage = () => {
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <Button
               type="submit"
-              disabled={saveProductMutation.isPending || isVendorLoading}
+              disabled={saveProductMutation.isPending || !currentVendor}
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
             >
               <Save className="h-4 w-4" />
