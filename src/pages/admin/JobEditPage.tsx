@@ -49,6 +49,9 @@ interface FormData {
   is_open: boolean;
   job_code: string;
   logo_url?: string;
+  education: string;
+  license: string;
+  availability: string;
 }
 
 export default function JobEditPage() {
@@ -72,6 +75,9 @@ export default function JobEditPage() {
     is_open: true,
     job_code: '',
     logo_url: '',
+    education: '',
+    license: '',
+    availability: '',
   });
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -107,6 +113,9 @@ export default function JobEditPage() {
           is_open: data.is_open,
           job_code: data.job_code,
           logo_url: data.logo_url || '',
+          education: data.education || '',
+          license: data.license || '',
+          availability: data.availability || '',
         });
       }
     } catch (error: any) {
@@ -356,22 +365,64 @@ export default function JobEditPage() {
             </div>
           </div>
 
-          {/* Work Approach */}
-          <div>
-            <Label htmlFor="work_approach">Work Approach</Label>
-            <Select
-              value={formData.work_approach}
-              onValueChange={(value) => setFormData({ ...formData, work_approach: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select work approach" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Remote">Remote</SelectItem>
-                <SelectItem value="On-site">On-site</SelectItem>
-                <SelectItem value="Hybrid">Hybrid</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Work Approach and Availability */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <Label htmlFor="work_approach">Work Approach</Label>
+              <Select
+                value={formData.work_approach}
+                onValueChange={(value) => setFormData({ ...formData, work_approach: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select work approach" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Remote">Remote</SelectItem>
+                  <SelectItem value="On-site">On-site</SelectItem>
+                  <SelectItem value="Hybrid">Hybrid</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="availability">Availability</Label>
+              <Select
+                value={formData.availability}
+                onValueChange={(value) => setFormData({ ...formData, availability: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select availability" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Full-time">Full-time</SelectItem>
+                  <SelectItem value="Part-time">Part-time</SelectItem>
+                  <SelectItem value="Contract">Contract</SelectItem>
+                  <SelectItem value="Freelance">Freelance</SelectItem>
+                  <SelectItem value="Internship">Internship</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Education and License */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <Label htmlFor="education">Education Requirements</Label>
+              <Input
+                id="education"
+                value={formData.education}
+                onChange={(e) => setFormData({ ...formData, education: e.target.value })}
+                placeholder="e.g., Bachelor's degree in Computer Science"
+              />
+            </div>
+            <div>
+              <Label htmlFor="license">License Requirements</Label>
+              <Input
+                id="license"
+                value={formData.license}
+                onChange={(e) => setFormData({ ...formData, license: e.target.value })}
+                placeholder="e.g., Valid driver's license, Professional license"
+              />
+            </div>
           </div>
 
           {/* Job Description */}
