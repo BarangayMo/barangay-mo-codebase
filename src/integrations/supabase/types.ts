@@ -757,6 +757,7 @@ export type Database = {
           category: string
           company: string
           created_at: string | null
+          created_by: string | null
           description: string
           education: string | null
           experience: string
@@ -783,6 +784,7 @@ export type Database = {
           category: string
           company: string
           created_at?: string | null
+          created_by?: string | null
           description: string
           education?: string | null
           experience: string
@@ -809,6 +811,7 @@ export type Database = {
           category?: string
           company?: string
           created_at?: string | null
+          created_by?: string | null
           description?: string
           education?: string | null
           experience?: string

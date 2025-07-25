@@ -53,7 +53,7 @@ export default function ResidentJobsPage() {
         const { data, error } = await supabase
           .from('jobs')
           .select('*')
-          .eq('assigned_to', user.id) // Only jobs posted by this user
+          .eq('created_by', user.id) // Only jobs posted by this user
           .order('created_at', { ascending: false });
           
         if (error) throw error;
