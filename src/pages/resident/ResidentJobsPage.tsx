@@ -161,6 +161,9 @@ export default function ResidentJobsPage() {
           title="Job Management"
           description={`${jobs.length} total jobs • ${openJobs.length} active • ${closedJobs.length} closed`}
           breadcrumbItems={[{
+            label: "Dashboard",
+            href: "/resident"
+          }, {
             label: "Jobs",
             href: "/resident/jobs"
           }, {
