@@ -251,37 +251,8 @@ export default function JobEditPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Job Code */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <Label htmlFor="job_code">Job Code</Label>
-              <Input
-                id="job_code"
-                value={formData.job_code}
-                onChange={(e) => setFormData({ ...formData, job_code: e.target.value })}
-                placeholder="e.g., JOB-001"
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="is_open">Job Status</Label>
-              <Select
-                value={formData.is_open ? "true" : "false"}
-                onValueChange={(value) => setFormData({ ...formData, is_open: value === "true" })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="true">Open</SelectItem>
-                  <SelectItem value="false">Closed</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
           {/* Job Title and Company */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
             <div>
               <Label htmlFor="title">Job Title</Label>
               <Input
@@ -289,6 +260,7 @@ export default function JobEditPage() {
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 required
+                placeholder="e.g., Software Developer"
               />
             </div>
             <div>
@@ -298,12 +270,13 @@ export default function JobEditPage() {
                 value={formData.company}
                 onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                 required
+                placeholder="Company name"
               />
             </div>
           </div>
 
           {/* Location and Category */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
             <div>
               <Label htmlFor="location">Location</Label>
               <Input
@@ -311,6 +284,7 @@ export default function JobEditPage() {
                 value={formData.location}
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                 required
+                placeholder="e.g., Manila, Philippines"
               />
             </div>
             <div>
@@ -336,14 +310,14 @@ export default function JobEditPage() {
           </div>
 
           {/* Salary and Experience */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
             <div>
-              <Label htmlFor="salary">Salary Range</Label>
+              <Label htmlFor="salary">Salary Range (Optional)</Label>
               <Input
                 id="salary"
                 value={formData.salary}
                 onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
-                placeholder="e.g., $50,000 - $70,000"
+                placeholder="e.g., ₱25,000 - ₱35,000"
               />
             </div>
             <div>
@@ -365,64 +339,22 @@ export default function JobEditPage() {
             </div>
           </div>
 
-          {/* Work Approach and Availability */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <Label htmlFor="work_approach">Work Approach</Label>
-              <Select
-                value={formData.work_approach}
-                onValueChange={(value) => setFormData({ ...formData, work_approach: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select work approach" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Remote">Remote</SelectItem>
-                  <SelectItem value="On-site">On-site</SelectItem>
-                  <SelectItem value="Hybrid">Hybrid</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="availability">Availability</Label>
-              <Select
-                value={formData.availability}
-                onValueChange={(value) => setFormData({ ...formData, availability: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select availability" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Full-time">Full-time</SelectItem>
-                  <SelectItem value="Part-time">Part-time</SelectItem>
-                  <SelectItem value="Contract">Contract</SelectItem>
-                  <SelectItem value="Freelance">Freelance</SelectItem>
-                  <SelectItem value="Internship">Internship</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Education and License */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <Label htmlFor="education">Education Requirements</Label>
-              <Input
-                id="education"
-                value={formData.education}
-                onChange={(e) => setFormData({ ...formData, education: e.target.value })}
-                placeholder="e.g., Bachelor's degree in Computer Science"
-              />
-            </div>
-            <div>
-              <Label htmlFor="license">License Requirements</Label>
-              <Input
-                id="license"
-                value={formData.license}
-                onChange={(e) => setFormData({ ...formData, license: e.target.value })}
-                placeholder="e.g., Valid driver's license, Professional license"
-              />
-            </div>
+          {/* Work Approach */}
+          <div>
+            <Label htmlFor="work_approach">Work Approach (Optional)</Label>
+            <Select
+              value={formData.work_approach}
+              onValueChange={(value) => setFormData({ ...formData, work_approach: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select work approach" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Remote">Remote</SelectItem>
+                <SelectItem value="On-site">On-site</SelectItem>
+                <SelectItem value="Hybrid">Hybrid</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Job Description */}
@@ -445,19 +377,9 @@ export default function JobEditPage() {
             />
           </div>
 
-          {/* Qualifications */}
-          <div>
-            <Label>Required Qualifications</Label>
-            <DraggableArrayInput
-              values={formData.qualifications}
-              onChange={(value) => setFormData({ ...formData, qualifications: value })}
-              placeholder="Add a required qualification..."
-            />
-          </div>
-
           {/* Skills */}
           <div>
-            <Label>Required Skills</Label>
+            <Label>Required Skills (Optional)</Label>
             <DraggableArrayInput
               values={formData.skills}
               onChange={(value) => setFormData({ ...formData, skills: value })}
@@ -465,21 +387,13 @@ export default function JobEditPage() {
             />
           </div>
 
-          {/* Logo Upload */}
-          <div>
-            <Label>Company Logo</Label>
-            <MediaUpload
-              value={formData.logo_url}
-              onChange={(url) => setFormData({ ...formData, logo_url: url })}
-              onRemove={() => setFormData({ ...formData, logo_url: '' })}
-              accept="image/*"
-              className="mt-2"
-            />
-          </div>
-
           {/* Submit Button */}
-          <div className="flex justify-end">
-            <Button type="submit" disabled={submitting} className="bg-blue-600 hover:bg-blue-700">
+          <div className="flex justify-center pt-4">
+            <Button 
+              type="submit" 
+              disabled={submitting} 
+              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 px-8 py-3"
+            >
               {submitting ? (
                 <>
                   <span className="animate-spin mr-2">⏳</span>
