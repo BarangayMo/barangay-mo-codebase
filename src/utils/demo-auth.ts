@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export const demoLogin = async (role: 'official' | 'resident' | 'superadmin') => {
+  // These credentials should match exactly what's in the Supabase auth system
   const credentials = {
     official: {
       email: 'demo.official@smartbarangay.ph',
@@ -19,25 +20,23 @@ export const demoLogin = async (role: 'official' | 'resident' | 'superadmin') =>
 
   try {
     const { email, password } = credentials[role];
-    console.log(`🎮 Demo login attempt for ${role} with email: ${email}`);
+    console.log(`Attempting demo login for ${role} with email: ${email}`);
     
-    // Clear any existing session first
-    await supabase.auth.signOut();
-    
+    // Make sure we're using the correct Supabase client
     const response = await supabase.auth.signInWithPassword({ 
       email, 
       password 
     });
     
     if (response.error) {
-      console.error('❌ Demo login error:', response.error.message);
+      console.error('Demo login error:', response.error.message);
       return response;
     } else {
-      console.log('✅ Demo login successful:', response.data.user?.email);
+      console.log('Demo login successful:', response.data.user?.email);
       return response;
     }
   } catch (error) {
-    console.error('💥 Unexpected error in demo login:', error);
+    console.error('Unexpected error in demo login:', error);
     throw error;
   }
 };

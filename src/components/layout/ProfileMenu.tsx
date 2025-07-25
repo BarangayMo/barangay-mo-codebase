@@ -24,23 +24,18 @@ export function ProfileMenu() {
   const lastName = profile?.last_name || user?.lastName || '';
   const initials = firstName?.[0] || '' + lastName?.[0] || '';
   
+  // Fix type handling for address.avatar_url
   const avatarUrl = profile?.settings?.address && typeof profile.settings.address === 'object' 
     ? (profile.settings.address as any)?.avatar_url 
     : `https://api.dicebear.com/7.x/initials/svg?seed=${firstName} ${lastName}`;
 
   const handleLogout = async () => {
-    console.log('🚪 ProfileMenu logout initiated');
     setIsLoggingOut(true);
-    
-    try {
-      await logout();
-    } catch (error) {
-      console.error('Logout error in ProfileMenu:', error);
-    } finally {
-      setIsLoggingOut(false);
-    }
+    await logout();
+    setIsLoggingOut(false);
   };
 
+  // Determine profile route based on user role
   const getProfileRoute = () => {
     if (user?.role === 'official' || user?.role === 'superadmin') {
       return '/official-profile';
@@ -92,10 +87,9 @@ export function ProfileMenu() {
           <DropdownMenuItem 
             onClick={handleLogout}
             className="text-red-600 focus:text-red-600"
-            disabled={isLoggingOut}
           >
             <LogOut className="mr-2 h-4 w-4" />
-            {isLoggingOut ? 'Logging out...' : 'Logout'}
+            Logout
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
