@@ -3,7 +3,9 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Content-Type': 'application/json',
 };
 
 interface OfficialRegistrationData {
@@ -22,15 +24,33 @@ interface OfficialRegistrationData {
 }
 
 serve(async (req) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} request received`);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    console.log('Handling CORS preflight request');
+    return new Response(null, { 
+      status: 200,
+      headers: corsHeaders 
+    });
   }
 
   try {
-    console.log('Official registration submission started');
+    // Only allow POST requests
+    if (req.method !== 'POST') {
+      console.log(`Method ${req.method} not allowed`);
+      return new Response(
+        JSON.stringify({ error: 'Method not allowed', method: req.method }),
+        {
+          status: 405,
+          headers: corsHeaders,
+        }
+      );
+    }
 
-    // Create Supabase client with service role for admin operations
+    console.log('Processing official registration submission');
+
+    // Create Supabase admin client with service role
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -42,97 +62,145 @@ serve(async (req) => {
       }
     );
 
-    // Parse request body
-    const registrationData: OfficialRegistrationData = await req.json();
-    console.log('Received registration data:', { 
-      email: registrationData.email, 
-      position: registrationData.position,
-      barangay: registrationData.barangay 
-    });
+    console.log('Supabase admin client created');
+
+    // Parse and validate request body
+    let registrationData: OfficialRegistrationData;
+    try {
+      registrationData = await req.json();
+      console.log('Registration data received:', { 
+        email: registrationData.email, 
+        position: registrationData.position,
+        barangay: registrationData.barangay,
+        first_name: registrationData.first_name,
+        last_name: registrationData.last_name
+      });
+    } catch (parseError) {
+      console.error('Failed to parse request JSON:', parseError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid JSON in request body',
+          details: 'Request must contain valid JSON data'
+        }),
+        {
+          status: 400,
+          headers: corsHeaders,
+        }
+      );
+    }
 
     // Validate required fields
-    const requiredFields = ['first_name', 'last_name', 'phone_number', 'email', 'position', 'barangay', 'municipality', 'province', 'region'];
-    const missingFields = requiredFields.filter(field => !registrationData[field]);
+    const requiredFields = [
+      'first_name', 
+      'last_name', 
+      'phone_number', 
+      'email', 
+      'position', 
+      'barangay', 
+      'municipality', 
+      'province', 
+      'region'
+    ];
+    
+    const missingFields = requiredFields.filter(field => {
+      const value = registrationData[field as keyof OfficialRegistrationData];
+      return !value || (typeof value === 'string' && value.trim() === '');
+    });
     
     if (missingFields.length > 0) {
       console.error('Missing required fields:', missingFields);
       return new Response(
         JSON.stringify({ 
           error: 'Missing required fields', 
-          fields: missingFields 
+          missingFields: missingFields,
+          message: `Please fill in all required fields: ${missingFields.join(', ')}`
         }),
         {
           status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: corsHeaders,
         }
       );
     }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(registrationData.email)) {
+    if (!emailRegex.test(registrationData.email.trim())) {
       console.error('Invalid email format:', registrationData.email);
       return new Response(
-        JSON.stringify({ error: 'Invalid email format' }),
+        JSON.stringify({ 
+          error: 'Invalid email format',
+          message: 'Please enter a valid email address'
+        }),
         {
           status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: corsHeaders,
         }
       );
     }
 
     // Check if email already exists in officials table
+    console.log('Checking for existing registration with email:', registrationData.email);
     const { data: existingOfficial, error: checkError } = await supabaseAdmin
       .from('officials')
       .select('id, email, status')
-      .eq('email', registrationData.email)
-      .single();
+      .eq('email', registrationData.email.trim())
+      .maybeSingle();
 
-    if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "not found" error
+    if (checkError) {
       console.error('Error checking existing official:', checkError);
       return new Response(
-        JSON.stringify({ error: 'Database error while checking existing registration' }),
+        JSON.stringify({ 
+          error: 'Database error',
+          message: 'Unable to verify registration status. Please try again.'
+        }),
         {
           status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: corsHeaders,
         }
       );
     }
 
     if (existingOfficial) {
-      console.log('Official already exists with email:', registrationData.email);
+      console.log('Official already exists with email:', registrationData.email, 'Status:', existingOfficial.status);
       return new Response(
         JSON.stringify({ 
-          error: 'An official registration with this email already exists',
+          error: 'Registration already exists',
+          message: `A registration with email ${registrationData.email} already exists with status: ${existingOfficial.status}`,
           status: existingOfficial.status
         }),
         {
           status: 409,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: corsHeaders,
         }
       );
     }
 
-    // Insert the official registration using service role
+    // Insert the official registration using service role (bypasses RLS)
+    console.log('Inserting new official registration');
+    const insertData = {
+      first_name: registrationData.first_name.trim(),
+      middle_name: registrationData.middle_name?.trim() || null,
+      last_name: registrationData.last_name.trim(),
+      suffix: registrationData.suffix?.trim() || null,
+      phone_number: registrationData.phone_number.trim(),
+      landline_number: registrationData.landline_number?.trim() || null,
+      email: registrationData.email.trim().toLowerCase(),
+      position: registrationData.position.trim(),
+      barangay: registrationData.barangay.trim(),
+      municipality: registrationData.municipality.trim(),
+      province: registrationData.province.trim(),
+      region: registrationData.region.trim(),
+      status: 'pending',
+      is_approved: false,
+      user_id: null, // No user associated yet
+      submitted_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
     const { data: newOfficial, error: insertError } = await supabaseAdmin
       .from('officials')
-      .insert([{
-        first_name: registrationData.first_name,
-        middle_name: registrationData.middle_name || null,
-        last_name: registrationData.last_name,
-        suffix: registrationData.suffix || null,
-        phone_number: registrationData.phone_number,
-        landline_number: registrationData.landline_number || null,
-        email: registrationData.email,
-        position: registrationData.position,
-        barangay: registrationData.barangay,
-        municipality: registrationData.municipality,
-        province: registrationData.province,
-        region: registrationData.region,
-        status: 'pending',
-        is_approved: false,
-        user_id: null // Explicitly set to null since no user is authenticated
-      }])
+      .insert([insertData])
       .select()
       .single();
 
@@ -140,26 +208,37 @@ serve(async (req) => {
       console.error('Error inserting official registration:', insertError);
       return new Response(
         JSON.stringify({ 
-          error: 'Failed to submit registration',
-          details: insertError.message 
+          error: 'Registration failed',
+          message: 'Unable to submit registration. Please try again.',
+          details: process.env.NODE_ENV === 'development' ? insertError.message : undefined
         }),
         {
           status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: corsHeaders,
         }
       );
     }
 
-    console.log('Official registration created successfully:', newOfficial.id);
+    console.log('Official registration created successfully:', {
+      id: newOfficial.id,
+      email: newOfficial.email,
+      status: newOfficial.status
+    });
 
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: 'Registration submitted successfully',
-        id: newOfficial.id
+        message: 'Registration submitted successfully! Your application is now pending review.',
+        data: {
+          id: newOfficial.id,
+          email: newOfficial.email,
+          status: newOfficial.status,
+          submitted_at: newOfficial.submitted_at
+        }
       }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+        headers: corsHeaders,
       }
     );
 
@@ -168,11 +247,12 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: 'Internal server error',
-        message: error.message 
+        message: 'An unexpected error occurred. Please try again later.',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
       }),
       {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: corsHeaders,
       }
     );
   }

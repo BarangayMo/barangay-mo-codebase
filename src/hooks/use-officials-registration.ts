@@ -35,37 +35,43 @@ export const useSubmitOfficialRegistration = () => {
     mutationFn: async (data: OfficialRegistration) => {
       console.log('Submitting official registration:', data);
       
+      // Clean and validate the data before sending
+      const cleanData = {
+        first_name: data.first_name?.trim() || '',
+        middle_name: data.middle_name && typeof data.middle_name === 'string' && data.middle_name.trim() !== '' ? data.middle_name.trim() : undefined,
+        last_name: data.last_name?.trim() || '',
+        suffix: data.suffix && typeof data.suffix === 'string' && data.suffix.trim() !== '' ? data.suffix.trim() : undefined,
+        phone_number: data.phone_number?.trim() || '',
+        landline_number: data.landline_number && typeof data.landline_number === 'string' && data.landline_number.trim() !== '' ? data.landline_number.trim() : undefined,
+        email: data.email?.trim() || '',
+        position: data.position?.trim() || '',
+        barangay: data.barangay?.trim() || '',
+        municipality: data.municipality?.trim() || '',
+        province: data.province?.trim() || '',
+        region: data.region?.trim() || ''
+      };
+
+      console.log('Cleaned data for submission:', cleanData);
+      
       // Use the Edge Function to submit the registration
       const { data: result, error } = await supabase.functions.invoke(
         'submit-official-registration',
         {
-          body: {
-            first_name: data.first_name,
-            middle_name: data.middle_name && typeof data.middle_name === 'string' ? data.middle_name : undefined,
-            last_name: data.last_name,
-            suffix: data.suffix && typeof data.suffix === 'string' ? data.suffix : undefined,
-            phone_number: data.phone_number,
-            landline_number: data.landline_number && typeof data.landline_number === 'string' ? data.landline_number : undefined,
-            email: data.email,
-            position: data.position,
-            barangay: data.barangay,
-            municipality: data.municipality,
-            province: data.province,
-            region: data.region
-          }
+          body: cleanData
         }
       );
 
       if (error) {
-        console.error('Error submitting registration:', error);
-        throw error;
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Failed to submit registration');
       }
 
       if (result?.error) {
-        console.error('Registration error:', result.error);
-        throw new Error(result.error);
+        console.error('Registration error from server:', result);
+        throw new Error(result.message || result.error || 'Registration failed');
       }
 
+      console.log('Registration successful:', result);
       return result;
     },
     onSuccess: () => {

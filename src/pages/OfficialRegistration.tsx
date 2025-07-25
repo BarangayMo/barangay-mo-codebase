@@ -10,6 +10,7 @@ import { RegistrationProgress } from "@/components/ui/registration-progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useSubmitOfficialRegistration } from "@/hooks/use-officials-registration";
+import { useToast } from "@/hooks/use-toast";
 
 interface LocationState {
   role: string;
@@ -44,6 +45,7 @@ export default function OfficialRegistration() {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const locationState = location.state as LocationState;
   const submitRegistration = useSubmitOfficialRegistration();
+  const { toast } = useToast();
 
   // Get registration data from localStorage or location state
   const role = localStorage.getItem('registration_role') || locationState?.role;
@@ -130,7 +132,13 @@ export default function OfficialRegistration() {
     };
 
     try {
-      await submitRegistration.mutateAsync(registrationData);
+      const result = await submitRegistration.mutateAsync(registrationData);
+      
+      // Show success toast
+      toast({
+        title: "Registration Submitted!",
+        description: "Your official registration has been submitted successfully and is now pending review.",
+      });
       
       // Clear localStorage after successful submission
       localStorage.removeItem('registration_role');
@@ -146,8 +154,31 @@ export default function OfficialRegistration() {
           name: `${formData.firstName} ${formData.lastName}`
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration submission failed:', error);
+      
+      // Handle different types of errors
+      let errorMessage = "Failed to submit registration. Please try again.";
+      
+      if (error?.message) {
+        // Check if it's a user-friendly error message
+        if (error.message.includes('already exists') || 
+            error.message.includes('Missing required fields') ||
+            error.message.includes('Invalid email') ||
+            error.message.includes('Registration already exists')) {
+          errorMessage = error.message;
+        } else if (error.message.includes('Failed to fetch') || 
+                   error.message.includes('network')) {
+          errorMessage = "Network error. Please check your connection and try again.";
+        }
+      }
+      
+      // Show error toast
+      toast({
+        title: "Registration Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
     }
   };
 
