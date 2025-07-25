@@ -1,30 +1,16 @@
 
 import { useAuth } from "@/contexts/AuthContext";
-import { useBarangayOfficial } from "@/hooks/use-barangay-official";
-import { useStartConversation } from "@/hooks/useStartConversation";
 import { Layout } from "@/components/layout/Layout";
 import { ConversationsList } from "@/components/messages/ConversationsList";
 import { ChatInterface } from "@/components/messages/ChatInterface";
 import { Helmet } from "react-helmet";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, LogIn } from "lucide-react";
-import { useEffect } from "react";
 
 export default function Messages() {
-  const { isAuthenticated, userRole } = useAuth();
-  const { data: barangayOfficial } = useBarangayOfficial();
-  const { startConversation } = useStartConversation();
+  const { isAuthenticated } = useAuth();
   const { id: conversationId } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-
-  // Auto-redirect residents to their barangay official conversation
-  useEffect(() => {
-    if (isAuthenticated && userRole === 'resident' && !conversationId && barangayOfficial) {
-      // Start conversation with barangay official automatically
-      startConversation(barangayOfficial.id).catch(console.error);
-    }
-  }, [isAuthenticated, userRole, conversationId, barangayOfficial, startConversation]);
 
   // If user is not authenticated, show a login prompt
   if (!isAuthenticated) {
