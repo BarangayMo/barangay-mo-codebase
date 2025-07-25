@@ -54,17 +54,17 @@ export const useSubmitOfficialRegistration = () => {
           email: data.email?.trim() || '',
           position: data.position?.trim() || '',
           
-          // Optional fields - send as null if empty so JSON.stringify includes them
-          middle_name: data.middle_name && typeof data.middle_name === 'string' && data.middle_name.trim() !== '' ? data.middle_name.trim() : null,
-          suffix: data.suffix && typeof data.suffix === 'string' && data.suffix.trim() !== '' ? data.suffix.trim() : null,
+          // Optional fields - send as null if empty, handle undefined properly
+          middle_name: (data.middle_name && typeof data.middle_name === 'string' && data.middle_name.trim() !== '') ? data.middle_name.trim() : null,
+          suffix: (data.suffix && typeof data.suffix === 'string' && data.suffix.trim() !== '') ? data.suffix.trim() : null,
           
           // These may be filled by location/form data later
-          password: data.password?.trim() || null,
-          barangay: data.barangay?.trim() || null,
-          municipality: data.municipality?.trim() || null,
-          province: data.province?.trim() || null,
-          region: data.region?.trim() || null,
-          landline_number: data.landline_number && typeof data.landline_number === 'string' && data.landline_number.trim() !== '' ? data.landline_number.trim() : null
+          password: (data.password && typeof data.password === 'string' && data.password.trim() !== '') ? data.password.trim() : null,
+          barangay: (data.barangay && typeof data.barangay === 'string' && data.barangay.trim() !== '') ? data.barangay.trim() : null,
+          municipality: (data.municipality && typeof data.municipality === 'string' && data.municipality.trim() !== '') ? data.municipality.trim() : null,
+          province: (data.province && typeof data.province === 'string' && data.province.trim() !== '') ? data.province.trim() : null,
+          region: (data.region && typeof data.region === 'string' && data.region.trim() !== '') ? data.region.trim() : null,
+          landline_number: (data.landline_number && typeof data.landline_number === 'string' && data.landline_number.trim() !== '') ? data.landline_number.trim() : null
         };
 
         console.log('Cleaned data for submission:', cleanData);
@@ -85,18 +85,37 @@ export const useSubmitOfficialRegistration = () => {
           
           // Try to get detailed error information from the response
           let errorDetails = null;
+          let detailedErrorMessage = 'Failed to submit registration';
+          
           try {
-            if (error.context && error.context.body) {
-              // Try to parse the response body if available
-              errorDetails = typeof error.context.body === 'string' 
-                ? JSON.parse(error.context.body) 
-                : error.context.body;
+            // For FunctionsHttpError, we need to access the response differently
+            if (error.name === 'FunctionsHttpError' && result) {
+              // The result might contain the error response even when there's an error
+              errorDetails = result;
+            } else if (error.context) {
+              errorDetails = error.context.body || error.context;
+            }
+            
+            if (errorDetails) {
+              console.error('Full Edge Function response details:', errorDetails);
+              
+              // Extract the error message from the response
+              if (typeof errorDetails === 'object') {
+                detailedErrorMessage = errorDetails.message || errorDetails.error || detailedErrorMessage;
+                
+                // Check for specific duplicate errors
+                if (errorDetails.error === 'Official already exists' || 
+                    errorDetails.message?.includes('already exists') ||
+                    errorDetails.message?.includes('duplicate')) {
+                  detailedErrorMessage = errorDetails.message || 'An official with this email already exists in this barangay.';
+                }
+              } else if (typeof errorDetails === 'string') {
+                detailedErrorMessage = errorDetails;
+              }
             }
           } catch (parseError) {
             console.error('Failed to parse error response:', parseError);
           }
-          
-          console.error('Full Edge Function response details:', errorDetails);
           
           // Handle rate limiting (429 errors)
           if (error.message?.includes('429') || error.message?.includes('rate limit')) {
@@ -104,14 +123,8 @@ export const useSubmitOfficialRegistration = () => {
             throw new Error('Too many registration attempts. Please wait a moment before trying again.');
           }
           
-          // If we have detailed error information, use it
-          if (errorDetails) {
-            const errorMessage = errorDetails.message || errorDetails.error || 'Failed to submit registration';
-            console.error('Detailed error message:', errorMessage);
-            throw new Error(errorMessage);
-          }
-          
-          throw new Error(error.message || 'Failed to submit registration');
+          console.error('Detailed error message:', detailedErrorMessage);
+          throw new Error(detailedErrorMessage);
         }
 
         if (result?.error || result?.success === false) {
