@@ -41,11 +41,11 @@ export function FilterButton({ onFiltersChange }: FilterButtonProps) {
 
   const formatCurrency = (value: number) => {
     if (value >= 100000) {
-      return `₹${(value / 100000).toFixed(value % 100000 === 0 ? 0 : 1)}L`;
+      return `₱${(value / 100000).toFixed(value % 100000 === 0 ? 0 : 1)}L`;
     } else if (value >= 1000) {
-      return `₹${(value / 1000).toFixed(value % 1000 === 0 ? 0 : 1)}K`;
+      return `₱${(value / 1000).toFixed(value % 1000 === 0 ? 0 : 1)}K`;
     }
-    return `₹${value}`;
+    return `₱${value}`;
   };
 
   const ratingRanges = [
