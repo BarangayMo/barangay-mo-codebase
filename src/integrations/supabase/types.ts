@@ -1041,6 +1041,81 @@ export type Database = {
         }
         Relationships: []
       }
+      officials: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          barangay: string
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          is_approved: boolean
+          landline_number: string | null
+          last_name: string
+          middle_name: string | null
+          municipality: string
+          phone_number: string
+          position: string
+          province: string
+          region: string
+          rejection_reason: string | null
+          status: string
+          submitted_at: string
+          suffix: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          barangay: string
+          created_at?: string
+          email: string
+          first_name: string
+          id?: string
+          is_approved?: boolean
+          landline_number?: string | null
+          last_name: string
+          middle_name?: string | null
+          municipality: string
+          phone_number: string
+          position: string
+          province: string
+          region: string
+          rejection_reason?: string | null
+          status?: string
+          submitted_at?: string
+          suffix?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          barangay?: string
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          is_approved?: boolean
+          landline_number?: string | null
+          last_name?: string
+          middle_name?: string | null
+          municipality?: string
+          phone_number?: string
+          position?: string
+          province?: string
+          region?: string
+          rejection_reason?: string | null
+          status?: string
+          submitted_at?: string
+          suffix?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       product_categories: {
         Row: {
           created_at: string
@@ -2342,6 +2417,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_official: {
+        Args: { official_id: string }
+        Returns: undefined
+      }
       generate_job_code: {
         Args: Record<PropertyKey, never>
         Returns: string
