@@ -2444,6 +2444,10 @@ export type Database = {
         Args: { password_text: string }
         Returns: string
       }
+      is_approved_official: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
       update_role_user_counts: {
         Args: Record<PropertyKey, never>
         Returns: undefined
