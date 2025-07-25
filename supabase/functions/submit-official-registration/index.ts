@@ -17,7 +17,6 @@ interface OfficialRegistrationData {
   landline_number?: string;
   email: string;
   position: string;
-  password: string;
   barangay: string;
   municipality: string;
   province: string;
@@ -67,18 +66,8 @@ serve(async (req) => {
 
     // Parse and validate request body
     let registrationData: OfficialRegistrationData;
-    let rawBody: string = '';
-    
     try {
-      // Try to parse the JSON first
       registrationData = await req.json();
-      
-      // Convert back to string for logging (avoid cloning issues)
-      rawBody = JSON.stringify(registrationData);
-      console.log('Successfully parsed JSON data:', registrationData);
-      console.log('Raw body (reconstructed):', rawBody);
-      console.log('Request headers:', Object.fromEntries(req.headers.entries()));
-      
       console.log('Registration data received:', { 
         email: registrationData.email, 
         position: registrationData.position,
@@ -88,27 +77,10 @@ serve(async (req) => {
       });
     } catch (parseError) {
       console.error('Failed to parse request JSON:', parseError);
-      
-      // Try to get the raw body for debugging
-      let debugBody = 'Unable to read body';
-      try {
-        const bodyClone = req.clone();
-        debugBody = await bodyClone.text();
-      } catch (bodyError) {
-        console.error('Could not read request body for debugging:', bodyError);
-      }
-      
-      console.error('Raw body for debugging:', debugBody);
-      console.error('Request headers:', Object.fromEntries(req.headers.entries()));
-      
       return new Response(
         JSON.stringify({ 
-          success: false,
           error: 'Invalid JSON in request body',
-          message: 'Request must contain valid JSON data',
-          details: 'Please ensure your request body contains valid JSON and Content-Type is application/json',
-          parseError: parseError.message,
-          receivedBody: debugBody
+          details: 'Request must contain valid JSON data'
         }),
         {
           status: 400,
@@ -117,69 +89,31 @@ serve(async (req) => {
       );
     }
 
-    // Validate required fields - only core registration fields are required
+    // Validate required fields
     const requiredFields = [
       'first_name', 
       'last_name', 
-      'email', 
       'phone_number', 
-      'position'
-    ];
-    
-    // Optional fields that can be null or undefined
-    const optionalFields = [
-      'middle_name',
-      'suffix',
-      'password',
+      'email', 
+      'position', 
       'barangay', 
       'municipality', 
       'province', 
       'region'
     ];
     
-    // Check each required field individually for specific error messages
-    const fieldValidationErrors = [];
-    
-    console.log('Validating required fields:', requiredFields);
-    console.log('Optional fields accepted:', optionalFields);
-    console.log('All received fields:', Object.keys(registrationData || {}));
-    
-    for (const field of requiredFields) {
+    const missingFields = requiredFields.filter(field => {
       const value = registrationData[field as keyof OfficialRegistrationData];
-      if (!value || (typeof value === 'string' && value.trim() === '')) {
-        let fieldDisplayName = field.replace('_', ' ').toLowerCase();
-        switch (field) {
-          case 'first_name': fieldDisplayName = 'First Name'; break;
-          case 'last_name': fieldDisplayName = 'Last Name'; break;
-          case 'phone_number': fieldDisplayName = 'Phone Number'; break;
-          case 'email': fieldDisplayName = 'Email'; break;
-          case 'position': fieldDisplayName = 'Position'; break;
-        }
-        fieldValidationErrors.push({
-          field: field,
-          displayName: fieldDisplayName,
-          message: `${fieldDisplayName} is required and cannot be empty`
-        });
-      }
-    }
+      return !value || (typeof value === 'string' && value.trim() === '');
+    });
     
-    if (fieldValidationErrors.length > 0) {
-      console.error('400 Error - Missing required fields:');
-      console.error('Raw input:', rawBody);
-      console.error('Parsed data:', registrationData);
-      console.error('Expected fields:', requiredFields);
-      console.error('Field validation errors:', fieldValidationErrors);
-      console.error('Received fields:', Object.keys(registrationData || {}));
-      
+    if (missingFields.length > 0) {
+      console.error('Missing required fields:', missingFields);
       return new Response(
         JSON.stringify({ 
-          success: false,
           error: 'Missing required fields', 
-          fieldErrors: fieldValidationErrors,
-          missingFields: fieldValidationErrors.map(err => err.field),
-          receivedFields: Object.keys(registrationData || {}),
-          expectedFields: requiredFields,
-          message: `The following fields are required: ${fieldValidationErrors.map(err => err.displayName).join(', ')}`
+          missingFields: missingFields,
+          message: `Please fill in all required fields: ${missingFields.join(', ')}`
         }),
         {
           status: 400,
@@ -191,16 +125,11 @@ serve(async (req) => {
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(registrationData.email.trim())) {
-      console.error('400 Error - Invalid email format:');
-      console.error('Email provided:', registrationData.email);
-      console.error('Email regex pattern:', emailRegex.source);
-      
+      console.error('Invalid email format:', registrationData.email);
       return new Response(
         JSON.stringify({ 
-          success: false,
           error: 'Invalid email format',
-          message: 'Please enter a valid email address',
-          emailProvided: registrationData.email
+          message: 'Please enter a valid email address'
         }),
         {
           status: 400,
@@ -209,20 +138,18 @@ serve(async (req) => {
       );
     }
 
-    // Check for existing official with same email OR same barangay+email combination (unique constraint)
+    // Check if email already exists in officials table
     console.log('Checking for existing registration with email:', registrationData.email);
-    console.log('Checking for existing registration in barangay:', registrationData.barangay);
-    
-    const { data: existingOfficials, error: checkError } = await supabaseAdmin
+    const { data: existingOfficial, error: checkError } = await supabaseAdmin
       .from('officials')
-      .select('id, email, status, barangay, position')
-      .or(`email.eq.${registrationData.email.trim()},and(barangay.eq.${registrationData.barangay?.trim() || 'unknown'},email.eq.${registrationData.email.trim()})`);
+      .select('id, email, status')
+      .eq('email', registrationData.email.trim())
+      .maybeSingle();
 
     if (checkError) {
       console.error('Error checking existing official:', checkError);
       return new Response(
         JSON.stringify({ 
-          success: false,
           error: 'Database error',
           message: 'Unable to verify registration status. Please try again.'
         }),
@@ -233,79 +160,13 @@ serve(async (req) => {
       );
     }
 
-    if (existingOfficials && existingOfficials.length > 0) {
-      const existingOfficial = existingOfficials[0];
-      console.log('Official already exists:', existingOfficial);
-      
-      let message = '';
-      if (existingOfficial.email === registrationData.email.trim()) {
-        if (existingOfficial.barangay === registrationData.barangay?.trim()) {
-          message = `Duplicate official for this barangay. An official with email ${registrationData.email} already exists in barangay "${registrationData.barangay}" with status: ${existingOfficial.status}`;
-        } else {
-          message = `A registration with email ${registrationData.email} already exists in barangay "${existingOfficial.barangay}" with status: ${existingOfficial.status}`;
-        }
-      }
-      
+    if (existingOfficial) {
+      console.log('Official already exists with email:', registrationData.email, 'Status:', existingOfficial.status);
       return new Response(
         JSON.stringify({ 
-          success: false,
-          error: 'Duplicate official for this barangay',
-          message: message,
-          status: existingOfficial.status,
-          existing: {
-            barangay: existingOfficial.barangay,
-            email: existingOfficial.email,
-            position: existingOfficial.position
-          }
-        }),
-        {
-          status: 400,
-          headers: corsHeaders,
-        }
-      );
-    }
-
-    // Validate password strength only if password is provided
-    if (registrationData.password && registrationData.password.length < 8) {
-      console.error('400 Error - Password validation failed:');
-      console.error('Password length:', registrationData.password?.length || 0);
-      console.error('Minimum required length: 8');
-      
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: 'Password too weak',
-          message: 'Password must be at least 8 characters long',
-          passwordLength: registrationData.password?.length || 0,
-          minimumLength: 8
-        }),
-        {
-          status: 400,
-          headers: corsHeaders,
-        }
-      );
-    }
-
-    // Check if email already exists in auth.users
-    console.log('Checking if email already exists in auth.users:', registrationData.email);
-    
-    let existingAuthUser = null;
-    try {
-      const { data, error } = await supabaseAdmin.auth.admin.getUserByEmail(registrationData.email.trim());
-      if (!error) {
-        existingAuthUser = data;
-      }
-    } catch (authCheckError) {
-      console.log('Email check completed - user not found (this is expected for new registrations)');
-    }
-    
-    if (existingAuthUser?.user) {
-      console.error('Email already exists in auth.users:', registrationData.email);
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: 'Email already registered',
-          message: `The email ${registrationData.email} is already registered in the authentication system.`
+          error: 'Registration already exists',
+          message: `A registration with email ${registrationData.email} already exists with status: ${existingOfficial.status}`,
+          status: existingOfficial.status
         }),
         {
           status: 409,
@@ -313,69 +174,6 @@ serve(async (req) => {
         }
       );
     }
-
-    // Create Supabase Auth user immediately
-    console.log('Creating Supabase Auth user for:', registrationData.email);
-    const createUserPayload = {
-      email: registrationData.email.trim().toLowerCase(),
-      password: registrationData.password,
-      email_confirm: false, // Will send confirmation email
-      user_metadata: {
-        first_name: registrationData.first_name.trim(),
-        middle_name: registrationData.middle_name?.trim() || null,
-        last_name: registrationData.last_name.trim(),
-        suffix: registrationData.suffix?.trim() || null,
-        phone_number: registrationData.phone_number.trim(),
-        landline_number: registrationData.landline_number?.trim() || null,
-        position: registrationData.position.trim(),
-        barangay: registrationData.barangay.trim(),
-        municipality: registrationData.municipality.trim(),
-        province: registrationData.province.trim(),
-        region: registrationData.region.trim(),
-        role: 'official',
-        status: 'pending' // Store status in metadata for immediate access
-      }
-    };
-    
-    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser(createUserPayload);
-
-    if (authError) {
-      console.error('Error creating Supabase Auth user:', authError);
-      let errorMessage = 'Unable to create user account. ';
-      let errorReason = authError.message || 'Unknown auth error';
-      
-      if (authError.message?.includes('already exists') || 
-          authError.message?.includes('already registered') ||
-          authError.message?.includes('User already registered') ||
-          authError.message?.includes('email address is already taken') ||
-          authError.message?.includes('Database error creating new user')) {
-        errorMessage = 'This email is already registered.';
-        errorReason = `The email ${registrationData.email} is already registered in the authentication system.`;
-      } else if (authError.message?.includes('invalid') || authError.message?.includes('format')) {
-        errorMessage += 'Invalid email format.';
-        errorReason = 'The email format is invalid';
-      } else {
-        errorMessage += 'Please try again or contact support.';
-      }
-      
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: 'Failed to create user account',
-          message: errorMessage,
-          reason: errorReason
-        }),
-        {
-          status: 400,
-          headers: corsHeaders,
-        }
-      );
-    }
-
-    console.log('Supabase Auth user created successfully:', { 
-      id: authUser.user.id, 
-      email: authUser.user.email 
-    });
 
     // Insert the official registration using service role (bypasses RLS)
     console.log('Inserting new official registration');
@@ -394,7 +192,7 @@ serve(async (req) => {
       region: registrationData.region.trim(),
       status: 'pending',
       is_approved: false,
-      user_id: authUser.user.id, // Link to the created Auth user
+      user_id: null, // No user associated yet
       submitted_at: new Date().toISOString(),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -408,42 +206,11 @@ serve(async (req) => {
 
     if (insertError) {
       console.error('Error inserting official registration:', insertError);
-      console.error('Insert error code:', insertError.code);
-      console.error('Insert error details:', insertError.details);
-      
-      // Handle duplicate key violations specifically
-      if (insertError.code === '23505' || insertError.message?.includes('duplicate key')) {
-        console.log('Duplicate key violation detected - cleaning up created auth user');
-        
-        // Cleanup: Delete the auth user we just created since DB insert failed
-        try {
-          await supabaseAdmin.auth.admin.deleteUser(authUser.user.id);
-          console.log('Successfully cleaned up auth user:', authUser.user.id);
-        } catch (cleanupError) {
-          console.error('Failed to cleanup auth user:', cleanupError);
-        }
-        
-        return new Response(
-          JSON.stringify({ 
-            success: false,
-            error: 'Official already exists',
-            message: 'An official with this email or position already exists in this barangay.',
-            code: 'DUPLICATE_OFFICIAL'
-          }),
-          {
-            status: 409,
-            headers: corsHeaders,
-          }
-        );
-      }
-      
-      // Handle other database errors
       return new Response(
         JSON.stringify({ 
-          success: false,
           error: 'Registration failed',
           message: 'Unable to submit registration. Please try again.',
-          details: Deno.env.get('NODE_ENV') === 'development' ? insertError.message : undefined
+          details: process.env.NODE_ENV === 'development' ? insertError.message : undefined
         }),
         {
           status: 500,
@@ -479,10 +246,9 @@ serve(async (req) => {
     console.error('Unexpected error in official registration:', error);
     return new Response(
       JSON.stringify({ 
-        success: false,
         error: 'Internal server error',
         message: 'An unexpected error occurred. Please try again later.',
-        details: Deno.env.get('NODE_ENV') === 'development' ? error.message : undefined
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
       }),
       {
         status: 500,

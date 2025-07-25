@@ -88,14 +88,8 @@ export default function OfficialRegistration() {
     email: "",
     phoneNumber: "",
     landlineNumber: "",
-    position: "",
-    password: "",
-    confirmPassword: ""
+    position: ""
   });
-
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'submitted' | 'approved' | 'rejected'>('idle');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -122,25 +116,6 @@ export default function OfficialRegistration() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate password fields
-    if (!formData.password || formData.password.length < 8) {
-      toast({
-        title: "Password Required",
-        description: "Password must be at least 8 characters long.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Passwords Don't Match",
-        description: "Please make sure your passwords match.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     const registrationData = {
       first_name: formData.firstName,
       middle_name: formData.middleName || undefined,
@@ -150,7 +125,6 @@ export default function OfficialRegistration() {
       phone_number: formData.phoneNumber,
       landline_number: formData.landlineNumber || undefined,
       position: formData.position,
-      password: formData.password,
       barangay: barangay!,
       municipality: municipality!,
       province: province!,
@@ -160,14 +134,11 @@ export default function OfficialRegistration() {
     try {
       const result = await submitRegistration.mutateAsync(registrationData);
       
-      // Show success toast with waiting for approval disclaimer
+      // Show success toast
       toast({
         title: "Registration Submitted!",
         description: "Your official registration has been submitted successfully and is now pending review.",
       });
-      
-      // Set submission status to show disclaimer
-      setSubmissionStatus('submitted');
       
       // Clear localStorage after successful submission
       localStorage.removeItem('registration_role');
@@ -175,6 +146,14 @@ export default function OfficialRegistration() {
       localStorage.removeItem('registration_province');
       localStorage.removeItem('registration_municipality');
       localStorage.removeItem('registration_barangay');
+      
+      // Navigate to success page
+      navigate("/register/official-success", {
+        state: {
+          email: formData.email,
+          name: `${formData.firstName} ${formData.lastName}`
+        }
+      });
     } catch (error: any) {
       console.error('Registration submission failed:', error);
       
@@ -364,84 +343,6 @@ export default function OfficialRegistration() {
                 />
               </div>
 
-              <div>
-                <Label htmlFor="password" className="text-gray-700 text-sm">Password *</Label>
-                <div className="relative">
-                  <Input 
-                    id="password" 
-                    name="password" 
-                    type={showPassword ? "text" : "password"}
-                    value={formData.password} 
-                    onChange={handleInputChange} 
-                    required 
-                    className="mt-1 h-12 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500 pr-10" 
-                    placeholder="Minimum 8 characters"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="confirmPassword" className="text-gray-700 text-sm">Confirm Password *</Label>
-                <div className="relative">
-                  <Input 
-                    id="confirmPassword" 
-                    name="confirmPassword" 
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={formData.confirmPassword} 
-                    onChange={handleInputChange} 
-                    required 
-                    className="mt-1 h-12 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500 pr-10" 
-                    placeholder="Re-enter your password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Waiting for Approval Disclaimer */}
-              {submissionStatus === 'submitted' && (
-                <div className="space-y-4">
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
-                    <div className="flex items-center justify-center mb-2">
-                      <div className="w-4 h-4 bg-yellow-400 rounded-full mr-2"></div>
-                      <h3 className="text-sm font-semibold text-yellow-800">Waiting for Approval</h3>
-                    </div>
-                    <p className="text-xs text-yellow-700">
-                      Your registration has been submitted successfully. Please wait for the Super-admin to approve your request. 
-                      You will receive an email confirmation once approved.
-                    </p>
-                  </div>
-                  
-                  <Button 
-                    onClick={() => navigate('/login')} 
-                    variant="outline"
-                    className="w-full border-red-600 text-red-600 hover:bg-red-50 py-3 h-12 text-base font-medium"
-                  >
-                    Return to Login
-                  </Button>
-                </div>
-              )}
-
               <div className="text-center text-xs text-gray-600 leading-4">
                 By submitting this form, you agree with the{" "}
                 <a href="/terms" className="text-red-600 hover:underline">
@@ -453,15 +354,13 @@ export default function OfficialRegistration() {
                 </a>
               </div>
 
-              {submissionStatus !== 'submitted' && (
-                <Button 
-                  type="submit" 
-                  disabled={submitRegistration.isPending} 
-                  className="w-full bg-red-600 hover:bg-red-700 text-white py-3 h-12 text-base font-medium"
-                >
-                  {submitRegistration.isPending ? "Submitting Form..." : "Submit Form"}
-                </Button>
-              )}
+              <Button 
+                type="submit" 
+                disabled={submitRegistration.isPending} 
+                className="w-full bg-red-600 hover:bg-red-700 text-white py-3 h-12 text-base font-medium"
+              >
+                {submitRegistration.isPending ? "Submitting Form..." : "Submit Form"}
+              </Button>
             </form>
           </div>
         </div>
@@ -626,84 +525,6 @@ export default function OfficialRegistration() {
             />
           </div>
 
-          <div>
-            <Label htmlFor="password-desktop" className="text-gray-700">Password *</Label>
-            <div className="relative">
-              <Input 
-                id="password-desktop" 
-                name="password" 
-                type={showPassword ? "text" : "password"}
-                value={formData.password} 
-                onChange={handleInputChange} 
-                required 
-                className="mt-1 h-12 border-gray-300 focus:border-red-500 focus:ring-red-500 pr-10" 
-                placeholder="Minimum 8 characters"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="confirmPassword-desktop" className="text-gray-700">Confirm Password *</Label>
-            <div className="relative">
-              <Input 
-                id="confirmPassword-desktop" 
-                name="confirmPassword" 
-                type={showConfirmPassword ? "text" : "password"}
-                value={formData.confirmPassword} 
-                onChange={handleInputChange} 
-                required 
-                className="mt-1 h-12 border-gray-300 focus:border-red-500 focus:ring-red-500 pr-10" 
-                placeholder="Re-enter your password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                {showConfirmPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Waiting for Approval Disclaimer */}
-          {submissionStatus === 'submitted' && (
-            <div className="space-y-4">
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
-                <div className="flex items-center justify-center mb-2">
-                  <div className="w-4 h-4 bg-yellow-400 rounded-full mr-2"></div>
-                  <h3 className="text-sm font-semibold text-yellow-800">Waiting for Approval</h3>
-                </div>
-                <p className="text-sm text-yellow-700">
-                  Your registration has been submitted successfully. Please wait for the Super-admin to approve your request. 
-                  You will receive an email confirmation once approved.
-                </p>
-              </div>
-              
-              <Button 
-                onClick={() => navigate('/login')} 
-                variant="outline"
-                className="w-full border-red-600 text-red-600 hover:bg-red-50 py-3 h-12 text-base font-medium"
-              >
-                Return to Login
-              </Button>
-            </div>
-          )}
-
           <div className="text-center text-sm text-gray-600 leading-5">
             By submitting this form, you agree with the{" "}
             <a href="/terms" className="text-red-600 hover:underline">
@@ -715,15 +536,13 @@ export default function OfficialRegistration() {
             </a>
           </div>
 
-          {submissionStatus !== 'submitted' && (
-            <Button 
-              type="submit" 
-              disabled={submitRegistration.isPending} 
-              className="w-full bg-red-600 hover:bg-red-700 text-white py-3 h-12 text-base font-medium"
-            >
-              {submitRegistration.isPending ? "Submitting Form..." : "Submit Form"}
-            </Button>
-          )}
+          <Button 
+            type="submit" 
+            disabled={submitRegistration.isPending} 
+            className="w-full bg-red-600 hover:bg-red-700 text-white py-3 h-12 text-base font-medium"
+          >
+            {submitRegistration.isPending ? "Submitting Form..." : "Submit Form"}
+          </Button>
         </form>
       </div>
     </div>
