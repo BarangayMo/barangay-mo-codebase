@@ -29,7 +29,12 @@ serve(async (req) => {
     if (req.method !== 'POST') {
       console.log(`Method ${req.method} not allowed`);
       return new Response(
-        JSON.stringify({ error: 'Method not allowed', method: req.method }),
+        JSON.stringify({ 
+          success: false,
+          error: 'Method not allowed', 
+          reason: `Only POST requests are allowed, received ${req.method}`,
+          method: req.method 
+        }),
         {
           status: 405,
           headers: corsHeaders,
@@ -56,14 +61,36 @@ serve(async (req) => {
     // Parse request body
     let requestData: ApprovalRequest;
     try {
-      requestData = await req.json();
-      console.log('Approval request data received:', { official_id: requestData.official_id });
+      const rawBody = await req.text();
+      console.log('Raw request body:', rawBody);
+      
+      if (!rawBody) {
+        console.error('Empty request body received');
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            error: 'Empty request body',
+            reason: 'Request body is required but was empty'
+          }),
+          {
+            status: 400,
+            headers: corsHeaders,
+          }
+        );
+      }
+
+      requestData = JSON.parse(rawBody);
+      console.log('Parsed approval request data:', requestData);
+      console.log('Request data keys:', Object.keys(requestData));
+      console.log('Official ID received:', requestData.official_id);
     } catch (parseError) {
       console.error('Failed to parse request JSON:', parseError);
       return new Response(
         JSON.stringify({ 
+          success: false,
           error: 'Invalid JSON in request body',
-          details: 'Request must contain valid JSON data'
+          reason: 'Request must contain valid JSON data',
+          details: parseError.message
         }),
         {
           status: 400,
@@ -73,12 +100,14 @@ serve(async (req) => {
     }
 
     // Validate required fields
-    if (!requestData.official_id) {
-      console.error('Missing official_id in request');
+    if (!requestData.official_id || typeof requestData.official_id !== 'string') {
+      console.error('Invalid or missing official_id in request:', requestData);
       return new Response(
         JSON.stringify({ 
-          error: 'Missing required field: official_id',
-          message: 'Please provide the official ID to approve'
+          success: false,
+          error: 'Missing or invalid required field: official_id',
+          reason: 'Please provide a valid official ID to approve',
+          received: requestData
         }),
         {
           status: 400,
@@ -99,8 +128,10 @@ serve(async (req) => {
       console.error('Error fetching official:', fetchError);
       return new Response(
         JSON.stringify({ 
+          success: false,
           error: 'Official not found',
-          message: 'The specified official registration could not be found'
+          reason: 'The specified official registration could not be found',
+          details: fetchError.message
         }),
         {
           status: 404,
@@ -113,8 +144,9 @@ serve(async (req) => {
       console.error('Official not found:', requestData.official_id);
       return new Response(
         JSON.stringify({ 
+          success: false,
           error: 'Official not found',
-          message: 'The specified official registration could not be found'
+          reason: 'The specified official registration could not be found in database'
         }),
         {
           status: 404,
@@ -135,8 +167,9 @@ serve(async (req) => {
       console.log('Official already approved:', official.email);
       return new Response(
         JSON.stringify({ 
+          success: false,
           error: 'Already approved',
-          message: 'This official registration has already been approved'
+          reason: 'This official registration has already been approved'
         }),
         {
           status: 400,
@@ -150,8 +183,9 @@ serve(async (req) => {
       console.error('Official has no password set:', official.email);
       return new Response(
         JSON.stringify({ 
+          success: false,
           error: 'No password set',
-          message: 'This official registration does not have a password set. They need to register again with a password.'
+          reason: 'This official registration does not have a password set. They need to register again with a password.'
         }),
         {
           status: 400,
@@ -160,11 +194,35 @@ serve(async (req) => {
       );
     }
 
+    // Check if email already exists in auth.users
+    console.log('Checking if email already exists in auth.users:', official.email);
+    const { data: existingAuthUser, error: existingUserError } = await supabaseAdmin.auth.admin.listUsers();
+    
+    if (existingUserError) {
+      console.error('Error checking existing auth users:', existingUserError);
+    } else {
+      const emailExists = existingAuthUser.users.some(user => user.email === official.email);
+      if (emailExists) {
+        console.error('Email already exists in auth.users:', official.email);
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            error: 'Email already registered',
+            reason: `The email ${official.email} is already registered in the authentication system. This official may have already been approved or the email is in use by another account.`
+          }),
+          {
+            status: 400,
+            headers: corsHeaders,
+          }
+        );
+      }
+    }
+
     // Create Supabase Auth user
     console.log('Creating Supabase Auth user for:', official.email);
-    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
+    const createUserPayload = {
       email: official.email,
-      password: Math.random().toString(36).slice(-8), // Temporary password, they'll use their stored password hash
+      password: Math.random().toString(36).slice(-12) + 'A1!', // More secure temporary password
       email_confirm: false, // Will send confirmation email
       user_metadata: {
         first_name: official.first_name,
@@ -180,14 +238,48 @@ serve(async (req) => {
         region: official.region,
         role: 'official'
       }
+    };
+    
+    console.log('Auth user creation payload:', {
+      email: createUserPayload.email,
+      hasPassword: !!createUserPayload.password,
+      metadata: createUserPayload.user_metadata
     });
+    
+    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser(createUserPayload);
 
     if (authError) {
       console.error('Error creating Supabase Auth user:', authError);
+      console.error('Auth error details:', {
+        message: authError.message,
+        status: authError.status,
+        code: authError.code || 'no-code'
+      });
+      
+      let errorMessage = 'Unable to create user account. ';
+      let errorReason = authError.message || 'Unknown auth error';
+      
+      if (authError.message?.includes('already exists') || authError.message?.includes('already registered')) {
+        errorMessage += 'This email is already registered.';
+        errorReason = `Email ${official.email} already exists in the authentication system`;
+      } else if (authError.message?.includes('invalid') || authError.message?.includes('format')) {
+        errorMessage += 'Invalid email format.';
+        errorReason = 'The email format is invalid';
+      } else {
+        errorMessage += 'Please try again or contact support.';
+      }
+      
       return new Response(
         JSON.stringify({ 
+          success: false,
           error: 'Failed to create user account',
-          message: authError.message || 'Unable to create user account. This email may already be registered.'
+          reason: errorReason,
+          message: errorMessage,
+          authError: {
+            code: authError.code,
+            status: authError.status,
+            message: authError.message
+          }
         }),
         {
           status: 400,
@@ -213,31 +305,49 @@ serve(async (req) => {
     if (emailError) {
       console.error('Error sending email verification:', emailError);
       // Don't fail the approval if email fails, just log it
+      console.log('Continuing with approval despite email error');
     } else {
       console.log('Email verification sent successfully');
     }
 
     // Update official status to approved and link to Auth user
     console.log('Updating official status to approved');
+    const updateData = {
+      status: 'approved',
+      is_approved: true,
+      user_id: authUser.user.id,
+      approved_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    
+    console.log('Update data for official:', updateData);
+    
     const { error: updateError } = await supabaseAdmin
       .from('officials')
-      .update({
-        status: 'approved',
-        is_approved: true,
-        user_id: authUser.user.id,
-        approved_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', requestData.official_id);
 
     if (updateError) {
       console.error('Error updating official status:', updateError);
+      console.error('Update error details:', {
+        message: updateError.message,
+        code: updateError.code,
+        details: updateError.details
+      });
+      
       // Try to clean up the created auth user
+      console.log('Attempting to cleanup created auth user:', authUser.user.id);
       await supabaseAdmin.auth.admin.deleteUser(authUser.user.id);
+      
       return new Response(
         JSON.stringify({ 
+          success: false,
           error: 'Failed to approve official',
-          message: 'Unable to update official status. Please try again.'
+          reason: 'Unable to update official status in database. The auth user has been cleaned up.',
+          updateError: {
+            message: updateError.message,
+            code: updateError.code
+          }
         }),
         {
           status: 500,
@@ -267,11 +377,17 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Unexpected error in approve-official:', error);
+    console.error('Error stack:', error.stack);
     return new Response(
       JSON.stringify({ 
+        success: false,
         error: 'Internal server error',
-        message: 'An unexpected error occurred. Please try again later.',
-        details: Deno.env.get('NODE_ENV') === 'development' ? error.message : undefined
+        reason: 'An unexpected error occurred during the approval process',
+        message: 'Please try again later or contact support if the issue persists.',
+        details: Deno.env.get('NODE_ENV') === 'development' ? {
+          message: error.message,
+          stack: error.stack
+        } : undefined
       }),
       {
         status: 500,
