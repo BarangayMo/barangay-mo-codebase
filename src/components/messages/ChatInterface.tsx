@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowLeft, Send, MoreVertical } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBarangayOfficial } from '@/hooks/use-barangay-official';
 import { formatDistanceToNow } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -43,7 +44,8 @@ interface Conversation {
 
 export function ChatInterface() {
   const { id: conversationId } = useParams<{ id: string }>();
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
+  const { data: barangayOfficial } = useBarangayOfficial();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -130,12 +132,26 @@ export function ChatInterface() {
         return;
       }
 
-      // Get other participant info
+      // Get other participant ID
       const otherParticipantId = 
         convData.participant_one_id === user.id 
           ? convData.participant_two_id 
           : convData.participant_one_id;
 
+      // Additional validation for residents - they can only chat with their barangay official
+      if (userRole === 'resident') {
+        if (!barangayOfficial) {
+          setError('No barangay official assigned to your area');
+          return;
+        }
+
+        if (otherParticipantId !== barangayOfficial.id) {
+          setError('Residents can only message their assigned barangay official');
+          return;
+        }
+      }
+
+      // Get other participant info
       console.log('Fetching other participant info for ID:', otherParticipantId);
       const { data: participantData, error: participantError } = await supabase
         .from('profiles')

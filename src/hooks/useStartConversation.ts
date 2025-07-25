@@ -2,12 +2,14 @@
 import { useNavigate } from 'react-router-dom';
 import { useMessages } from './useMessages';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBarangayOfficial } from './use-barangay-official';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useStartConversation = () => {
   const navigate = useNavigate();
   const { createOrFindConversation } = useMessages();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, userRole } = useAuth();
+  const { data: barangayOfficial } = useBarangayOfficial();
 
   const startConversation = async (userId: string) => {
     if (!isAuthenticated) {
@@ -21,6 +23,16 @@ export const useStartConversation = () => {
 
     if (userId === user.id) {
       throw new Error('Cannot start conversation with yourself');
+    }
+
+    // Restrict residents to only message their barangay official
+    if (userRole === 'resident') {
+      if (!barangayOfficial) {
+        throw new Error('No barangay official assigned to your area');
+      }
+      if (userId !== barangayOfficial.id) {
+        throw new Error('Residents can only message their assigned barangay official');
+      }
     }
 
     try {

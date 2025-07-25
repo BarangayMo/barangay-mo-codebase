@@ -15,7 +15,7 @@ import { formatDistanceToNow } from "date-fns";
 export default function OfficialProfileView() {
   const { data: official, isLoading, error } = useBarangayOfficial();
   const { startConversation } = useStartConversation();
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -74,6 +74,13 @@ export default function OfficialProfileView() {
   }
 
   if (error || !official) {
+    console.log('OfficialProfileView - Error or no official:', { 
+      error, 
+      official, 
+      userBarangay: user?.barangay,
+      userRole: userRole 
+    });
+    
     return (
       <Layout>
         <div className="max-w-4xl mx-auto px-4 py-8">
@@ -92,15 +99,26 @@ export default function OfficialProfileView() {
               <h3 className="text-lg font-medium text-gray-900 mb-2">
                 No Official Information Available
               </h3>
-              <p className="text-gray-600">
-                {error ? 'Unable to load official information.' : 'No barangay official has been assigned to your area yet.'}
+              <p className="text-gray-600 mb-4">
+                {error ? 'Unable to load official information.' : `No barangay official has been assigned to your area (${user?.barangay}) yet.`}
               </p>
+              {error && (
+                <p className="text-sm text-red-600 mb-4">
+                  Error details: {typeof error === 'string' ? error : error.message || 'Unknown error'}
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>
       </Layout>
     );
   }
+
+  console.log('OfficialProfileView - Rendering official profile:', {
+    official,
+    userBarangay: user?.barangay,
+    officialBarangay: official.barangay
+  });
 
   return (
     <Layout>

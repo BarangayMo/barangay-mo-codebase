@@ -14,9 +14,11 @@ export function useBarangayOfficial() {
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, email, avatar_url')
+        .select('id, first_name, last_name, email, avatar_url, barangay')
         .eq('barangay', user.barangay)
         .eq('role', 'official')
+        .eq('is_approved', true)
+        .order('created_at', { ascending: true })
         .limit(1)
         .maybeSingle();
 
