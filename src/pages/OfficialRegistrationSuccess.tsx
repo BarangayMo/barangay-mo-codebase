@@ -103,11 +103,7 @@ export default function OfficialRegistrationSuccess() {
                 </div>
                 <div className="flex items-start space-x-2">
                   <span className="font-semibold text-red-600 mt-0.5">2.</span>
-                  <span>If approved, an account will be created automatically</span>
-                </div>
-                <div className="flex items-start space-x-2">
-                  <span className="font-semibold text-red-600 mt-0.5">3.</span>
-                  <span>You'll receive login credentials and further instructions</span>
+                  <span>If approved, you'll need to register normally using your approved email address</span>
                 </div>
               </div>
             </div>
@@ -209,11 +205,7 @@ export default function OfficialRegistrationSuccess() {
                 </div>
                 <div className="flex items-start space-x-3">
                   <span className="font-bold text-red-600 text-lg mt-0.5">2.</span>
-                  <span>If approved, an account will be created automatically</span>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <span className="font-bold text-red-600 text-lg mt-0.5">3.</span>
-                  <span>You'll receive login credentials and further instructions</span>
+                  <span>If approved, you'll need to register normally using your approved email address</span>
                 </div>
               </div>
             </div>
