@@ -131,6 +131,10 @@ export default function ResidentJobsPage() {
     }
   };
 
+  const breadcrumbItems = [
+    { label: "Jobs" }
+  ];
+
   if (loading) {
     return (
       <Layout>
