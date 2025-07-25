@@ -4,10 +4,9 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, Phone, Upload, FileText, User, Send } from "lucide-react";
+import { ChevronLeft, Phone, Upload, FileText, User } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { MediaUpload } from "@/components/ui/media-upload";
-import { useToast } from "@/hooks/use-toast";
 
 interface LocationState {
   role: string;
@@ -28,38 +27,16 @@ export default function OfficialDocuments() {
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 768px)");
-  const { toast } = useToast();
   const locationState = location.state as LocationState;
 
   const [phoneNumber, setPhoneNumber] = useState("9171234567");
   const [landlineNumber, setLandlineNumber] = useState("047-222-5173");
-  const [otpSent, setOtpSent] = useState(false);
-  const [otp, setOtp] = useState("");
-  const [isUploadingDocuments, setIsUploadingDocuments] = useState(false);
 
   const [documents, setDocuments] = useState<DocumentUploads>({
     secretariesAppointment: "",
     secretariesGovId: "",
     brgyaptainGovId: ""
   });
-
-  const handleSendOTP = async () => {
-    if (!phoneNumber || phoneNumber.length < 10) {
-      toast({
-        title: "Invalid Phone Number",
-        description: "Please enter a valid phone number",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // TODO: Implement OTP sending logic
-    setOtpSent(true);
-    toast({
-      title: "OTP Sent",
-      description: "Verification code has been sent to your phone",
-    });
-  };
 
   const handleDocumentUpload = (field: keyof DocumentUploads, url: string) => {
     setDocuments(prev => ({ ...prev, [field]: url }));
@@ -75,8 +52,7 @@ export default function OfficialDocuments() {
         ...locationState,
         phoneNumber,
         landlineNumber,
-        documents,
-        otpVerified: otpSent && otp.length === 6
+        documents
       } 
     });
   };
@@ -153,33 +129,6 @@ export default function OfficialDocuments() {
                 />
               </div>
               
-              <Button
-                onClick={handleSendOTP}
-                variant="outline"
-                className="w-full text-red-600 border-red-600 hover:bg-red-50"
-                disabled={otpSent}
-              >
-                <Send className="h-4 w-4 mr-2" />
-                {otpSent ? "OTP Sent" : "SEND OTP"}
-              </Button>
-
-              {otpSent && (
-                <div className="space-y-2">
-                  <Label htmlFor="otp" className="text-sm font-medium text-gray-700">
-                    Enter OTP
-                  </Label>
-                  <Input
-                    id="otp"
-                    type="text"
-                    maxLength={6}
-                    placeholder="Enter 6-digit OTP"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    className="text-center text-lg tracking-wider"
-                  />
-                </div>
-              )}
-
               <div className="flex items-center space-x-2 mt-4">
                 <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
                   <Phone className="h-4 w-4 text-white" />
@@ -314,33 +263,6 @@ export default function OfficialDocuments() {
                 />
               </div>
               
-              <Button
-                onClick={handleSendOTP}
-                variant="outline"
-                className="w-full text-red-600 border-red-600 hover:bg-red-50"
-                disabled={otpSent}
-              >
-                <Send className="h-4 w-4 mr-2" />
-                {otpSent ? "OTP Sent" : "SEND OTP"}
-              </Button>
-
-              {otpSent && (
-                <div className="space-y-2">
-                  <Label htmlFor="otp" className="text-sm font-medium text-gray-700">
-                    Enter OTP
-                  </Label>
-                  <Input
-                    id="otp"
-                    type="text"
-                    maxLength={6}
-                    placeholder="Enter 6-digit OTP"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    className="text-center text-lg tracking-wider"
-                  />
-                </div>
-              )}
-
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
                   <Phone className="h-4 w-4 text-white" />
