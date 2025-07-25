@@ -13,6 +13,7 @@ export interface OfficialRegistration {
   landline_number?: string;
   email: string;
   position: string;
+  password?: string;
   barangay: string;
   municipality: string;
   province: string;
@@ -45,6 +46,7 @@ export const useSubmitOfficialRegistration = () => {
         landline_number: data.landline_number && typeof data.landline_number === 'string' && data.landline_number.trim() !== '' ? data.landline_number.trim() : undefined,
         email: data.email?.trim() || '',
         position: data.position?.trim() || '',
+        password: data.password?.trim() || '',
         barangay: data.barangay?.trim() || '',
         municipality: data.municipality?.trim() || '',
         province: data.province?.trim() || '',
