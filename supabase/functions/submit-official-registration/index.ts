@@ -37,6 +37,30 @@ serve(async (req) => {
   }
 
   try {
+    // Verify required environment variables
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    console.log('Environment check:', {
+      hasSupabaseUrl: !!supabaseUrl,
+      hasServiceKey: !!supabaseServiceKey,
+      urlPrefix: supabaseUrl?.substring(0, 20) + '...' || 'MISSING'
+    });
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Missing required environment variables');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Server configuration error',
+          message: 'Service temporarily unavailable. Please try again later.'
+        }),
+        {
+          status: 500,
+          headers: corsHeaders,
+        }
+      );
+    }
+
     // Only allow POST requests
     if (req.method !== 'POST') {
       console.log(`Method ${req.method} not allowed`);
@@ -53,8 +77,8 @@ serve(async (req) => {
 
     // Create Supabase admin client with service role
     const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      supabaseUrl,
+      supabaseServiceKey,
       {
         auth: {
           autoRefreshToken: false,
@@ -63,7 +87,7 @@ serve(async (req) => {
       }
     );
 
-    console.log('Supabase admin client created');
+    console.log('Supabase admin client created successfully');
 
     // Parse and validate request body
     let registrationData: OfficialRegistrationData;
@@ -148,12 +172,19 @@ serve(async (req) => {
       .eq('email', registrationData.email.trim())
       .maybeSingle();
 
+    console.log('Database check result:', {
+      foundExisting: !!existingOfficial,
+      hasError: !!checkError,
+      errorDetails: checkError?.message || 'none'
+    });
+
     if (checkError) {
       console.error('Error checking existing official:', checkError);
       return new Response(
         JSON.stringify({ 
           error: 'Database error',
-          message: 'Unable to verify registration status. Please try again.'
+          message: 'Unable to verify registration status. Please try again.',
+          details: checkError.message
         }),
         {
           status: 500,
@@ -182,12 +213,20 @@ serve(async (req) => {
     const { data: hashedPassword, error: hashError } = await supabaseAdmin
       .rpc('hash_password', { password_text: registrationData.password.trim() });
 
+    console.log('Password hashing result:', {
+      success: !!hashedPassword,
+      hasError: !!hashError,
+      errorDetails: hashError?.message || 'none',
+      hashLength: hashedPassword?.length || 0
+    });
+
     if (hashError || !hashedPassword) {
       console.error('Error hashing password:', hashError);
       return new Response(
         JSON.stringify({ 
           error: 'Password processing failed',
-          message: 'Unable to process password. Please try again.'
+          message: 'Unable to process password. Please try again.',
+          details: hashError?.message || 'No hash returned'
         }),
         {
           status: 500,
@@ -222,11 +261,27 @@ serve(async (req) => {
       updated_at: new Date().toISOString()
     };
 
+    console.log('Prepared insert data:', {
+      email: insertData.email,
+      position: insertData.position,
+      barangay: insertData.barangay,
+      hasPassword: !!insertData.password_hash,
+      passwordLength: insertData.password_hash?.length || 0
+    });
+
     const { data: newOfficial, error: insertError } = await supabaseAdmin
       .from('officials')
       .insert([insertData])
       .select()
       .single();
+
+    console.log('Database insert result:', {
+      success: !!newOfficial,
+      hasError: !!insertError,
+      errorCode: insertError?.code || 'none',
+      errorMessage: insertError?.message || 'none',
+      newOfficialId: newOfficial?.id || 'none'
+    });
 
     if (insertError) {
       console.error('Error inserting official registration:', insertError);
@@ -234,7 +289,7 @@ serve(async (req) => {
         JSON.stringify({ 
           error: 'Registration failed',
           message: 'Unable to submit registration. Please try again.',
-          details: process.env.NODE_ENV === 'development' ? insertError.message : undefined
+          details: insertError.message || 'Database insertion failed'
         }),
         {
           status: 500,
@@ -268,11 +323,16 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Unexpected error in official registration:', error);
+    console.error('Error stack:', error?.stack || 'No stack trace');
+    console.error('Error type:', typeof error);
+    console.error('Error constructor:', error?.constructor?.name || 'Unknown');
+    
     return new Response(
       JSON.stringify({ 
         error: 'Internal server error',
         message: 'An unexpected error occurred. Please try again later.',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        details: error?.message || error?.toString() || 'Unknown error',
+        errorType: error?.constructor?.name || 'Unknown'
       }),
       {
         status: 500,
