@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Save, X } from "lucide-react";
+import { ArrowLeft, Save, X, Upload, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,8 @@ interface ProductFormData {
   category_id: string;
   is_active: boolean;
   vendor_id?: string;
+  main_image_url?: string;
+  additional_images?: string[];
 }
 
 const ProductEditPage = () => {
@@ -41,7 +43,46 @@ const ProductEditPage = () => {
     sku: "",
     category_id: "",
     is_active: true,
+    main_image_url: "",
+    additional_images: [],
   });
+
+  // Handle image upload
+  const handleImageUpload = async (file: File, isMainImage = false) => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `${user?.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('User Uploads')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('User Uploads')
+        .getPublicUrl(filePath);
+
+      if (isMainImage) {
+        handleInputChange('main_image_url', publicUrl);
+      } else {
+        const currentImages = formData.additional_images || [];
+        handleInputChange('additional_images', [...currentImages, publicUrl]);
+      }
+
+      toast.success('Image uploaded successfully');
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload image');
+    }
+  };
+
+  const removeAdditionalImage = (index: number) => {
+    const currentImages = formData.additional_images || [];
+    const newImages = currentImages.filter((_, i) => i !== index);
+    handleInputChange('additional_images', newImages);
+  };
 
   // Fetch product categories
   const { data: categories } = useQuery({
@@ -81,7 +122,7 @@ const ProductEditPage = () => {
       // If no vendor exists, create one
       const vendorData = {
         user_id: user.id,
-        shop_name: `${user.firstName || 'User'} ${user.lastName || 'Shop'}`,
+        shop_name: `${user.name || user.firstName || 'User'} Shop`,
         contact_email: user.email || '',
         contact_phone: '',
         description: '',
@@ -132,6 +173,8 @@ const ProductEditPage = () => {
         category_id: product.category_id || "",
         is_active: product.is_active ?? true,
         vendor_id: product.vendor_id || "",
+        main_image_url: product.main_image_url || "",
+        additional_images: product.gallery_image_urls || [],
       });
     }
   }, [product]);
@@ -152,6 +195,8 @@ const ProductEditPage = () => {
         category_id: data.category_id || null,
         is_active: data.is_active,
         vendor_id: vendor.id,
+        main_image_url: data.main_image_url || null,
+        gallery_image_urls: data.additional_images || [],
       };
 
       if (isEditing && id) {
@@ -178,7 +223,7 @@ const ProductEditPage = () => {
     },
   });
 
-  const handleInputChange = (field: keyof ProductFormData, value: string | boolean) => {
+  const handleInputChange = (field: keyof ProductFormData, value: string | boolean | string[]) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -360,6 +405,106 @@ const ProductEditPage = () => {
                   onCheckedChange={(checked) => handleInputChange('is_active', checked)}
                 />
                 <Label htmlFor="is_active">Active Product</Label>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Image Upload Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Product Images</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Main Image */}
+              <div className="space-y-2">
+                <Label>Main Product Image</Label>
+                <div className="flex items-center gap-4">
+                  {formData.main_image_url && (
+                    <div className="relative">
+                      <img 
+                        src={formData.main_image_url} 
+                        alt="Main product" 
+                        className="w-20 h-20 object-cover rounded-md border"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
+                        onClick={() => handleInputChange('main_image_url', '')}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleImageUpload(file, true);
+                      }}
+                      className="hidden"
+                      id="main-image-upload"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('main-image-upload')?.click()}
+                      className="flex items-center gap-2"
+                    >
+                      <Upload className="h-4 w-4" />
+                      {formData.main_image_url ? 'Change Main Image' : 'Upload Main Image'}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Images */}
+              <div className="space-y-2">
+                <Label>Additional Images</Label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {formData.additional_images?.map((imageUrl, index) => (
+                    <div key={index} className="relative">
+                      <img 
+                        src={imageUrl} 
+                        alt={`Additional ${index + 1}`} 
+                        className="w-full h-20 object-cover rounded-md border"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
+                        onClick={() => removeAdditionalImage(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                  <div className="flex items-center justify-center h-20 border-2 border-dashed border-gray-300 rounded-md hover:border-gray-400">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleImageUpload(file, false);
+                      }}
+                      className="hidden"
+                      id="additional-image-upload"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => document.getElementById('additional-image-upload')?.click()}
+                      className="h-full w-full flex flex-col items-center gap-1 text-gray-500"
+                    >
+                      <Plus className="h-5 w-5" />
+                      <span className="text-xs">Add Image</span>
+                    </Button>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
