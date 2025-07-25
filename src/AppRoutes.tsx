@@ -3,6 +3,8 @@ import { Layout } from "@/components/layout/Layout";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import OfficialRegistration from "@/pages/OfficialRegistration";
+import OfficialRegistrationSuccess from "@/pages/OfficialRegistrationSuccess";
 import RoleSelection from "@/pages/RoleSelection";
 import LocationSelection from "@/pages/LocationSelection";
 import OfficialsInfo from "@/pages/OfficialsInfo";
@@ -120,6 +122,8 @@ export function AppRoutes() {
       <Route path="/login" element={<Login />} />
       {/* Registration flow routes */}
       <Route path="/register" element={<Register />} />
+      <Route path="/register/official" element={<OfficialRegistration />} />
+      <Route path="/register/official-success" element={<OfficialRegistrationSuccess />} />
       <Route path="/register/role" element={<RoleSelection />} />
       <Route path="/register/location" element={<LocationSelection />} />
       <Route path="/register/officials" element={<OfficialsInfo />} />
