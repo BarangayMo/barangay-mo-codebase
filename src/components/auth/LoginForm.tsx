@@ -7,7 +7,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { demoLogin } from "@/utils/demo-auth";
-import { Fingerprint } from "lucide-react";
 
 export const LoginForm = () => {
   const { login } = useAuth();
@@ -23,30 +22,36 @@ export const LoginForm = () => {
     setLoginError(null);
     
     try {
+      console.log('🔐 LoginForm: Attempting login for', email);
       const { error } = await login(email, password);
       
       if (error) {
-        console.error("Login error:", error.message);
+        console.error("❌ Login error:", error.message);
+        const errorMessage = error.message.includes('Invalid login credentials') 
+          ? 'Invalid email or password' 
+          : error.message;
+        
         toast({
           variant: "destructive",
           title: "Login failed",
-          description: error.message
+          description: errorMessage
         });
-        setLoginError(error.message);
+        setLoginError(errorMessage);
       } else {
-        console.log("Login form: Login successful, waiting for redirect...");
-        // Clear form on success
+        console.log("✅ Login form: Login successful");
         setEmail("");
         setPassword("");
+        setLoginError(null);
       }
     } catch (err: any) {
-      console.error("Unexpected login error:", err);
+      console.error("💥 Unexpected login error:", err);
+      const errorMessage = "An unexpected error occurred. Please try again.";
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: "An unexpected error occurred"
+        description: errorMessage
       });
-      setLoginError("An unexpected error occurred");
+      setLoginError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -57,28 +62,34 @@ export const LoginForm = () => {
     setLoginError(null);
     
     try {
-      console.log(`Starting demo login for ${role}`);
+      console.log(`🎮 Demo login for ${role}`);
       const { error } = await demoLogin(role);
       
       if (error) {
-        console.error("Demo login error:", error);
+        console.error("❌ Demo login error:", error);
+        const errorMessage = error.message.includes('Invalid login credentials')
+          ? 'Demo account not found or credentials invalid'
+          : error.message;
+        
         toast({
           variant: "destructive",
           title: "Demo login failed",
-          description: error.message
+          description: errorMessage
         });
-        setLoginError(error.message);
+        setLoginError(errorMessage);
       } else {
-        console.log("Demo login successful, waiting for redirect...");
+        console.log("✅ Demo login successful");
+        setLoginError(null);
       }
     } catch (err: any) {
-      console.error("Unexpected demo login error:", err);
+      console.error("💥 Unexpected demo login error:", err);
+      const errorMessage = "Demo login failed. Please try again.";
       toast({
         variant: "destructive",
         title: "Demo login failed",
-        description: err.message || "An unexpected error occurred"
+        description: errorMessage
       });
-      setLoginError(err.message || "An unexpected error occurred");
+      setLoginError(errorMessage);
     } finally {
       setIsLoading(false);
     }
