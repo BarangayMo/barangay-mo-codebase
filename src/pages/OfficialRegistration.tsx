@@ -420,15 +420,25 @@ export default function OfficialRegistration() {
 
               {/* Waiting for Approval Disclaimer */}
               {submissionStatus === 'submitted' && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
-                  <div className="flex items-center justify-center mb-2">
-                    <div className="w-4 h-4 bg-yellow-400 rounded-full mr-2"></div>
-                    <h3 className="text-sm font-semibold text-yellow-800">Waiting for Approval</h3>
+                <div className="space-y-4">
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+                    <div className="flex items-center justify-center mb-2">
+                      <div className="w-4 h-4 bg-yellow-400 rounded-full mr-2"></div>
+                      <h3 className="text-sm font-semibold text-yellow-800">Waiting for Approval</h3>
+                    </div>
+                    <p className="text-xs text-yellow-700">
+                      Your registration has been submitted successfully. Please wait for the Super-admin to approve your request. 
+                      You will receive an email confirmation once approved.
+                    </p>
                   </div>
-                  <p className="text-xs text-yellow-700">
-                    Your registration has been submitted successfully. Please wait for the Super-admin to approve your request. 
-                    You will receive an email confirmation once approved.
-                  </p>
+                  
+                  <Button 
+                    onClick={() => navigate('/login')} 
+                    variant="outline"
+                    className="w-full border-red-600 text-red-600 hover:bg-red-50 py-3 h-12 text-base font-medium"
+                  >
+                    Return to Login
+                  </Button>
                 </div>
               )}
 
@@ -443,13 +453,15 @@ export default function OfficialRegistration() {
                 </a>
               </div>
 
-              <Button 
-                type="submit" 
-                disabled={submitRegistration.isPending} 
-                className="w-full bg-red-600 hover:bg-red-700 text-white py-3 h-12 text-base font-medium"
-              >
-                {submitRegistration.isPending ? "Submitting Form..." : "Submit Form"}
-              </Button>
+              {submissionStatus !== 'submitted' && (
+                <Button 
+                  type="submit" 
+                  disabled={submitRegistration.isPending} 
+                  className="w-full bg-red-600 hover:bg-red-700 text-white py-3 h-12 text-base font-medium"
+                >
+                  {submitRegistration.isPending ? "Submitting Form..." : "Submit Form"}
+                </Button>
+              )}
             </form>
           </div>
         </div>
@@ -670,15 +682,25 @@ export default function OfficialRegistration() {
 
           {/* Waiting for Approval Disclaimer */}
           {submissionStatus === 'submitted' && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
-              <div className="flex items-center justify-center mb-2">
-                <div className="w-4 h-4 bg-yellow-400 rounded-full mr-2"></div>
-                <h3 className="text-sm font-semibold text-yellow-800">Waiting for Approval</h3>
+            <div className="space-y-4">
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+                <div className="flex items-center justify-center mb-2">
+                  <div className="w-4 h-4 bg-yellow-400 rounded-full mr-2"></div>
+                  <h3 className="text-sm font-semibold text-yellow-800">Waiting for Approval</h3>
+                </div>
+                <p className="text-sm text-yellow-700">
+                  Your registration has been submitted successfully. Please wait for the Super-admin to approve your request. 
+                  You will receive an email confirmation once approved.
+                </p>
               </div>
-              <p className="text-sm text-yellow-700">
-                Your registration has been submitted successfully. Please wait for the Super-admin to approve your request. 
-                You will receive an email confirmation once approved.
-              </p>
+              
+              <Button 
+                onClick={() => navigate('/login')} 
+                variant="outline"
+                className="w-full border-red-600 text-red-600 hover:bg-red-50 py-3 h-12 text-base font-medium"
+              >
+                Return to Login
+              </Button>
             </div>
           )}
 
@@ -693,13 +715,15 @@ export default function OfficialRegistration() {
             </a>
           </div>
 
-          <Button 
-            type="submit" 
-            disabled={submitRegistration.isPending} 
-            className="w-full bg-red-600 hover:bg-red-700 text-white py-3 h-12 text-base font-medium"
-          >
-            {submitRegistration.isPending ? "Submitting Form..." : "Submit Form"}
-          </Button>
+          {submissionStatus !== 'submitted' && (
+            <Button 
+              type="submit" 
+              disabled={submitRegistration.isPending} 
+              className="w-full bg-red-600 hover:bg-red-700 text-white py-3 h-12 text-base font-medium"
+            >
+              {submitRegistration.isPending ? "Submitting Form..." : "Submit Form"}
+            </Button>
+          )}
         </form>
       </div>
     </div>
