@@ -21,8 +21,16 @@ interface PageHeaderProps {
     label: string;
     onClick: () => void;
     icon?: React.ReactNode;
-    variant?: "default" | "dashboard";
+    variant?: "default" | "dashboard" | "destructive" | "outline" | "secondary" | "ghost";
+    disabled?: boolean;
   };
+  secondaryActions?: Array<{
+    label: string;
+    onClick: () => void;
+    icon?: React.ReactNode;
+    variant?: "default" | "dashboard" | "destructive" | "outline" | "secondary" | "ghost";
+    disabled?: boolean;
+  }>;
   className?: string;
 }
 
@@ -31,6 +39,7 @@ export function DashboardPageHeader({
   description,
   breadcrumbItems,
   actionButton,
+  secondaryActions,
   className,
 }: PageHeaderProps) {
   const { userRole } = useAuth();
@@ -94,20 +103,45 @@ export function DashboardPageHeader({
           <h1 className="text-3xl font-bold">{title}</h1>
           {description && <p className="mt-2 text-gray-500">{description}</p>}
         </div>
-        {actionButton && (
-          <button
-            onClick={actionButton.onClick}
-            className={cn(
-              "inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors",
-              actionButton.variant === "dashboard"
-                ? "bg-blue-600 text-white hover:bg-blue-700"
-                : "bg-gray-900 text-white hover:bg-gray-800"
-            )}
-          >
-            {actionButton.icon}
-            {actionButton.label}
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {secondaryActions && secondaryActions.map((action, index) => (
+            <button
+              key={index}
+              onClick={action.onClick}
+              disabled={action.disabled}
+              className={cn(
+                "inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors",
+                action.variant === "dashboard"
+                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  : action.variant === "outline"
+                  ? "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  : "bg-gray-900 text-white hover:bg-gray-800",
+                action.disabled && "opacity-50 cursor-not-allowed"
+              )}
+            >
+              {action.icon}
+              {action.label}
+            </button>
+          ))}
+          {actionButton && (
+            <button
+              onClick={actionButton.onClick}
+              disabled={actionButton.disabled}
+              className={cn(
+                "inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors",
+                actionButton.variant === "dashboard"
+                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  : actionButton.variant === "outline"
+                  ? "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  : "bg-gray-900 text-white hover:bg-gray-800",
+                actionButton.disabled && "opacity-50 cursor-not-allowed"
+              )}
+            >
+              {actionButton.icon}
+              {actionButton.label}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

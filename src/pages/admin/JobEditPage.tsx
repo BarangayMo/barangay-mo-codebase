@@ -330,7 +330,7 @@ export default function JobEditPage() {
           description={id === "new" ? "Create a new job posting" : `${job.job_code} • ${job.title}`}
           breadcrumbItems={
             user?.role === 'resident' ? [
-              { label: "Dashboard", href: "/resident" },
+              { label: "Dashboard", href: "/resident-home" },
               { label: "Jobs", href: "/resident/jobs" },
               { label: id === "new" ? "Create Job" : "Edit Job" }
             ] : [
@@ -346,15 +346,17 @@ export default function JobEditPage() {
             variant: "default",
             disabled: saving
           }}
-          secondaryActions={[
-            {
-              label: "Back to List",
-              onClick: () => navigate(user?.role === 'resident' ? '/resident/jobs' : '/admin/jobs/all'),
-              icon: <ArrowLeft className="h-4 w-4" />,
-              variant: "ghost"
-            }
-          ]}
         />
+
+        <div className="mb-4">
+          <button
+            onClick={() => navigate(user?.role === 'resident' ? '/resident/jobs' : '/admin/jobs/all')}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors border border-gray-300 text-gray-700 hover:bg-gray-50"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to List
+          </button>
+        </div>
 
         {/* Auto-save status - only show for existing jobs */}
         {id && id !== "new" && (
