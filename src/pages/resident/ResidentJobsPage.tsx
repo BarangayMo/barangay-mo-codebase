@@ -1,24 +1,46 @@
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
+import { DashboardPageHeader } from "@/components/dashboard/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
-import { Briefcase, Search, MapPin, Building, Clock, Banknote, Bookmark, BookmarkCheck, Plus } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "@/contexts/AuthContext";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { MapPin, Building, Search, Edit, Briefcase, Calendar, DollarSign, Users, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
-import { Badge } from "@/components/ui/badge";
-import { SavedJobsTab } from "@/components/jobs/SavedJobsTab";
-import { ShareButton } from "@/components/ui/share-button";
+import { useAuth } from "@/contexts/AuthContext";
+import { JobMap } from "@/components/ui/job-map";
+
+interface Job {
+  id: string;
+  title: string;
+  company: string;
+  location: string;
+  category: string;
+  salary: string;
+  experience: string;
+  work_approach: string;
+  description: string;
+  responsibilities: string[];
+  qualifications: string[];
+  skills: string[];
+  is_open: boolean;
+  created_at: string;
+  updated_at: string;
+  job_code: string;
+  logo_url?: string;
+}
 
 export default function ResidentJobsPage() {
-  const [jobs, setJobs] = useState([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [savedJobs, setSavedJobs] = useState({});
-  const [activeTab, setActiveTab] = useState("all"); // "all" or "saved"
-  const { isAuthenticated, user } = useAuth();
+  const [activeTab, setActiveTab] = useState("all");
+  const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -37,21 +59,8 @@ export default function ResidentJobsPage() {
         if (error) throw error;
         
         setJobs(data || []);
-        
-        // If authenticated, fetch saved jobs
-        if (isAuthenticated && user) {
-          const { data: savedJobsData, error: savedJobsError } = await supabase
-            .from('saved_jobs')
-            .select('job_id')
-            .eq('user_id', user.id);
-            
-          if (!savedJobsError && savedJobsData) {
-            const savedJobsMap = {};
-            savedJobsData.forEach(item => {
-              savedJobsMap[item.job_id] = true;
-            });
-            setSavedJobs(savedJobsMap);
-          }
+        if (data && data.length > 0) {
+          setSelectedJob(data[0]);
         }
       } catch (error) {
         console.error('Error fetching jobs:', error);
@@ -66,206 +75,395 @@ export default function ResidentJobsPage() {
     };
     
     fetchJobs();
-  }, [isAuthenticated, user, toast]);
+  }, [user, toast]);
 
-  // Filter jobs by search query
-  const filteredJobs = jobs.filter(job => {
-    const query = searchQuery.toLowerCase();
+  const getStatusColor = (isOpen: boolean) => {
+    return isOpen ? "bg-green-100 text-green-800 border-green-200" : "bg-gray-100 text-gray-800 border-gray-200";
+  };
+
+  const getCategoryColor = (category: string) => {
+    const colors = {
+      'Technology': 'bg-blue-100 text-blue-800 border-blue-200',
+      'Healthcare': 'bg-red-100 text-red-800 border-red-200',
+      'Education': 'bg-purple-100 text-purple-800 border-purple-200',
+      'Finance': 'bg-green-100 text-green-800 border-green-200',
+      'Marketing': 'bg-orange-100 text-orange-800 border-orange-200',
+      'Customer Service': 'bg-pink-100 text-pink-800 border-pink-200',
+      'Creative': 'bg-indigo-100 text-indigo-800 border-indigo-200'
+    };
+    return colors[category] || 'bg-gray-100 text-gray-800 border-gray-200';
+  };
+
+  const getWorkApproachColor = (workApproach: string) => {
+    const colors = {
+      'Remote': 'bg-blue-100 text-blue-800 border-blue-200',
+      'On-site': 'bg-orange-100 text-orange-800 border-orange-200',
+      'Hybrid': 'bg-purple-100 text-purple-800 border-purple-200'
+    };
+    return colors[workApproach] || 'bg-gray-100 text-gray-800 border-gray-200';
+  };
+
+  const handleJobSelect = (job: Job) => {
+    setSelectedJob(job);
+  };
+
+  const handleEditJob = (jobId: string) => {
+    navigate(`/admin/jobs/edit/${jobId}`);
+  };
+
+  const filteredJobs = jobs.filter(job => 
+    job.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    job.company.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    job.location.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const openJobs = filteredJobs.filter(job => job.is_open);
+  const closedJobs = filteredJobs.filter(job => !job.is_open);
+
+  const getTabJobs = () => {
+    switch (activeTab) {
+      case 'open':
+        return openJobs;
+      case 'closed':
+        return closedJobs;
+      default:
+        return filteredJobs;
+    }
+  };
+
+  if (loading) {
     return (
-      job.title.toLowerCase().includes(query) ||
-      job.company.toLowerCase().includes(query) ||
-      job.location.toLowerCase().includes(query) ||
-      job.category.toLowerCase().includes(query)
+      <Layout>
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <DashboardPageHeader 
+            title="Job Management" 
+            description="Manage job postings and applications"
+            breadcrumbItems={[{
+              label: "Jobs",
+              href: "/resident/jobs"
+            }, {
+              label: "My Jobs"
+            }]} 
+          />
+          <div className="animate-pulse">
+            <div className="h-64 bg-gray-200 rounded mb-4"></div>
+            <div className="h-32 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </Layout>
     );
-  });
-
-  const viewJobDetails = (jobId) => {
-    navigate(`/jobs/${jobId}`);
-  };
-
-  const handleAddJob = () => {
-    navigate('/admin/jobs/edit/new');
-  };
+  }
 
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">My Jobs</h1>
-            <p className="text-gray-600">Manage your job postings</p>
-          </div>
-          
-          <div className="w-full md:w-auto flex items-center gap-2 mt-4 md:mt-0">
-            <Button 
-              onClick={handleAddJob}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add Job
-            </Button>
-            <div className="relative w-full md:w-80">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <Input 
-                type="search"
-                placeholder="Search jobs..."
-                className="pl-10 border-blue-200 focus:border-blue-500"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+        <DashboardPageHeader
+          title="Job Management"
+          description={`${jobs.length} total jobs • ${openJobs.length} active • ${closedJobs.length} closed`}
+          breadcrumbItems={[{
+            label: "Jobs",
+            href: "/resident/jobs"
+          }, {
+            label: "My Jobs"
+          }]}
+          actionButton={{
+            label: "Add Job",
+            onClick: () => navigate('/admin/jobs/edit/new'),
+            icon: <Plus className="h-4 w-4" />,
+            variant: "dashboard"
+          }}
+        />
+
+        <div className="flex gap-6 h-[calc(100vh-200px)]">
+          {/* Left Panel - Jobs List */}
+          <div className="w-1/2 bg-white rounded-lg border overflow-hidden shadow-sm">
+            <div className="p-6">
+              <h3 className="text-xl font-bold mb-4">Job Listings</h3>
+
+              {/* Tabs */}
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
+                <TabsList className="grid w-full grid-cols-3 mb-4">
+                  <TabsTrigger value="all" className="text-sm">
+                    All <span className="ml-1 text-xs bg-gray-200 px-1 rounded">{filteredJobs.length}</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="open" className="text-sm">
+                    Open <span className="ml-1 text-xs bg-gray-200 px-1 rounded">{openJobs.length}</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="closed" className="text-sm">
+                    Closed <span className="ml-1 text-xs bg-gray-200 px-1 rounded">{closedJobs.length}</span>
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value={activeTab}>
+                  {/* Search and Filters */}
+                  <div className="flex gap-4 mb-4">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                      <Input 
+                        placeholder="Search jobs..." 
+                        className="pl-10" 
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
+                    <Select>
+                      <SelectTrigger className="w-32">
+                        <SelectValue placeholder="Category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="technology">Technology</SelectItem>
+                        <SelectItem value="healthcare">Healthcare</SelectItem>
+                        <SelectItem value="education">Education</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select>
+                      <SelectTrigger className="w-40">
+                        <SelectValue placeholder="Experience" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="entry">Entry Level</SelectItem>
+                        <SelectItem value="mid">Mid Level</SelectItem>
+                        <SelectItem value="senior">Senior Level</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Table */}
+                  <div className="overflow-auto max-h-[500px]">
+                    {getTabJobs().length === 0 ? (
+                      <div className="text-center py-12">
+                        <Briefcase className="mx-auto h-12 w-12 text-gray-400" />
+                        <h3 className="mt-4 text-lg font-medium text-gray-900">No jobs posted yet</h3>
+                        <p className="mt-2 text-gray-500 mb-4">Start by posting your first job</p>
+                        <Button onClick={() => navigate('/admin/jobs/edit/new')} className="bg-blue-600 hover:bg-blue-700">
+                          <Plus className="mr-2 h-4 w-4" />
+                          Post a Job
+                        </Button>
+                      </div>
+                    ) : (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Job Details</TableHead>
+                            <TableHead>Category</TableHead>
+                            <TableHead>Location</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Created</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {getTabJobs().map(job => (
+                            <TableRow 
+                              key={job.id} 
+                              className={`cursor-pointer hover:bg-gray-50 ${selectedJob?.id === job.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''}`}
+                              onClick={() => handleJobSelect(job)}
+                            >
+                              <TableCell className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                                  {job.logo_url ? (
+                                    <img src={job.logo_url} alt="Company logo" className="w-full h-full object-cover rounded-lg" />
+                                  ) : (
+                                    <Building className="h-5 w-5 text-white" />
+                                  )}
+                                </div>
+                                <div>
+                                  <div className="font-medium text-sm">{job.title}</div>
+                                  <div className="text-xs text-gray-500">{job.company}</div>
+                                  <div className="text-xs text-gray-400">{job.job_code}</div>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge className={`text-xs border ${getCategoryColor(job.category)}`}>
+                                  {job.category}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-sm">{job.location}</TableCell>
+                              <TableCell>
+                                <div className="flex flex-col gap-1">
+                                  <Badge className={`text-xs border ${getStatusColor(job.is_open)}`}>
+                                    {job.is_open ? 'Open' : 'Closed'}
+                                  </Badge>
+                                  {job.work_approach && (
+                                    <Badge className={`text-xs border ${getWorkApproachColor(job.work_approach)}`}>
+                                      {job.work_approach}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-sm text-gray-500">
+                                {new Date(job.created_at).toLocaleDateString()}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    )}
+                  </div>
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
-        </div>
-        
-        {/* Tab Navigation */}
-        <div className="flex items-center gap-4 mb-6 border-b">
-          <Button
-            variant="ghost"
-            className={`pb-3 ${activeTab === "all" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500"}`}
-            onClick={() => setActiveTab("all")}
-          >
-            <Briefcase className="mr-2 h-4 w-4" />
-            My Jobs
-          </Button>
-          <Button
-            variant="ghost"
-            className={`pb-3 ${activeTab === "saved" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500"}`}
-            onClick={() => setActiveTab("saved")}
-          >
-            <BookmarkCheck className="mr-2 h-4 w-4" />
-            Saved Jobs
-          </Button>
-        </div>
-        
-        {/* Tab Content */}
-        {activeTab === "all" ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {loading ? (
-              // Loading skeletons
-              Array(6).fill(0).map((_, index) => (
-                <div key={index} className="border rounded-xl overflow-hidden shadow-sm p-6 bg-white">
-                  <Skeleton className="h-6 w-3/4 mb-2" />
-                  <Skeleton className="h-5 w-1/2 mb-4" />
-                  <Skeleton className="h-4 w-full mb-2" />
-                  <Skeleton className="h-4 w-full mb-2" />
-                  <Skeleton className="h-4 w-3/4" />
-                  <div className="mt-4 pt-4 border-t">
-                    <div className="flex flex-wrap gap-2">
-                      <Skeleton className="h-8 w-20" />
-                      <Skeleton className="h-8 w-24" />
-                    </div>
-                  </div>
-                  <div className="mt-4 flex justify-between">
-                    <Skeleton className="h-10 w-28" />
-                    <Skeleton className="h-10 w-10 rounded-full" />
-                  </div>
-                </div>
-              ))
-            ) : filteredJobs.length === 0 ? (
-              <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center py-12">
-                <Briefcase className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-4 text-lg font-medium text-gray-900">No jobs posted yet</h3>
-                <p className="mt-2 text-gray-500 mb-4">Start by posting your first job</p>
-                <Button onClick={handleAddJob} className="bg-blue-600 hover:bg-blue-700">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Post a Job
-                </Button>
-              </div>
-            ) : (
-              filteredJobs.map((job) => (
-                <div key={job.id} className="border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-white">
-                  <div className="p-4 sm:p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex-1 mr-3">
-                        <h3 className="text-lg font-bold text-gray-900 mb-1 line-clamp-2">{job.title}</h3>
-                        <p className="text-gray-600 font-medium">{job.company}</p>
-                      </div>
-                      {job.logo_url ? (
-                        <img 
-                          src={job.logo_url} 
-                          alt={`${job.company} logo`} 
-                          className="w-12 h-12 object-contain rounded-md flex-shrink-0"
-                        />
+
+          {/* Right Panel - Job Details */}
+          <div className="w-1/2 bg-white rounded-lg border overflow-hidden shadow-sm">
+            {selectedJob ? (
+              <div className="p-6 h-full overflow-y-auto">
+                {/* Job Header with Edit Button */}
+                <div className="flex items-start justify-between mb-6">
+                  <div className="flex items-start gap-4 flex-1">
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-md">
+                      {selectedJob.logo_url ? (
+                        <img src={selectedJob.logo_url} alt="Company logo" className="w-full h-full object-cover rounded-lg" />
                       ) : (
-                        <div className="w-12 h-12 bg-blue-100 rounded-md flex items-center justify-center flex-shrink-0">
-                          <Building className="h-6 w-6 text-blue-600" />
-                        </div>
+                        <Building className="h-8 w-8 text-white" />
                       )}
                     </div>
-                    
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center text-gray-600 text-sm">
-                        <MapPin size={14} className="mr-2 text-gray-400 flex-shrink-0" />
-                        <span className="truncate">{job.location}</span>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
+                        <span>{selectedJob.company}</span>
+                        <span>•</span>
+                        <span>{selectedJob.job_code}</span>
                       </div>
-                      
-                      {job.salary && (
-                        <div className="flex items-center text-gray-600 text-sm">
-                          <Banknote size={14} className="mr-2 text-gray-400 flex-shrink-0" />
-                          <span className="truncate">{job.salary}</span>
+                      <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                        {selectedJob.title}
+                      </h2>
+                      <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                        <div className="flex items-center gap-1">
+                          <MapPin className="h-4 w-4" />
+                          <span>{selectedJob.location}</span>
                         </div>
-                      )}
-                      
-                      {job.availability && (
-                        <div className="flex items-center text-gray-600 text-sm">
-                          <Clock size={14} className="mr-2 text-gray-400 flex-shrink-0" />
-                          <span className="truncate">{job.availability}</span>
+                        <div className="flex items-center gap-1">
+                          <Building className="h-4 w-4" />
+                          <span>{selectedJob.category}</span>
                         </div>
-                      )}
-                    </div>
-                    
-                    <div className="mb-4 pt-2 border-t">
-                      <div className="flex flex-wrap gap-2">
-                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
-                          {job.category}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge className={`border ${getStatusColor(selectedJob.is_open)}`}>
+                          {selectedJob.is_open ? "Open" : "Closed"}
                         </Badge>
-                        {job.work_approach && (
-                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
-                            {job.work_approach}
+                        {selectedJob.work_approach && (
+                          <Badge className={`border ${getWorkApproachColor(selectedJob.work_approach)}`}>
+                            {selectedJob.work_approach}
                           </Badge>
                         )}
                       </div>
                     </div>
-                    
-                    {/* Action buttons */}
-                    <div className="flex flex-col gap-2">
-                      <div className="flex gap-2">
-                        <Button 
-                          onClick={() => viewJobDetails(job.id)} 
-                          className="bg-blue-600 hover:bg-blue-700 text-sm flex-1"
-                        >
-                          View Details
-                        </Button>
-                        <Button
-                          onClick={() => navigate(`/admin/jobs/edit/${job.id}`)}
-                          variant="outline"
-                          className="text-sm px-3"
-                        >
-                          Edit
-                        </Button>
-                      </div>
-                      
-                      <div className="flex items-center gap-2 justify-end">
-                        <ShareButton
-                          title={job.title}
-                          description={`Check out this job opportunity: ${job.title} at ${job.company}`}
-                          itemId={job.id}
-                          itemType="job"
-                          variant="ghost"
-                          size="icon"
-                          showLabel={false}
-                          className="text-gray-400 hover:text-gray-600 h-9 w-9 flex-shrink-0"
-                        />
-                      </div>
+                  </div>
+                  
+                  {/* Edit Button */}
+                  <Button 
+                    onClick={() => handleEditJob(selectedJob.id)} 
+                    className="flex items-center gap-2 ml-4 bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <Edit className="h-4 w-4" />
+                    Edit
+                  </Button>
+                </div>
+
+                {/* Map */}
+                {selectedJob.location && (
+                  <div className="mb-6">
+                    <JobMap location={selectedJob.location} />
+                  </div>
+                )}
+
+                {/* Job Details Grid */}
+                <div className="grid grid-cols-2 gap-6 mb-6">
+                  <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+                    <DollarSign className="h-5 w-5 text-green-600" />
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500">Salary Range</h4>
+                      <p className="text-lg font-semibold">{selectedJob.salary || "Not specified"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+                    <Users className="h-5 w-5 text-blue-600" />
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500">Experience</h4>
+                      <p className="text-lg font-semibold">{selectedJob.experience}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+                    <Calendar className="h-5 w-5 text-purple-600" />
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500">Created</h4>
+                      <p className="text-sm">{new Date(selectedJob.created_at).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+                    <Calendar className="h-5 w-5 text-orange-600" />
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500">Updated</h4>
+                      <p className="text-sm">{new Date(selectedJob.updated_at).toLocaleDateString()}</p>
                     </div>
                   </div>
                 </div>
-              ))
+
+                {/* Job Description */}
+                <div className="mb-6">
+                  <h4 className="text-sm font-medium text-gray-500 mb-2">Job Description</h4>
+                  <div 
+                    className="text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none" 
+                    dangerouslySetInnerHTML={{ __html: selectedJob.description }}
+                  />
+                </div>
+
+                {/* Skills and Qualifications */}
+                <div className="grid grid-cols-1 gap-6">
+                  {selectedJob.qualifications && selectedJob.qualifications.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500 mb-2">Qualifications</h4>
+                      <ul className="text-sm text-gray-700 space-y-1">
+                        {selectedJob.qualifications.map((qual, index) => (
+                          <li key={index} className="flex items-start gap-2">
+                            <span className="text-blue-500 mt-1">•</span>
+                            <span>{qual}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  
+                  {selectedJob.responsibilities && selectedJob.responsibilities.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500 mb-2">Key Responsibilities</h4>
+                      <ul className="text-sm text-gray-700 space-y-1">
+                        {selectedJob.responsibilities.map((resp, index) => (
+                          <li key={index} className="flex items-start gap-2">
+                            <span className="text-green-500 mt-1">•</span>
+                            <span>{resp}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {selectedJob.skills && selectedJob.skills.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500 mb-2">Required Skills</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedJob.skills.map((skill, index) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {skill}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                <div className="text-center">
+                  <Briefcase className="mx-auto h-12 w-12 mb-4 text-gray-300" />
+                  <p>Select a job to view details</p>
+                </div>
+              </div>
             )}
           </div>
-        ) : (
-          <SavedJobsTab />
-        )}
+        </div>
       </div>
     </Layout>
   );

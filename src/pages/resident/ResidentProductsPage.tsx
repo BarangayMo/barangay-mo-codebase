@@ -75,7 +75,8 @@ const ResidentProductsPage = () => {
           stock_quantity,
           is_active,
           created_at,
-          vendors (shop_name),
+          vendor_id,
+          vendors!inner (shop_name, user_id),
           product_categories (name)
         `)
         .eq('vendors.user_id', user.id); // Only products from vendors owned by this user
@@ -191,8 +192,8 @@ const ResidentProductsPage = () => {
     <Layout>
       <div className="max-w-7xl mx-auto px-4 py-8">
         <DashboardPageHeader
-          title="My Products"
-          description="Manage your marketplace products"
+          title="Product Management"
+          description="View and manage your marketplace products"
           breadcrumbItems={breadcrumbItems}
           actionButton={{
             label: "Add Product",
