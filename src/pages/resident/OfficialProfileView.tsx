@@ -97,16 +97,24 @@ export default function OfficialProfileView() {
             <CardContent className="p-8 text-center">
               <Building className="mx-auto h-12 w-12 text-gray-400 mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No Official Information Available
+                No Approved Officials Available
               </h3>
               <p className="text-gray-600 mb-4">
-                {error ? 'Unable to load official information.' : `No barangay official has been assigned to your area (${user?.barangay}) yet.`}
+                {error ? 
+                  'Unable to load official information due to a technical error.' : 
+                  `No approved officials for your barangay (${user?.barangay}) yet. Please check back later or contact your local barangay office.`
+                }
               </p>
               {error && (
                 <p className="text-sm text-red-600 mb-4">
                   Error details: {typeof error === 'string' ? error : error.message || 'Unknown error'}
                 </p>
               )}
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  Once an official is approved for your barangay, you'll be able to view their profile and contact them through the messaging system.
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>
