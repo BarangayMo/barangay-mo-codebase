@@ -69,17 +69,12 @@ export const useSubmitOfficialRegistration = () => {
 
       
         console.log('Cleaned data for submission:', cleanData);
-        
-        // Debug: Check what we're actually sending
-        const bodyString = JSON.stringify(cleanData);
-        console.log('JSON body string:', bodyString);
-        console.log('Body string length:', bodyString.length);
       
         // Use the Edge Function to submit the registration
         const { data: result, error } = await supabase.functions.invoke(
           'submit-official-registration',
           {
-            body: cleanData,  // Don't stringify here - let Supabase handle it
+            body: cleanData,
             headers: {
               'Content-Type': 'application/json',
             }
@@ -88,51 +83,61 @@ export const useSubmitOfficialRegistration = () => {
         
         console.log('Supabase invoke result:', result);
         console.log('Supabase invoke error:', error);
-
+        
         if (error) {
           console.error('Edge function error:', error);
           
-          // Try to get detailed error information from the response
+          // Try to get the actual response body from FunctionsHttpError
           let errorDetails = null;
           let detailedErrorMessage = 'Failed to submit registration';
           
           try {
-            // For FunctionsHttpError, we need to access the response differently
-            if (error.name === 'FunctionsHttpError' && result) {
-              // The result might contain the error response even when there's an error
-              errorDetails = result;
-            } else if (error.context) {
-              errorDetails = error.context.body || error.context;
-            }
-            
-            if (errorDetails) {
-              console.error('Full Edge Function response details:', errorDetails);
+            // For newer versions of Supabase, the error response might be in different places
+            if (error.context?.response) {
+              // Try to read the response
+              const responseText = await error.context.response.text();
+              console.error('Full Edge Function response text:', responseText);
               
-              // Extract the error message from the response
-              if (typeof errorDetails === 'object') {
-                detailedErrorMessage = errorDetails.message || errorDetails.error || detailedErrorMessage;
-                
-                // Check for specific duplicate errors
-                if (errorDetails.error === 'Official already exists' || 
-                    errorDetails.message?.includes('already exists') ||
-                    errorDetails.message?.includes('duplicate')) {
-                  detailedErrorMessage = errorDetails.message || 'An official with this email already exists in this barangay.';
-                }
-              } else if (typeof errorDetails === 'string') {
-                detailedErrorMessage = errorDetails;
+              try {
+                errorDetails = JSON.parse(responseText);
+                console.error('Parsed Edge Function response:', errorDetails);
+              } catch (jsonError) {
+                console.error('Response is not JSON:', responseText);
+                errorDetails = { error: responseText };
               }
+            } else if (error.context?.body) {
+              // Alternative path for older versions
+              errorDetails = typeof error.context.body === 'string' 
+                ? JSON.parse(error.context.body) 
+                : error.context.body;
+              console.error('Edge Function error details from body:', errorDetails);
+            } else if (result && typeof result === 'object') {
+              // Sometimes the error details are in the result even when there's an error
+              errorDetails = result;
+              console.error('Edge Function error details from result:', errorDetails);
             }
-          } catch (parseError) {
-            console.error('Failed to parse error response:', parseError);
+          } catch (responseError) {
+            console.error('Failed to read error response:', responseError);
           }
           
-          // Handle rate limiting (429 errors)
+          // Extract meaningful error message
+          if (errorDetails) {
+            detailedErrorMessage = errorDetails.message || errorDetails.error || detailedErrorMessage;
+            
+            // Handle specific error cases
+            if (errorDetails.error === 'Official already exists' || 
+                errorDetails.error === 'Duplicate official for this barangay' ||
+                detailedErrorMessage.includes('already exists') ||
+                detailedErrorMessage.includes('duplicate')) {
+              detailedErrorMessage = 'An official with this email already exists in this barangay.';
+            }
+          }
+          
+          // Handle rate limiting
           if (error.message?.includes('429') || error.message?.includes('rate limit')) {
-            console.error('Rate limit reached - registration submission throttled');
             throw new Error('Too many registration attempts. Please wait a moment before trying again.');
           }
           
-          console.error('Detailed error message:', detailedErrorMessage);
           throw new Error(detailedErrorMessage);
         }
 

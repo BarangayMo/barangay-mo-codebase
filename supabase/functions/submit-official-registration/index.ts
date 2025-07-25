@@ -209,15 +209,14 @@ serve(async (req) => {
       );
     }
 
-    // Check for existing official with same email OR same barangay+position combination
+    // Check for existing official with same email OR same barangay+email combination (unique constraint)
     console.log('Checking for existing registration with email:', registrationData.email);
-    console.log('Checking for existing registration in barangay:', registrationData.barangay, 'with position:', registrationData.position);
+    console.log('Checking for existing registration in barangay:', registrationData.barangay);
     
-    const { data: existingOfficial, error: checkError } = await supabaseAdmin
+    const { data: existingOfficials, error: checkError } = await supabaseAdmin
       .from('officials')
       .select('id, email, status, barangay, position')
-      .or(`email.eq.${registrationData.email.trim()},and(barangay.eq.${registrationData.barangay?.trim()},position.eq.${registrationData.position.trim()})`)
-      .maybeSingle();
+      .or(`email.eq.${registrationData.email.trim()},and(barangay.eq.${registrationData.barangay?.trim() || 'unknown'},email.eq.${registrationData.email.trim()})`);
 
     if (checkError) {
       console.error('Error checking existing official:', checkError);
@@ -234,25 +233,33 @@ serve(async (req) => {
       );
     }
 
-    if (existingOfficial) {
+    if (existingOfficials && existingOfficials.length > 0) {
+      const existingOfficial = existingOfficials[0];
       console.log('Official already exists:', existingOfficial);
       
       let message = '';
       if (existingOfficial.email === registrationData.email.trim()) {
-        message = `A registration with email ${registrationData.email} already exists with status: ${existingOfficial.status}`;
-      } else {
-        message = `An official with position "${registrationData.position}" already exists in barangay "${registrationData.barangay}" with status: ${existingOfficial.status}`;
+        if (existingOfficial.barangay === registrationData.barangay?.trim()) {
+          message = `Duplicate official for this barangay. An official with email ${registrationData.email} already exists in barangay "${registrationData.barangay}" with status: ${existingOfficial.status}`;
+        } else {
+          message = `A registration with email ${registrationData.email} already exists in barangay "${existingOfficial.barangay}" with status: ${existingOfficial.status}`;
+        }
       }
       
       return new Response(
         JSON.stringify({ 
           success: false,
-          error: 'Official already exists',
+          error: 'Duplicate official for this barangay',
           message: message,
-          status: existingOfficial.status
+          status: existingOfficial.status,
+          existing: {
+            barangay: existingOfficial.barangay,
+            email: existingOfficial.email,
+            position: existingOfficial.position
+          }
         }),
         {
-          status: 409,
+          status: 400,
           headers: corsHeaders,
         }
       );
