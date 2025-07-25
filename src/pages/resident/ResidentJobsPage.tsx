@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
-import { DashboardPageHeader } from "@/components/dashboard/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MapPin, Building, Search, Edit, Briefcase, Calendar, DollarSign, Users, Plus } from "lucide-react";
+import { MapPin, Building, Search, Edit, Briefcase, Calendar, DollarSign, Users, Plus, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -131,24 +130,24 @@ export default function ResidentJobsPage() {
     }
   };
 
-  const breadcrumbItems = [
-    { label: "Jobs" }
-  ];
-
   if (loading) {
     return (
       <Layout>
         <div className="max-w-7xl mx-auto px-4 py-8">
-          <DashboardPageHeader 
-            title="Job Management" 
-            description="Manage job postings and applications"
-            breadcrumbItems={[{
-              label: "Jobs",
-              href: "/resident/jobs"
-            }, {
-              label: "My Jobs"
-            }]} 
-          />
+          <div className="flex items-center gap-4 mb-6">
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/resident-home')}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Dashboard
+            </Button>
+          </div>
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold">Job Management</h1>
+            <p className="text-gray-500 mt-2">Manage job postings and applications</p>
+          </div>
           <div className="animate-pulse">
             <div className="h-64 bg-gray-200 rounded mb-4"></div>
             <div className="h-32 bg-gray-200 rounded"></div>
@@ -161,25 +160,32 @@ export default function ResidentJobsPage() {
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <DashboardPageHeader
-          title="Job Management"
-          description={`${jobs.length} total jobs • ${openJobs.length} active • ${closedJobs.length} closed`}
-          breadcrumbItems={[{
-            label: "Dashboard",
-            href: "/resident"
-          }, {
-            label: "Jobs",
-            href: "/resident/jobs"
-          }, {
-            label: "My Jobs"
-          }]}
-          actionButton={{
-            label: "Add Job",
-            onClick: () => navigate('/admin/jobs/edit/new'),
-            icon: <Plus className="h-4 w-4" />,
-            variant: "dashboard"
-          }}
-        />
+        <div className="flex items-center gap-4 mb-6">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/resident-home')}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Button>
+        </div>
+
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold">Job Management</h1>
+            <p className="text-gray-500 mt-2">
+              {jobs.length} total jobs • {openJobs.length} active • {closedJobs.length} closed
+            </p>
+          </div>
+          <Button
+            onClick={() => navigate('/admin/jobs/edit/new')}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="h-4 w-4" />
+            Add Job
+          </Button>
+        </div>
 
         <div className="flex gap-6 h-[calc(100vh-200px)]">
           {/* Left Panel - Jobs List */}

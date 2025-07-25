@@ -9,9 +9,9 @@ import {
   PlusCircle,
   Eye,
   Edit,
-  Trash2 
+  Trash2,
+  ArrowLeft
 } from "lucide-react";
-import { DashboardPageHeader } from "@/components/dashboard/PageHeader";
 import { ModernTabs } from "@/components/dashboard/ModernTabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -191,17 +191,30 @@ const ResidentProductsPage = () => {
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <DashboardPageHeader
-          title="Product Management"
-          description="View and manage your marketplace products"
-          breadcrumbItems={breadcrumbItems}
-          actionButton={{
-            label: "Add Product",
-            onClick: handleAddProduct,
-            icon: <PlusCircle className="h-4 w-4" />,
-            variant: "dashboard"
-          }}
-        />
+        <div className="flex items-center gap-4 mb-6">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/resident-home')}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Button>
+        </div>
+
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold">Product Management</h1>
+            <p className="text-gray-500 mt-2">View and manage your marketplace products</p>
+          </div>
+          <Button
+            onClick={handleAddProduct}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+          >
+            <PlusCircle className="h-4 w-4" />
+            Add Product
+          </Button>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <StatsCard 
