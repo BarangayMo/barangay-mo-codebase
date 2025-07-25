@@ -45,30 +45,27 @@ export const useSubmitOfficialRegistration = () => {
       try {
         console.log('Submitting official registration:', data);
         
-        // Clean and validate the data before sending - remove undefined values
-        const cleanData: Record<string, any> = {
+        // Clean and validate the data before sending - ensure optional fields are null, not undefined
+        const cleanData = {
+          // Required fields
           first_name: data.first_name?.trim() || '',
           last_name: data.last_name?.trim() || '',
           phone_number: data.phone_number?.trim() || '',
           email: data.email?.trim() || '',
           position: data.position?.trim() || '',
-          password: data.password?.trim() || '',
-          barangay: data.barangay?.trim() || '',
-          municipality: data.municipality?.trim() || '',
-          province: data.province?.trim() || '',
-          region: data.region?.trim() || ''
+          
+          // Optional fields - send as null if empty so JSON.stringify includes them
+          middle_name: data.middle_name && typeof data.middle_name === 'string' && data.middle_name.trim() !== '' ? data.middle_name.trim() : null,
+          suffix: data.suffix && typeof data.suffix === 'string' && data.suffix.trim() !== '' ? data.suffix.trim() : null,
+          
+          // These may be filled by location/form data later
+          password: data.password?.trim() || null,
+          barangay: data.barangay?.trim() || null,
+          municipality: data.municipality?.trim() || null,
+          province: data.province?.trim() || null,
+          region: data.region?.trim() || null,
+          landline_number: data.landline_number && typeof data.landline_number === 'string' && data.landline_number.trim() !== '' ? data.landline_number.trim() : null
         };
-
-        // Add optional fields only if they have values
-        if (data.middle_name && typeof data.middle_name === 'string' && data.middle_name.trim() !== '') {
-          cleanData.middle_name = data.middle_name.trim();
-        }
-        if (data.suffix && typeof data.suffix === 'string' && data.suffix.trim() !== '') {
-          cleanData.suffix = data.suffix.trim();
-        }
-        if (data.landline_number && typeof data.landline_number === 'string' && data.landline_number.trim() !== '') {
-          cleanData.landline_number = data.landline_number.trim();
-        }
 
         console.log('Cleaned data for submission:', cleanData);
       

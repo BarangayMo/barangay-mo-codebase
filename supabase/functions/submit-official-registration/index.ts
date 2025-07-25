@@ -99,13 +99,19 @@ serve(async (req) => {
       );
     }
 
-    // Validate required fields
+    // Validate required fields - only core registration fields are required
     const requiredFields = [
       'first_name', 
       'last_name', 
-      'phone_number', 
       'email', 
-      'position', 
+      'phone_number', 
+      'position'
+    ];
+    
+    // Optional fields that can be null or undefined
+    const optionalFields = [
+      'middle_name',
+      'suffix',
       'password',
       'barangay', 
       'municipality', 
@@ -115,6 +121,10 @@ serve(async (req) => {
     
     // Check each required field individually for specific error messages
     const fieldValidationErrors = [];
+    
+    console.log('Validating required fields:', requiredFields);
+    console.log('Optional fields accepted:', optionalFields);
+    console.log('All received fields:', Object.keys(registrationData || {}));
     
     for (const field of requiredFields) {
       const value = registrationData[field as keyof OfficialRegistrationData];
@@ -126,11 +136,6 @@ serve(async (req) => {
           case 'phone_number': fieldDisplayName = 'Phone Number'; break;
           case 'email': fieldDisplayName = 'Email'; break;
           case 'position': fieldDisplayName = 'Position'; break;
-          case 'password': fieldDisplayName = 'Password'; break;
-          case 'barangay': fieldDisplayName = 'Barangay'; break;
-          case 'municipality': fieldDisplayName = 'Municipality'; break;
-          case 'province': fieldDisplayName = 'Province'; break;
-          case 'region': fieldDisplayName = 'Region'; break;
         }
         fieldValidationErrors.push({
           field: field,
@@ -221,8 +226,8 @@ serve(async (req) => {
       );
     }
 
-    // Validate password strength
-    if (!registrationData.password || registrationData.password.length < 8) {
+    // Validate password strength only if password is provided
+    if (registrationData.password && registrationData.password.length < 8) {
       console.error('400 Error - Password validation failed:');
       console.error('Password length:', registrationData.password?.length || 0);
       console.error('Minimum required length: 8');
