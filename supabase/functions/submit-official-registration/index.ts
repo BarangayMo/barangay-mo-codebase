@@ -192,26 +192,101 @@ serve(async (req) => {
       );
     }
 
-    // Hash the password before storing
-    console.log('Hashing password for security');
-    const { data: hashedPassword, error: hashError } = await supabaseAdmin
-      .rpc('hash_password', { password_text: registrationData.password });
-
-    if (hashError || !hashedPassword) {
-      console.error('Error hashing password:', hashError);
+    // Check if email already exists in auth.users
+    console.log('Checking if email already exists in auth.users:', registrationData.email);
+    const { data: existingAuthUser, error: authCheckError } = await supabaseAdmin.auth.admin.getUserByEmail(registrationData.email.trim());
+    
+    if (authCheckError) {
+      // If error is 'User not found', that's good - email doesn't exist
+      if (!authCheckError.message?.includes('User not found') && authCheckError.status !== 404) {
+        console.error('Error checking auth email existence:', authCheckError);
+        return new Response(
+          JSON.stringify({ 
+            error: 'Email validation failed',
+            message: 'Unable to verify if email is already registered. Please try again.'
+          }),
+          {
+            status: 500,
+            headers: corsHeaders,
+          }
+        );
+      }
+      console.log('Email not found in auth system, proceeding with user creation');
+    } else if (existingAuthUser?.user) {
+      console.error('Email already exists in auth.users:', registrationData.email);
       return new Response(
         JSON.stringify({ 
-          error: 'Password processing failed',
-          message: 'Unable to process password securely. Please try again.'
+          error: 'Email already registered',
+          message: `The email ${registrationData.email} is already registered in the authentication system.`
         }),
         {
-          status: 500,
+          status: 409,
           headers: corsHeaders,
         }
       );
     }
 
-    console.log('Password hashed successfully');
+    // Create Supabase Auth user immediately
+    console.log('Creating Supabase Auth user for:', registrationData.email);
+    const createUserPayload = {
+      email: registrationData.email.trim().toLowerCase(),
+      password: registrationData.password,
+      email_confirm: false, // Will send confirmation email
+      user_metadata: {
+        first_name: registrationData.first_name.trim(),
+        middle_name: registrationData.middle_name?.trim() || null,
+        last_name: registrationData.last_name.trim(),
+        suffix: registrationData.suffix?.trim() || null,
+        phone_number: registrationData.phone_number.trim(),
+        landline_number: registrationData.landline_number?.trim() || null,
+        position: registrationData.position.trim(),
+        barangay: registrationData.barangay.trim(),
+        municipality: registrationData.municipality.trim(),
+        province: registrationData.province.trim(),
+        region: registrationData.region.trim(),
+        role: 'official',
+        status: 'pending' // Store status in metadata for immediate access
+      }
+    };
+    
+    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser(createUserPayload);
+
+    if (authError) {
+      console.error('Error creating Supabase Auth user:', authError);
+      let errorMessage = 'Unable to create user account. ';
+      let errorReason = authError.message || 'Unknown auth error';
+      
+      if (authError.message?.includes('already exists') || 
+          authError.message?.includes('already registered') ||
+          authError.message?.includes('User already registered') ||
+          authError.message?.includes('email address is already taken') ||
+          authError.message?.includes('Database error creating new user')) {
+        errorMessage = 'This email is already registered.';
+        errorReason = `The email ${registrationData.email} is already registered in the authentication system.`;
+      } else if (authError.message?.includes('invalid') || authError.message?.includes('format')) {
+        errorMessage += 'Invalid email format.';
+        errorReason = 'The email format is invalid';
+      } else {
+        errorMessage += 'Please try again or contact support.';
+      }
+      
+      return new Response(
+        JSON.stringify({ 
+          error: 'Failed to create user account',
+          message: errorMessage,
+          reason: errorReason
+        }),
+        {
+          status: 400,
+          headers: corsHeaders,
+        }
+      );
+    }
+
+    console.log('Supabase Auth user created successfully:', { 
+      id: authUser.user.id, 
+      email: authUser.user.email 
+    });
 
     // Insert the official registration using service role (bypasses RLS)
     console.log('Inserting new official registration');
@@ -224,14 +299,13 @@ serve(async (req) => {
       landline_number: registrationData.landline_number?.trim() || null,
       email: registrationData.email.trim().toLowerCase(),
       position: registrationData.position.trim(),
-      password_hash: hashedPassword,
       barangay: registrationData.barangay.trim(),
       municipality: registrationData.municipality.trim(),
       province: registrationData.province.trim(),
       region: registrationData.region.trim(),
       status: 'pending',
       is_approved: false,
-      user_id: null, // No user associated yet
+      user_id: authUser.user.id, // Link to the created Auth user
       submitted_at: new Date().toISOString(),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()

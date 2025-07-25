@@ -8,12 +8,13 @@ const corsHeaders = {
   'Content-Type': 'application/json',
 };
 
-interface ApprovalRequest {
+interface RejectionRequest {
   official_id: string;
+  reason?: string;
 }
 
 serve(async (req) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} request received for approve-official`);
+  console.log(`[${new Date().toISOString()}] ${req.method} request received for reject-official`);
   
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -42,7 +43,7 @@ serve(async (req) => {
       );
     }
 
-    console.log('Processing official approval request');
+    console.log('Processing official rejection request');
 
     // Create Supabase admin client with service role
     const supabaseAdmin = createClient(
@@ -59,7 +60,7 @@ serve(async (req) => {
     console.log('Supabase admin client created');
 
     // Parse request body
-    let requestData: ApprovalRequest;
+    let requestData: RejectionRequest;
     try {
       const rawBody = await req.text();
       console.log('Raw request body:', rawBody);
@@ -80,9 +81,7 @@ serve(async (req) => {
       }
 
       requestData = JSON.parse(rawBody);
-      console.log('Parsed approval request data:', requestData);
-      console.log('Request data keys:', Object.keys(requestData));
-      console.log('Official ID received:', requestData.official_id);
+      console.log('Parsed rejection request data:', requestData);
     } catch (parseError) {
       console.error('Failed to parse request JSON:', parseError);
       return new Response(
@@ -106,7 +105,7 @@ serve(async (req) => {
         JSON.stringify({ 
           success: false,
           error: 'Missing or invalid required field: official_id',
-          reason: 'Please provide a valid official ID to approve',
+          reason: 'Please provide a valid official ID to reject',
           received: requestData
         }),
         {
@@ -159,17 +158,17 @@ serve(async (req) => {
       id: official.id, 
       email: official.email, 
       status: official.status,
-      password_hash: official.password_hash ? 'present' : 'missing'
+      user_id: official.user_id
     });
 
-    // Check if official is already approved
-    if (official.status === 'approved') {
-      console.log('Official already approved:', official.email);
+    // Check if official is already rejected
+    if (official.status === 'rejected') {
+      console.log('Official already rejected:', official.email);
       return new Response(
         JSON.stringify({ 
           success: false,
-          error: 'Already approved',
-          reason: 'This official registration has already been approved'
+          error: 'Already rejected',
+          reason: 'This official registration has already been rejected'
         }),
         {
           status: 400,
@@ -178,103 +177,30 @@ serve(async (req) => {
       );
     }
 
-    // Check if password is set
-    if (!official.password_hash) {
-      console.error('Official has no password set:', official.email);
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: 'No password set',
-          reason: 'This official registration does not have a password set. They need to register again with a password.'
-        }),
-        {
-          status: 400,
-          headers: corsHeaders,
-        }
-      );
-    }
-
-    // Verify that Auth user already exists (should have been created during registration)
-    if (!official.user_id) {
-      console.error('Official has no associated Auth user ID:', official.email);
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: 'No Auth user found',
-          reason: 'This official registration does not have an associated authentication user. They may need to register again.'
-        }),
-        {
-          status: 400,
-          headers: corsHeaders,
-        }
-      );
-    }
-
-    // Verify the Auth user still exists
-    console.log('Verifying Auth user exists:', official.user_id);
-    const { data: authUser, error: authCheckError } = await supabaseAdmin.auth.admin.getUserById(official.user_id);
-    
-    if (authCheckError || !authUser?.user) {
-      console.error('Auth user not found or error:', authCheckError);
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: 'Auth user not found',
-          reason: 'The authentication user associated with this registration no longer exists. The official may need to register again.'
-        }),
-        {
-          status: 400,
-          headers: corsHeaders,
-        }
-      );
-    }
-
-    console.log('Auth user verified:', { 
-      id: authUser.user.id, 
-      email: authUser.user.email 
-    });
-
-    // Update Auth user metadata to mark as approved
-    console.log('Updating Auth user metadata to approved status');
-    const { error: updateUserError } = await supabaseAdmin.auth.admin.updateUserById(
-      official.user_id,
-      {
-        user_metadata: {
-          ...authUser.user.user_metadata,
-          status: 'approved'
-        }
+    // Delete or disable the Auth user if it exists
+    if (official.user_id) {
+      console.log('Deleting Auth user:', official.user_id);
+      const { error: deleteAuthError } = await supabaseAdmin.auth.admin.deleteUser(official.user_id);
+      
+      if (deleteAuthError) {
+        console.error('Error deleting Auth user:', deleteAuthError);
+        // Continue with rejection even if auth user deletion fails
+        console.log('Continuing with rejection despite auth deletion error');
+      } else {
+        console.log('Auth user deleted successfully');
       }
-    );
-
-    if (updateUserError) {
-      console.error('Error updating Auth user metadata:', updateUserError);
-      // Continue with approval even if metadata update fails
-      console.log('Continuing with approval despite metadata update error');
-    }
-
-    // Send email verification
-    console.log('Sending email verification to:', official.email);
-    const { error: emailError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
-      official.email,
-      {
-        redirectTo: `${Deno.env.get('SUPABASE_URL')}/auth/v1/verify?token={token}&type=invite&redirect_to=${Deno.env.get('SITE_URL') || 'http://localhost:5173'}/login`
-      }
-    );
-
-    if (emailError) {
-      console.error('Error sending email verification:', emailError);
-      // Don't fail the approval if email fails, just log it
-      console.log('Continuing with approval despite email error');
     } else {
-      console.log('Email verification sent successfully');
+      console.log('No Auth user to delete');
     }
 
-    // Update official status to approved
-    console.log('Updating official status to approved');
+    // Update official status to rejected
+    console.log('Updating official status to rejected');
     const updateData = {
-      status: 'approved',
-      is_approved: true,
-      approved_at: new Date().toISOString(),
+      status: 'rejected',
+      is_approved: false,
+      rejection_reason: requestData.reason || null,
+      approved_by: null,
+      approved_at: null,
       updated_at: new Date().toISOString()
     };
     
@@ -287,19 +213,11 @@ serve(async (req) => {
 
     if (updateError) {
       console.error('Error updating official status:', updateError);
-      console.error('Update error details:', {
-        message: updateError.message,
-        code: updateError.code,
-        details: updateError.details
-      });
-      
-      // Auth user already exists, no cleanup needed for approval failure
-      
       return new Response(
         JSON.stringify({ 
           success: false,
-          error: 'Failed to approve official',
-          reason: 'Unable to update official status in database. The auth user has been cleaned up.',
+          error: 'Failed to reject official',
+          reason: 'Unable to update official status in database',
           updateError: {
             message: updateError.message,
             code: updateError.code
@@ -312,17 +230,17 @@ serve(async (req) => {
       );
     }
 
-    console.log('Official approval completed successfully for:', official.email);
+    console.log('Official rejection completed successfully for:', official.email);
 
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: 'Official approved successfully! An email verification has been sent.',
+        message: 'Official rejected successfully. The authentication account has been disabled.',
         data: {
           official_id: requestData.official_id,
           email: official.email,
-          auth_user_id: official.user_id,
-          status: 'approved'
+          status: 'rejected',
+          reason: requestData.reason || null
         }
       }),
       {
@@ -332,13 +250,13 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Unexpected error in approve-official:', error);
+    console.error('Unexpected error in reject-official:', error);
     console.error('Error stack:', error.stack);
     return new Response(
       JSON.stringify({ 
         success: false,
         error: 'Internal server error',
-        reason: 'An unexpected error occurred during the approval process',
+        reason: 'An unexpected error occurred during the rejection process',
         message: 'Please try again later or contact support if the issue persists.',
         details: Deno.env.get('NODE_ENV') === 'development' ? {
           message: error.message,

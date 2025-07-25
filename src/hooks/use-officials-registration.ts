@@ -179,28 +179,35 @@ export const useRejectOfficial = () => {
     mutationFn: async ({ officialId, reason }: { officialId: string; reason?: string }) => {
       console.log('Rejecting official:', officialId, 'reason:', reason);
       
-      const { error } = await supabase
-        .from('officials')
-        .update({
-          status: 'rejected',
-          is_approved: false,
-          rejection_reason: reason || null,
-          approved_by: null,
-          approved_at: null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', officialId);
+      // Use the Edge Function to reject the official
+      const { data: result, error } = await supabase.functions.invoke(
+        'reject-official',
+        {
+          body: { 
+            official_id: officialId,
+            reason: reason || undefined
+          }
+        }
+      );
 
       if (error) {
-        console.error('Error rejecting official:', error);
-        throw error;
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Failed to reject official');
       }
+
+      if (result?.error) {
+        console.error('Rejection error from server:', result);
+        throw new Error(result.message || result.error || 'Rejection failed');
+      }
+
+      console.log('Official rejected successfully:', result);
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['official-registrations'] });
       toast({
         title: "Official Rejected",
-        description: "The official registration has been rejected.",
+        description: "The official registration has been rejected and the authentication account has been disabled.",
       });
     },
     onError: (error: any) => {
