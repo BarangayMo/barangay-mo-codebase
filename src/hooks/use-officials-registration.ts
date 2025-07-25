@@ -67,18 +67,27 @@ export const useSubmitOfficialRegistration = () => {
           landline_number: (data.landline_number && typeof data.landline_number === 'string' && data.landline_number.trim() !== '') ? data.landline_number.trim() : null
         };
 
+      
         console.log('Cleaned data for submission:', cleanData);
+        
+        // Debug: Check what we're actually sending
+        const bodyString = JSON.stringify(cleanData);
+        console.log('JSON body string:', bodyString);
+        console.log('Body string length:', bodyString.length);
       
         // Use the Edge Function to submit the registration
         const { data: result, error } = await supabase.functions.invoke(
           'submit-official-registration',
           {
-            body: JSON.stringify(cleanData),
+            body: cleanData,  // Don't stringify here - let Supabase handle it
             headers: {
               'Content-Type': 'application/json',
             }
           }
         );
+        
+        console.log('Supabase invoke result:', result);
+        console.log('Supabase invoke error:', error);
 
         if (error) {
           console.error('Edge function error:', error);

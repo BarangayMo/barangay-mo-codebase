@@ -70,13 +70,14 @@ serve(async (req) => {
     let rawBody: string = '';
     
     try {
-      // Get raw body for logging
-      const requestClone = req.clone();
-      rawBody = await requestClone.text();
-      console.log('Received body:', rawBody);
-      
+      // Try to parse the JSON first
       registrationData = await req.json();
-      console.log('Parsed data:', registrationData);
+      
+      // Convert back to string for logging (avoid cloning issues)
+      rawBody = JSON.stringify(registrationData);
+      console.log('Successfully parsed JSON data:', registrationData);
+      console.log('Raw body (reconstructed):', rawBody);
+      console.log('Request headers:', Object.fromEntries(req.headers.entries()));
       
       console.log('Registration data received:', { 
         email: registrationData.email, 
@@ -87,7 +88,17 @@ serve(async (req) => {
       });
     } catch (parseError) {
       console.error('Failed to parse request JSON:', parseError);
-      console.error('Raw body received:', rawBody);
+      
+      // Try to get the raw body for debugging
+      let debugBody = 'Unable to read body';
+      try {
+        const bodyClone = req.clone();
+        debugBody = await bodyClone.text();
+      } catch (bodyError) {
+        console.error('Could not read request body for debugging:', bodyError);
+      }
+      
+      console.error('Raw body for debugging:', debugBody);
       console.error('Request headers:', Object.fromEntries(req.headers.entries()));
       
       return new Response(
@@ -96,7 +107,8 @@ serve(async (req) => {
           error: 'Invalid JSON in request body',
           message: 'Request must contain valid JSON data',
           details: 'Please ensure your request body contains valid JSON and Content-Type is application/json',
-          receivedBody: rawBody
+          parseError: parseError.message,
+          receivedBody: debugBody
         }),
         {
           status: 400,
