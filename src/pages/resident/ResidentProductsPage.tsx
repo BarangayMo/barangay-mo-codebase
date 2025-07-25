@@ -190,40 +190,42 @@ const ResidentProductsPage = () => {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex items-center gap-4 mb-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+        <div className="flex items-center gap-4 mb-4 sm:mb-6">
           <Button
             variant="ghost"
             onClick={() => navigate('/resident-home')}
             className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
+            <span className="hidden sm:inline">Back to Dashboard</span>
+            <span className="sm:hidden">Back</span>
           </Button>
         </div>
 
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold">Product Management</h1>
-            <p className="text-gray-500 mt-2">View and manage your marketplace products</p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div className="flex-1">
+            <h1 className="text-2xl sm:text-3xl font-bold">Product Management</h1>
+            <p className="text-gray-500 mt-1 sm:mt-2 text-sm sm:text-base">View and manage your marketplace products</p>
           </div>
           <Button
             onClick={handleAddProduct}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
           >
             <PlusCircle className="h-4 w-4" />
-            Add Product
+            <span className="sm:hidden">Add New Product</span>
+            <span className="hidden sm:inline">Add Product</span>
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
           <StatsCard 
             title="Total Products"
             value={products?.length.toString() || "0"}
             icon={<ShoppingBag className="h-5 w-5 text-blue-500" />}
           />
           <StatsCard 
-            title="Active Products"
+            title="Active"
             value={activeProducts.toString()}
             change={{ value: 5, isPositive: true }}
             icon={<Package className="h-5 w-5 text-green-500" />}
@@ -244,20 +246,20 @@ const ResidentProductsPage = () => {
           />
         </div>
 
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-6">
-          <div className="relative w-full md:w-64">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between mb-4 sm:mb-6">
+          <div className="relative flex-1 sm:max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input 
               placeholder="Search products..." 
-              className="pl-9" 
+              className="pl-9 text-sm" 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
 
-          <div className="flex gap-2 w-full md:w-auto">
+          <div className="flex gap-2 flex-1 sm:flex-initial">
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-full md:w-[150px]">
+              <SelectTrigger className="flex-1 sm:w-[150px] text-sm">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
@@ -268,7 +270,7 @@ const ResidentProductsPage = () => {
               </SelectContent>
             </Select>
 
-            <Button variant="dashboard">
+            <Button variant="dashboard" size="icon" className="shrink-0">
               <Filter className="h-4 w-4" />
             </Button>
           </div>
@@ -284,86 +286,151 @@ const ResidentProductsPage = () => {
                   ))}
                 </div>
               ) : products?.length === 0 ? (
-                <div className="text-center py-12">
-                  <ShoppingBag className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No products yet</h3>
-                  <p className="text-gray-500 mb-4">Start by adding your first product</p>
-                  <Button onClick={handleAddProduct} className="bg-blue-600 hover:bg-blue-700">
+                <div className="text-center py-8 sm:py-12 px-4">
+                  <ShoppingBag className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3 sm:mb-4" />
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No products yet</h3>
+                  <p className="text-sm sm:text-base text-gray-500 mb-4">Start by adding your first product</p>
+                  <Button onClick={handleAddProduct} className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Add Product
                   </Button>
                 </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[300px] cursor-pointer" onClick={() => handleSort('name')}>
-                        Product Name {sortColumn === 'name' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
-                      </TableHead>
-                      <TableHead className="cursor-pointer" onClick={() => handleSort('sku')}>
-                        SKU {sortColumn === 'sku' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
-                      </TableHead>
-                      <TableHead className="cursor-pointer" onClick={() => handleSort('price')}>
-                        Price {sortColumn === 'price' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
-                      </TableHead>
-                      <TableHead className="cursor-pointer" onClick={() => handleSort('stock_quantity')}>
-                        Inventory {sortColumn === 'stock_quantity' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
-                      </TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {products?.map((product) => (
-                      <TableRow key={product.id} className="hover:bg-gray-50 transition-colors">
-                        <TableCell className="font-medium">{product.name}</TableCell>
-                        <TableCell>{product.sku || 'N/A'}</TableCell>
-                        <TableCell>₱{product.price?.toLocaleString() || '0'}</TableCell>
-                        <TableCell>
-                          {product.stock_quantity === 0 ? (
-                            <span className="text-red-500">Out of stock</span>
-                          ) : product.stock_quantity < 20 ? (
-                            <span className="text-amber-500">{product.stock_quantity} (Low)</span>
-                          ) : (
-                            product.stock_quantity
-                          )}
-                        </TableCell>
-                        <TableCell>{getStatusBadge(product)}</TableCell>
-                        <TableCell>{product.product_categories?.name || 'Uncategorized'}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8"
-                              onClick={() => handleViewProduct(product.id)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8"
-                              onClick={() => handleEditProduct(product.id)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
-                              onClick={() => handleDeleteProduct(product.id, product.name)}
-                              disabled={deleteProductMutation.isPending}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                <>
+                  {/* Mobile Card View for small screens */}
+                  <div className="block lg:hidden p-4">
+                    <div className="space-y-3">
+                      {products?.map((product) => (
+                        <Card key={product.id} className="p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-sm truncate">{product.name}</h4>
+                              <div className="flex items-center gap-2 mt-1">
+                                {getStatusBadge(product)}
+                                <span className="text-xs text-gray-500">
+                                  ₱{product.price?.toLocaleString() || '0'}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                                <span>SKU: {product.sku || 'N/A'}</span>
+                                <span>
+                                  Stock: {product.stock_quantity === 0 ? (
+                                    <span className="text-red-500">Out</span>
+                                  ) : product.stock_quantity < 20 ? (
+                                    <span className="text-amber-500">{product.stock_quantity}</span>
+                                  ) : (
+                                    product.stock_quantity
+                                  )}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex gap-1">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8"
+                                onClick={() => handleViewProduct(product.id)}
+                              >
+                                <Eye className="h-3 w-3" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8"
+                                onClick={() => handleEditProduct(product.id)}
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                onClick={() => handleDeleteProduct(product.id, product.name)}
+                                disabled={deleteProductMutation.isPending}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
                           </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Desktop Table View */}
+                  <div className="hidden lg:block overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="min-w-[200px] cursor-pointer" onClick={() => handleSort('name')}>
+                            Product Name {sortColumn === 'name' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+                          </TableHead>
+                          <TableHead className="cursor-pointer min-w-[100px]" onClick={() => handleSort('sku')}>
+                            SKU {sortColumn === 'sku' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+                          </TableHead>
+                          <TableHead className="cursor-pointer min-w-[100px]" onClick={() => handleSort('price')}>
+                            Price {sortColumn === 'price' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+                          </TableHead>
+                          <TableHead className="cursor-pointer min-w-[100px]" onClick={() => handleSort('stock_quantity')}>
+                            Inventory {sortColumn === 'stock_quantity' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+                          </TableHead>
+                          <TableHead className="min-w-[100px]">Status</TableHead>
+                          <TableHead className="min-w-[120px]">Category</TableHead>
+                          <TableHead className="text-right min-w-[120px]">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {products?.map((product) => (
+                          <TableRow key={product.id} className="hover:bg-gray-50 transition-colors">
+                            <TableCell className="font-medium">{product.name}</TableCell>
+                            <TableCell>{product.sku || 'N/A'}</TableCell>
+                            <TableCell>₱{product.price?.toLocaleString() || '0'}</TableCell>
+                            <TableCell>
+                              {product.stock_quantity === 0 ? (
+                                <span className="text-red-500">Out of stock</span>
+                              ) : product.stock_quantity < 20 ? (
+                                <span className="text-amber-500">{product.stock_quantity} (Low)</span>
+                              ) : (
+                                product.stock_quantity
+                              )}
+                            </TableCell>
+                            <TableCell>{getStatusBadge(product)}</TableCell>
+                            <TableCell>{product.product_categories?.name || 'Uncategorized'}</TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8"
+                                  onClick={() => handleViewProduct(product.id)}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8"
+                                  onClick={() => handleEditProduct(product.id)}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                  onClick={() => handleDeleteProduct(product.id, product.name)}
+                                  disabled={deleteProductMutation.isPending}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>
