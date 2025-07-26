@@ -181,7 +181,6 @@ export default function JobEditPage() {
       } 
       else if (userRole === 'official') {
         navigate('/official/jobs');
-      }
          else {
         navigate('/admin/jobs');
       }
