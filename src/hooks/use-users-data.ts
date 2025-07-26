@@ -162,58 +162,33 @@ export const useArchiveUser = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  return useMutation({
-    mutationFn: async (userId: string) => {
-      if (!userId) throw new Error("Missing userId");
+  mutationFn: async (userId: string) => {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ status: 'archived' })
+    .eq('id', userId)
+    .select() // important to use .select().single() if you expect exactly one row
+    .single(); // ✅ this fixes the error
 
-      console.log("Archiving user with ID:", userId);
+  if (error) throw error;
+  return { success: true };
+},
 
-      // ✅ Check if the user exists
-      const { data: checkUser, error: checkError } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("id", userId)
-        .maybeSingle();
-
-      if (checkError) {
-        console.error("User check failed:", checkError);
-        throw checkError;
-      }
-
-      if (!checkUser) {
-        throw new Error("User does not exist in profiles table");
-      }
-
-      // ✅ Do the actual update
-      const { data, error } = await supabase
-        .from("profiles")
-        .update({ status: "archived" })
-        .eq("id", userId)
-        .select();
-
-      if (error) {
-        console.error("Archive Supabase error:", error);
-        throw error;
-      }
-
-      return data?.[0];
-    },
 
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ['users'] });
       toast({
         title: "User archived",
-        description: "User status updated to archived.",
+        description: "User has been archived successfully.",
       });
     },
-
-    onError: (error: any) => {
+    onError: (error) => {
       toast({
-        title: "Archive Error",
-        description: error.message,
+        title: "Error",
+        description: "Failed to archive user. Please try again.",
         variant: "destructive",
       });
-      console.error("Archive error:", error);
+      console.error('Archive error:', error);
     },
   });
 };
