@@ -271,7 +271,7 @@ const ProductEditPage = () => {
     toast.success(isEditing ? 'Product updated successfully' : 'Product created successfully');
     handleBackToProducts(); // Make sure this navigates to /admin/smarketplace/products
   }
-}
+},
 
 
     onError: (error) => {
