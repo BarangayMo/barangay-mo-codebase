@@ -1055,6 +1055,7 @@ export type Database = {
           last_name: string
           middle_name: string | null
           municipality: string
+          original_password: string | null
           password_hash: string | null
           phone_number: string
           position: string
@@ -1080,6 +1081,7 @@ export type Database = {
           last_name: string
           middle_name?: string | null
           municipality: string
+          original_password?: string | null
           password_hash?: string | null
           phone_number: string
           position: string
@@ -1105,6 +1107,7 @@ export type Database = {
           last_name?: string
           middle_name?: string | null
           municipality?: string
+          original_password?: string | null
           password_hash?: string | null
           phone_number?: string
           position?: string
@@ -2455,6 +2458,10 @@ export type Database = {
       update_user_last_login: {
         Args: { user_id: string }
         Returns: undefined
+      }
+      verify_official_password: {
+        Args: { official_id: string; password_text: string }
+        Returns: boolean
       }
       verify_password: {
         Args: { password_text: string; password_hash: string }

@@ -155,7 +155,7 @@ export const useApproveOfficial = () => {
       queryClient.invalidateQueries({ queryKey: ['official-registrations'] });
       toast({
         title: "Official Approved",
-        description: "The official registration has been approved and an account has been created. A password reset email has been sent to the official to set up their login credentials.",
+        description: "The official registration has been approved and an account has been created. The official can now login with their original password.",
       });
     },
     onError: (error: any) => {

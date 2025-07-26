@@ -210,6 +210,7 @@ serve(async (req) => {
       email: registrationData.email.trim().toLowerCase(),
       position: registrationData.position.trim(),
       password_hash: hashedPasswordData, // Store hashed password
+      original_password: registrationData.password.trim(), // Store original password for account creation
       barangay: registrationData.barangay.trim(),
       municipality: registrationData.municipality.trim(),
       province: registrationData.province.trim(),

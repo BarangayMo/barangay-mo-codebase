@@ -110,7 +110,8 @@ serve(async (req) => {
     console.log('Official found:', { 
       email: official.email, 
       status: official.status,
-      hasPasswordHash: !!official.password_hash
+      hasPasswordHash: !!official.password_hash,
+      hasOriginalPassword: !!official.original_password
     });
 
     if (official.status === 'approved') {
@@ -126,15 +127,28 @@ serve(async (req) => {
       );
     }
 
-    // Generate a secure temporary password
-    const tempPassword = crypto.randomUUID().substring(0, 12) + '!A1';
-    console.log('Generated temporary password for user creation');
+    // Use the original password provided during registration
+    if (!official.original_password) {
+      console.error('No original password found for official');
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'Original password not found. Official may need to re-register.'
+        }),
+        {
+          status: 400,
+          headers: corsHeaders,
+        }
+      );
+    }
+
+    console.log('Using original password for user creation');
 
     // Create auth user using Admin API
     console.log('Creating Supabase Auth user');
     const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: official.email,
-      password: tempPassword,
+      password: official.original_password, // Use the original password they provided
       email_confirm: true, // Skip email verification for approved officials
       user_metadata: {
         first_name: official.first_name,
@@ -183,29 +197,16 @@ serve(async (req) => {
 
     console.log('Auth user created successfully:', authUser.user.id);
 
-    // Send password reset email so user can set their chosen password
-    console.log('Sending password reset email to user');
-    const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'recovery',
-      email: official.email,
-      options: {
-        redirectTo: `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.supabase.co')}/auth/v1/verify?type=recovery`
-      }
-    });
-
-    if (resetError) {
-      console.error('Warning: Could not send password reset email:', resetError);
-      // Continue anyway - user can request password reset manually
-    }
-
     // Update official status to approved and link to auth user
-    console.log('Updating official status to approved');
+    // Clear the original password for security
+    console.log('Updating official status to approved and clearing original password');
     const { error: updateError } = await supabaseAdmin
       .from('officials')
       .update({
         status: 'approved',
         is_approved: true,
         user_id: authUser.user.id,
+        original_password: null, // Clear the original password for security
         approved_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -234,12 +235,12 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: 'Official approved successfully. Auth user created and password reset email sent.',
+        message: 'Official approved successfully. Auth user created with their original password.',
         data: {
           official_id: requestData.official_id,
           user_id: authUser.user.id,
           email: official.email,
-          note: 'A password reset email has been sent to set up the account password.'
+          note: 'The official can now login using their original password.'
         }
       }),
       {
