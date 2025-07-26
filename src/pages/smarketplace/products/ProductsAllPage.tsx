@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   ShoppingBag, 
@@ -123,30 +122,55 @@ const ProductsAllPage = () => {
     },
   });
 
-  // Delete product mutation
+  // Enhanced delete product mutation with proper authentication checks
   const deleteProductMutation = useMutation({
- mutationFn: async (productId: string) => {
-  const { error } = await supabase
-    .from('products')
-    .delete()
-    .eq('id', productId); // ✅ DO NOT add `.select()` here
+    mutationFn: async (productId: string) => {
+      console.log("🔄 Starting delete operation for product:", productId);
+      
+      // Check authentication first
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      console.log("🔐 Current user:", user?.email || "Not logged in");
+      
+      if (authError || !user) {
+        console.error("❌ Authentication error:", authError);
+        throw new Error("You must be logged in to delete products");
+      }
 
-  if (error) {
-    console.error("Supabase delete error:", error);
-    throw error;
-  }
+      // Check session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.error("❌ No active session");
+        throw new Error("No active session found. Please log in again.");
+      }
 
-  return true; // or return productId if needed
-},
+      console.log("✅ User authenticated, proceeding with delete");
 
+      // Perform delete without .select()
+      const { error: deleteError } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', productId);
 
+      if (deleteError) {
+        console.error("❌ Supabase delete error:", deleteError);
+        throw new Error(`Failed to delete product: ${deleteError.message}`);
+      }
 
-    onSuccess: () => {
+      console.log("✅ Product deleted successfully");
+      return productId;
+    },
+    onSuccess: (deletedProductId) => {
+      console.log("🎉 Delete mutation successful for:", deletedProductId);
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       toast.success('Product deleted successfully');
     },
-    onError: (error) => {
-      toast.error('Failed to delete product: ' + error.message);
+    onError: (error: any) => {
+      console.error("💥 Delete mutation error:", error);
+      if (error.message.includes("logged in") || error.message.includes("session")) {
+        toast.error('Please log in to delete products');
+      } else {
+        toast.error(`Failed to delete product: ${error.message}`);
+      }
     },
   });
 
@@ -158,13 +182,23 @@ const ProductsAllPage = () => {
     navigate(`/admin/smarketplace/products/edit/${productId}`);
   };
 
-  const handleDeleteProduct = (productId: string, productName: string) => {
-  console.log("Deleting product with ID:", productId); // Add this
-  if (window.confirm(`Are you sure you want to delete "${productName}"?`)) {
-    deleteProductMutation.mutate(productId);
-  }
-};
+  const handleDeleteProduct = async (productId: string, productName: string) => {
+    console.log("🗑️ Delete requested for product:", { productId, productName });
+    
+    // Check authentication before showing confirmation
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error('Please log in to delete products');
+      return;
+    }
 
+    if (window.confirm(`Are you sure you want to delete "${productName}"?`)) {
+      console.log("✅ User confirmed deletion");
+      deleteProductMutation.mutate(productId);
+    } else {
+      console.log("❌ User cancelled deletion");
+    }
+  };
 
   const tabItems = [
     { icon: <ShoppingBag className="h-4 w-4" />, label: "All", value: "all" },
