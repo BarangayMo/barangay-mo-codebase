@@ -92,7 +92,7 @@ import OfficialServices from "@/pages/officials/OfficialServices";
 import OfficialRequests from "@/pages/officials/OfficialRequests";
 import PunongBarangayDashboard from "@/pages/officials/PunongBarangayDashboard";
 import EmergencyResponse from "@/pages/officials/EmergencyResponse";
-import OfficialsJobsPage from "@/pages/officials/OfficialJobsPage";
+import OfficialsJobsPage from "@/pages/officials/OfficialsJobsPage";
 
 
 // Import the new EmailConfirmation component
