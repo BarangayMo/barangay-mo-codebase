@@ -270,8 +270,10 @@ serve(async (req) => {
     if (updateError) {
       console.error('Error updating official status:', updateError);
       
-      // Try to clean up created user
-      await supabaseAdmin.auth.admin.deleteUser(authUser.user.id);
+      // Try to clean up created user if we created a new one
+      if (!existingUser) {
+        await supabaseAdmin.auth.admin.deleteUser(authUser.user.id);
+      }
       
       return new Response(
         JSON.stringify({ 
@@ -283,6 +285,30 @@ serve(async (req) => {
           headers: corsHeaders,
         }
       );
+    }
+
+    // Update the profiles table with official's barangay information
+    console.log('Updating profiles table with official data');
+    const { error: profileUpdateError } = await supabaseAdmin
+      .from('profiles')
+      .update({
+        barangay: official.barangay,
+        municipality: official.municipality,
+        province: official.province,
+        region: official.region,
+        phone_number: official.phone_number,
+        landline_number: official.landline_number,
+        first_name: official.first_name,
+        last_name: official.last_name,
+        middle_name: official.middle_name,
+        suffix: official.suffix,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', authUser.user.id);
+
+    if (profileUpdateError) {
+      console.error('Warning: Failed to update profile with official data:', profileUpdateError);
+      // Don't fail the whole operation for this
     }
 
     console.log('Official approved successfully with auth user created');
