@@ -88,8 +88,13 @@ export default function OfficialRegistration() {
     email: "",
     phoneNumber: "",
     landlineNumber: "",
-    position: ""
+    position: "",
+    password: "",
+    confirmPassword: ""
   });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -116,6 +121,26 @@ export default function OfficialRegistration() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        title: "Password Mismatch",
+        description: "Passwords do not match. Please check and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate password length
+    if (formData.password.length < 6) {
+      toast({
+        title: "Password Too Short",
+        description: "Password must be at least 6 characters long.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const registrationData = {
       first_name: formData.firstName,
       middle_name: formData.middleName || undefined,
@@ -125,6 +150,7 @@ export default function OfficialRegistration() {
       phone_number: formData.phoneNumber,
       landline_number: formData.landlineNumber || undefined,
       position: formData.position,
+      password: formData.password,
       barangay: barangay!,
       municipality: municipality!,
       province: province!,
@@ -343,6 +369,58 @@ export default function OfficialRegistration() {
                 />
               </div>
 
+              <div>
+                <Label htmlFor="password" className="text-gray-700 text-sm">Password *</Label>
+                <div className="relative">
+                  <Input 
+                    id="password" 
+                    name="password" 
+                    type={showPassword ? "text" : "password"}
+                    value={formData.password} 
+                    onChange={handleInputChange} 
+                    required 
+                    className="mt-1 h-12 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500 pr-10" 
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="confirmPassword" className="text-gray-700 text-sm">Confirm Password *</Label>
+                <div className="relative">
+                  <Input 
+                    id="confirmPassword" 
+                    name="confirmPassword" 
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={formData.confirmPassword} 
+                    onChange={handleInputChange} 
+                    required 
+                    className="mt-1 h-12 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500 pr-10" 
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
               <div className="text-center text-xs text-gray-600 leading-4">
                 By submitting this form, you agree with the{" "}
                 <a href="/terms" className="text-red-600 hover:underline">
@@ -523,6 +601,58 @@ export default function OfficialRegistration() {
               onChange={handleInputChange} 
               className="mt-1 h-12 border-gray-300 focus:border-red-500 focus:ring-red-500" 
             />
+          </div>
+
+          <div>
+            <Label htmlFor="password-desktop" className="text-gray-700">Password *</Label>
+            <div className="relative">
+              <Input 
+                id="password-desktop" 
+                name="password" 
+                type={showPassword ? "text" : "password"}
+                value={formData.password} 
+                onChange={handleInputChange} 
+                required 
+                className="mt-1 h-12 border-gray-300 focus:border-red-500 focus:ring-red-500 pr-10" 
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4 text-gray-400" />
+                ) : (
+                  <Eye className="h-4 w-4 text-gray-400" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="confirmPassword-desktop" className="text-gray-700">Confirm Password *</Label>
+            <div className="relative">
+              <Input 
+                id="confirmPassword-desktop" 
+                name="confirmPassword" 
+                type={showConfirmPassword ? "text" : "password"}
+                value={formData.confirmPassword} 
+                onChange={handleInputChange} 
+                required 
+                className="mt-1 h-12 border-gray-300 focus:border-red-500 focus:ring-red-500 pr-10" 
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="h-4 w-4 text-gray-400" />
+                ) : (
+                  <Eye className="h-4 w-4 text-gray-400" />
+                )}
+              </button>
+            </div>
           </div>
 
           <div className="text-center text-sm text-gray-600 leading-5">

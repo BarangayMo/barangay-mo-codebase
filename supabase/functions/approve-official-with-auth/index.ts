@@ -141,18 +141,29 @@ serve(async (req) => {
       }
     }
 
-    // If user doesn't exist, create them
+    // If user doesn't exist, create them using the stored password
     if (!authUser) {
-      // Generate a secure temporary password
-      const tempPassword = crypto.randomUUID().substring(0, 12) + '!A1';
-      console.log('Generated temporary password for user creation');
+      // Use the password stored in the official record (which should be hashed)
+      if (!official.password_hash) {
+        console.error('No password found for official');
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            error: 'No password found for official. Please ensure password was provided during registration.'
+          }),
+          {
+            status: 400,
+            headers: corsHeaders,
+          }
+        );
+      }
 
-      // Create auth user using Admin API - this will trigger Supabase's email confirmation
+      // Create auth user using Admin API with the stored password
       console.log('Creating Supabase Auth user with email:', official.email);
       const { data: newAuthUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email: official.email,
-        password: tempPassword,
-        email_confirm: false, // Let Supabase handle email confirmation
+        password: official.password_hash, // Use the stored password directly
+        email_confirm: true, // Auto-confirm email since it's approved by admin
         user_metadata: {
           first_name: official.first_name,
           last_name: official.last_name,
@@ -185,32 +196,24 @@ serve(async (req) => {
       console.log('Auth user created successfully:', authUser.user.id);
     } else {
       console.log('Using existing auth user:', authUser.user.id);
-    }
-
-    // Send password reset email using Supabase's built-in system
-    console.log('Sending password reset email via Supabase');
-    const { data: resetData, error: resetError } = await supabaseAdmin.auth.resetPasswordForEmail(
-      official.email,
-      { 
-        redirectTo: `${req.headers.get('origin') || 'https://trybarangaymo.com'}/auth/reset-password`
-      }
-    );
-
-    if (resetError) {
-      console.error('Failed to send password reset email:', resetError);
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: `Failed to send password setup email: ${resetError.message}`
-        }),
-        {
-          status: 500,
-          headers: corsHeaders,
+      
+      // If user exists but doesn't have the stored password, update it
+      if (official.password_hash) {
+        console.log('Updating existing user password');
+        const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+          authUser.user.id,
+          {
+            password: official.password_hash
+          }
+        );
+        
+        if (updateError) {
+          console.error('Failed to update user password:', updateError);
         }
-      );
-    } else {
-      console.log('Password reset email sent successfully to:', official.email);
+      }
     }
+
+    console.log('Official can now login with their registration password');
 
     // Update user metadata with full information after successful approval
     console.log('Updating user metadata with complete information');
@@ -275,12 +278,12 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: 'Official approved successfully. Auth user created and password setup email sent.',
+        message: 'Official approved successfully. Auth user created with registration password.',
         data: {
           official_id: requestData.official_id,
           user_id: authUser.user.id,
           email: official.email,
-          note: 'A password setup email has been sent via Supabase.'
+          note: 'Official can now login using the password they provided during registration.'
         }
       }),
       {
