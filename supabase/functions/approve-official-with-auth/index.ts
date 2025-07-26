@@ -189,15 +189,27 @@ serve(async (req) => {
 
     // Send password reset email using Supabase's built-in system
     console.log('Sending password reset email via Supabase');
-    const { error: resetError } = await supabaseAdmin.auth.admin.inviteUserByEmail(official.email, {
-      redirectTo: `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.supabase.co')}/auth/callback`
-    });
+    const { data: resetData, error: resetError } = await supabaseAdmin.auth.resetPasswordForEmail(
+      official.email,
+      { 
+        redirectTo: `${req.headers.get('origin') || 'https://trybarangaymo.com'}/auth/reset-password`
+      }
+    );
 
     if (resetError) {
-      console.error('Warning: Could not send password setup email:', resetError);
-      // Continue anyway - user can still log in with temporary password
+      console.error('Failed to send password reset email:', resetError);
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: `Failed to send password setup email: ${resetError.message}`
+        }),
+        {
+          status: 500,
+          headers: corsHeaders,
+        }
+      );
     } else {
-      console.log('Password setup email sent successfully via Supabase');
+      console.log('Password reset email sent successfully to:', official.email);
     }
 
     // Update user metadata with full information after successful approval
