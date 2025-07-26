@@ -95,7 +95,6 @@ import PunongBarangayDashboard from "@/pages/officials/PunongBarangayDashboard";
 import EmergencyResponse from "@/pages/officials/EmergencyResponse";
 import OfficialsJobsPage from "@/pages/officials/OfficialsJobsPage";
 import OfficialProductPage from "@/pages/officials/OfficialProductPage";
-import OfficialCommunity from "@/pages/officials/OfficialCommunity";
 
 
 // Import the new EmailConfirmation component
@@ -172,7 +171,6 @@ export function AppRoutes() {
       <Route path="/official/rbi-forms" element={<ProtectedRoute><RbiForms /></ProtectedRoute>} />
       <Route path="/official/jobs" element={<ProtectedRoute><OfficialsJobsPage /></ProtectedRoute>} />
       <Route path="/official/products" element={<ProtectedRoute><OfficialProductPage /></ProtectedRoute>} />
-      <Route path="/official/community" element={<ProtectedRoute><OfficialCommunity /></ProtectedRoute>} />
       
       <Route path="/official/qr-verification" element={<ProtectedRoute><QRScanner /></ProtectedRoute>} />
       
