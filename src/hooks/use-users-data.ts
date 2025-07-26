@@ -168,7 +168,7 @@ export const useArchiveUser = () => {
         .from('profiles')
         .update({ status: 'archived' })
         .eq('id', userId)
-        .select()
+        .select('id, status')
         .single();
 
       if (error) throw error;
