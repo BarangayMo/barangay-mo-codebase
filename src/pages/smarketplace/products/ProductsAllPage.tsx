@@ -125,13 +125,24 @@ const ProductsAllPage = () => {
 
   // Delete product mutation
   const deleteProductMutation = useMutation({
-    mutationFn: async (productId: string) => {
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', productId);
-      if (error) throw error;
-    },
+  mutationFn: async (productId: string) => {
+  const { error, data, count } = await supabase
+    .from('products')
+    .delete()
+    .eq('id', productId)
+    .select() // <-- required to get count/data
+    .single(); // optional, just in case
+
+  console.log("Delete response:", { error, data, count });
+
+  if (error) {
+    console.error("Supabase delete error:", error);
+    throw error;
+  }
+
+  return data;
+},
+
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       toast.success('Product deleted successfully');
