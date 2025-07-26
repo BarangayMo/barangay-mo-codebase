@@ -171,7 +171,7 @@ export const useArchiveUser = () => {
 
   if (error) throw error;
   return { success: true };
-}
+},
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
