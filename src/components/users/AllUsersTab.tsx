@@ -134,7 +134,6 @@ const navigate = useNavigate();
       </div>
     );
   }
-  const router = useRouter();
 
 
   return (
