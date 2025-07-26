@@ -42,21 +42,38 @@ export const RbiApprovalModal = ({ isOpen, onClose, form, onSuccess }: RbiApprov
     
     setIsProcessing(true);
     try {
+      // Get user role to determine reviewer type and precedence
+      const { data: userProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) throw profileError;
+
+      // Determine decision precedence: superadmin (2) has higher precedence than official (1)
+      const reviewerType = userProfile.role === 'superadmin' ? 'superadmin' : 'official';
+      const decisionPrecedence = userProfile.role === 'superadmin' ? 2 : 1;
+
       const { error } = await supabase
         .from('rbi_forms')
         .update({
           status: approved ? 'approved' : 'rejected',
           reviewed_at: new Date().toISOString(),
           reviewed_by: user.id,
-          admin_notes: notes || null
+          admin_notes: notes || null,
+          reviewer_type: reviewerType,
+          decision_precedence: decisionPrecedence
         })
         .eq('id', form.id);
 
       if (error) throw error;
 
+      const reviewerTitle = userProfile.role === 'superadmin' ? 'Super Admin' : 'Barangay Official';
+      
       toast({
         title: approved ? "Application Approved" : "Application Rejected",
-        description: `RBI application ${form.rbi_number} has been ${approved ? 'approved' : 'rejected'}.`,
+        description: `RBI application ${form.rbi_number || 'pending'} has been ${approved ? 'approved' : 'rejected'} by ${reviewerTitle}.`,
       });
 
       onSuccess();

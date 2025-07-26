@@ -382,6 +382,7 @@ export default function RbiRegistration() {
         submitData = data;
       } else {
         // Create new form with proper headers
+        const barangayId = formData.address?.barangay || user.barangay || 'Unknown';
         const { data, error } = await supabase
           .from('rbi_forms')
           .insert([{
@@ -389,7 +390,7 @@ export default function RbiRegistration() {
             user_id: user.id,
             form_data: formData as unknown as Json,
             status: 'submitted',
-            barangay_id: formData.address?.barangay || user.barangay || 'Unknown',
+            barangay_id: barangayId,
             submitted_at: new Date().toISOString()
           }])
           .select('id, rbi_number, status')

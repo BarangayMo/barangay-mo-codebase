@@ -81,6 +81,7 @@ import UserManagementPage from "@/pages/users/UserManagementPage";
 import JobsAllPage from "@/pages/admin/JobsAllPage";
 import JobEditPage from "@/pages/admin/JobEditPage";
 import JobApplicationsPage from "@/pages/admin/JobApplicationsPage";
+import RbiFormsPage from "@/pages/admin/RbiFormsPage";
 
 // Import the new profile pages
 import PublicProfile from "@/pages/PublicProfile";
@@ -239,6 +240,8 @@ export function AppRoutes() {
       <Route path="/admin/jobs/all" element={<ProtectedRoute><JobsAllPage /></ProtectedRoute>} />
       <Route path="/admin/jobs/edit/:id" element={<ProtectedRoute><JobEditPage /></ProtectedRoute>} />
       <Route path="/admin/jobs/applications" element={<ProtectedRoute><JobApplicationsPage /></ProtectedRoute>} />
+      
+      <Route path="/admin/rbi-forms" element={<ProtectedRoute><RbiFormsPage /></ProtectedRoute>} />
       
       <Route path="/profile/public/:userId" element={<RbiProtectedRoute><PublicProfile /></RbiProtectedRoute>} />
       <Route path="/profile/private" element={<RbiProtectedRoute><PrivateProfile /></RbiProtectedRoute>} />

@@ -1410,11 +1410,13 @@ export type Database = {
         Row: {
           admin_notes: string | null
           barangay_id: string | null
+          decision_precedence: number | null
           form_data: Json
           id: string
           rbi_number: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          reviewer_type: string | null
           status: Database["public"]["Enums"]["rbi_status"]
           submitted_at: string
           updated_at: string | null
@@ -1423,11 +1425,13 @@ export type Database = {
         Insert: {
           admin_notes?: string | null
           barangay_id?: string | null
+          decision_precedence?: number | null
           form_data: Json
           id?: string
           rbi_number?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          reviewer_type?: string | null
           status?: Database["public"]["Enums"]["rbi_status"]
           submitted_at?: string
           updated_at?: string | null
@@ -1436,11 +1440,13 @@ export type Database = {
         Update: {
           admin_notes?: string | null
           barangay_id?: string | null
+          decision_precedence?: number | null
           form_data?: Json
           id?: string
           rbi_number?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          reviewer_type?: string | null
           status?: Database["public"]["Enums"]["rbi_status"]
           submitted_at?: string
           updated_at?: string | null
