@@ -163,17 +163,16 @@ export const useArchiveUser = () => {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (userId: string) => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .update({ status: 'archived' })
-        .eq('id', userId)
-        .select('id, status')
-        .single();
+   mutationFn: async (userId: string) => {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ status: 'archived' })
+    .eq('id', userId);
 
-      if (error) throw error;
-      return data;
-    },
+  if (error) throw error;
+  return { success: true };
+}
+
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       toast({
