@@ -165,6 +165,7 @@ export function AppRoutes() {
       <Route path="/official/punong-barangay" element={<ProtectedRoute><PunongBarangayDashboard /></ProtectedRoute>} />
       <Route path="/official/emergency-response" element={<ProtectedRoute><EmergencyResponse /></ProtectedRoute>} />
       <Route path="/official/rbi-forms" element={<ProtectedRoute><RbiForms /></ProtectedRoute>} />
+      <Route path="/official/jobs" element={<ProtectedRoute><OfficialJobsPage /></ProtectedRoute>} />
       
       <Route path="/official/qr-verification" element={<ProtectedRoute><QRScanner /></ProtectedRoute>} />
       
