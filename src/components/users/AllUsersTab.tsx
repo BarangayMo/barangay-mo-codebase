@@ -123,13 +123,7 @@ export const AllUsersTab = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-gray-900">Company users</h2>
-        <Button 
-          onClick={() => setIsInviteModalOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Invite users
-        </Button>
+        
       </div>
 
       {/* Filters and Search */}
