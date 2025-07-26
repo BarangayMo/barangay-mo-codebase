@@ -16,7 +16,8 @@ import {
 import { InviteUsersModal } from "./InviteUsersModal";
 import { useUsers, useArchiveUser, User } from "@/hooks/use-users-data";
 import { formatDistanceToNow } from "date-fns";
-import { useRouter } from 'next/router';
+import { useNavigate } from 'react-router-dom';
+
 
 
 const filterOptions = [
@@ -42,6 +43,7 @@ export const AllUsersTab = () => {
     const last = lastName || "";
     return `${first.charAt(0)}${last.charAt(0)}`.toUpperCase() || "U";
   };
+const navigate = useNavigate();
 
 
   const getRoleBadgeColor = (role: string) => {
@@ -255,9 +257,10 @@ export const AllUsersTab = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => router.push(`/users/${user.id}`)}>
-  View Profile
-</DropdownMenuItem>
+                       
+          <DropdownMenuItem onClick={() => navigate(`/users/${user.id}`)}>
+            View Profile
+          </DropdownMenuItem>
                        
                         <DropdownMenuSeparator />
                         <DropdownMenuItem 
