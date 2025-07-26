@@ -153,12 +153,12 @@ serve(async (req) => {
     const tempPassword = crypto.randomUUID().substring(0, 12) + '!A1';
     console.log('Generated temporary password for user creation');
 
-    // Create auth user using Admin API with minimal metadata first
+    // Create auth user using Admin API - this will trigger Supabase's email confirmation
     console.log('Creating Supabase Auth user with email:', official.email);
     const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: official.email,
       password: tempPassword,
-      email_confirm: true,
+      email_confirm: false, // Let Supabase handle email confirmation
       user_metadata: {
         first_name: official.first_name,
         last_name: official.last_name,
@@ -189,45 +189,17 @@ serve(async (req) => {
 
     console.log('Auth user created successfully:', authUser.user.id);
 
-    // Generate password reset link
-    console.log('Generating password reset link');
-    const { data: resetLinkData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'recovery',
-      email: official.email,
-      options: {
-        redirectTo: `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.supabase.co')}/auth/v1/verify`
-      }
+    // Send password reset email using Supabase's built-in system
+    console.log('Sending password reset email via Supabase');
+    const { error: resetError } = await supabaseAdmin.auth.admin.inviteUserByEmail(official.email, {
+      redirectTo: `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.supabase.co')}/auth/callback`
     });
 
     if (resetError) {
-      console.error('Error generating password reset link:', resetError);
-      // Continue anyway - we can still approve the user
-    }
-
-    // Send welcome email with password setup instructions
-    if (resetLinkData?.properties?.action_link) {
-      console.log('Sending welcome email to new official');
-      try {
-        const { error: emailError } = await supabaseAdmin.functions.invoke('send-official-welcome-email', {
-          body: {
-            officialName: `${official.first_name} ${official.last_name}`,
-            email: official.email,
-            position: official.position,
-            barangay: official.barangay,
-            resetUrl: resetLinkData.properties.action_link
-          }
-        });
-
-        if (emailError) {
-          console.error('Warning: Could not send welcome email:', emailError);
-          // Continue anyway
-        } else {
-          console.log('Welcome email sent successfully');
-        }
-      } catch (emailSendError) {
-        console.error('Warning: Email sending failed:', emailSendError);
-        // Continue anyway
-      }
+      console.error('Warning: Could not send password setup email:', resetError);
+      // Continue anyway - user can still log in with temporary password
+    } else {
+      console.log('Password setup email sent successfully via Supabase');
     }
 
     // Update user metadata with full information after successful approval
@@ -293,12 +265,12 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: 'Official approved successfully. Auth user created and welcome email sent.',
+        message: 'Official approved successfully. Auth user created and password setup email sent.',
         data: {
           official_id: requestData.official_id,
           user_id: authUser.user.id,
           email: official.email,
-          note: 'A welcome email with password setup instructions has been sent.'
+          note: 'A password setup email has been sent via Supabase.'
         }
       }),
       {
