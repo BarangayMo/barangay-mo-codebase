@@ -146,55 +146,108 @@ serve(async (req) => {
 
     console.log('Using original password for user creation');
 
-    // Create auth user using Admin API
-    console.log('Creating Supabase Auth user');
-    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: official.email,
-      password: official.original_password, // Use the original password they provided
-      email_confirm: true, // Skip email verification for approved officials
-      user_metadata: {
-        first_name: official.first_name,
-        last_name: official.last_name,
-        middle_name: official.middle_name,
-        suffix: official.suffix,
-        phone_number: official.phone_number,
-        landline_number: official.landline_number,
-        barangay: official.barangay,
-        municipality: official.municipality,
-        province: official.province,
-        region: official.region,
-        role: 'official',
-        position: official.position
-      }
-    });
-
-    if (authError) {
-      console.error('Error creating auth user:', authError);
-      
-      // Check if user already exists
-      if (authError.message?.includes('already registered') || authError.message?.includes('duplicate')) {
-        return new Response(
-          JSON.stringify({ 
-            success: false,
-            error: 'User with this email already exists in the authentication system'
-          }),
-          {
-            status: 409,
-            headers: corsHeaders,
-          }
-        );
-      }
-      
+    // Check if user already exists in auth system
+    console.log('Checking if user already exists in auth system');
+    const { data: existingAuthUsers, error: userListError } = await supabaseAdmin.auth.admin.listUsers();
+    
+    if (userListError) {
+      console.error('Error checking existing users:', userListError);
       return new Response(
         JSON.stringify({ 
           success: false,
-          error: 'Failed to create user account'
+          error: 'Failed to check existing users'
         }),
         {
           status: 500,
           headers: corsHeaders,
         }
       );
+    }
+
+    const existingUser = existingAuthUsers.users.find(user => user.email === official.email);
+    
+    let authUser;
+    
+    if (existingUser) {
+      console.log('User already exists in auth system, using existing user:', existingUser.id);
+      authUser = { user: existingUser };
+      
+      // Update the existing user's password to match the official's original password
+      console.log('Updating existing user password to match registration password');
+      const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+        existingUser.id,
+        { 
+          password: official.original_password,
+          user_metadata: {
+            first_name: official.first_name,
+            last_name: official.last_name,
+            middle_name: official.middle_name,
+            suffix: official.suffix,
+            phone_number: official.phone_number,
+            landline_number: official.landline_number,
+            barangay: official.barangay,
+            municipality: official.municipality,
+            province: official.province,
+            region: official.region,
+            role: 'official',
+            position: official.position
+          }
+        }
+      );
+      
+      if (updateError) {
+        console.error('Error updating existing user:', updateError);
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            error: 'Failed to update existing user account'
+          }),
+          {
+            status: 500,
+            headers: corsHeaders,
+          }
+        );
+      }
+    } else {
+      // Create auth user using Admin API
+      console.log('Creating new Supabase Auth user');
+      const { data: newAuthUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email: official.email,
+        password: official.original_password, // Use the original password they provided
+        email_confirm: true, // Skip email verification for approved officials
+        user_metadata: {
+          first_name: official.first_name,
+          last_name: official.last_name,
+          middle_name: official.middle_name,
+          suffix: official.suffix,
+          phone_number: official.phone_number,
+          landline_number: official.landline_number,
+          barangay: official.barangay,
+          municipality: official.municipality,
+          province: official.province,
+          region: official.region,
+          role: 'official',
+          position: official.position
+        }
+      });
+
+      if (authError) {
+        console.error('Error creating auth user:', authError);
+        
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            error: 'Failed to create user account',
+            details: authError.message
+          }),
+          {
+            status: 500,
+            headers: corsHeaders,
+          }
+        );
+      }
+      
+      authUser = newAuthUser;
     }
 
     console.log('Auth user created successfully:', authUser.user.id);
