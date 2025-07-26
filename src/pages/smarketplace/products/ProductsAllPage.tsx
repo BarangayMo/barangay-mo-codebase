@@ -129,13 +129,16 @@ const ProductsAllPage = () => {
   const { error } = await supabase
     .from('products')
     .delete()
-    .eq('id', productId); // ❌ Don't add `.select()` here
+    .eq('id', productId); // ✅ DO NOT add `.select()` here
 
   if (error) {
     console.error("Supabase delete error:", error);
     throw error;
   }
+
+  return true; // or return productId if needed
 },
+
 
 
     onSuccess: () => {
