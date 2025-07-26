@@ -103,7 +103,7 @@ export function DesktopNavItems() {
         asChild
         className={pathname === "/messages" ? "text-[#1a237e]" : ""}
       >
-        <Link to={getMessagesRoute()}>Messages</Link>
+        
       </Button>
       
       {userRole === "superadmin" && (
