@@ -178,10 +178,7 @@ export default function JobEditPage() {
 
       if (userRole === 'resident') {
         navigate('/resident/jobs');
-      } 
-      else if (userRole === 'official') {
-        navigate('/official/jobs');
-         else {
+      } else {
         navigate('/admin/jobs');
       }
     } catch (error: any) {
@@ -199,11 +196,7 @@ export default function JobEditPage() {
   const handleBackNavigation = () => {
     if (userRole === 'resident') {
       navigate('/resident/jobs');
-    } 
-    else if (userRole === 'official') {
-      navigate('/official/jobs');
-    }
-    else {
+    } else {
       navigate('/admin/jobs');
     }
   };
