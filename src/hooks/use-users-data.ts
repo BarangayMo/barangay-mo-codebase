@@ -162,18 +162,18 @@ export const useArchiveUser = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  mutationFn: async (userId: string) => {
-  const { error } = await supabase
-    .from('profiles')
-    .update({ status: 'archived' })
-    .eq('id', userId)
-    .select() // important to use .select().single() if you expect exactly one row
-    .single(); // ✅ this fixes the error
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ status: 'archived' })
+        .eq('id', userId)
+        .select()
+        .single(); // ✅ Fix: expect single row
 
-  if (error) throw error;
-  return { success: true };
-},
-
+      if (error) throw error;
+      return { success: true };
+    },
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
@@ -182,6 +182,7 @@ export const useArchiveUser = () => {
         description: "User has been archived successfully.",
       });
     },
+
     onError: (error) => {
       toast({
         title: "Error",
