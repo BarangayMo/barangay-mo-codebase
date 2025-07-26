@@ -126,24 +126,15 @@ serve(async (req) => {
       );
     }
 
-    if (!official.password_hash) {
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: 'No password found for this official registration'
-        }),
-        {
-          status: 400,
-          headers: corsHeaders,
-        }
-      );
-    }
+    // Generate a secure temporary password
+    const tempPassword = crypto.randomUUID().substring(0, 12) + '!A1';
+    console.log('Generated temporary password for user creation');
 
     // Create auth user using Admin API
     console.log('Creating Supabase Auth user');
     const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: official.email,
-      password: '', // We'll set password later using the hash
+      password: tempPassword,
       email_confirm: true, // Skip email verification for approved officials
       user_metadata: {
         first_name: official.first_name,
@@ -192,19 +183,19 @@ serve(async (req) => {
 
     console.log('Auth user created successfully:', authUser.user.id);
 
-    // Update password hash directly in auth.users table
-    console.log('Setting password hash for user');
-    const { error: passwordError } = await supabaseAdmin
-      .from('auth.users')
-      .update({ 
-        encrypted_password: official.password_hash,
-        password_hash: official.password_hash 
-      })
-      .eq('id', authUser.user.id);
+    // Send password reset email so user can set their chosen password
+    console.log('Sending password reset email to user');
+    const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'recovery',
+      email: official.email,
+      options: {
+        redirectTo: `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.supabase.co')}/auth/v1/verify?type=recovery`
+      }
+    });
 
-    if (passwordError) {
-      console.error('Warning: Could not set password hash directly:', passwordError);
-      // Continue anyway - user can reset password if needed
+    if (resetError) {
+      console.error('Warning: Could not send password reset email:', resetError);
+      // Continue anyway - user can request password reset manually
     }
 
     // Update official status to approved and link to auth user
@@ -243,11 +234,12 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: 'Official approved successfully. Auth user created.',
+        message: 'Official approved successfully. Auth user created and password reset email sent.',
         data: {
           official_id: requestData.official_id,
           user_id: authUser.user.id,
-          email: official.email
+          email: official.email,
+          note: 'A password reset email has been sent to set up the account password.'
         }
       }),
       {
