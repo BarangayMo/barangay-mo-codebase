@@ -577,12 +577,12 @@ const OfficialsDashboard = () => {
             </div>
           </div>
 
-          <div className="flex">
+          <div className="flex min-h-screen">
             {/* Desktop Sidebar */}
-            <div className="w-64 bg-white border-r border-red-100 min-h-screen">
+            <div className="w-64 flex-shrink-0 bg-white border-r border-red-100 min-h-screen overflow-y-auto">
               <div className="p-6">
                 <div className="flex items-center gap-2 mb-8">
-                  <div className="w-8 h-8 bg-red-400 rounded-lg flex items-center justify-center overflow-hidden">
+                  <div className="w-8 h-8 bg-red-400 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                     {user?.logo_url ? (
                       <img 
                         src={user.logo_url} 
@@ -593,7 +593,7 @@ const OfficialsDashboard = () => {
                       <span className="text-white font-bold">🏛️</span>
                     )}
                   </div>
-                  <span className="font-semibold text-gray-900">Barangay Portal</span>
+                  <span className="font-semibold text-gray-900 truncate">Barangay Portal</span>
                 </div>
 
                 {/* Desktop Profile Card */}
@@ -616,8 +616,8 @@ const OfficialsDashboard = () => {
                       <Link key={index} to={item.href || "/official-dashboard"} className={`flex items-center gap-3 px-2 py-2 rounded-lg cursor-pointer transition-all duration-200 ${
                         item.active ? 'bg-red-50 text-red-600 border-l-2 border-red-500' : 'hover:bg-red-50 hover:text-red-600 text-gray-700'
                       }`}>
-                        <item.icon className={`h-4 w-4 ${item.active ? 'text-red-600' : 'text-red-500'}`} />
-                        <span className="text-sm">{item.name}</span>
+                        <item.icon className={`h-4 w-4 flex-shrink-0 ${item.active ? 'text-red-600' : 'text-red-500'}`} />
+                        <span className="text-sm truncate">{item.name}</span>
                       </Link>
                     ))}
                   </div>
@@ -636,8 +636,8 @@ const OfficialsDashboard = () => {
                       { name: "Emergency Response", icon: Siren, href: "/official/emergency-responder" }
                     ].map((item, index) => (
                       <Link key={index} to={item.href} className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-red-50 hover:text-red-600 cursor-pointer transition-all duration-200">
-                        <item.icon className="h-4 w-4 text-red-500" />
-                        <span className="text-sm text-gray-700 hover:text-red-600">{item.name}</span>
+                        <item.icon className="h-4 w-4 flex-shrink-0 text-red-500" />
+                        <span className="text-sm text-gray-700 hover:text-red-600 truncate">{item.name}</span>
                       </Link>
                     ))}
                   </div>
@@ -646,304 +646,310 @@ const OfficialsDashboard = () => {
             </div>
 
             {/* Desktop Main Content */}
-            <div className="flex-1 p-6">
-              {/* Community Overview Section */}
-              <div className="mb-8">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h2 className="text-3xl font-bold text-gray-900">Community Overview</h2>
-                    <p className="text-lg text-blue-600 mt-2">
-                      Serving {residentsCount || 0} residents across {purokCount} puroks
-                    </p>
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <div className="h-full overflow-y-auto p-6">
+                {/* Community Overview Section */}
+                <div className="mb-8">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 gap-4">
+                    <div className="min-w-0">
+                      <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 truncate">Community Overview</h2>
+                      <p className="text-base lg:text-lg text-blue-600 mt-2">
+                        Serving {residentsCount || 0} residents across {purokCount} puroks
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      <Button variant="outline" className="flex items-center gap-2 text-sm">
+                        <CalendarDays className="h-4 w-4" />
+                        <span className="hidden sm:inline">This Month</span>
+                      </Button>
+                      <Button variant="outline" className="flex items-center gap-2 text-sm">
+                        <Filter className="h-4 w-4" />
+                        <span className="hidden sm:inline">Filter</span>
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Button variant="outline" className="flex items-center gap-2">
-                      <CalendarDays className="h-4 w-4" />
-                      This Month
-                    </Button>
-                    <Button variant="outline" className="flex items-center gap-2">
-                      <Filter className="h-4 w-4" />
-                      Filter
-                    </Button>
-                  </div>
-                </div>
 
-                {/* Community Stats */}
-                <div className="grid grid-cols-4 gap-6 mb-8">
-                  <Card className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <p className="text-sm text-gray-600">Total Residents</p>
-                        <p className="text-2xl font-bold text-gray-900">{residentsCount || 0}</p>
-                        <p className="text-sm text-green-600 flex items-center">
-                          ↗ 12% <span className="text-gray-500 ml-1">from last month</span>
-                        </p>
-                      </div>
-                      <div className="w-16 h-8 bg-gradient-to-r from-green-200 to-green-300 rounded"></div>
-                    </div>
-                  </Card>
-                  
-                  <Card className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <p className="text-sm text-gray-600">RBI Submissions</p>
-                        <p className="text-2xl font-bold text-gray-900">{rbiCount || 0}</p>
-                        <p className="text-sm text-blue-600 flex items-center">
-                          ↗ New <span className="text-gray-500 ml-1">this month</span>
-                        </p>
-                      </div>
-                      <div className="w-16 h-8 bg-gradient-to-r from-blue-200 to-blue-300 rounded"></div>
-                    </div>
-                  </Card>
-
-                  <Card className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <p className="text-sm text-gray-600">Active Services</p>
-                        <p className="text-2xl font-bold text-gray-900">{servicesCount || 0}</p>
-                        <p className="text-sm text-purple-600 flex items-center">
-                          ↗ 3 new <span className="text-gray-500 ml-1">this month</span>
-                        </p>
-                      </div>
-                      <div className="w-16 h-8 bg-gradient-to-r from-purple-200 to-purple-300 rounded"></div>
-                    </div>
-                  </Card>
-                  
-                  <Card className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <p className="text-sm text-gray-600">Pending Requests</p>
-                        <p className="text-2xl font-bold text-gray-900">{pendingRequests || 0}</p>
-                        <p className="text-sm text-orange-600 flex items-center">
-                          ↓ 5 resolved <span className="text-gray-500 ml-1">this week</span>
-                        </p>
-                      </div>
-                      <div className="w-16 h-8 bg-gradient-to-r from-orange-200 to-orange-300 rounded"></div>
-                    </div>
-                  </Card>
-                </div>
-              </div>
-
-              {/* Recent Residents Section */}
-              <div className="mb-8">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-semibold text-gray-900">Recent Residents</h3>
-                  <Link to="/official/residents" className="text-red-500 text-sm font-medium hover:underline">View All</Link>
-                </div>
-                <div className="grid grid-cols-4 gap-4">
-                  {recentResidents?.slice(0, 4).map((resident, index) => (
-                    <Card key={index} className="p-4 hover:shadow-md transition-shadow">
-                      <div className="flex flex-col items-center text-center">
-                        <Avatar className="w-16 h-16 mb-3">
-                          <AvatarImage src={resident.avatar_url || "/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png"} />
-                          <AvatarFallback>{resident.first_name?.[0]}{resident.last_name?.[0]}</AvatarFallback>
-                        </Avatar>
-                        <h4 className="font-medium text-gray-900 mb-1">
-                          {resident.first_name} {resident.last_name}
-                        </h4>
-                        <p className="text-xs text-gray-500 mb-2">
-                          Joined {format(new Date(resident.created_at), 'MMM dd, yyyy')}
-                        </p>
-                        <Badge variant="secondary" className="text-xs">{resident.role}</Badge>
+                  {/* Community Stats */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6 mb-8">
+                    <Card className="p-4 lg:p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm text-gray-600 truncate">Total Residents</p>
+                          <p className="text-xl lg:text-2xl font-bold text-gray-900">{residentsCount || 0}</p>
+                          <p className="text-sm text-green-600 flex items-center">
+                            ↗ 12% <span className="text-gray-500 ml-1 hidden sm:inline">from last month</span>
+                          </p>
+                        </div>
+                        <div className="w-12 lg:w-16 h-6 lg:h-8 bg-gradient-to-r from-green-200 to-green-300 rounded flex-shrink-0"></div>
                       </div>
                     </Card>
-                  )) || (
-                    <div className="col-span-4 text-center text-gray-500 py-8">
-                      <p>No recent residents found</p>
-                    </div>
-                  )}
-                </div>
-              </div>
+                    
+                    <Card className="p-4 lg:p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm text-gray-600 truncate">RBI Submissions</p>
+                          <p className="text-xl lg:text-2xl font-bold text-gray-900">{rbiCount || 0}</p>
+                          <p className="text-sm text-blue-600 flex items-center">
+                            ↗ New <span className="text-gray-500 ml-1 hidden sm:inline">this month</span>
+                          </p>
+                        </div>
+                        <div className="w-12 lg:w-16 h-6 lg:h-8 bg-gradient-to-r from-blue-200 to-blue-300 rounded flex-shrink-0"></div>
+                      </div>
+                    </Card>
 
-              {/* Barangay Officials Section */}
-              {barangayOfficials && barangayOfficials.length > 0 && (
+                    <Card className="p-4 lg:p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm text-gray-600 truncate">Active Services</p>
+                          <p className="text-xl lg:text-2xl font-bold text-gray-900">{servicesCount || 0}</p>
+                          <p className="text-sm text-purple-600 flex items-center">
+                            ↗ 3 new <span className="text-gray-500 ml-1 hidden sm:inline">this month</span>
+                          </p>
+                        </div>
+                        <div className="w-12 lg:w-16 h-6 lg:h-8 bg-gradient-to-r from-purple-200 to-purple-300 rounded flex-shrink-0"></div>
+                      </div>
+                    </Card>
+                    
+                    <Card className="p-4 lg:p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm text-gray-600 truncate">Pending Requests</p>
+                          <p className="text-xl lg:text-2xl font-bold text-gray-900">{pendingRequests || 0}</p>
+                          <p className="text-sm text-orange-600 flex items-center">
+                            ↓ 5 resolved <span className="text-gray-500 ml-1 hidden sm:inline">this week</span>
+                          </p>
+                        </div>
+                        <div className="w-12 lg:w-16 h-6 lg:h-8 bg-gradient-to-r from-orange-200 to-orange-300 rounded flex-shrink-0"></div>
+                      </div>
+                    </Card>
+                  </div>
+                </div>
+
+                {/* Recent Residents Section */}
                 <div className="mb-8">
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-semibold text-gray-900">Barangay Officials</h3>
-                    <Link to="/users/officials" className="text-red-500 text-sm font-medium hover:underline">View All</Link>
+                    <h3 className="text-lg lg:text-xl font-semibold text-gray-900">Recent Residents</h3>
+                    <Link to="/official/residents" className="text-red-500 text-sm font-medium hover:underline flex-shrink-0">View All</Link>
                   </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    {barangayOfficials.slice(0, 6).map((official, index) => (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {recentResidents?.slice(0, 4).map((resident, index) => (
                       <Card key={index} className="p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="w-12 h-12">
-                            <AvatarFallback className="bg-red-100 text-red-600">
-                              {official.FIRSTNAME?.[0]}{official.LASTNAME?.[0]}
-                            </AvatarFallback>
+                        <div className="flex flex-col items-center text-center">
+                          <Avatar className="w-16 h-16 mb-3 flex-shrink-0">
+                            <AvatarImage src={resident.avatar_url || "/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png"} />
+                            <AvatarFallback>{resident.first_name?.[0]}{resident.last_name?.[0]}</AvatarFallback>
                           </Avatar>
-                          <div className="flex-1">
-                            <h4 className="font-medium text-gray-900">
-                              {official.FIRSTNAME} {official.LASTNAME}
-                            </h4>
-                            <p className="text-sm text-gray-600">{official.POSITION}</p>
-                          </div>
+                          <h4 className="font-medium text-gray-900 mb-1 truncate w-full" title={`${resident.first_name} ${resident.last_name}`}>
+                            {resident.first_name} {resident.last_name}
+                          </h4>
+                          <p className="text-xs text-gray-500 mb-2 truncate w-full">
+                            Joined {format(new Date(resident.created_at), 'MMM dd, yyyy')}
+                          </p>
+                          <Badge variant="secondary" className="text-xs truncate">{resident.role}</Badge>
                         </div>
                       </Card>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Community Posts Section */}
-              <div className="mb-8">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-semibold text-gray-900">Community Posts</h3>
-                  <Link to="/community" className="text-red-500 text-sm font-medium hover:underline">View All</Link>
-                </div>
-                <CommunitySlider />
-              </div>
-
-              {/* Recent Activities Section */}
-              <div>
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-semibold text-gray-900">Recent Activities</h3>
-                  <Button variant="ghost" className="text-gray-600">View All</Button>
-                </div>
-
-                {/* Activity Status Tabs */}
-                <div className="flex items-center gap-6 mb-6">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">New Requests</span>
-                    <Badge variant="secondary">{pendingRequests || 0}</Badge>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">In Progress</span>
-                    <Badge variant="secondary">12</Badge>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Completed</span>
-                    <Badge variant="secondary">45</Badge>
-                  </div>
-                </div>
-
-                {/* Activity Cards */}
-                <div className="grid grid-cols-3 gap-6">
-                  {/* Resident Services */}
-                  <Card className="p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                        <Users className="h-4 w-4 text-green-600" />
+                    )) || (
+                      <div className="col-span-full text-center text-gray-500 py-8">
+                        <p>No recent residents found</p>
                       </div>
-                      <div className="flex -space-x-2">
-                        {recentResidents?.slice(0, 2).map((resident, index) => (
-                          <Avatar key={index} className="w-6 h-6 border-2 border-white">
-                            <AvatarImage src={resident.avatar_url} />
-                            <AvatarFallback className="text-xs">{resident.first_name?.[0]}</AvatarFallback>
-                          </Avatar>
-                        ))}
-                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Barangay Officials Section */}
+                {barangayOfficials && barangayOfficials.length > 0 && (
+                  <div className="mb-8">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-lg lg:text-xl font-semibold text-gray-900">Barangay Officials</h3>
+                      <Link to="/users/officials" className="text-red-500 text-sm font-medium hover:underline flex-shrink-0">View All</Link>
                     </div>
-                    <h4 className="font-medium text-gray-900 mb-2">New resident registrations and service requests this week</h4>
-                    <p className="text-sm text-gray-500 mb-4">Status: Processing</p>
-                    <p className="text-xs text-gray-400">Last updated: Today</p>
-                  </Card>
-
-                  {/* Community Programs */}
-                  <Card className="p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <FileText className="h-4 w-4 text-blue-600" />
-                      </div>
-                      <Avatar className="w-6 h-6">
-                        <AvatarFallback className="text-xs">A</AvatarFallback>
-                      </Avatar>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {barangayOfficials.slice(0, 6).map((official, index) => (
+                        <Card key={index} className="p-4 hover:shadow-md transition-shadow">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <Avatar className="w-12 h-12 flex-shrink-0">
+                              <AvatarFallback className="bg-red-100 text-red-600">
+                                {official.FIRSTNAME?.[0]}{official.LASTNAME?.[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-gray-900 truncate" title={`${official.FIRSTNAME} ${official.LASTNAME}`}>
+                                {official.FIRSTNAME} {official.LASTNAME}
+                              </h4>
+                              <p className="text-sm text-gray-600 truncate" title={official.POSITION}>{official.POSITION}</p>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
                     </div>
-                    <h4 className="font-medium text-gray-900 mb-2">Medical assistance program: distribute health cards to qualified residents</h4>
-                    <div className="mb-2">
-                      <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
-                        <span>Started: June 15, 2024</span>
-                        <span>Target: July 15, 2024</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div className="bg-blue-500 h-2 rounded-full" style={{width: '75%'}}></div>
-                      </div>
-                    </div>
-                    <p className="text-xs text-gray-400">Last updated: 2 days ago</p>
-                  </Card>
+                  </div>
+                )}
 
-                  {/* Add New Service Card */}
-                  <Card className="p-6 border-dashed border-2 border-gray-300 flex items-center justify-center">
-                    <Link to="/official/services" className="flex items-center gap-2 text-gray-500">
-                      <Plus className="h-4 w-4" />
-                      Add new service
-                    </Link>
-                  </Card>
+                {/* Community Posts Section */}
+                <div className="mb-8">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg lg:text-xl font-semibold text-gray-900">Community Posts</h3>
+                    <Link to="/community" className="text-red-500 text-sm font-medium hover:underline flex-shrink-0">View All</Link>
+                  </div>
+                  <div className="w-full overflow-hidden">
+                    <CommunitySlider />
+                  </div>
+                </div>
+
+                {/* Recent Activities Section */}
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg lg:text-xl font-semibold text-gray-900">Recent Activities</h3>
+                    <Button variant="ghost" className="text-gray-600 flex-shrink-0">View All</Button>
+                  </div>
+
+                  {/* Activity Status Tabs */}
+                  <div className="flex flex-wrap items-center gap-4 lg:gap-6 mb-6">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600">New Requests</span>
+                      <Badge variant="secondary">{pendingRequests || 0}</Badge>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600">In Progress</span>
+                      <Badge variant="secondary">12</Badge>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600">Completed</span>
+                      <Badge variant="secondary">45</Badge>
+                    </div>
+                  </div>
+
+                  {/* Activity Cards */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
+                    {/* Resident Services */}
+                    <Card className="p-4 lg:p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Users className="h-4 w-4 text-green-600" />
+                        </div>
+                        <div className="flex -space-x-2">
+                          {recentResidents?.slice(0, 2).map((resident, index) => (
+                            <Avatar key={index} className="w-6 h-6 border-2 border-white">
+                              <AvatarImage src={resident.avatar_url} />
+                              <AvatarFallback className="text-xs">{resident.first_name?.[0]}</AvatarFallback>
+                            </Avatar>
+                          ))}
+                        </div>
+                      </div>
+                      <h4 className="font-medium text-gray-900 mb-2 line-clamp-2">New resident registrations and service requests this week</h4>
+                      <p className="text-sm text-gray-500 mb-4">Status: Processing</p>
+                      <p className="text-xs text-gray-400">Last updated: Today</p>
+                    </Card>
+
+                    {/* Community Programs */}
+                    <Card className="p-4 lg:p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <FileText className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <Avatar className="w-6 h-6">
+                          <AvatarFallback className="text-xs">A</AvatarFallback>
+                        </Avatar>
+                      </div>
+                      <h4 className="font-medium text-gray-900 mb-2 line-clamp-2">Medical assistance program: distribute health cards to qualified residents</h4>
+                      <div className="mb-2">
+                        <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                          <span className="truncate">Started: June 15, 2024</span>
+                          <span className="truncate">Target: July 15, 2024</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="bg-blue-500 h-2 rounded-full" style={{width: '75%'}}></div>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-400">Last updated: 2 days ago</p>
+                    </Card>
+
+                    {/* Add New Service Card */}
+                    <Card className="p-4 lg:p-6 border-dashed border-2 border-gray-300 flex items-center justify-center">
+                      <Link to="/official/services" className="flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors">
+                        <Plus className="h-4 w-4" />
+                        <span>Add new service</span>
+                      </Link>
+                    </Card>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Desktop Right Sidebar */}
-            <div className="w-80 bg-white border-l border-gray-200 p-6">
-              <h3 className="font-semibold text-gray-900 mb-4">Recent Documents</h3>
-              <div className="space-y-3">
-                {[
-                  { name: "Barangay Resolution 2024-15", time: "2 hours ago", color: "bg-yellow-100" },
-                  { name: "Budget Allocation Report", time: "1 day ago", color: "bg-purple-100" },
-                  { name: "Community Survey Results", time: "2 days ago", color: "bg-pink-100" },
-                  { name: "Emergency Response Plan", time: "3 days ago", color: "bg-green-100" },
-                  { name: "Monthly Activity Report", time: "1 week ago", color: "bg-orange-100" }
-                ].map((doc, index) => (
-                  <div key={index} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
-                    <div className={`w-8 h-8 ${doc.color} rounded`}></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">{doc.name}</p>
-                      <p className="text-xs text-gray-500">Updated {doc.time}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-8">
-                <h3 className="font-semibold text-gray-900 mb-4">Barangay Staff</h3>
+            <div className="w-72 xl:w-80 flex-shrink-0 bg-white border-l border-gray-200 overflow-y-auto">
+              <div className="p-4 lg:p-6">
+                <h3 className="font-semibold text-gray-900 mb-4 truncate">Recent Documents</h3>
                 <div className="space-y-3">
-                  {barangayOfficials?.slice(0, 3).map((official, index) => (
-                    <div key={index} className="flex items-center gap-3">
-                      <Avatar className="w-8 h-8">
-                        <AvatarFallback className="text-xs">
-                          {official.FIRSTNAME?.[0]}{official.LASTNAME?.[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {official.FIRSTNAME} {official.LASTNAME}
-                        </p>
-                        <p className="text-xs text-gray-500">{official.POSITION}</p>
-                      </div>
-                    </div>
-                  )) || [
-                    { name: "Captain Rodriguez", role: "Barangay Captain", avatar: "CR" },
-                    { name: "Secretary Santos", role: "Barangay Secretary", avatar: "SS" },
-                    { name: "Kagawad Reyes", role: "Councilor", avatar: "KR" }
-                  ].map((member, index) => (
-                    <div key={index} className="flex items-center gap-3">
-                      <Avatar className="w-8 h-8">
-                        <AvatarFallback className="text-xs">{member.avatar}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{member.name}</p>
-                        <p className="text-xs text-gray-500">{member.role}</p>
+                  {[
+                    { name: "Barangay Resolution 2024-15", time: "2 hours ago", color: "bg-yellow-100" },
+                    { name: "Budget Allocation Report", time: "1 day ago", color: "bg-purple-100" },
+                    { name: "Community Survey Results", time: "2 days ago", color: "bg-pink-100" },
+                    { name: "Emergency Response Plan", time: "3 days ago", color: "bg-green-100" },
+                    { name: "Monthly Activity Report", time: "1 week ago", color: "bg-orange-100" }
+                  ].map((doc, index) => (
+                    <div key={index} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer min-w-0">
+                      <div className={`w-8 h-8 ${doc.color} rounded flex-shrink-0`}></div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate" title={doc.name}>{doc.name}</p>
+                        <p className="text-xs text-gray-500 truncate">Updated {doc.time}</p>
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
 
-              <div className="mt-8">
-                <h3 className="font-semibold text-gray-900 mb-4">Urgent Alerts</h3>
-                <div className="space-y-3">
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                    <div className="flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4 text-red-500" />
-                      <span className="text-sm font-medium text-red-800">Emergency Response</span>
-                    </div>
-                    <p className="text-xs text-red-600 mt-1">3 pending emergency requests</p>
+                <div className="mt-8">
+                  <h3 className="font-semibold text-gray-900 mb-4 truncate">Barangay Staff</h3>
+                  <div className="space-y-3">
+                    {barangayOfficials?.slice(0, 3).map((official, index) => (
+                      <div key={index} className="flex items-center gap-3 min-w-0">
+                        <Avatar className="w-8 h-8 flex-shrink-0">
+                          <AvatarFallback className="text-xs">
+                            {official.FIRSTNAME?.[0]}{official.LASTNAME?.[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-gray-900 truncate" title={`${official.FIRSTNAME} ${official.LASTNAME}`}>
+                            {official.FIRSTNAME} {official.LASTNAME}
+                          </p>
+                          <p className="text-xs text-gray-500 truncate" title={official.POSITION}>{official.POSITION}</p>
+                        </div>
+                      </div>
+                    )) || [
+                      { name: "Captain Rodriguez", role: "Barangay Captain", avatar: "CR" },
+                      { name: "Secretary Santos", role: "Barangay Secretary", avatar: "SS" },
+                      { name: "Kagawad Reyes", role: "Councilor", avatar: "KR" }
+                    ].map((member, index) => (
+                      <div key={index} className="flex items-center gap-3 min-w-0">
+                        <Avatar className="w-8 h-8 flex-shrink-0">
+                          <AvatarFallback className="text-xs">{member.avatar}</AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-gray-900 truncate" title={member.name}>{member.name}</p>
+                          <p className="text-xs text-gray-500 truncate" title={member.role}>{member.role}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-orange-500" />
-                      <span className="text-sm font-medium text-orange-800">RBI Forms</span>
+                </div>
+
+                <div className="mt-8">
+                  <h3 className="font-semibold text-gray-900 mb-4 truncate">Urgent Alerts</h3>
+                  <div className="space-y-3">
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <AlertTriangle className="h-4 w-4 text-red-500 flex-shrink-0" />
+                        <span className="text-sm font-medium text-red-800 truncate">Emergency Response</span>
+                      </div>
+                      <p className="text-xs text-red-600 mt-1 truncate">3 pending emergency requests</p>
                     </div>
-                    <p className="text-xs text-orange-600 mt-1">{rbiCount || 0} forms need review</p>
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <FileText className="h-4 w-4 text-orange-500 flex-shrink-0" />
+                        <span className="text-sm font-medium text-orange-800 truncate">RBI Forms</span>
+                      </div>
+                      <p className="text-xs text-orange-600 mt-1 truncate">{rbiCount || 0} forms need review</p>
+                    </div>
                   </div>
                 </div>
               </div>
