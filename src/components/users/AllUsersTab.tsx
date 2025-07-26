@@ -115,13 +115,9 @@ const navigate = useNavigate();
     }
   };
 
- const handleArchiveUser = (userId: string) => {
-  archiveUserMutation.mutate(userId, {
-    onSuccess: () => {
-      // Optimistically remove the user from the current list
-      setSelectedUsers((prev) => prev.filter(id => id !== userId));
-    }
-  });
+  const handleArchiveUser = (userId: string) => {
+  console.log("Archiving user with ID:", userId);
+  archiveUserMutation.mutate(userId);
 };
 
 
