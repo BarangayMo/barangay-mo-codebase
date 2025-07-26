@@ -239,7 +239,7 @@ export const AllUsersTab = () => {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem>View Profile</DropdownMenuItem>
-                        <DropdownMenuItem>Edit User</DropdownMenuItem>
+                       
                         <DropdownMenuSeparator />
                         <DropdownMenuItem 
                           className="text-red-600"
