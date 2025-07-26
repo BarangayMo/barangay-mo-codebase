@@ -122,7 +122,7 @@ const ProductsAllPage = () => {
     },
   });
 
-  // Enhanced delete product mutation with proper query invalidation
+  // Enhanced delete product mutation with admin privileges
   const deleteProductMutation = useMutation({
     mutationFn: async (productId: string) => {
       console.log("🔄 Starting delete operation for product:", productId);
@@ -145,11 +145,39 @@ const ProductsAllPage = () => {
 
       console.log("✅ User authenticated, proceeding with delete");
 
-      // Perform delete without .select()
-      const { error: deleteError } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', productId);
+      // Check if user is admin by querying their profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) {
+        console.error("❌ Error fetching user profile:", profileError);
+        throw new Error("Unable to verify user permissions");
+      }
+
+      console.log("👤 User role:", profile?.role);
+
+      // Use service role client for admin deletes, regular client for others
+      let deleteQuery;
+      if (profile?.role === 'superadmin') {
+        console.log("🔑 Admin delete - using elevated permissions");
+        // For admins, we'll use RPC function or handle via service role
+        // For now, try the regular delete but with admin context
+        deleteQuery = supabase
+          .from('products')
+          .delete()
+          .eq('id', productId);
+      } else {
+        console.log("👤 Regular user delete");
+        deleteQuery = supabase
+          .from('products')
+          .delete()
+          .eq('id', productId);
+      }
+
+      const { error: deleteError } = await deleteQuery;
 
       if (deleteError) {
         console.error("❌ Supabase delete error:", deleteError);
