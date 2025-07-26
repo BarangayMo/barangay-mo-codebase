@@ -150,10 +150,12 @@ const ProductsAllPage = () => {
   };
 
   const handleDeleteProduct = (productId: string, productName: string) => {
-    if (window.confirm(`Are you sure you want to delete "${productName}"?`)) {
-      deleteProductMutation.mutate(productId);
-    }
-  };
+  console.log("Deleting product with ID:", productId); // Add this
+  if (window.confirm(`Are you sure you want to delete "${productName}"?`)) {
+    deleteProductMutation.mutate(productId);
+  }
+};
+
 
   const tabItems = [
     { icon: <ShoppingBag className="h-4 w-4" />, label: "All", value: "all" },
