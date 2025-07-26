@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { supabase } from "@/integrations/supabase/client";
@@ -138,7 +137,7 @@ export default function OfficialJobsPage() {
           <div className="flex items-center gap-4 mb-6">
             <Button
               variant="ghost"
-              onClick={() => navigate('/official-home')}
+              onClick={() => navigate('/official-dashboard')}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -164,7 +163,7 @@ export default function OfficialJobsPage() {
         <div className="flex items-center gap-4 mb-6">
           <Button
             variant="ghost"
-            onClick={() => navigate('/official-home')}
+            onClick={() => navigate('/official-dashboard')}
             className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
