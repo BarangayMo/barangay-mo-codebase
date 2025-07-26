@@ -17,7 +17,7 @@ import { InviteUsersModal } from "./InviteUsersModal";
 import { useUsers, useArchiveUser, User } from "@/hooks/use-users-data";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from 'next/router';
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+
 
 const filterOptions = [
   { value: "All", label: "All", icon: Users },
@@ -42,7 +42,6 @@ export const AllUsersTab = () => {
     const last = lastName || "";
     return `${first.charAt(0)}${last.charAt(0)}`.toUpperCase() || "U";
   };
-  const router = useRouter();
 
 
   const getRoleBadgeColor = (role: string) => {
@@ -54,27 +53,7 @@ export const AllUsersTab = () => {
       default:
         return 'bg-gray-100 text-gray-800';
     }
-    // in use-users-data.ts
-export const useArchiveUser = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation(
-    async (userId: string) => {
-      const { data, error } = await supabase
-        .from('users')
-        .update({ status: 'archived' })  // ✅ Mark as archived
-        .eq('id', userId);
-
-      if (error) throw new Error(error.message);
-      return data;
-    },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries('users'); // ✅ Refetch updated list
-      }
-    }
-  );
-};
+   
 
   };
 
@@ -95,18 +74,28 @@ export const useArchiveUser = () => {
   };
 
   const filteredUsers = users.filter(user => {
-    const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
-    const matchesSearch = fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    
-if (selectedFilter === "All") return matchesSearch && user.status !== "archived";
-    if (selectedFilter === "Resident") return matchesSearch && user.role === "resident";
-    if (selectedFilter === "Official") return matchesSearch && user.role === "official";
-    if (selectedFilter === "Online") return matchesSearch && user.status === "online";
-    if (selectedFilter === "Offline") return matchesSearch && user.status === "offline";
-    if (selectedFilter === "Archived") return matchesSearch && user.status === "archived";
-    return matchesSearch;
-  });
+  const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+  const matchesSearch = fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        user.email.toLowerCase().includes(searchTerm.toLowerCase());
+
+  switch (selectedFilter) {
+    case "All":
+      return matchesSearch && user.status !== "archived";
+    case "Resident":
+      return matchesSearch && user.role === "resident" && user.status !== "archived";
+    case "Official":
+      return matchesSearch && user.role === "official" && user.status !== "archived";
+    case "Online":
+      return matchesSearch && user.status === "online";
+    case "Offline":
+      return matchesSearch && user.status === "offline";
+    case "Archived":
+      return matchesSearch && user.status === "archived";
+    default:
+      return matchesSearch;
+  }
+});
+
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -143,6 +132,8 @@ if (selectedFilter === "All") return matchesSearch && user.status !== "archived"
       </div>
     );
   }
+  const router = useRouter();
+
 
   return (
     <div className="space-y-6">
