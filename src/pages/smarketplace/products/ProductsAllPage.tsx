@@ -122,7 +122,7 @@ const ProductsAllPage = () => {
     },
   });
 
-  // Enhanced delete product mutation with proper authentication checks
+  // Enhanced delete product mutation with proper query invalidation
   const deleteProductMutation = useMutation({
     mutationFn: async (productId: string) => {
       console.log("🔄 Starting delete operation for product:", productId);
@@ -161,7 +161,21 @@ const ProductsAllPage = () => {
     },
     onSuccess: (deletedProductId) => {
       console.log("🎉 Delete mutation successful for:", deletedProductId);
-      queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+      
+      // Invalidate all admin-products queries to refresh the UI
+      queryClient.invalidateQueries({ 
+        queryKey: ['admin-products'],
+        exact: false,
+        refetchType: 'all'
+      });
+      
+      // Also invalidate any other product-related queries
+      queryClient.invalidateQueries({ 
+        queryKey: ['products'],
+        exact: false,
+        refetchType: 'all'
+      });
+      
       toast.success('Product deleted successfully');
     },
     onError: (error: any) => {
