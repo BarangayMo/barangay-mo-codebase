@@ -13,7 +13,6 @@ export interface OfficialRegistration {
   landline_number?: string;
   email: string;
   position: string;
-  password?: string;
   barangay: string;
   municipality: string;
   province: string;
@@ -46,7 +45,6 @@ export const useSubmitOfficialRegistration = () => {
         landline_number: data.landline_number && typeof data.landline_number === 'string' && data.landline_number.trim() !== '' ? data.landline_number.trim() : undefined,
         email: data.email?.trim() || '',
         position: data.position?.trim() || '',
-        password: data.password?.trim() || '',
         barangay: data.barangay?.trim() || '',
         municipality: data.municipality?.trim() || '',
         province: data.province?.trim() || '',
@@ -155,7 +153,7 @@ export const useApproveOfficial = () => {
       queryClient.invalidateQueries({ queryKey: ['official-registrations'] });
       toast({
         title: "Official Approved",
-        description: "The official registration has been approved and an account has been created. A password reset email has been sent to the official to set up their login credentials.",
+        description: "The official registration has been approved and an account has been created. A welcome email with password setup instructions has been sent to the official.",
       });
     },
     onError: (error: any) => {

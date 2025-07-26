@@ -17,7 +17,6 @@ interface OfficialRegistrationData {
   landline_number?: string;
   email: string;
   position: string;
-  password: string;
   barangay: string;
   municipality: string;
   province: string;
@@ -97,7 +96,6 @@ serve(async (req) => {
       'phone_number', 
       'email', 
       'position', 
-      'password',
       'barangay', 
       'municipality', 
       'province', 
@@ -177,27 +175,6 @@ serve(async (req) => {
       );
     }
 
-    // Hash the password for secure storage
-    console.log('Hashing password for secure storage');
-    const { data: hashedPasswordData, error: hashError } = await supabaseAdmin.rpc('hash_password', {
-      password_text: registrationData.password.trim()
-    });
-
-    if (hashError) {
-      console.error('Error hashing password:', hashError);
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: 'Password processing failed',
-          message: 'Unable to process registration. Please try again.'
-        }),
-        {
-          status: 500,
-          headers: corsHeaders,
-        }
-      );
-    }
-
     // Insert the official registration using service role (bypasses RLS)
     console.log('Inserting new official registration');
     const insertData = {
@@ -209,7 +186,6 @@ serve(async (req) => {
       landline_number: registrationData.landline_number?.trim() || null,
       email: registrationData.email.trim().toLowerCase(),
       position: registrationData.position.trim(),
-      password_hash: hashedPasswordData, // Store hashed password
       barangay: registrationData.barangay.trim(),
       municipality: registrationData.municipality.trim(),
       province: registrationData.province.trim(),

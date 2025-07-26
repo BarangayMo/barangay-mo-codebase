@@ -189,9 +189,50 @@ serve(async (req) => {
 
     console.log('Auth user created successfully:', authUser.user.id);
 
-    // Update user metadata with full information
+    // Generate password reset link
+    console.log('Generating password reset link');
+    const { data: resetLinkData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'recovery',
+      email: official.email,
+      options: {
+        redirectTo: `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.supabase.co')}/auth/v1/verify`
+      }
+    });
+
+    if (resetError) {
+      console.error('Error generating password reset link:', resetError);
+      // Continue anyway - we can still approve the user
+    }
+
+    // Send welcome email with password setup instructions
+    if (resetLinkData?.properties?.action_link) {
+      console.log('Sending welcome email to new official');
+      try {
+        const { error: emailError } = await supabaseAdmin.functions.invoke('send-official-welcome-email', {
+          body: {
+            officialName: `${official.first_name} ${official.last_name}`,
+            email: official.email,
+            position: official.position,
+            barangay: official.barangay,
+            resetUrl: resetLinkData.properties.action_link
+          }
+        });
+
+        if (emailError) {
+          console.error('Warning: Could not send welcome email:', emailError);
+          // Continue anyway
+        } else {
+          console.log('Welcome email sent successfully');
+        }
+      } catch (emailSendError) {
+        console.error('Warning: Email sending failed:', emailSendError);
+        // Continue anyway
+      }
+    }
+
+    // Update user metadata with full information after successful approval
     console.log('Updating user metadata with complete information');
-    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+    const { error: metadataUpdateError } = await supabaseAdmin.auth.admin.updateUserById(
       authUser.user.id,
       {
         user_metadata: {
@@ -211,24 +252,9 @@ serve(async (req) => {
       }
     );
 
-    if (updateError) {
-      console.error('Warning: Could not update user metadata:', updateError);
+    if (metadataUpdateError) {
+      console.error('Warning: Could not update user metadata:', metadataUpdateError);
       // Continue anyway
-    }
-
-    // Send password reset email so user can set their chosen password
-    console.log('Sending password reset email to user');
-    const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'recovery',
-      email: official.email,
-      options: {
-        redirectTo: `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.supabase.co')}/auth/v1/verify?type=recovery`
-      }
-    });
-
-    if (resetError) {
-      console.error('Warning: Could not send password reset email:', resetError);
-      // Continue anyway - user can request password reset manually
     }
 
     // Update official status to approved and link to auth user
@@ -267,12 +293,12 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: 'Official approved successfully. Auth user created and password reset email sent.',
+        message: 'Official approved successfully. Auth user created and welcome email sent.',
         data: {
           official_id: requestData.official_id,
           user_id: authUser.user.id,
           email: official.email,
-          note: 'A password reset email has been sent to set up the account password.'
+          note: 'A welcome email with password setup instructions has been sent.'
         }
       }),
       {
