@@ -36,7 +36,7 @@ export const officialSidebarMenuItems = [
       {
         title: "Community",
         icon: MessageSquare,
-        path: "/official/community"
+        path: "/community"
       },
       {
         title: "Services",
