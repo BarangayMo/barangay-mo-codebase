@@ -2451,6 +2451,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: boolean
       }
+      sync_approved_officials_to_profiles: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       update_role_user_counts: {
         Args: Record<PropertyKey, never>
         Returns: undefined

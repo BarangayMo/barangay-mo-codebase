@@ -287,28 +287,35 @@ serve(async (req) => {
       );
     }
 
-    // Update the profiles table with official's barangay information
-    console.log('Updating profiles table with official data');
-    const { error: profileUpdateError } = await supabaseAdmin
-      .from('profiles')
-      .update({
-        barangay: official.barangay,
-        municipality: official.municipality,
-        province: official.province,
-        region: official.region,
-        phone_number: official.phone_number,
-        landline_number: official.landline_number,
-        first_name: official.first_name,
-        last_name: official.last_name,
-        middle_name: official.middle_name,
-        suffix: official.suffix,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', authUser.user.id);
+    // Update the profiles table with official's barangay information using the sync function
+    console.log('Syncing official data to profiles table using comprehensive sync function');
+    const { error: syncError } = await supabaseAdmin.rpc('sync_approved_officials_to_profiles');
 
-    if (profileUpdateError) {
-      console.error('Warning: Failed to update profile with official data:', profileUpdateError);
-      // Don't fail the whole operation for this
+    if (syncError) {
+      console.error('Warning: Failed to sync official data using sync function:', syncError);
+      // Still try manual update as fallback
+      console.log('Attempting manual profile update as fallback');
+      const { error: profileUpdateError } = await supabaseAdmin
+        .from('profiles')
+        .update({
+          barangay: official.barangay,
+          municipality: official.municipality,
+          province: official.province,
+          region: official.region,
+          phone_number: official.phone_number,
+          landline_number: official.landline_number,
+          first_name: official.first_name,
+          last_name: official.last_name,
+          middle_name: official.middle_name,
+          suffix: official.suffix,
+          is_approved: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', authUser.user.id);
+
+      if (profileUpdateError) {
+        console.error('Warning: Manual profile update also failed:', profileUpdateError);
+      }
     }
 
     console.log('Official approved successfully with auth user created');
