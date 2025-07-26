@@ -144,9 +144,9 @@ export const useApproveOfficial = () => {
         throw new Error(error.message || 'Failed to approve official');
       }
 
-      if (result?.error) {
+      if (result?.error || result?.success === false) {
         console.error('Approval error from server:', result);
-        throw new Error(result.error || 'Approval failed');
+        throw new Error(result.error || result.message || 'Approval failed');
       }
 
       return result;

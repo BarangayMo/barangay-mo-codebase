@@ -86,12 +86,14 @@ serve(async (req) => {
     }
 
     // Get the official record
-    console.log('Fetching official record');
+    console.log('Fetching official record for ID:', requestData.official_id);
     const { data: official, error: fetchError } = await supabaseAdmin
       .from('officials')
       .select('*')
       .eq('id', requestData.official_id)
       .single();
+
+    console.log('Query result - Data:', official ? 'found' : 'null', 'Error:', fetchError);
 
     if (fetchError || !official) {
       console.error('Error fetching official or official not found:', fetchError);
@@ -251,10 +253,14 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Unexpected error in official approval:', error);
+    console.error('Error name:', error?.name);
+    console.error('Error message:', error?.message);
+    console.error('Error stack:', error?.stack);
     return new Response(
       JSON.stringify({ 
         success: false,
-        error: 'Internal server error'
+        error: 'Internal server error',
+        details: error?.message || 'Unknown error occurred'
       }),
       {
         status: 500,
