@@ -257,7 +257,7 @@ const navigate = useNavigate();
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                        
-          <DropdownMenuItem onClick={() => navigate(`/users/${user.id}`)}>
+          <DropdownMenuItem onClick={() => navigate(`/admin/users/${user.id}`)}>
             View Profile
           </DropdownMenuItem>
                        
