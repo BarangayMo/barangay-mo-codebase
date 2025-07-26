@@ -254,7 +254,7 @@ export default function OfficialJobsPage() {
                         <Briefcase className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400" />
                         <h3 className="mt-4 text-base sm:text-lg font-medium text-gray-900">No jobs posted yet</h3>
                         <p className="mt-2 text-sm sm:text-base text-gray-500 mb-4">Start by posting your first job</p>
-                        <Button onClick={() => navigate('/admin/jobs/edit/new')} className="bg-blue-600 hover:bg-blue-700">
+                        <Button onClick={() => navigate('/official/jobs')} className="bg-blue-600 hover:bg-blue-700">
                           <Plus className="mr-2 h-4 w-4" />
                           Post a Job
                         </Button>
