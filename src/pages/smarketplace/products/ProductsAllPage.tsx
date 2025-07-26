@@ -201,7 +201,7 @@ const ProductsAllPage = () => {
         breadcrumbItems={breadcrumbItems}
         actionButton={{
           label: "Add Product",
-          onClick: () => navigate("/admin/smarketplace/products/new"),
+          onClick: () => navigate("/admin/smarketplace/products/edit/new"),
           icon: <PlusCircle className="h-4 w-4" />,
           variant: "dashboard"
         }}
