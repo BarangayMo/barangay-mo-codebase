@@ -257,11 +257,18 @@ const ProductEditPage = () => {
         if (error) throw error;
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['resident-products'] });
-      toast.success(isEditing ? 'Product updated successfully' : 'Product created successfully');
-      handleBackToProducts();
-    },
+   onSuccess: () => {
+  if (userRole === 'resident') {
+    queryClient.invalidateQueries({ queryKey: ['resident-products'] });
+    toast.success(isEditing ? 'Product updated successfully' : 'Product created successfully');
+    handleBackToProducts(); // for residents
+  } else if (userRole === 'official') {
+    queryClient.invalidateQueries({ queryKey: ['official-products'] });
+    toast.success(isEditing ? 'Official product updated' : 'Official product created');
+    handleBackToProducts(); // you may need to define this if not already
+  }
+},
+
     onError: (error) => {
       console.error('Product save error:', error);
       toast.error('Failed to save product: ' + error.message);
@@ -311,7 +318,11 @@ const ProductEditPage = () => {
   const handleBackToProducts = () => {
     if (userRole === 'resident') {
       navigate('/resident/products');
-    } else {
+    }
+    else if (userRole === 'official') {
+      navigate('/official/products'); 
+    }
+    else {
       navigate('/admin/smarketplace/products/all');
     }
   };
