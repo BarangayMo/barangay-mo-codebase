@@ -266,7 +266,7 @@ const ProductEditPage = () => {
     queryClient.invalidateQueries({ queryKey: ['official-products'] });
     toast.success(isEditing ? 'Official product updated' : 'Official product created');
     handleBackToProducts();
-  } else if (userRole === 'super-admin') {
+  } else if (userRole === 'superadmin') {
     queryClient.invalidateQueries({ queryKey: ['superadmin-products'] }); // Adjust if your query key is different
     toast.success(isEditing ? 'Product updated successfully' : 'Product created successfully');
     handleBackToProducts(); // Make sure this navigates to /admin/smarketplace/products
