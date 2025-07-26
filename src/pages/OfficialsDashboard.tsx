@@ -669,12 +669,12 @@ const OfficialsDashboard = () => {
                 </div>
 
                 {/* Community Stats */}
-                <div className="grid grid-cols-3 gap-6 mb-8">
+                <div className="grid grid-cols-4 gap-6 mb-8">
                   <Card className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <p className="text-sm text-gray-600">New Registrations</p>
-                        <p className="text-2xl font-bold text-gray-900">32</p>
+                        <p className="text-sm text-gray-600">Total Residents</p>
+                        <p className="text-2xl font-bold text-gray-900">{residentsCount || 0}</p>
                         <p className="text-sm text-green-600 flex items-center">
                           ↗ 12% <span className="text-gray-500 ml-1">from last month</span>
                         </p>
@@ -686,13 +686,26 @@ const OfficialsDashboard = () => {
                   <Card className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <p className="text-sm text-gray-600">Active Services</p>
-                        <p className="text-2xl font-bold text-gray-900">{servicesCount || 0}</p>
+                        <p className="text-sm text-gray-600">RBI Submissions</p>
+                        <p className="text-2xl font-bold text-gray-900">{rbiCount || 0}</p>
                         <p className="text-sm text-blue-600 flex items-center">
-                          ↗ 3 new <span className="text-gray-500 ml-1">this month</span>
+                          ↗ New <span className="text-gray-500 ml-1">this month</span>
                         </p>
                       </div>
                       <div className="w-16 h-8 bg-gradient-to-r from-blue-200 to-blue-300 rounded"></div>
+                    </div>
+                  </Card>
+
+                  <Card className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <p className="text-sm text-gray-600">Active Services</p>
+                        <p className="text-2xl font-bold text-gray-900">{servicesCount || 0}</p>
+                        <p className="text-sm text-purple-600 flex items-center">
+                          ↗ 3 new <span className="text-gray-500 ml-1">this month</span>
+                        </p>
+                      </div>
+                      <div className="w-16 h-8 bg-gradient-to-r from-purple-200 to-purple-300 rounded"></div>
                     </div>
                   </Card>
                   
@@ -709,6 +722,75 @@ const OfficialsDashboard = () => {
                     </div>
                   </Card>
                 </div>
+              </div>
+
+              {/* Recent Residents Section */}
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-semibold text-gray-900">Recent Residents</h3>
+                  <Link to="/official/residents" className="text-red-500 text-sm font-medium hover:underline">View All</Link>
+                </div>
+                <div className="grid grid-cols-4 gap-4">
+                  {recentResidents?.slice(0, 4).map((resident, index) => (
+                    <Card key={index} className="p-4 hover:shadow-md transition-shadow">
+                      <div className="flex flex-col items-center text-center">
+                        <Avatar className="w-16 h-16 mb-3">
+                          <AvatarImage src={resident.avatar_url || "/lovable-uploads/5ae5e12e-93d2-4584-b279-4bff59ae4ed8.png"} />
+                          <AvatarFallback>{resident.first_name?.[0]}{resident.last_name?.[0]}</AvatarFallback>
+                        </Avatar>
+                        <h4 className="font-medium text-gray-900 mb-1">
+                          {resident.first_name} {resident.last_name}
+                        </h4>
+                        <p className="text-xs text-gray-500 mb-2">
+                          Joined {format(new Date(resident.created_at), 'MMM dd, yyyy')}
+                        </p>
+                        <Badge variant="secondary" className="text-xs">{resident.role}</Badge>
+                      </div>
+                    </Card>
+                  )) || (
+                    <div className="col-span-4 text-center text-gray-500 py-8">
+                      <p>No recent residents found</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Barangay Officials Section */}
+              {barangayOfficials && barangayOfficials.length > 0 && (
+                <div className="mb-8">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-semibold text-gray-900">Barangay Officials</h3>
+                    <Link to="/users/officials" className="text-red-500 text-sm font-medium hover:underline">View All</Link>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    {barangayOfficials.slice(0, 6).map((official, index) => (
+                      <Card key={index} className="p-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="w-12 h-12">
+                            <AvatarFallback className="bg-red-100 text-red-600">
+                              {official.FIRSTNAME?.[0]}{official.LASTNAME?.[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <h4 className="font-medium text-gray-900">
+                              {official.FIRSTNAME} {official.LASTNAME}
+                            </h4>
+                            <p className="text-sm text-gray-600">{official.POSITION}</p>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Community Posts Section */}
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-semibold text-gray-900">Community Posts</h3>
+                  <Link to="/community" className="text-red-500 text-sm font-medium hover:underline">View All</Link>
+                </div>
+                <CommunitySlider />
               </div>
 
               {/* Recent Activities Section */}
