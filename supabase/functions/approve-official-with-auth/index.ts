@@ -130,64 +130,62 @@ serve(async (req) => {
     console.log('Checking if user already exists in auth system');
     const { data: existingAuthUser, error: authCheckError } = await supabaseAdmin.auth.admin.listUsers();
     
+    let authUser;
     if (authCheckError) {
       console.error('Error checking existing users:', authCheckError);
     } else {
       const userExists = existingAuthUser.users.find(user => user.email === official.email);
       if (userExists) {
         console.log('User already exists in auth system:', userExists.id);
+        authUser = { user: userExists };
+      }
+    }
+
+    // If user doesn't exist, create them
+    if (!authUser) {
+      // Generate a secure temporary password
+      const tempPassword = crypto.randomUUID().substring(0, 12) + '!A1';
+      console.log('Generated temporary password for user creation');
+
+      // Create auth user using Admin API - this will trigger Supabase's email confirmation
+      console.log('Creating Supabase Auth user with email:', official.email);
+      const { data: newAuthUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email: official.email,
+        password: tempPassword,
+        email_confirm: false, // Let Supabase handle email confirmation
+        user_metadata: {
+          first_name: official.first_name,
+          last_name: official.last_name,
+          role: 'official'
+        }
+      });
+
+      if (authError) {
+        console.error('Detailed auth error:', {
+          message: authError.message,
+          status: authError.status,
+          code: authError.code || 'unknown',
+          details: authError
+        });
+        
         return new Response(
           JSON.stringify({ 
             success: false,
-            error: `User with email ${official.email} already exists in the authentication system`
+            error: `Failed to create user account: ${authError.message}`,
+            details: authError.code || 'unknown_error'
           }),
           {
-            status: 409,
+            status: 500,
             headers: corsHeaders,
           }
         );
       }
+
+      authUser = newAuthUser;
+      console.log('Auth user created successfully:', authUser.user.id);
+    } else {
+      console.log('Using existing auth user:', authUser.user.id);
     }
-
-    // Generate a secure temporary password
-    const tempPassword = crypto.randomUUID().substring(0, 12) + '!A1';
-    console.log('Generated temporary password for user creation');
-
-    // Create auth user using Admin API - this will trigger Supabase's email confirmation
-    console.log('Creating Supabase Auth user with email:', official.email);
-    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: official.email,
-      password: tempPassword,
-      email_confirm: false, // Let Supabase handle email confirmation
-      user_metadata: {
-        first_name: official.first_name,
-        last_name: official.last_name,
-        role: 'official'
-      }
-    });
-
-    if (authError) {
-      console.error('Detailed auth error:', {
-        message: authError.message,
-        status: authError.status,
-        code: authError.code || 'unknown',
-        details: authError
-      });
-      
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: `Failed to create user account: ${authError.message}`,
-          details: authError.code || 'unknown_error'
-        }),
-        {
-          status: 500,
-          headers: corsHeaders,
-        }
-      );
-    }
-
-    console.log('Auth user created successfully:', authUser.user.id);
 
     // Send password reset email using Supabase's built-in system
     console.log('Sending password reset email via Supabase');
