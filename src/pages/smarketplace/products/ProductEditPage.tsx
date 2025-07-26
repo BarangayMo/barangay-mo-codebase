@@ -257,17 +257,22 @@ const ProductEditPage = () => {
         if (error) throw error;
       }
     },
-   onSuccess: () => {
+  onSuccess: () => {
   if (userRole === 'resident') {
     queryClient.invalidateQueries({ queryKey: ['resident-products'] });
     toast.success(isEditing ? 'Product updated successfully' : 'Product created successfully');
-    handleBackToProducts(); // for residents
+    handleBackToProducts();
   } else if (userRole === 'official') {
     queryClient.invalidateQueries({ queryKey: ['official-products'] });
     toast.success(isEditing ? 'Official product updated' : 'Official product created');
-    handleBackToProducts(); // you may need to define this if not already
+    handleBackToProducts();
+  } else if (userRole === 'super-admin') {
+    queryClient.invalidateQueries({ queryKey: ['super-admin-products'] }); // Adjust if your query key is different
+    toast.success(isEditing ? 'Product updated successfully' : 'Product created successfully');
+    handleBackToProducts(); // Make sure this navigates to /admin/smarketplace/products
   }
-},
+}
+
 
     onError: (error) => {
       console.error('Product save error:', error);
