@@ -99,7 +99,6 @@ export const sidebarMenuItems = [
         icon: Users,
         path: "/admin/users",
         submenu: [
-          { title: "All Users", path: "/admin/users/all" },
           { title: "User Roles", path: "/admin/users/roles" },
           { title: "Settings", path: "/admin/users/settings" },
           { title: "Official Registrations", path: "/admin/official-registrations" },
