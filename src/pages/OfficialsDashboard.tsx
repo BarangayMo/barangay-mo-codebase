@@ -630,7 +630,7 @@ const OfficialsDashboard = () => {
                       { name: "Resident Management", icon: UsersIcon, href: "/official/residents" },
                       { name: "Community Services", icon: Hospital, href: "/official/services" },
                       { name: "RBI Forms", icon: ClipboardList, href: "/official/rbi-forms" },
-      { name: "Job Management", icon: Briefcase, href: "/official/rbi-forms" },
+      { name: "Job Management", icon: Briefcase, href: "/resident/ResidentJobsPage" },
                       { name: "Emergency Response", icon: Siren, href: "/official/emergency-responder" }
                     ].map((item, index) => (
                       <Link key={index} to={item.href} className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-red-50 hover:text-red-600 cursor-pointer transition-all duration-200">
