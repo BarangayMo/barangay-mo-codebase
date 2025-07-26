@@ -164,14 +164,14 @@ export const useArchiveUser = () => {
 
   return useMutation({
     mutationFn: async (userId: string) => {
-      console.log("Archiving user with ID:", userId);
       if (!userId) throw new Error("Missing userId");
+      console.log("Archiving user ID:", userId);
 
-      const { data, error, status } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
-        .update({ status: "archived" })
-        .eq("id", userId)
-        .select();
+        .update({ status: "archived" }) // ✅ ensure this is not empty
+        .eq("id", userId)                // ✅ ensure userId is valid
+        .select();                       // ❌ don't use .single() for now
 
       if (error) {
         console.error("Archive Supabase error:", error);
@@ -182,8 +182,9 @@ export const useArchiveUser = () => {
         throw new Error("User not found or already archived");
       }
 
-      return data[0]; // first (and only) updated user
+      return data[0];
     },
+
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       toast({
@@ -191,10 +192,11 @@ export const useArchiveUser = () => {
         description: "User has been archived successfully.",
       });
     },
+
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error?.message || "Failed to archive user. Please try again.",
+        description: error.message || "Failed to archive user.",
         variant: "destructive",
       });
       console.error("Archive error:", error);
