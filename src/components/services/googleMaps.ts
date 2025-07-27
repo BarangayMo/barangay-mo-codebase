@@ -36,15 +36,16 @@ export async function loadGoogleMaps(): Promise<void> {
 
       // Create script element
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry&callback=initGoogleMaps`;
+script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry`;
       script.async = true;
       script.defer = true;
 
       // Set up callback
-      (window as any).initGoogleMaps = () => {
-        isGoogleMapsLoaded = true;
-        resolve();
-      };
+     script.onload = () => {
+  isGoogleMapsLoaded = true;
+  resolve();
+};
+
 
       script.onerror = () => {
         reject(new Error('Failed to load Google Maps script'));
