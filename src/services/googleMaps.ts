@@ -1,33 +1,38 @@
 import { getGoogleMapsApiKey } from "./apiKeys"
-
+import type * as google from "google.maps"
 
 let isGoogleMapsLoaded = false
 
 export function loadGoogleMaps(): Promise<void> {
   return new Promise(async (resolve, reject) => {
-    if (isGoogleMapsLoaded && typeof window.google !== "undefined" && typeof window.google.maps !== "undefined") {
-      console.log("✅ Google Maps already loaded (from cache)")
+    // 1. Check if Google Maps is already fully loaded and available globally
+    if (typeof window.google !== "undefined" && typeof window.google.maps !== "undefined") {
+      console.log("✅ Google Maps already fully loaded and available globally.")
+      isGoogleMapsLoaded = true // Ensure our internal flag is true
       return resolve()
     }
 
-    // Check for existing script to prevent duplicate injection
+    // 2. Check for an existing script tag in the DOM
     const existingScript = document.querySelector(`script[src*="maps.googleapis.com"]`)
     if (existingScript) {
-      console.log("⏳ Waiting for existing Google Maps script to finish loading...")
+      console.log("⏳ Found existing Google Maps script tag.")
+      // If script exists, but not yet fully loaded (checked in step 1),
+      // then attach listeners and wait for it to load.
       existingScript.addEventListener("load", () => {
+        console.log("✅ Existing Google Maps script finished loading via event listener.")
         isGoogleMapsLoaded = true
-        console.log("✅ Google Maps loaded from existing script")
         resolve()
       })
       existingScript.addEventListener("error", () => {
-        console.error("❌ Failed to load existing Google Maps script")
-        reject(new Error("Google Maps script failed"))
+        console.error("❌ Existing Google Maps script failed to load via event listener.")
+        reject(new Error("Google Maps script failed (existing)."))
       })
-      return
+      return // Exit, as we're waiting for the existing script to complete
     }
 
+    // 3. If no existing script and not already loaded, inject a new one
     try {
-      console.log("📦 Injecting Google Maps script...")
+      console.log("📦 Injecting new Google Maps script...")
       const apiKey = await getGoogleMapsApiKey()
 
       const script = document.createElement("script")
@@ -35,16 +40,16 @@ export function loadGoogleMaps(): Promise<void> {
       script.async = true
       script.defer = true
 
-      // Attach global callback
+      // Attach global callback for the new script
       ;(window as any).initGoogleMaps = () => {
-        console.log("✅ initGoogleMaps callback called")
+        console.log("✅ initGoogleMaps callback called (new script).")
         isGoogleMapsLoaded = true
         resolve()
       }
 
       script.onerror = () => {
-        console.error("❌ Google Maps script failed to load")
-        reject(new Error("Google Maps script error"))
+        console.error("❌ New Google Maps script failed to load.")
+        reject(new Error("Google Maps script error (new)."))
       }
 
       document.head.appendChild(script)
@@ -61,8 +66,11 @@ export async function geocodeAddress(
   await loadGoogleMaps()
 
   return new Promise((resolve, reject) => {
-    // Use window.google.maps.Geocoder
-    const geocoder = new google.maps.Geocoder()
+    // Ensure window.google.maps is available before using
+    if (typeof window.google === "undefined" || typeof window.google.maps === "undefined") {
+      return reject(new Error("Google Maps API not available for geocoding."))
+    }
+    const geocoder = new window.google.maps.Geocoder()
     console.log(`🌍 Geocoding address: "${address}"`)
     geocoder.geocode({ address }, (results, status) => {
       if (status === "OK" && results && results[0]) {
@@ -85,8 +93,11 @@ export async function reverseGeocode(lat: number, lng: number): Promise<{ addres
   await loadGoogleMaps()
 
   return new Promise((resolve, reject) => {
-    // Use window.google.maps.Geocoder
-    const geocoder = new google.maps.Geocoder()
+    // Ensure window.google.maps is available before using
+    if (typeof window.google === "undefined" || typeof window.google.maps === "undefined") {
+      return reject(new Error("Google Maps API not available for reverse geocoding."))
+    }
+    const geocoder = new window.google.maps.Geocoder()
     const latlng = { lat, lng }
     console.log(`🌍 Reverse geocoding coordinates: ${lat}, ${lng}`)
     geocoder.geocode({ location: latlng }, (results, status) => {
@@ -130,6 +141,10 @@ export async function createMap(
 ): Promise<google.maps.Map> {
   await loadGoogleMaps()
   console.log("🗺️ Attempting to create map instance...")
+  // Ensure window.google.maps is available before using
+  if (typeof window.google === "undefined" || typeof window.google.maps === "undefined") {
+    throw new Error("Google Maps API not available for map creation.")
+  }
   const mapOptions: google.maps.MapOptions = {
     center: options.center,
     zoom: options.zoom || 15,
@@ -150,8 +165,7 @@ export async function createMap(
     ],
   }
   try {
-    // Use window.google.maps.Map
-    const map = new google.maps.Map(container, mapOptions)
+    const map = new window.google.maps.Map(container, mapOptions)
     console.log("✅ Map instance created successfully.")
     return map
   } catch (e) {
@@ -170,8 +184,11 @@ export function createMarker(
   },
 ): google.maps.Marker {
   console.log("📍 Creating marker...")
-  // Use window.google.maps.Marker
-  return new google.maps.Marker({
+  // Ensure window.google.maps is available before using
+  if (typeof window.google === "undefined" || typeof window.google.maps === "undefined") {
+    throw new Error("Google Maps API not available for marker creation.")
+  }
+  return new window.google.maps.Marker({
     position,
     map,
     title: options?.title,
@@ -188,8 +205,11 @@ export function createInfoWindow(
   },
 ): google.maps.InfoWindow {
   console.log("💬 Creating info window...")
-  // Use window.google.maps.InfoWindow
-  return new google.maps.InfoWindow({
+  // Ensure window.google.maps is available before using
+  if (typeof window.google === "undefined" || typeof window.google.maps === "undefined") {
+    throw new Error("Google Maps API not available for info window creation.")
+  }
+  return new window.google.maps.InfoWindow({
     content,
     maxWidth: options?.maxWidth || 300,
     pixelOffset: options?.pixelOffset,
