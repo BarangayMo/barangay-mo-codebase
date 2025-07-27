@@ -48,6 +48,11 @@ export const GoogleMapLocationPicker = ({
       // Load Google Maps API
       await loadGoogleMaps();
 
+if (!window.google || !window.google.maps) {
+  throw new Error('Google Maps SDK not available after loading');
+}
+        console.log('🗺️ GoogleMapLocationPicker: Google Maps API loaded successfully');
+
       // Create map
       const map = await createMap(mapContainer.current, {
         center: defaultCenter,
