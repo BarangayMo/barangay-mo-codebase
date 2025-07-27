@@ -10,11 +10,16 @@ import {
 } from "@/components/ui/dialog";
 import { GoogleMapLocationPicker } from "@/components/ui/google-map-location-picker";
 import { toast } from "sonner";
+import { getGoogleMapsApiKey } from "@/services/apiKeys";
+import { loadGoogleMaps } from "@/services/googleMaps";
 
 // Define types for our location data
 interface MapLocationModalProps {
   children: React.ReactNode;
-  onLocationSelected: (location: { barangay: string; coordinates: { lat: number; lng: number } }) => void;
+  onLocationSelected: (location: {
+    barangay: string;
+    coordinates: { lat: number; lng: number };
+  }) => void;
 }
 
 export function MapLocationModal({ children, onLocationSelected }: MapLocationModalProps) {
@@ -22,30 +27,28 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
   const [isMapsReady, setIsMapsReady] = useState(false);
 
   // Check for Google Maps script readiness
- useEffect(() => {
-  const init = async () => {
-    try {
-      const apiKey = await getGoogleMapsApiKey();
-      await loadGoogleMaps(apiKey);
-      setIsMapsReady(true);
-    } catch (err) {
-      console.error("❌ Google Maps failed to load:", err);
-    }
-  };
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const apiKey = await getGoogleMapsApiKey();
+        await loadGoogleMaps(apiKey);
+        console.log("✅ Google Maps loaded successfully.");
+        setIsMapsReady(true);
+      } catch (err) {
+        console.error("❌ Google Maps failed to load:", err);
+      }
+    };
 
-  init();
-}, []);
-
-
+    init();
 
     // Safety timeout in case maps never load
-    setTimeout(() => {
+    const timeout = setTimeout(() => {
       if (!isMapsReady) {
         console.error("⏰ Google Maps failed to load in expected time.");
       }
     }, 10000);
 
-    return () => clearInterval(interval);
+    return () => clearTimeout(timeout);
   }, []);
 
   const handleLocationSelected = (location: {
