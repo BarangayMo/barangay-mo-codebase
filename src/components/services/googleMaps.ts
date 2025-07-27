@@ -20,6 +20,8 @@ export async function loadGoogleMaps(): Promise<void> {
     try {
       // Get API key from Supabase
       const apiKey = await getGoogleMapsApiKey();
+
+        console.log('API Key used:', apiKey);
       
       if (!apiKey) {
         throw new Error('Google Maps API key not found. Please configure it in the admin settings.');
