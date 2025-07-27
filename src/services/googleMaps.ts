@@ -1,5 +1,3 @@
-
-
 //mychanges
 
 import { getGoogleMapsApiKey } from './apiKeys';
@@ -12,7 +10,7 @@ let googleMapsPromise: Promise<void> | null = null;
  * Loads Google Maps JavaScript API with Places and Geometry libraries
  */
 export async function loadGoogleMaps(): Promise<void> {
-  if (isGoogleMapsLoaded) {
+  if (isGoogleMapsLoaded && typeof window.google !== 'undefined' && typeof window.google.maps !== 'undefined') {
     return Promise.resolve();
   }
 
@@ -31,9 +29,9 @@ export async function loadGoogleMaps(): Promise<void> {
 
       console.log('🗺️ Loading Google Maps with API key:', apiKey.substring(0, 20) + '...');
 
-      // Check if already loaded
-      if (window.google && window.google.maps) {
-        console.log('✅ Google Maps already loaded');
+      // Check if already loaded and available
+      if (typeof window.google !== 'undefined' && typeof window.google.maps !== 'undefined') {
+        console.log('✅ Google Maps already loaded and available');
         isGoogleMapsLoaded = true;
         resolve();
         return;
@@ -42,19 +40,29 @@ export async function loadGoogleMaps(): Promise<void> {
       // ✅ Set up callback FIRST - this must resolve the promise
       (window as any).initGoogleMaps = () => {
         console.log('✅ Google Maps initialized successfully');
-        isGoogleMapsLoaded = true;
-
-        // ✅ Ensure global reference is set
-        (window as any).google = window.google;
-
-        resolve();
+        
+        // Wait a bit to ensure everything is fully loaded
+        setTimeout(() => {
+          if (typeof window.google !== 'undefined' && typeof window.google.maps !== 'undefined') {
+            isGoogleMapsLoaded = true;
+            (window as any).google = window.google;
+            resolve();
+          } else {
+            reject(new Error('Google Maps failed to initialize properly'));
+          }
+        }, 100);
       };
 
-      // ✅ Check for existing script but don't return early
+      // ✅ Check for existing script to avoid duplicates
       const existingScript = document.querySelector(`script[src*="maps.googleapis.com"]`);
       if (existingScript) {
         console.log('🔄 Google Maps script already exists, waiting for initialization...');
-        // Don't return here - let the callback handle resolution
+        // Script exists but may not be initialized yet
+        if (typeof window.google !== 'undefined' && typeof window.google.maps !== 'undefined') {
+          isGoogleMapsLoaded = true;
+          resolve();
+        }
+        // Otherwise, wait for the callback
         return;
       }
 

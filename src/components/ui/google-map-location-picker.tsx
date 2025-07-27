@@ -1,5 +1,3 @@
-
-
 import React, { useEffect, useRef, useState } from 'react';
 import { MapPin, Loader2, AlertCircle, RefreshCw, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -35,9 +33,35 @@ export const GoogleMapLocationPicker = ({
     coordinates: { lat: number; lng: number };
     address: string;
   } | null>(null);
+  const [isMapsReady, setIsMapsReady] = useState(false);
 
   // Default to Manila, Philippines
   const defaultCenter = initialLocation || { lat: 14.5995, lng: 120.9842 };
+
+  // Check if Google Maps is ready
+  useEffect(() => {
+    const checkMapsReady = () => {
+      if (typeof window.google !== 'undefined' && typeof window.google.maps !== 'undefined') {
+        console.log('✅ Google Maps is ready for location picker');
+        setIsMapsReady(true);
+        return true;
+      }
+      return false;
+    };
+
+    if (checkMapsReady()) {
+      return;
+    }
+
+    // Poll for Google Maps availability
+    const interval = setInterval(() => {
+      if (checkMapsReady()) {
+        clearInterval(interval);
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const initializeMap = async (): Promise<void> => {
     if (!mapContainer.current) return;
@@ -51,7 +75,7 @@ export const GoogleMapLocationPicker = ({
       await loadGoogleMaps();
 
       // Verify Google Maps is loaded
-      if (!window.google || !window.google.maps) {
+      if (typeof window.google === 'undefined' || typeof window.google.maps === 'undefined') {
         throw new Error('Google Maps SDK not available after loading');
       }
       
@@ -200,8 +224,10 @@ export const GoogleMapLocationPicker = ({
   };
 
   useEffect(() => {
-    console.log('🔄 GoogleMapLocationPicker: Component mounted, initializing map...');
-    initializeMap();
+    if (isMapsReady) {
+      console.log('🔄 GoogleMapLocationPicker: Maps ready, initializing map...');
+      initializeMap();
+    }
 
     return () => {
       console.log('🧹 GoogleMapLocationPicker: Component unmounting, cleaning up...');
@@ -210,9 +236,9 @@ export const GoogleMapLocationPicker = ({
       }
       mapInstance.current = null;
     };
-  }, []);
+  }, [isMapsReady]);
 
-  if (loading) {
+  if (!isMapsReady || loading) {
     return (
       <div 
         className={`relative border border-border rounded-lg overflow-hidden ${className}`}
@@ -221,7 +247,9 @@ export const GoogleMapLocationPicker = ({
         <div className="absolute inset-0 flex items-center justify-center bg-muted">
           <div className="text-center space-y-3">
             <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
-            <div className="text-sm text-muted-foreground">Loading map...</div>
+            <div className="text-sm text-muted-foreground">
+              {!isMapsReady ? 'Loading Google Maps...' : 'Loading map...'}
+            </div>
           </div>
         </div>
       </div>

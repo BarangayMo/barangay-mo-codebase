@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { MapPin, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,7 +29,33 @@ export const GoogleMap = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [isMapsReady, setIsMapsReady] = useState(false);
   const maxRetries = 3;
+
+  // Check if Google Maps is ready
+  useEffect(() => {
+    const checkMapsReady = () => {
+      if (typeof window.google !== 'undefined' && typeof window.google.maps !== 'undefined') {
+        console.log('✅ Google Maps is ready');
+        setIsMapsReady(true);
+        return true;
+      }
+      return false;
+    };
+
+    if (checkMapsReady()) {
+      return;
+    }
+
+    // Poll for Google Maps availability
+    const interval = setInterval(() => {
+      if (checkMapsReady()) {
+        clearInterval(interval);
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const initializeMap = async (attempt: number = 1): Promise<void> => {
     if (!mapContainer.current) {
@@ -40,8 +67,14 @@ export const GoogleMap = ({
       setError(null);
       console.log(`🗺️ GoogleMap: Initializing map (attempt ${attempt}) for location:`, location);
 
-      // Load Google Maps API
+      // Load Google Maps API and wait for it to be ready
       await loadGoogleMaps();
+      
+      // Double-check that Google Maps is available
+      if (typeof window.google === 'undefined' || typeof window.google.maps === 'undefined') {
+        throw new Error('Google Maps API not available after loading');
+      }
+
       console.log('🗺️ GoogleMap: Google Maps API loaded successfully');
 
       // Geocode the location
@@ -133,7 +166,7 @@ export const GoogleMap = ({
   };
 
   useEffect(() => {
-    if (location && mapContainer.current) {
+    if (location && mapContainer.current && isMapsReady) {
       initializeMap();
     }
 
@@ -147,14 +180,14 @@ export const GoogleMap = ({
       }
       mapInstance.current = null;
     };
-  }, [location]);
+  }, [location, isMapsReady]);
 
   const handleRetry = () => {
     setRetryCount(0);
     initializeMap();
   };
 
-  if (loading) {
+  if (!isMapsReady || loading) {
     return (
       <div 
         className={`relative border border-border rounded-lg overflow-hidden ${className}`}
@@ -164,7 +197,7 @@ export const GoogleMap = ({
           <div className="text-center space-y-3">
             <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
             <div className="text-sm text-muted-foreground">
-              Loading map...
+              {!isMapsReady ? 'Loading Google Maps...' : 'Loading map...'}
               {retryCount > 0 && (
                 <div className="text-xs mt-1">
                   Attempt {retryCount + 1} of {maxRetries}
