@@ -1,5 +1,4 @@
 import { getGoogleMapsApiKey } from "./apiKeys"
-import type * as google from "google.maps"
 
 let isGoogleMapsLoaded = false
 
@@ -138,14 +137,16 @@ export async function createMap(
     streetViewControl?: boolean
     fullscreenControl?: boolean
   },
-): Promise<google.maps.Map> {
+): Promise<any> {
+  // Changed to any as google.maps.Map type might not be available without @types/google.maps
   await loadGoogleMaps()
   console.log("🗺️ Attempting to create map instance...")
   // Ensure window.google.maps is available before using
   if (typeof window.google === "undefined" || typeof window.google.maps === "undefined") {
     throw new Error("Google Maps API not available for map creation.")
   }
-  const mapOptions: google.maps.MapOptions = {
+  const mapOptions: any = {
+    // Changed to any
     center: options.center,
     zoom: options.zoom || 15,
     disableDefaultUI: options.disableDefaultUI || false,
@@ -175,14 +176,15 @@ export async function createMap(
 }
 
 export function createMarker(
-  map: google.maps.Map,
+  map: any, // Changed to any
   position: { lat: number; lng: number },
   options?: {
     title?: string
     draggable?: boolean
-    icon?: string | google.maps.Icon | google.maps.Symbol
+    icon?: string | any | any // Changed to any
   },
-): google.maps.Marker {
+): any {
+  // Changed to any
   console.log("📍 Creating marker...")
   // Ensure window.google.maps is available before using
   if (typeof window.google === "undefined" || typeof window.google.maps === "undefined") {
@@ -201,9 +203,10 @@ export function createInfoWindow(
   content: string,
   options?: {
     maxWidth?: number
-    pixelOffset?: google.maps.Size
+    pixelOffset?: any // Changed to any
   },
-): google.maps.InfoWindow {
+): any {
+  // Changed to any
   console.log("💬 Creating info window...")
   // Ensure window.google.maps is available before using
   if (typeof window.google === "undefined" || typeof window.google.maps === "undefined") {

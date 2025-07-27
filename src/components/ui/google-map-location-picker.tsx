@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { loadGoogleMaps, geocodeAddress, reverseGeocode, createMap, createMarker } from "@/services/googleMaps"
 
-
 interface GoogleMapLocationPickerProps {
   onLocationSelected: (location: {
     barangay: string
@@ -27,8 +26,8 @@ export const GoogleMapLocationPicker = ({
 }: GoogleMapLocationPickerProps) => {
   const mapContainer = useRef<HTMLDivElement>(null)
   // Use window.google.maps.Map for type, or any if @types/google.maps is not installed
-  const mapInstance = useRef<google.maps.Map | null>(null)
-  const markerInstance = useRef<google.maps.Marker | null>(null)
+  const mapInstance = useRef<any | null>(null) // Changed to any
+  const markerInstance = useRef<any | null>(null) // Changed to any
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -56,6 +55,12 @@ export const GoogleMapLocationPicker = ({
   }, [])
 
   useEffect(() => {
+    console.log(
+      "GoogleMapLocationPicker useEffect triggered. isMapsReady:",
+      isMapsReady,
+      "mapContainer.current:",
+      mapContainer.current,
+    ) // Added this log
     if (isMapsReady) {
       initializeMap()
     }
@@ -66,6 +71,7 @@ export const GoogleMapLocationPicker = ({
   }, [isMapsReady])
 
   const initializeMap = async () => {
+    console.log("GoogleMapLocationPicker: initializeMap function invoked.") // Added this log
     if (!mapContainer.current) return
     try {
       setLoading(true)
@@ -140,7 +146,8 @@ export const GoogleMapLocationPicker = ({
         placeMarker(defaultCenter)
       }
 
-      map.addListener("click", (e: google.maps.MapMouseEvent) => {
+      map.addListener("click", (e: any) => {
+        // Changed to any
         if (e.latLng) {
           const coords = { lat: e.latLng.lat(), lng: e.latLng.lng() }
           placeMarker(coords)

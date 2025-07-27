@@ -5,7 +5,6 @@ import { Loader2, AlertCircle, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { loadGoogleMaps, geocodeAddress, createMap, createMarker, createInfoWindow } from "@/services/googleMaps"
 
-
 interface GoogleMapProps {
   location: string
   className?: string
@@ -25,9 +24,9 @@ export const GoogleMap = ({
 }: GoogleMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null)
   // Use window.google.maps.Map for type, or any if @types/google.maps is not installed
-  const mapInstance = useRef<google.maps.Map | null>(null)
-  const markerInstance = useRef<google.maps.Marker | null>(null)
-  const infoWindowInstance = useRef<google.maps.InfoWindow | null>(null)
+  const mapInstance = useRef<any | null>(null) // Changed to any
+  const markerInstance = useRef<any | null>(null) // Changed to any
+  const infoWindowInstance = useRef<any | null>(null) // Changed to any
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -58,7 +57,32 @@ export const GoogleMap = ({
     return () => clearInterval(interval)
   }, [])
 
+  useEffect(() => {
+    console.log(
+      "GoogleMap useEffect triggered. isMapsReady:",
+      isMapsReady,
+      "mapContainer.current:",
+      mapContainer.current,
+      "location:",
+      location,
+    )
+    if (location && mapContainer.current && isMapsReady) {
+      initializeMap()
+    }
+
+    return () => {
+      if (infoWindowInstance.current) {
+        infoWindowInstance.current.close()
+      }
+      if (markerInstance.current) {
+        markerInstance.current.setMap(null)
+      }
+      mapInstance.current = null
+    }
+  }, [location, isMapsReady]) // Added location to dependency array
+
   const initializeMap = async (attempt = 1): Promise<void> => {
+    console.log("GoogleMap: initializeMap function invoked.") // Added this log
     if (!mapContainer.current) {
       console.error("❌ GoogleMap: Map container ref is null.")
       setError("Map container not found.")
@@ -144,7 +168,8 @@ export const GoogleMap = ({
           onLocationClick(geocodeResult.lat, geocodeResult.lng)
         })
 
-        map.addListener("click", (event: google.maps.MapMouseEvent) => {
+        map.addListener("click", (event: any) => {
+          // Changed to any
           if (event.latLng) {
             onLocationClick(event.latLng.lat(), event.latLng.lng())
           }
