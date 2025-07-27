@@ -28,7 +28,7 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
     const init = async () => {
       try {
         const apiKey = await getGoogleMapsApiKey();
-        await loadGoogleMaps(apiKey);
+        await loadGoogleMaps();
         setIsMapsReady(true);
       } catch (err) {
         console.error("❌ Google Maps failed to load:", err);
