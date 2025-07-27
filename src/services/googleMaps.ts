@@ -1,8 +1,9 @@
-import { getGoogleMapsApiKey } from './apiKeys';
 
 // Global variable to track if Google Maps is loaded
 let isGoogleMapsLoaded = false;
 let googleMapsPromise: Promise<void> | null = null;
+
+const GOOGLE_MAPS_API_KEY = 'AIzaSyDKWjnDlFD1mysRpXnc6KiaWZyh_6jnphM';
 
 /**
  * Loads Google Maps JavaScript API with Places and Geometry libraries
@@ -16,15 +17,8 @@ export async function loadGoogleMaps(): Promise<void> {
     return googleMapsPromise;
   }
 
-  googleMapsPromise = new Promise(async (resolve, reject) => {
+  googleMapsPromise = new Promise((resolve, reject) => {
     try {
-      // Get API key from Supabase
-      const apiKey = await getGoogleMapsApiKey();
-      
-      if (!apiKey) {
-        throw new Error('Google Maps API key not found. Please configure it in the admin settings.');
-      }
-
       // Check if already loaded
       if (window.google && window.google.maps) {
         isGoogleMapsLoaded = true;
@@ -34,7 +28,7 @@ export async function loadGoogleMaps(): Promise<void> {
 
       // Create script element
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry&callback=initGoogleMaps`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places,geometry&callback=initGoogleMaps`;
       script.async = true;
       script.defer = true;
 
