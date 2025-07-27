@@ -43,7 +43,7 @@ export const GoogleMapLocationPicker = ({
     const loadMaps = async () => {
       try {
         const apiKey = await getGoogleMapsApiKey();
-        await loadGoogleMaps(apiKey);
+        await loadGoogleMaps();
         setIsMapsReady(true);
       } catch (err) {
         console.error('❌ Error loading Google Maps:', err);
