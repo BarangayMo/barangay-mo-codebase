@@ -4,7 +4,7 @@ import { MapPin, Loader2, AlertCircle, RefreshCw, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { loadGoogleMaps, geocodeAddress, reverseGeocode, createMap, createMarker } from '@/services/googleMaps';
-import { getGoogleMapsApiKey } from '@/services/api';
+import { getGoogleMapsApiKey } from '@/services/apiKeys';
 
 interface GoogleMapLocationPickerProps {
   onLocationSelected: (location: {
