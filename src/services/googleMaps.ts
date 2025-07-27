@@ -1,3 +1,4 @@
+import { getGoogleMapsApiKey } from './apiKeys'; // ✅ must be correct relative path
 
 // Global variable to track if Google Maps is loaded
 let isGoogleMapsLoaded = false;
