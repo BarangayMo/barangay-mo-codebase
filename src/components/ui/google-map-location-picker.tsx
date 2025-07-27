@@ -1,3 +1,4 @@
+//my-changes
 import React, { useEffect, useRef, useState } from 'react';
 import { MapPin, Loader2, AlertCircle, RefreshCw, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -38,29 +39,34 @@ export const GoogleMapLocationPicker = ({
   // Default to Manila, Philippines
   const defaultCenter = initialLocation || { lat: 14.5995, lng: 120.9842 };
 
-  // Check if Google Maps is ready
   useEffect(() => {
-    const checkMapsReady = () => {
-      if (typeof window.google !== 'undefined' && typeof window.google.maps !== 'undefined') {
-        console.log('✅ Google Maps is ready for location picker');
-        setIsMapsReady(true);
-        return true;
+    const init = async () => {
+      try {
+        console.log('📦 GoogleMapLocationPicker: Loading Google Maps script...');
+        await loadGoogleMaps();
+
+        if (typeof window.google !== 'undefined' && typeof window.google.maps !== 'undefined') {
+          console.log('✅ Google Maps is ready for location picker');
+          setIsMapsReady(true);
+        } else {
+          console.error('❌ Google Maps SDK still undefined after load');
+          setError('Google Maps SDK not available after load');
+        }
+      } catch (err) {
+        console.error('❌ Failed to load Google Maps:', err);
+        setError('Failed to load Google Maps');
       }
-      return false;
     };
 
-    if (checkMapsReady()) {
-      return;
-    }
+    init();
 
-    // Poll for Google Maps availability
-    const interval = setInterval(() => {
-      if (checkMapsReady()) {
-        clearInterval(interval);
+    return () => {
+      console.log('🧹 GoogleMapLocationPicker: Component unmounting, cleaning up...');
+      if (markerInstance.current) {
+        markerInstance.current.setMap(null);
       }
-    }, 100);
-
-    return () => clearInterval(interval);
+      mapInstance.current = null;
+    };
   }, []);
 
   const initializeMap = async (): Promise<void> => {
@@ -71,24 +77,15 @@ export const GoogleMapLocationPicker = ({
       setError(null);
       console.log('🗺️ GoogleMapLocationPicker: Initializing map...');
 
-      // Load Google Maps API and wait for it to complete
-      await loadGoogleMaps();
-
-      // Verify Google Maps is loaded
       if (typeof window.google === 'undefined' || typeof window.google.maps === 'undefined') {
-        throw new Error('Google Maps SDK not available after loading');
+        throw new Error('Google Maps SDK not available at initializeMap');
       }
       
-      console.log('🗺️ GoogleMapLocationPicker: Google Maps API loaded successfully');
+      console.log('🗺️ GoogleMapLocationPicker: Google Maps API verified');
 
-      // Ensure map container has proper dimensions
-      if (mapContainer.current) {
-        mapContainer.current.style.width = '100%';
-        mapContainer.current.style.height = height;
-      }
+      mapContainer.current.style.width = '100%';
+      mapContainer.current.style.height = height;
 
-      // Create map
-      console.log('🗺️ GoogleMapLocationPicker: Creating map instance...');
       const map = await createMap(mapContainer.current, {
         center: defaultCenter,
         zoom: 13,
@@ -100,7 +97,6 @@ export const GoogleMapLocationPicker = ({
       mapInstance.current = map;
       console.log('🗺️ GoogleMapLocationPicker: Map created successfully');
 
-      // Get user's current location if available
       if (navigator.geolocation && !initialLocation) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
@@ -115,7 +111,6 @@ export const GoogleMapLocationPicker = ({
           },
           (error) => {
             console.log('⚠️ GoogleMapLocationPicker: Geolocation not available:', error);
-            // Place default marker
             placeMarker(defaultCenter);
           }
         );
@@ -123,7 +118,6 @@ export const GoogleMapLocationPicker = ({
         placeMarker(defaultCenter);
       }
 
-      // Add click listener to map
       map.addListener('click', (event: google.maps.MapMouseEvent) => {
         if (event.latLng) {
           const position = {
@@ -146,12 +140,10 @@ export const GoogleMapLocationPicker = ({
   const placeMarker = async (position: { lat: number; lng: number }) => {
     if (!mapInstance.current) return;
 
-    // Remove existing marker
     if (markerInstance.current) {
       markerInstance.current.setMap(null);
     }
 
-    // Create new marker
     const marker = createMarker(mapInstance.current, position, {
       draggable: true,
       title: 'Selected Location',
@@ -168,7 +160,6 @@ export const GoogleMapLocationPicker = ({
 
     markerInstance.current = marker;
 
-    // Add drag listener
     marker.addListener('dragend', () => {
       const newPosition = marker.getPosition();
       if (newPosition) {
@@ -179,21 +170,18 @@ export const GoogleMapLocationPicker = ({
       }
     });
 
-    // Update location info
     await updateLocationInfo(position);
   };
 
   const updateLocationInfo = async (position: { lat: number; lng: number }) => {
     try {
       const geocodeResult = await reverseGeocode(position.lat, position.lng);
-      
       if (geocodeResult) {
         const locationData = {
           barangay: geocodeResult.barangay || 'Unknown Barangay',
           coordinates: position,
           address: geocodeResult.address
         };
-        
         setSelectedLocation(locationData);
       }
     } catch (error) {
@@ -228,14 +216,6 @@ export const GoogleMapLocationPicker = ({
       console.log('🔄 GoogleMapLocationPicker: Maps ready, initializing map...');
       initializeMap();
     }
-
-    return () => {
-      console.log('🧹 GoogleMapLocationPicker: Component unmounting, cleaning up...');
-      if (markerInstance.current) {
-        markerInstance.current.setMap(null);
-      }
-      mapInstance.current = null;
-    };
   }, [isMapsReady]);
 
   if (!isMapsReady || loading) {
@@ -286,7 +266,6 @@ export const GoogleMapLocationPicker = ({
 
   return (
     <div className={`space-y-4 ${className}`}>
-      {/* Search Bar */}
       <div className="flex gap-2">
         <Input
           placeholder="Search for a location..."
@@ -299,7 +278,6 @@ export const GoogleMapLocationPicker = ({
         </Button>
       </div>
 
-      {/* Map Container */}
       <div 
         className="relative border border-border rounded-lg overflow-hidden"
         style={{ height }}
@@ -311,7 +289,6 @@ export const GoogleMapLocationPicker = ({
         />
       </div>
 
-      {/* Location Info */}
       {selectedLocation && (
         <div className="bg-muted/50 rounded-lg p-4 space-y-3">
           <div className="flex items-start gap-3">

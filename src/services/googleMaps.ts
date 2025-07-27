@@ -3,90 +3,73 @@
 import { getGoogleMapsApiKey } from './apiKeys';
 
 // Global variable to track if Google Maps is loaded
-let isGoogleMapsLoaded = false;
+
 let googleMapsPromise: Promise<void> | null = null;
 
 /**
  * Loads Google Maps JavaScript API with Places and Geometry libraries
  */
-export async function loadGoogleMaps(): Promise<void> {
-  if (isGoogleMapsLoaded && typeof window.google !== 'undefined' && typeof window.google.maps !== 'undefined') {
-    return Promise.resolve();
-  }
+let isGoogleMapsLoaded = false;
 
-  if (googleMapsPromise) {
-    return googleMapsPromise;
-  }
+export function loadGoogleMaps(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (isGoogleMapsLoaded && typeof window.google !== "undefined") {
+      console.log("✅ Google Maps already loaded");
+      return resolve();
+    }
 
-  googleMapsPromise = new Promise(async (resolve, reject) => {
-    try {
-      // Get API key from service
-      const apiKey = await getGoogleMapsApiKey();
-      
-      if (!apiKey) {
-        throw new Error('Google Maps API key not found. Please configure it in the admin settings.');
-      }
+    // Already loaded or loading
+    if (typeof window.google !== "undefined" && window.google.maps) {
+      console.log("✅ window.google is already defined");
+      isGoogleMapsLoaded = true;
+      return resolve();
+    }
 
-      console.log('🗺️ Loading Google Maps with API key:', apiKey.substring(0, 20) + '...');
-
-      // Check if already loaded and available
-      if (typeof window.google !== 'undefined' && typeof window.google.maps !== 'undefined') {
-        console.log('✅ Google Maps already loaded and available');
+    const existingScript = document.querySelector(`script[src*="maps.googleapis.com"]`);
+    if (existingScript) {
+      console.log("⏳ Waiting for existing Google Maps script to finish loading...");
+      existingScript.addEventListener("load", () => {
+        (window as any).google = window.google;
         isGoogleMapsLoaded = true;
+        console.log("✅ Google Maps loaded from existing script");
         resolve();
-        return;
-      }
+      });
+      existingScript.addEventListener("error", () => {
+        console.error("❌ Failed to load existing Google Maps script");
+        reject(new Error("Google Maps script failed"));
+      });
+      return;
+    }
 
-      // ✅ Set up callback FIRST - this must resolve the promise
-      (window as any).initGoogleMaps = () => {
-        console.log('✅ Google Maps initialized successfully');
-        
-        // Wait a bit to ensure everything is fully loaded
-        setTimeout(() => {
-          if (typeof window.google !== 'undefined' && typeof window.google.maps !== 'undefined') {
-            isGoogleMapsLoaded = true;
-            (window as any).google = window.google;
-            resolve();
-          } else {
-            reject(new Error('Google Maps failed to initialize properly'));
-          }
-        }, 100);
-      };
+    try {
+      console.log("📦 Injecting Google Maps script...");
 
-      // ✅ Check for existing script to avoid duplicates
-      const existingScript = document.querySelector(`script[src*="maps.googleapis.com"]`);
-      if (existingScript) {
-        console.log('🔄 Google Maps script already exists, waiting for initialization...');
-        // Script exists but may not be initialized yet
-        if (typeof window.google !== 'undefined' && typeof window.google.maps !== 'undefined') {
-          isGoogleMapsLoaded = true;
-          resolve();
-        }
-        // Otherwise, wait for the callback
-        return;
-      }
-
-      // Create script element
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry&callback=initGoogleMaps`;
+      const script = document.createElement("script");
+      script.src = `https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places&callback=initGoogleMaps`;
       script.async = true;
       script.defer = true;
 
-      script.onerror = () => {
-        console.error('❌ Failed to load Google Maps script');
-        reject(new Error('Failed to load Google Maps script'));
+      // Attach global callback
+      (window as any).initGoogleMaps = () => {
+        console.log("✅ initGoogleMaps callback called");
+        (window as any).google = window.google; // Ensure global reference
+        isGoogleMapsLoaded = true;
+        resolve();
       };
 
-      console.log('📡 Appending Google Maps script to document');
+      script.onerror = () => {
+        console.error("❌ Google Maps script failed to load");
+        reject(new Error("Google Maps script error"));
+      };
+
       document.head.appendChild(script);
     } catch (error) {
-      console.error('❌ Error in loadGoogleMaps:', error);
+      console.error("❌ Exception during script injection", error);
       reject(error);
     }
   });
-
-  return googleMapsPromise;
 }
+
 
 /**
  * Geocodes an address using Google Maps Geocoding API
