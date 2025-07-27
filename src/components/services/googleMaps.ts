@@ -1,3 +1,5 @@
+//mychanges
+
 import { getGoogleMapsApiKey } from './apiKeys';
 
 // Global variable to track if Google Maps is loaded
@@ -20,8 +22,6 @@ export async function loadGoogleMaps(): Promise<void> {
     try {
       // Get API key from Supabase
       const apiKey = await getGoogleMapsApiKey();
-
-        console.log('API Key used:', apiKey);
       
       if (!apiKey) {
         throw new Error('Google Maps API key not found. Please configure it in the admin settings.');
@@ -34,39 +34,33 @@ export async function loadGoogleMaps(): Promise<void> {
         return;
       }
 
+      // ✅ Set up callback FIRST
+      (window as any).initGoogleMaps = () => {
+        isGoogleMapsLoaded = true;
+
+        // ✅ Ensure global reference is set
+        (window as any).google = window.google;
+
+        resolve();
+      };
+
+      // ✅ Avoid duplicate script
+      const existingScript = document.querySelector(`script[src*="maps.googleapis.com"]`);
+      if (existingScript) {
+        return; // If already appended, just wait for initGoogleMaps
+      }
+
       // Create script element
       const script = document.createElement('script');
       script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry&callback=initGoogleMaps`;
       script.async = true;
       script.defer = true;
 
-     // Set up the global callback FIRST (before appending script)
-(window as any).initGoogleMaps = () => {
-  isGoogleMapsLoaded = true;
+      script.onerror = () => {
+        reject(new Error('Failed to load Google Maps script'));
+      };
 
-  // ✅ Ensure global.google is available
-  (window as any).google = window.google;
-
-  resolve();
-};
-
-// ✅ Create script tag
-const script = document.createElement('script');
-script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry&callback=initGoogleMaps`;
-script.async = true;
-script.defer = true;
-
-script.onerror = () => {
-  reject(new Error('❌ Failed to load Google Maps script'));
-};
-
-// ✅ Avoid duplicate script injection
-const existingScript = document.querySelector(`script[src*="maps.googleapis.com"]`);
-if (!existingScript) {
-  document.head.appendChild(script);
-}
-
-
+      document.head.appendChild(script);
     } catch (error) {
       reject(error);
     }
