@@ -1,3 +1,4 @@
+
 //mychanges
 
 import { getGoogleMapsApiKey } from './apiKeys';
@@ -20,15 +21,18 @@ export async function loadGoogleMaps(): Promise<void> {
 
   googleMapsPromise = new Promise(async (resolve, reject) => {
     try {
-      // Get API key from Supabase
+      // Get API key from service
       const apiKey = await getGoogleMapsApiKey();
       
       if (!apiKey) {
         throw new Error('Google Maps API key not found. Please configure it in the admin settings.');
       }
 
+      console.log('🗺️ Loading Google Maps with API key:', apiKey.substring(0, 20) + '...');
+
       // Check if already loaded
       if (window.google && window.google.maps) {
+        console.log('✅ Google Maps already loaded');
         isGoogleMapsLoaded = true;
         resolve();
         return;
@@ -36,6 +40,7 @@ export async function loadGoogleMaps(): Promise<void> {
 
       // ✅ Set up callback FIRST
       (window as any).initGoogleMaps = () => {
+        console.log('✅ Google Maps initialized successfully');
         isGoogleMapsLoaded = true;
 
         // ✅ Ensure global reference is set
@@ -47,6 +52,7 @@ export async function loadGoogleMaps(): Promise<void> {
       // ✅ Avoid duplicate script
       const existingScript = document.querySelector(`script[src*="maps.googleapis.com"]`);
       if (existingScript) {
+        console.log('🔄 Google Maps script already exists, waiting for initialization...');
         return; // If already appended, just wait for initGoogleMaps
       }
 
@@ -57,11 +63,14 @@ export async function loadGoogleMaps(): Promise<void> {
       script.defer = true;
 
       script.onerror = () => {
+        console.error('❌ Failed to load Google Maps script');
         reject(new Error('Failed to load Google Maps script'));
       };
 
+      console.log('📡 Appending Google Maps script to document');
       document.head.appendChild(script);
     } catch (error) {
+      console.error('❌ Error in loadGoogleMaps:', error);
       reject(error);
     }
   });

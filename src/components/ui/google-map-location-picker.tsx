@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { MapPin, Loader2, AlertCircle, RefreshCw, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -48,10 +49,12 @@ export const GoogleMapLocationPicker = ({
       // Load Google Maps API
       await loadGoogleMaps();
 
-if (!window.google || !window.google.maps) {
-  throw new Error('Google Maps SDK not available after loading');
-}
-        console.log('🗺️ GoogleMapLocationPicker: Google Maps API loaded successfully');
+      // Verify Google Maps is loaded
+      if (!window.google || !window.google.maps) {
+        throw new Error('Google Maps SDK not available after loading');
+      }
+      
+      console.log('🗺️ GoogleMapLocationPicker: Google Maps API loaded successfully');
 
       // Create map
       const map = await createMap(mapContainer.current, {
@@ -63,6 +66,7 @@ if (!window.google || !window.google.maps) {
       });
 
       mapInstance.current = map;
+      console.log('🗺️ GoogleMapLocationPicker: Map created successfully');
 
       // Get user's current location if available
       if (navigator.geolocation && !initialLocation) {
@@ -72,12 +76,13 @@ if (!window.google || !window.google.maps) {
               lat: position.coords.latitude,
               lng: position.coords.longitude
             };
+            console.log('📍 GoogleMapLocationPicker: User location found:', userLocation);
             map.setCenter(userLocation);
             map.setZoom(15);
             placeMarker(userLocation);
           },
           (error) => {
-            console.log('Geolocation not available:', error);
+            console.log('⚠️ GoogleMapLocationPicker: Geolocation not available:', error);
             // Place default marker
             placeMarker(defaultCenter);
           }
@@ -93,6 +98,7 @@ if (!window.google || !window.google.maps) {
             lat: event.latLng.lat(),
             lng: event.latLng.lng()
           };
+          console.log('🖱️ GoogleMapLocationPicker: Map clicked at:', position);
           placeMarker(position);
         }
       });
@@ -186,9 +192,11 @@ if (!window.google || !window.google.maps) {
   };
 
   useEffect(() => {
+    console.log('🔄 GoogleMapLocationPicker: Component mounted, initializing map...');
     initializeMap();
 
     return () => {
+      console.log('🧹 GoogleMapLocationPicker: Component unmounting, cleaning up...');
       if (markerInstance.current) {
         markerInstance.current.setMap(null);
       }
