@@ -1,5 +1,5 @@
 import { getGoogleMapsApiKey } from "./apiKeys"
-import * as google from "googlemaps"
+import type * as google from "googlemaps"
 
 let isGoogleMapsLoaded = false
 
@@ -66,20 +66,21 @@ export async function geocodeAddress(
   await loadGoogleMaps()
 
   return new Promise((resolve, reject) => {
-    const geocoder = new google.maps.Geocoder()
-    console.log(`🌍 Geocoding address: "${address}"`) // Added log
+    // Use window.google as it's globally available
+    const geocoder = new window.google.maps.Geocoder()
+    console.log(`🌍 Geocoding address: "${address}"`)
     geocoder.geocode({ address }, (results, status) => {
       if (status === "OK" && results && results[0]) {
         const location = results[0].geometry.location
-        console.log("✅ Geocoding successful:", results[0].formatted_address) // Added log
+        console.log("✅ Geocoding successful:", results[0].formatted_address)
         resolve({
           lat: location.lat(),
           lng: location.lng(),
           formatted_address: results[0].formatted_address,
         })
       } else {
-        console.error("❌ Geocoding failed:", status) // Added log
-        reject(new Error(`Geocoding failed with status: ${status}`)) // Reject promise on failure
+        console.error("❌ Geocoding failed:", status)
+        reject(new Error(`Geocoding failed with status: ${status}`))
       }
     })
   })
@@ -89,9 +90,10 @@ export async function reverseGeocode(lat: number, lng: number): Promise<{ addres
   await loadGoogleMaps()
 
   return new Promise((resolve, reject) => {
-    const geocoder = new google.maps.Geocoder()
+    // Use window.google as it's globally available
+    const geocoder = new window.google.maps.Geocoder()
     const latlng = { lat, lng }
-    console.log(`🌍 Reverse geocoding coordinates: ${lat}, ${lng}`) // Added log
+    console.log(`🌍 Reverse geocoding coordinates: ${lat}, ${lng}`)
     geocoder.geocode({ location: latlng }, (results, status) => {
       if (status === "OK" && results && results[0]) {
         const address = results[0].formatted_address
@@ -107,14 +109,14 @@ export async function reverseGeocode(lat: number, lng: number): Promise<{ addres
             break
           }
         }
-        console.log("✅ Reverse geocoding successful:", address) // Added log
+        console.log("✅ Reverse geocoding successful:", address)
         resolve({
           address,
           barangay: barangay || undefined,
         })
       } else {
-        console.error("❌ Reverse geocoding failed:", status) // Added log
-        reject(new Error(`Reverse geocoding failed with status: ${status}`)) // Reject promise on failure
+        console.error("❌ Reverse geocoding failed:", status)
+        reject(new Error(`Reverse geocoding failed with status: ${status}`))
       }
     })
   })
@@ -132,7 +134,7 @@ export async function createMap(
   },
 ): Promise<google.maps.Map> {
   await loadGoogleMaps()
-  console.log("🗺️ Attempting to create map instance...") // Added log
+  console.log("🗺️ Attempting to create map instance...")
   const mapOptions: google.maps.MapOptions = {
     center: options.center,
     zoom: options.zoom || 15,
@@ -153,12 +155,13 @@ export async function createMap(
     ],
   }
   try {
-    const map = new google.maps.Map(container, mapOptions)
-    console.log("✅ Map instance created successfully.") // Added log
+    // Use window.google as it's globally available
+    const map = new window.google.maps.Map(container, mapOptions)
+    console.log("✅ Map instance created successfully.")
     return map
   } catch (e) {
-    console.error("❌ Error creating map instance:", e) // Added log
-    throw e // Re-throw to be caught by component
+    console.error("❌ Error creating map instance:", e)
+    throw e
   }
 }
 
@@ -171,8 +174,9 @@ export function createMarker(
     icon?: string | google.maps.Icon | google.maps.Symbol
   },
 ): google.maps.Marker {
-  console.log("📍 Creating marker...") // Added log
-  return new google.maps.Marker({
+  console.log("📍 Creating marker...")
+  // Use window.google as it's globally available
+  return new window.google.maps.Marker({
     position,
     map,
     title: options?.title,
@@ -188,17 +192,19 @@ export function createInfoWindow(
     pixelOffset?: google.maps.Size
   },
 ): google.maps.InfoWindow {
-  console.log("💬 Creating info window...") // Added log
-  return new google.maps.InfoWindow({
+  console.log("💬 Creating info window...")
+  // Use window.google as it's globally available
+  return new window.google.maps.InfoWindow({
     content,
     maxWidth: options?.maxWidth || 300,
     pixelOffset: options?.pixelOffset,
   })
 }
 
+// This declare global block is crucial for TypeScript to recognize window.google
 declare global {
   interface Window {
-    google: any
+    google: typeof google
     initGoogleMaps: () => void
   }
 }

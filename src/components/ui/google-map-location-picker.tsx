@@ -1,73 +1,75 @@
+"use client"
+
 // Fully corrected version of GoogleMapLocationPicker.tsx
-import React, { useEffect, useRef, useState } from 'react';
-import { MapPin, Loader2, AlertCircle, RefreshCw, Search } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { loadGoogleMaps, geocodeAddress, reverseGeocode, createMap, createMarker } from '@/services/googleMaps';
-import { getGoogleMapsApiKey } from '@/services/apiKeys';
+import { useEffect, useRef, useState } from "react"
+import { Loader2, AlertCircle, RefreshCw, Search } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { loadGoogleMaps, geocodeAddress, reverseGeocode, createMap, createMarker } from "@/services/googleMaps"
+import { google } from "googlemaps"
 
 interface GoogleMapLocationPickerProps {
   onLocationSelected: (location: {
-    barangay: string;
-    coordinates: { lat: number; lng: number };
-    address: string;
-  }) => void;
-  initialLocation?: { lat: number; lng: number };
-  className?: string;
-  height?: string;
+    barangay: string
+    coordinates: { lat: number; lng: number }
+    address: string
+  }) => void
+  initialLocation?: { lat: number; lng: number }
+  className?: string
+  height?: string
 }
 
 export const GoogleMapLocationPicker = ({
   onLocationSelected,
   initialLocation,
-  className = '',
-  height = '400px',
+  className = "",
+  height = "400px",
 }: GoogleMapLocationPickerProps) => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const mapInstance = useRef<google.maps.Map | null>(null);
-  const markerInstance = useRef<google.maps.Marker | null>(null);
+  const mapContainer = useRef<HTMLDivElement>(null)
+  const mapInstance = useRef<google.maps.Map | null>(null)
+  const markerInstance = useRef<google.maps.Marker | null>(null)
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState("")
   const [selectedLocation, setSelectedLocation] = useState<{
-    barangay: string;
-    coordinates: { lat: number; lng: number };
-    address: string;
-  } | null>(null);
-  const [isMapsReady, setIsMapsReady] = useState(false);
+    barangay: string
+    coordinates: { lat: number; lng: number }
+    address: string
+  } | null>(null)
+  const [isMapsReady, setIsMapsReady] = useState(false)
 
-  const defaultCenter = initialLocation || { lat: 14.5995, lng: 120.9842 };
+  const defaultCenter = initialLocation || { lat: 14.5995, lng: 120.9842 }
 
   useEffect(() => {
     const loadMaps = async () => {
       try {
-        const apiKey = await getGoogleMapsApiKey();
-        await loadGoogleMaps();
-        setIsMapsReady(true);
+        // No need to await getGoogleMapsApiKey here, loadGoogleMaps handles it
+        await loadGoogleMaps()
+        setIsMapsReady(true)
       } catch (err) {
-        console.error('❌ Error loading Google Maps:', err);
-        setError('Google Maps failed to load');
+        console.error("❌ Error loading Google Maps:", err)
+        setError("Google Maps failed to load")
       }
-    };
-    loadMaps();
-  }, []);
+    }
+    loadMaps()
+  }, [])
 
   useEffect(() => {
     if (isMapsReady) {
-      initializeMap();
+      initializeMap()
     }
     return () => {
-      if (markerInstance.current) markerInstance.current.setMap(null);
-      if (mapInstance.current) mapInstance.current = null;
-    };
-  }, [isMapsReady]);
+      if (markerInstance.current) markerInstance.current.setMap(null)
+      if (mapInstance.current) mapInstance.current = null
+    }
+  }, [isMapsReady])
 
   const initializeMap = async () => {
-    if (!mapContainer.current) return;
+    if (!mapContainer.current) return
     try {
-      setLoading(true);
-      setError(null);
+      setLoading(true)
+      setError(null)
 
       const map = await createMap(mapContainer.current, {
         center: defaultCenter,
@@ -75,105 +77,106 @@ export const GoogleMapLocationPicker = ({
         zoomControl: true,
         streetViewControl: false,
         fullscreenControl: true,
-      });
+      })
 
-      mapInstance.current = map;
+      mapInstance.current = map
 
       const placeMarker = async (position: { lat: number; lng: number }) => {
-        if (markerInstance.current) markerInstance.current.setMap(null);
+        if (markerInstance.current) markerInstance.current.setMap(null)
         const marker = createMarker(map, position, {
           draggable: true,
-          title: 'Selected Location',
+          title: "Selected Location",
           icon: {
             url:
-              'data:image/svg+xml;charset=UTF-8,' +
+              "data:image/svg+xml;charset=UTF-8," +
               encodeURIComponent(`
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#3b82f6" width="32" height="32">
                   <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                 </svg>
               `),
-            scaledSize: new google.maps.Size(32, 32),
-            anchor: new google.maps.Point(16, 32),
+            scaledSize: new google.maps.Size(32, 32), // Use window.google
+            anchor: new google.maps.Point(16, 32), // Use window.google
           },
-        });
-        markerInstance.current = marker;
+        })
+        markerInstance.current = marker
 
-        marker.addListener('dragend', () => {
-          const newPosition = marker.getPosition();
-          if (newPosition) updateLocationInfo({ lat: newPosition.lat(), lng: newPosition.lng() });
-        });
+        marker.addListener("dragend", () => {
+          const newPosition = marker.getPosition()
+          if (newPosition) updateLocationInfo({ lat: newPosition.lat(), lng: newPosition.lng() })
+        })
 
-        await updateLocationInfo(position);
-      };
+        await updateLocationInfo(position)
+      }
 
       const updateLocationInfo = async (position: { lat: number; lng: number }) => {
         try {
-          const result = await reverseGeocode(position.lat, position.lng);
+          const result = await reverseGeocode(position.lat, position.lng)
           if (result) {
             const loc = {
-              barangay: result.barangay || 'Unknown Barangay',
+              barangay: result.barangay || "Unknown Barangay",
               coordinates: position,
               address: result.address,
-            };
-            setSelectedLocation(loc);
+            }
+            setSelectedLocation(loc)
           }
         } catch (error) {
-          console.error('Reverse geocoding failed:', error);
+          console.error("Reverse geocoding failed:", error)
         }
-      };
+      }
 
       if (navigator.geolocation && !initialLocation) {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
-            const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-            map.setCenter(coords);
-            map.setZoom(15);
-            placeMarker(coords);
+            const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+            map.setCenter(coords)
+            map.setZoom(15)
+            placeMarker(coords)
           },
           () => {
-            placeMarker(defaultCenter);
-          }
-        );
+            placeMarker(defaultCenter)
+          },
+        )
       } else {
-        placeMarker(defaultCenter);
+        placeMarker(defaultCenter)
       }
 
-      map.addListener('click', (e: google.maps.MapMouseEvent) => {
+      map.addListener("click", (e: google.maps.MapMouseEvent) => {
         if (e.latLng) {
-          const coords = { lat: e.latLng.lat(), lng: e.latLng.lng() };
-          placeMarker(coords);
+          const coords = { lat: e.latLng.lat(), lng: e.latLng.lng() }
+          placeMarker(coords)
         }
-      });
+      })
 
-      setLoading(false);
+      setLoading(false)
     } catch (err) {
-      console.error('Initialization error:', err);
-      setError('Failed to initialize map');
-      setLoading(false);
+      console.error("Initialization error:", err)
+      setError("Failed to initialize map")
+      setLoading(false)
     }
-  };
+  }
 
   const handleSearch = async () => {
-    if (!searchQuery.trim() || !mapInstance.current) return;
+    if (!searchQuery.trim() || !mapInstance.current) return
     try {
-      const result = await geocodeAddress(searchQuery);
+      const result = await geocodeAddress(searchQuery)
       if (result) {
-        const position = { lat: result.lat, lng: result.lng };
-        mapInstance.current.setCenter(position);
-        mapInstance.current.setZoom(16);
-        markerInstance.current?.setMap(null);
-        await initializeMap();
+        const position = { lat: result.lat, lng: result.lng }
+        mapInstance.current.setCenter(position)
+        mapInstance.current.setZoom(16)
+        markerInstance.current?.setMap(null)
+        // Re-initialize map to place marker at new location and update info
+        await initializeMap()
       }
     } catch (error) {
-      console.error('Search failed:', error);
+      console.error("Search failed:", error)
     }
-  };
+  }
 
   const handleConfirm = () => {
     if (selectedLocation) {
-      onLocationSelected(selectedLocation);
+      onLocationSelected(selectedLocation)
     }
-  };
+  }
 
   if (!isMapsReady || loading) {
     return (
@@ -181,11 +184,11 @@ export const GoogleMapLocationPicker = ({
         <div className="absolute inset-0 flex items-center justify-center bg-muted">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           <div className="text-sm ml-2 text-muted-foreground">
-            {!isMapsReady ? 'Loading Google Maps...' : 'Loading map...'}
+            {!isMapsReady ? "Loading Google Maps..." : "Loading map..."}
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   if (error) {
@@ -199,7 +202,7 @@ export const GoogleMapLocationPicker = ({
           </Button>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -209,7 +212,7 @@ export const GoogleMapLocationPicker = ({
           placeholder="Search for a location..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+          onKeyDown={(e) => e.key === "Enter" && handleSearch()}
         />
         <Button onClick={handleSearch} size="sm">
           <Search className="h-4 w-4" />
@@ -235,7 +238,7 @@ export const GoogleMapLocationPicker = ({
         Click the map or drag the marker to update your location.
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default GoogleMapLocationPicker;
+export default GoogleMapLocationPicker

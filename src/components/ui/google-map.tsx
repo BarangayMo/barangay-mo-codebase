@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { Loader2, AlertCircle, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { loadGoogleMaps, geocodeAddress, createMap, createMarker, createInfoWindow } from "@/services/googleMaps"
-import { google } from "googlemaps" // Declare the google variable
+import { google } from "googlemaps"
 
 interface GoogleMapProps {
   location: string
@@ -24,6 +24,7 @@ export const GoogleMap = ({
   onLocationClick,
 }: GoogleMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null)
+  // Use google.maps.Map from the global window.google object
   const mapInstance = useRef<google.maps.Map | null>(null)
   const markerInstance = useRef<google.maps.Marker | null>(null)
   const infoWindowInstance = useRef<google.maps.InfoWindow | null>(null)
@@ -62,14 +63,14 @@ export const GoogleMap = ({
       console.error("❌ GoogleMap: Map container ref is null.")
       setError("Map container not found.")
       setLoading(false)
-      return // Exit early if container is not ready
+      return
     }
 
     if (!location) {
       console.warn("⚠️ GoogleMap: No location provided. Cannot initialize map.")
       setError("No location specified to display.")
       setLoading(false)
-      return // Exit early if no location
+      return
     }
 
     try {
@@ -118,8 +119,8 @@ export const GoogleMap = ({
                 <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
               </svg>
             `),
-            scaledSize: new google.maps.Size(32, 32),
-            anchor: new google.maps.Point(16, 32),
+            scaledSize: new google.maps.Size(32, 32), // Use google.maps
+            anchor: new google.maps.Point(16, 32), // Use google.maps
           },
         },
       )
