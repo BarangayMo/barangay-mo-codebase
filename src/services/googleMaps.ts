@@ -1,4 +1,5 @@
 
+
 //mychanges
 
 import { getGoogleMapsApiKey } from './apiKeys';
@@ -38,7 +39,7 @@ export async function loadGoogleMaps(): Promise<void> {
         return;
       }
 
-      // ✅ Set up callback FIRST
+      // ✅ Set up callback FIRST - this must resolve the promise
       (window as any).initGoogleMaps = () => {
         console.log('✅ Google Maps initialized successfully');
         isGoogleMapsLoaded = true;
@@ -49,11 +50,12 @@ export async function loadGoogleMaps(): Promise<void> {
         resolve();
       };
 
-      // ✅ Avoid duplicate script
+      // ✅ Check for existing script but don't return early
       const existingScript = document.querySelector(`script[src*="maps.googleapis.com"]`);
       if (existingScript) {
         console.log('🔄 Google Maps script already exists, waiting for initialization...');
-        return; // If already appended, just wait for initGoogleMaps
+        // Don't return here - let the callback handle resolution
+        return;
       }
 
       // Create script element

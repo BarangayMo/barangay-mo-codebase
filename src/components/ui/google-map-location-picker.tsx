@@ -1,4 +1,5 @@
 
+
 import React, { useEffect, useRef, useState } from 'react';
 import { MapPin, Loader2, AlertCircle, RefreshCw, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -46,7 +47,7 @@ export const GoogleMapLocationPicker = ({
       setError(null);
       console.log('🗺️ GoogleMapLocationPicker: Initializing map...');
 
-      // Load Google Maps API
+      // Load Google Maps API and wait for it to complete
       await loadGoogleMaps();
 
       // Verify Google Maps is loaded
@@ -56,7 +57,14 @@ export const GoogleMapLocationPicker = ({
       
       console.log('🗺️ GoogleMapLocationPicker: Google Maps API loaded successfully');
 
+      // Ensure map container has proper dimensions
+      if (mapContainer.current) {
+        mapContainer.current.style.width = '100%';
+        mapContainer.current.style.height = height;
+      }
+
       // Create map
+      console.log('🗺️ GoogleMapLocationPicker: Creating map instance...');
       const map = await createMap(mapContainer.current, {
         center: defaultCenter,
         zoom: 13,
@@ -271,7 +279,7 @@ export const GoogleMapLocationPicker = ({
         <div 
           ref={mapContainer} 
           className="w-full h-full"
-          style={{ minHeight: height }}
+          style={{ minHeight: height, width: '100%', height: '100%' }}
         />
       </div>
 
