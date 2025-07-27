@@ -1,4 +1,4 @@
-//my-changes
+//new-changes
 import React, { useEffect, useState } from "react";
 import {
   Dialog,
@@ -22,22 +22,20 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
   const [isMapsReady, setIsMapsReady] = useState(false);
 
   // Check for Google Maps script readiness
-  useEffect(() => {
-    console.log("📍 MapLocationModal: Mounted");
+ useEffect(() => {
+  const init = async () => {
+    try {
+      const apiKey = await getGoogleMapsApiKey();
+      await loadGoogleMaps(apiKey);
+      setIsMapsReady(true);
+    } catch (err) {
+      console.error("❌ Google Maps failed to load:", err);
+    }
+  };
 
-    const interval = setInterval(() => {
-      if (typeof window !== "undefined") {
-        if (!window.google) {
-          console.warn("❌ window.google is undefined");
-        } else if (!window.google.maps) {
-          console.warn("❌ window.google.maps is undefined");
-        } else {
-          console.log("✅ Google Maps is ready");
-          setIsMapsReady(true);
-          clearInterval(interval);
-        }
-      }
-    }, 200);
+  init();
+}, []);
+
 
     // Safety timeout in case maps never load
     setTimeout(() => {
