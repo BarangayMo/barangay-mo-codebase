@@ -1,4 +1,3 @@
-//new-changes
 import React, { useEffect, useState } from "react";
 import {
   Dialog,
@@ -10,10 +9,9 @@ import {
 } from "@/components/ui/dialog";
 import { GoogleMapLocationPicker } from "@/components/ui/google-map-location-picker";
 import { toast } from "sonner";
-import { getGoogleMapsApiKey } from "@/services/apiKeys";
-import { loadGoogleMaps } from "@/services/googleMaps";
+import { getGoogleMapsApiKey } from "@/lib/api-keys"; // Ensure this import is correct
+import { loadGoogleMaps } from "@/lib/load-google-maps"; // Ensure this helper exists
 
-// Define types for our location data
 interface MapLocationModalProps {
   children: React.ReactNode;
   onLocationSelected: (location: {
@@ -26,13 +24,11 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
   const [isOpen, setIsOpen] = useState(false);
   const [isMapsReady, setIsMapsReady] = useState(false);
 
-  // Check for Google Maps script readiness
   useEffect(() => {
     const init = async () => {
       try {
         const apiKey = await getGoogleMapsApiKey();
         await loadGoogleMaps(apiKey);
-        console.log("✅ Google Maps loaded successfully.");
         setIsMapsReady(true);
       } catch (err) {
         console.error("❌ Google Maps failed to load:", err);
@@ -41,7 +37,6 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
 
     init();
 
-    // Safety timeout in case maps never load
     const timeout = setTimeout(() => {
       if (!isMapsReady) {
         console.error("⏰ Google Maps failed to load in expected time.");
@@ -49,7 +44,7 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
     }, 10000);
 
     return () => clearTimeout(timeout);
-  }, []);
+  }, [isMapsReady]);
 
   const handleLocationSelected = (location: {
     barangay: string;
