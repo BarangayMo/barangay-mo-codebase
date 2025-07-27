@@ -37,6 +37,7 @@ export function MapLocationModal({ children, onLocationSelected }: MapLocationMo
 }, []);
 
 
+
     // Safety timeout in case maps never load
     setTimeout(() => {
       if (!isMapsReady) {
