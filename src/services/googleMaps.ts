@@ -18,36 +18,34 @@ export async function loadGoogleMaps(): Promise<void> {
     return googleMapsPromise;
   }
 
-  googleMapsPromise = new Promise((resolve, reject) => {
-    try {
-      // Check if already loaded
-      if (window.google && window.google.maps) {
-        isGoogleMapsLoaded = true;
-        resolve();
-        return;
-      }
-
-      // Create script element
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places,geometry&callback=initGoogleMaps`;
-      script.async = true;
-      script.defer = true;
-
-      // Set up callback
-      (window as any).initGoogleMaps = () => {
-        isGoogleMapsLoaded = true;
-        resolve();
-      };
-
-      script.onerror = () => {
-        reject(new Error('Failed to load Google Maps script'));
-      };
-
-      document.head.appendChild(script);
-    } catch (error) {
-      reject(error);
+ googleMapsPromise = new Promise((resolve, reject) => {
+  try {
+    // ✅ Already loaded
+    if (window.google && window.google.maps) {
+      isGoogleMapsLoaded = true;
+      resolve();
+      return;
     }
-  });
+
+    // ✅ Define callback FIRST
+    (window as any).initGoogleMaps = () => {
+      console.log("✅ Google Maps initialized");
+      isGoogleMapsLoaded = true;
+      resolve();
+    };
+
+    // ✅ Create and append script
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}&libraries=places,geometry&callback=initGoogleMaps`;
+    script.async = true;
+    script.defer = true;
+    script.onerror = () => reject(new Error("❌ Failed to load Google Maps script"));
+
+    document.head.appendChild(script);
+  } catch (error) {
+    reject(error);
+  }
+});
 
   return googleMapsPromise;
 }
