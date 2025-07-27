@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { GoogleMapLocationPicker } from "@/components/ui/google-map-location-picker";
 import { toast } from "sonner";
-import { getGoogleMapsApiKey } from "@/services/api-keys"; // Ensure this import is correct
+import { getGoogleMapsApiKey } from "@/services/apiKeys"; // Ensure this import is correct
 import { loadGoogleMaps } from "@/lib/load-google-maps"; // Ensure this helper exists
 
 interface MapLocationModalProps {
