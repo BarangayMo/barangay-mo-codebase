@@ -39,26 +39,30 @@ export const GoogleMapLocationPicker = ({
   // Default to Manila, Philippines
   const defaultCenter = initialLocation || { lat: 14.5995, lng: 120.9842 };
 
-  useEffect(() => {
-    const init = async () => {
-      try {
-        console.log('📦 GoogleMapLocationPicker: Loading Google Maps script...');
-        await loadGoogleMaps();
+ useEffect(() => {
+  async function initMap() {
+    try {
+      const apiKey = await getGoogleMapsApiKey();
+      await loadGoogleMaps(apiKey);
 
-        if (typeof window.google !== 'undefined' && typeof window.google.maps !== 'undefined') {
-          console.log('✅ Google Maps is ready for location picker');
-          setIsMapsReady(true);
-        } else {
-          console.error('❌ Google Maps SDK still undefined after load');
-          setError('Google Maps SDK not available after load');
-        }
-      } catch (err) {
-        console.error('❌ Failed to load Google Maps:', err);
-        setError('Failed to load Google Maps');
-      }
-    };
+      const map = createMap(mapRef.current!, defaultCenter, zoom);
+      const marker = createMarker(map, defaultCenter, true);
 
-    init();
+      setMap(map);
+      setMarker(marker);
+
+      reverseGeocode(defaultCenter.lat, defaultCenter.lng).then(setAddress);
+    } catch (err) {
+      console.error('❌ Error initializing map:', err);
+      setError('Failed to load Google Maps');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  initMap();
+}, []);
+
 
     return () => {
       console.log('🧹 GoogleMapLocationPicker: Component unmounting, cleaning up...');
