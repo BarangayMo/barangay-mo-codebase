@@ -18,40 +18,48 @@ export async function loadGoogleMaps(): Promise<void> {
 
   googleMapsPromise = new Promise(async (resolve, reject) => {
     try {
-      // Get API key from Supabase
       const apiKey = await getGoogleMapsApiKey();
+      console.log('API Key used:', apiKey);
 
-        console.log('API Key used:', apiKey);
-      
       if (!apiKey) {
         throw new Error('Google Maps API key not found. Please configure it in the admin settings.');
       }
 
-      // Check if already loaded
+      // If already available
       if (window.google && window.google.maps) {
         isGoogleMapsLoaded = true;
         resolve();
         return;
       }
 
-      // Create script element
-      const script = document.createElement('script');
-script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry`;
-      script.async = true;
-      script.defer = true;
-
-      // Set up callback
-     script.onload = () => {
-  isGoogleMapsLoaded = true;
-  resolve();
-};
-
-
-      script.onerror = () => {
-        reject(new Error('Failed to load Google Maps script'));
+      // Define the callback BEFORE appending the script
+      (window as any).initGoogleMaps = () => {
+        console.log("✅ Google Maps initialized");
+        isGoogleMapsLoaded = true;
+        resolve();
       };
 
-      document.head.appendChild(script);
+      // Timeout fallback (optional but safe)
+      setTimeout(() => {
+        if (!isGoogleMapsLoaded) {
+          reject(new Error("Google Maps init timeout"));
+        }
+      }, 10000); // 10 seconds
+
+      // Avoid adding the script multiple times
+      const existingScript = document.querySelector(`script[src*="maps.googleapis.com"]`);
+      if (!existingScript) {
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry&callback=initGoogleMaps`;
+        script.async = true;
+        script.defer = true;
+
+        script.onerror = () => {
+          reject(new Error('Failed to load Google Maps script'));
+        };
+
+        document.head.appendChild(script);
+      }
     } catch (error) {
       reject(error);
     }
