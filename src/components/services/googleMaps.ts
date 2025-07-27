@@ -18,48 +18,55 @@ export async function loadGoogleMaps(): Promise<void> {
 
   googleMapsPromise = new Promise(async (resolve, reject) => {
     try {
+      // Get API key from Supabase
       const apiKey = await getGoogleMapsApiKey();
-      console.log('API Key used:', apiKey);
 
+        console.log('API Key used:', apiKey);
+      
       if (!apiKey) {
         throw new Error('Google Maps API key not found. Please configure it in the admin settings.');
       }
 
-      // If already available
+      // Check if already loaded
       if (window.google && window.google.maps) {
         isGoogleMapsLoaded = true;
         resolve();
         return;
       }
 
-      // Define the callback BEFORE appending the script
-      (window as any).initGoogleMaps = () => {
-        console.log("✅ Google Maps initialized");
-        isGoogleMapsLoaded = true;
-        resolve();
-      };
+      // Create script element
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry&callback=initGoogleMaps`;
+      script.async = true;
+      script.defer = true;
 
-      // Timeout fallback (optional but safe)
-      setTimeout(() => {
-        if (!isGoogleMapsLoaded) {
-          reject(new Error("Google Maps init timeout"));
-        }
-      }, 10000); // 10 seconds
+     // Set up the global callback FIRST (before appending script)
+(window as any).initGoogleMaps = () => {
+  isGoogleMapsLoaded = true;
 
-      // Avoid adding the script multiple times
-      const existingScript = document.querySelector(`script[src*="maps.googleapis.com"]`);
-      if (!existingScript) {
-        const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry&callback=initGoogleMaps`;
-        script.async = true;
-        script.defer = true;
+  // ✅ Ensure global.google is available
+  (window as any).google = window.google;
 
-        script.onerror = () => {
-          reject(new Error('Failed to load Google Maps script'));
-        };
+  resolve();
+};
 
-        document.head.appendChild(script);
-      }
+// ✅ Create script tag
+const script = document.createElement('script');
+script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry&callback=initGoogleMaps`;
+script.async = true;
+script.defer = true;
+
+script.onerror = () => {
+  reject(new Error('❌ Failed to load Google Maps script'));
+};
+
+// ✅ Avoid duplicate script injection
+const existingScript = document.querySelector(`script[src*="maps.googleapis.com"]`);
+if (!existingScript) {
+  document.head.appendChild(script);
+}
+
+
     } catch (error) {
       reject(error);
     }
