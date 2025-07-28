@@ -63,7 +63,7 @@ export const RbiApprovalModal = ({ isOpen, onClose, form, onSuccess }: RbiApprov
       if (approved) {
         const { error: profileError } = await supabase
           .from("profiles")
-          .update({ status: "approved" })
+          .update({ status: "approved" }) // Reverted to 'approved' (lowercase)
           .eq("id", form.user_id)
 
         if (profileError) {
