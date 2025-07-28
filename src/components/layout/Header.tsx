@@ -359,11 +359,7 @@ export const Header = () => {
               </Button>}
 
             {/* Profile/User Icon */}
-            <Button asChild variant="ghost" size="icon" className="rounded-full w-8 h-8">
-              <Link to={isAuthenticated ? "/resident-profile" : "/login"}>
-                <User className="h-5 w-5" />
-              </Link>
-            </Button>
+           
           </div>
         </div>
       </header>;
