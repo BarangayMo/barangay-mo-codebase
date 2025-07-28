@@ -69,7 +69,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
     region: "",
     achievements: "",
     years_of_service: "",
-   
+    barangay: "",
   })
 
   const [provinces, setProvinces] = useState<string[]>([])
@@ -98,7 +98,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
           ? official.achievements.join(", ")
           : official.achievements || "",
         years_of_service: official.years_of_service?.toString() || "",
-        
+        barangay: official.barangay || "",
       })
     }
   }, [official, isOpen])
@@ -203,7 +203,11 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
 
       console.log("Authenticated user:", user.id)
 
-      // Prepare the data for insertion
+      // Check current session
+      const { data: session } = await supabase.auth.getSession()
+      console.log("Current session:", session)
+
+      // Prepare the data for insertion - only include fields that exist in the table
       const officialData = {
         user_id: user.id,
         first_name: formData.first_name.trim(),
@@ -214,7 +218,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
         phone_number: formData.phone_number.trim(),
         landline_number: formData.landline_number?.trim() || null,
         email: formData.email.trim(),
-       
+        barangay: formData.barangay?.trim() || "",
         municipality: formData.municipality,
         province: formData.province,
         region: formData.region,
@@ -226,22 +230,31 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
           : null,
         years_of_service: formData.years_of_service ? Number.parseInt(formData.years_of_service) : null,
         status: "pending" as const,
-
+        term_start: null,
+        term_end: null,
       }
 
       console.log("Inserting official data:", officialData)
 
-      // Insert the official into the database
+      // Try to insert with explicit RLS context
       const { data, error } = await supabase.from("officials").insert(officialData).select().single()
 
       if (error) {
         console.error("Error creating official:", error)
+        console.error("Error code:", error.code)
+        console.error("Error message:", error.message)
+        console.error("Error details:", error.details)
+        console.error("Error hint:", error.hint)
 
         // Handle specific RLS error
         if (error.code === "42501") {
+          // Try to get more information about the user and RLS
+          const { data: userData } = await supabase.auth.getUser()
+          console.log("User data for RLS debug:", userData)
+
           toast({
             title: "Permission Error",
-            description: "You don't have permission to create officials. Please contact an administrator.",
+            description: `RLS Policy Error: ${error.message}. Please check your permissions or contact an administrator.`,
             variant: "destructive",
           })
         } else {
@@ -536,7 +549,18 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
                     className="bg-gray-50 border-gray-200 h-12"
                   />
                 </div>
-                
+                <div className="space-y-2">
+                  <Label htmlFor="barangay" className="text-sm font-medium text-gray-700">
+                    Barangay (Optional)
+                  </Label>
+                  <Input
+                    id="barangay"
+                    value={formData.barangay}
+                    onChange={(e) => handleInputChange("barangay", e.target.value)}
+                    placeholder="Enter barangay"
+                    className="bg-gray-50 border-gray-200 h-12"
+                  />
+                </div>
               </div>
             </div>
           </div>
