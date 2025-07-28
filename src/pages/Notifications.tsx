@@ -13,13 +13,16 @@ const Notifications = () => {
   const { userRole } = useAuth()
   const {
     notifications,
+    archivedNotifications,
     isLoading,
     error,
     unreadCount,
     markAsRead,
     archiveNotification,
+    unarchiveNotification,
     isMarkingAsRead,
     isArchiving,
+    isUnarchiving,
   } = useNotifications()
   const [activeTab, setActiveTab] = useState<string>("all")
   const [searchTerm, setSearchTerm] = useState<string>("")
@@ -109,8 +112,23 @@ const Notifications = () => {
     )
   }
 
-  const currentNotifications = activeTab === "all" ? notifications : notifications.filter((n) => n.status === "unread")
-  const roleBasedNotifications = filterNotificationsByRole(currentNotifications)
+  // Get the appropriate notification list based on active tab
+  const getNotificationsByTab = () => {
+    switch (activeTab) {
+      case "unread":
+        return notifications.filter((n) => n.status === "unread")
+      case "read":
+        return notifications.filter((n) => n.status === "read")
+      case "archived":
+        return archivedNotifications
+      default:
+        return notifications
+    }
+  }
+
+  const currentNotifications = getNotificationsByTab()
+  const roleBasedNotifications =
+    activeTab === "archived" ? currentNotifications : filterNotificationsByRole(currentNotifications)
   const filteredNotifications = filterNotificationsBySearch(roleBasedNotifications)
   const unreadNotifications = notifications.filter((n) => n.status === "unread")
 
@@ -122,6 +140,7 @@ const Notifications = () => {
     afterRoleFilter: roleBasedNotifications.length,
     afterSearchFilter: filteredNotifications.length,
     unreadCount: unreadNotifications.length,
+    archivedCount: archivedNotifications.length,
     allCategories: [...new Set(currentNotifications.map((n) => n.category))],
     filteredCategories: [...new Set(roleBasedNotifications.map((n) => n.category))],
     sampleNotifications: currentNotifications.slice(0, 3).map((n) => ({
@@ -134,6 +153,7 @@ const Notifications = () => {
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab)
+    setShowActions(null) // Close any open action menus
   }
 
   const handleMarkAsRead = (notificationId: string, event?: React.MouseEvent) => {
@@ -142,6 +162,7 @@ const Notifications = () => {
     }
     console.log("Attempting to mark as read:", notificationId)
     markAsRead(notificationId)
+    setShowActions(null)
   }
 
   const handleArchive = (notificationId: string, event?: React.MouseEvent) => {
@@ -150,6 +171,15 @@ const Notifications = () => {
     }
     console.log("Attempting to archive:", notificationId)
     archiveNotification(notificationId)
+    setShowActions(null)
+  }
+
+  const handleUnarchive = (notificationId: string, event?: React.MouseEvent) => {
+    if (event) {
+      event.stopPropagation()
+    }
+    console.log("Attempting to unarchive:", notificationId)
+    unarchiveNotification(notificationId)
     setShowActions(null)
   }
 
@@ -173,6 +203,11 @@ const Notifications = () => {
 
   const handleNotificationClick = (notification: Notification) => {
     console.log("Notification clicked:", notification.id)
+
+    // Don't navigate if it's archived, just show it
+    if (notification.status === "archived") {
+      return
+    }
 
     // Mark as read if it's unread
     if (notification.status === "unread") {
@@ -219,8 +254,8 @@ const Notifications = () => {
       {process.env.NODE_ENV === "development" && (
         <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm">
           <strong>Debug Info:</strong> Total: {notifications.length}, Role-filtered: {roleBasedNotifications.length},
-          Search-filtered: {filteredNotifications.length}, Unread: {unreadNotifications.length}, Categories:{" "}
-          {[...new Set(notifications.map((n) => n.category))].join(", ")}
+          Search-filtered: {filteredNotifications.length}, Unread: {unreadNotifications.length}, Archived:{" "}
+          {archivedNotifications.length}, Categories: {[...new Set(notifications.map((n) => n.category))].join(", ")}
         </div>
       )}
 
@@ -235,39 +270,50 @@ const Notifications = () => {
         />
       </div>
 
-      {/* Filter Buttons */}
-      <div className="mb-6 flex items-center gap-3">
+      {/* Filter Buttons - Smaller icons */}
+      <div className="mb-6 flex items-center gap-2 flex-wrap">
         <button
           onClick={() => handleTabChange("all")}
           className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-lg transition-colors",
+            "flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm",
             activeTab === "all" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200",
           )}
         >
-          <Bell className="h-4 w-4" />
+          <Bell className="h-3 w-3" />
           <span>All ({notifications.length})</span>
         </button>
 
         <button
           onClick={() => handleTabChange("unread")}
           className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-lg transition-colors",
+            "flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm",
             activeTab === "unread" ? "bg-orange-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200",
           )}
         >
-          <Mail className="h-4 w-4" />
+          <Mail className="h-3 w-3" />
           <span>Unread ({unreadNotifications.length})</span>
         </button>
 
         <button
           onClick={() => handleTabChange("read")}
           className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-lg transition-colors",
+            "flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm",
             activeTab === "read" ? "bg-green-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200",
           )}
         >
-          <MailOpen className="h-4 w-4" />
+          <MailOpen className="h-3 w-3" />
           <span>Read ({notifications.filter((n) => n.status === "read").length})</span>
+        </button>
+
+        <button
+          onClick={() => handleTabChange("archived")}
+          className={cn(
+            "flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm",
+            activeTab === "archived" ? "bg-purple-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200",
+          )}
+        >
+          <Archive className="h-3 w-3" />
+          <span>Archived ({archivedNotifications.length})</span>
         </button>
       </div>
 
@@ -275,8 +321,10 @@ const Notifications = () => {
       {error && <div className="text-red-500 text-center">Error: {error.message}</div>}
       {!isLoading && !error && filteredNotifications.length === 0 && (
         <div className="text-center py-8">
-          <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500">No notifications found.</p>
+          <Bell className="h-8 w-8 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-500">
+            {activeTab === "archived" ? "No archived notifications found." : "No notifications found."}
+          </p>
         </div>
       )}
       {!isLoading &&
@@ -286,10 +334,12 @@ const Notifications = () => {
             key={notification.id}
             onClick={() => handleNotificationClick(notification)}
             className={cn(
-              "border-b pb-3 mb-3 last:border-b-0 p-4 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md relative",
+              "border-b pb-3 mb-3 last:border-b-0 p-4 rounded-lg transition-all duration-200 hover:shadow-md relative",
               notification.status === "unread"
-                ? "bg-blue-50 border-blue-200 hover:bg-blue-100"
-                : "bg-white border-gray-200 hover:bg-gray-50",
+                ? "bg-blue-50 border-blue-200 hover:bg-blue-100 cursor-pointer"
+                : notification.status === "archived"
+                  ? "bg-purple-50 border-purple-200 hover:bg-purple-100"
+                  : "bg-white border-gray-200 hover:bg-gray-50 cursor-pointer",
             )}
           >
             <div className="flex items-start justify-between gap-3">
@@ -303,7 +353,9 @@ const Notifications = () => {
                   >
                     {notification.title}
                   </h4>
-                  <ExternalLink className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                  {notification.status !== "archived" && (
+                    <ExternalLink className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                  )}
                 </div>
                 <p className="text-sm text-gray-600 mb-3 line-clamp-2">{notification.message}</p>
                 <div className="flex items-center gap-2 flex-wrap">
@@ -312,7 +364,11 @@ const Notifications = () => {
                   <span
                     className={cn(
                       "text-xs px-2 py-1 rounded",
-                      notification.status === "unread" ? "bg-orange-100 text-orange-700" : "bg-gray-100 text-gray-700",
+                      notification.status === "unread"
+                        ? "bg-orange-100 text-orange-700"
+                        : notification.status === "archived"
+                          ? "bg-purple-100 text-purple-700"
+                          : "bg-gray-100 text-gray-700",
                     )}
                   >
                     {notification.status}
@@ -325,14 +381,14 @@ const Notifications = () => {
                 </div>
               </div>
 
-              {/* Actions Menu */}
+              {/* Actions Menu - Smaller icon */}
               <div className="relative">
                 <button
                   onClick={(e) => toggleActions(notification.id, e)}
                   className="p-1 rounded-full hover:bg-gray-200 transition-colors"
                   title="More actions"
                 >
-                  <MoreVertical className="h-4 w-4 text-gray-500" />
+                  <MoreVertical className="h-3 w-3 text-gray-500" />
                 </button>
 
                 {showActions === notification.id && (
@@ -348,14 +404,25 @@ const Notifications = () => {
                       </button>
                     )}
 
-                    <button
-                      onClick={(e) => handleArchive(notification.id, e)}
-                      disabled={isArchiving}
-                      className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 border-b border-gray-100"
-                    >
-                      <Archive className="h-3 w-3" />
-                      Archive
-                    </button>
+                    {notification.status === "archived" ? (
+                      <button
+                        onClick={(e) => handleUnarchive(notification.id, e)}
+                        disabled={isUnarchiving}
+                        className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 border-b border-gray-100"
+                      >
+                        <Archive className="h-3 w-3" />
+                        Unarchive
+                      </button>
+                    ) : (
+                      <button
+                        onClick={(e) => handleArchive(notification.id, e)}
+                        disabled={isArchiving}
+                        className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 border-b border-gray-100"
+                      >
+                        <Archive className="h-3 w-3" />
+                        Archive
+                      </button>
+                    )}
 
                     <button
                       onClick={(e) => handleDelete(notification.id, e)}
@@ -372,20 +439,6 @@ const Notifications = () => {
         ))}
     </div>
   )
-
-  // Update the filter logic for the new "read" tab
-  const getFilteredNotifications = () => {
-    switch (activeTab) {
-      case "unread":
-        return roleBasedNotifications.filter((n) => n.status === "unread")
-      case "read":
-        return roleBasedNotifications.filter((n) => n.status === "read")
-      default:
-        return roleBasedNotifications
-    }
-  }
-
-  const finalFilteredNotifications = filterNotificationsBySearch(getFilteredNotifications())
 
   return (
     <div className="container mx-auto p-4">
