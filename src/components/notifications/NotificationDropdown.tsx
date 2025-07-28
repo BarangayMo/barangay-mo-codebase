@@ -1,5 +1,5 @@
 "use client"
-
+//my-changes
 import { Bell, CheckCircle2, Info, type LucideIcon, XCircle } from "lucide-react"
 import * as React from "react"
 import { Badge } from "@/components/ui/badge"
@@ -12,7 +12,6 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface Notification {
@@ -127,6 +126,23 @@ const notifications: Notification[] = [
   },
 ]
 
+interface NotificationItemProps {
+  notification: Notification
+  onMarkAsRead: (id: string) => void
+}
+
+function NotificationItem({ notification, onMarkAsRead }: NotificationItemProps) {
+  return (
+    <div key={notification.id} className="flex items-center space-x-2">
+      <notification.icon className="h-4 w-4 text-muted-foreground" />
+      <div>
+        <p className="text-sm font-medium leading-none">{notification.title}</p>
+        <p className="text-sm text-muted-foreground">{notification.description}</p>
+      </div>
+    </div>
+  )
+}
+
 export function NotificationDropdown() {
   const [open, setOpen] = React.useState(false)
 
@@ -134,6 +150,10 @@ export function NotificationDropdown() {
   const yesterdayNotifications = notifications.filter((notification) => notification.time.includes("day"))
   const unreadNotifications = notifications.filter((notification) => !notification.read)
   const urgentNotifications = notifications.filter((notification) => notification.variant === "destructive")
+
+  const markAsRead = (id: string) => {
+    console.log(`Marking notification ${id} as read`)
+  }
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -159,65 +179,28 @@ export function NotificationDropdown() {
             <TabsTrigger value="unread">Unread</TabsTrigger>
             <TabsTrigger value="urgent">Urgent</TabsTrigger>
           </TabsList>
-          <TabsContent value="all" className="border-none p-0 outline-none">
-            <div className="max-h-32">
-              <ScrollArea className="h-32">
-                <div className="flex flex-col space-y-1 p-4">
-                  {todayNotifications.slice(0, 1).map((notification) => (
-                    <div key={notification.id} className="flex items-center space-x-2">
-                      <notification.icon className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm font-medium leading-none">{notification.title}</p>
-                        <p className="text-sm text-muted-foreground">{notification.description}</p>
-                      </div>
-                    </div>
-                  ))}
-                  {yesterdayNotifications.slice(0, 1).map((notification) => (
-                    <div key={notification.id} className="flex items-center space-x-2">
-                      <notification.icon className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm font-medium leading-none">{notification.title}</p>
-                        <p className="text-sm text-muted-foreground">{notification.description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </div>
+          <TabsContent value="all" className="m-0">
+            {todayNotifications.slice(0, 1).map((notification) => (
+              <NotificationItem key={notification.id} notification={notification} onMarkAsRead={markAsRead} />
+            ))}
+            {todayNotifications.length === 0 &&
+              yesterdayNotifications
+                .slice(0, 1)
+                .map((notification) => (
+                  <NotificationItem key={notification.id} notification={notification} onMarkAsRead={markAsRead} />
+                ))}
           </TabsContent>
-          <TabsContent value="unread" className="border-none p-0 outline-none">
-            <div className="max-h-32">
-              <ScrollArea className="h-32">
-                <div className="flex flex-col space-y-1 p-4">
-                  {unreadNotifications.slice(0, 1).map((notification) => (
-                    <div key={notification.id} className="flex items-center space-x-2">
-                      <notification.icon className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm font-medium leading-none">{notification.title}</p>
-                        <p className="text-sm text-muted-foreground">{notification.description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </div>
+
+          <TabsContent value="unread" className="m-0">
+            {unreadNotifications.slice(0, 1).map((notification) => (
+              <NotificationItem key={notification.id} notification={notification} onMarkAsRead={markAsRead} />
+            ))}
           </TabsContent>
-          <TabsContent value="urgent" className="border-none p-0 outline-none">
-            <div className="max-h-32">
-              <ScrollArea className="h-32">
-                <div className="flex flex-col space-y-1 p-4">
-                  {urgentNotifications.slice(0, 1).map((notification) => (
-                    <div key={notification.id} className="flex items-center space-x-2">
-                      <notification.icon className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm font-medium leading-none">{notification.title}</p>
-                        <p className="text-sm text-muted-foreground">{notification.description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </div>
+
+          <TabsContent value="urgent" className="m-0">
+            {urgentNotifications.slice(0, 1).map((notification) => (
+              <NotificationItem key={notification.id} notification={notification} onMarkAsRead={markAsRead} />
+            ))}
           </TabsContent>
         </Tabs>
         <DropdownMenuSeparator />
