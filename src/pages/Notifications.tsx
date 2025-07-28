@@ -6,7 +6,7 @@ import { useState } from "react"
 import { useNotifications } from "@/hooks/useNotifications"
 import { useAuth } from "@/contexts/AuthContext"
 import { cn } from "@/lib/utils"
-import { Bell, Clock, AlertTriangle, Briefcase, Settings, CheckCircle, ExternalLink } from "lucide-react"
+import { Bell, Archive, Trash2, ExternalLink, Mail, MailOpen, MoreVertical } from "lucide-react"
 import type { Notification } from "@/hooks/useNotifications"
 
 const Notifications = () => {
@@ -17,12 +17,13 @@ const Notifications = () => {
     error,
     unreadCount,
     markAsRead,
-    markAllAsRead,
+    archiveNotification,
     isMarkingAsRead,
-    isMarkingAllAsRead,
+    isArchiving,
   } = useNotifications()
   const [activeTab, setActiveTab] = useState<string>("all")
   const [searchTerm, setSearchTerm] = useState<string>("")
+  const [showActions, setShowActions] = useState<string | null>(null)
 
   // Updated role-based filtering with the actual categories from your database
   const filterNotificationsByRole = (notificationList: Notification[]) => {
@@ -112,17 +113,6 @@ const Notifications = () => {
   const roleBasedNotifications = filterNotificationsByRole(currentNotifications)
   const filteredNotifications = filterNotificationsBySearch(roleBasedNotifications)
   const unreadNotifications = notifications.filter((n) => n.status === "unread")
-  const urgentNotifications = notifications.filter((n) => n.priority === "urgent")
-
-  // Define role-based color schemes
-  const roleColors = {
-    superadmin: { stats: "bg-purple-50 text-purple-700" },
-    official: { stats: "bg-blue-50 text-blue-700" },
-    resident: { stats: "bg-green-50 text-green-700" },
-  }
-
-  // Determine the color scheme based on the user role
-  const userRoleForColors = userRole in roleColors ? userRole : "resident"
 
   // Enhanced debug logging
   console.log("Notifications page filtering - DETAILED:", {
@@ -154,9 +144,31 @@ const Notifications = () => {
     markAsRead(notificationId)
   }
 
-  const handleMarkAllAsRead = () => {
-    console.log("Attempting to mark all as read")
-    markAllAsRead()
+  const handleArchive = (notificationId: string, event?: React.MouseEvent) => {
+    if (event) {
+      event.stopPropagation()
+    }
+    console.log("Attempting to archive:", notificationId)
+    archiveNotification(notificationId)
+    setShowActions(null)
+  }
+
+  const handleDelete = async (notificationId: string, event?: React.MouseEvent) => {
+    if (event) {
+      event.stopPropagation()
+    }
+
+    if (confirm("Are you sure you want to delete this notification? This action cannot be undone.")) {
+      try {
+        // You'll need to add a delete mutation to your hook
+        console.log("Attempting to delete:", notificationId)
+        // For now, we'll archive it as delete functionality
+        archiveNotification(notificationId)
+        setShowActions(null)
+      } catch (error) {
+        console.error("Failed to delete notification:", error)
+      }
+    }
   }
 
   const handleNotificationClick = (notification: Notification) => {
@@ -195,6 +207,11 @@ const Notifications = () => {
     }
   }
 
+  const toggleActions = (notificationId: string, event: React.MouseEvent) => {
+    event.stopPropagation()
+    setShowActions(showActions === notificationId ? null : notificationId)
+  }
+
   // Main content component
   const NotificationsContent = () => (
     <div className="w-full">
@@ -218,59 +235,49 @@ const Notifications = () => {
         />
       </div>
 
-      {/* Mark All as Read Button */}
-      {unreadNotifications.length > 0 && (
-        <div className="mb-4">
-          <button
-            onClick={handleMarkAllAsRead}
-            disabled={isMarkingAllAsRead}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isMarkingAllAsRead ? "Marking all as read..." : `Mark all ${unreadNotifications.length} as read`}
-          </button>
-        </div>
-      )}
+      {/* Filter Buttons */}
+      <div className="mb-6 flex items-center gap-3">
+        <button
+          onClick={() => handleTabChange("all")}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 rounded-lg transition-colors",
+            activeTab === "all" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200",
+          )}
+        >
+          <Bell className="h-4 w-4" />
+          <span>All ({notifications.length})</span>
+        </button>
 
-      {/* Compact Stats for Mobile with Role Colors - Fixed overflow */}
-      <div className="mb-6">
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 px-1">
-          <div
-            className={cn(
-              "flex items-center gap-2 px-3 py-2 rounded-full whitespace-nowrap flex-shrink-0 min-w-0",
-              roleColors[userRoleForColors as keyof typeof roleColors]?.stats,
-            )}
-          >
-            <Bell className="h-4 w-4 flex-shrink-0" />
-            <span className="text-sm font-medium">{filteredNotifications.length}</span>
-            <span className="text-xs hidden sm:inline">Total</span>
-          </div>
-          <div className="flex items-center gap-2 bg-orange-50 text-orange-700 px-3 py-2 rounded-full whitespace-nowrap flex-shrink-0 min-w-0">
-            <Clock className="h-4 w-4 flex-shrink-0" />
-            <span className="text-sm font-medium">{unreadNotifications.length}</span>
-            <span className="text-xs hidden sm:inline">Unread</span>
-          </div>
-          <div className="flex items-center gap-2 bg-red-50 text-red-700 px-3 py-2 rounded-full whitespace-nowrap flex-shrink-0 min-w-0">
-            <AlertTriangle className="h-4 w-4 flex-shrink-0" />
-            <span className="text-sm font-medium">{urgentNotifications.length}</span>
-            <span className="text-xs hidden sm:inline">Urgent</span>
-          </div>
-          <div className="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-2 rounded-full whitespace-nowrap flex-shrink-0 min-w-0">
-            <Briefcase className="h-4 w-4 flex-shrink-0" />
-            <span className="text-sm font-medium">{notifications.filter((n) => n.category === "jobs").length}</span>
-            <span className="text-xs hidden sm:inline">Jobs</span>
-          </div>
-          <div className="flex items-center gap-2 bg-green-50 text-green-700 px-3 py-2 rounded-full whitespace-nowrap flex-shrink-0 min-w-0">
-            <Settings className="h-4 w-4 flex-shrink-0" />
-            <span className="text-sm font-medium">{notifications.filter((n) => n.category === "services").length}</span>
-            <span className="text-xs hidden sm:inline">Services</span>
-          </div>
-        </div>
+        <button
+          onClick={() => handleTabChange("unread")}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 rounded-lg transition-colors",
+            activeTab === "unread" ? "bg-orange-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200",
+          )}
+        >
+          <Mail className="h-4 w-4" />
+          <span>Unread ({unreadNotifications.length})</span>
+        </button>
+
+        <button
+          onClick={() => handleTabChange("read")}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 rounded-lg transition-colors",
+            activeTab === "read" ? "bg-green-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200",
+          )}
+        >
+          <MailOpen className="h-4 w-4" />
+          <span>Read ({notifications.filter((n) => n.status === "read").length})</span>
+        </button>
       </div>
 
       {isLoading && <div className="text-center">Loading notifications...</div>}
       {error && <div className="text-red-500 text-center">Error: {error.message}</div>}
       {!isLoading && !error && filteredNotifications.length === 0 && (
-        <div className="text-center">No notifications found.</div>
+        <div className="text-center py-8">
+          <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-500">No notifications found.</p>
+        </div>
       )}
       {!isLoading &&
         !error &&
@@ -279,7 +286,7 @@ const Notifications = () => {
             key={notification.id}
             onClick={() => handleNotificationClick(notification)}
             className={cn(
-              "border-b pb-3 mb-3 last:border-b-0 p-4 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md",
+              "border-b pb-3 mb-3 last:border-b-0 p-4 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md relative",
               notification.status === "unread"
                 ? "bg-blue-50 border-blue-200 hover:bg-blue-100"
                 : "bg-white border-gray-200 hover:bg-gray-50",
@@ -318,45 +325,71 @@ const Notifications = () => {
                 </div>
               </div>
 
-              {/* Small Mark as Read Button */}
-              {notification.status === "unread" && (
+              {/* Actions Menu */}
+              <div className="relative">
                 <button
-                  onClick={(e) => handleMarkAsRead(notification.id, e)}
-                  disabled={isMarkingAsRead}
-                  className="flex items-center gap-1 px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
-                  title="Mark as read"
+                  onClick={(e) => toggleActions(notification.id, e)}
+                  className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+                  title="More actions"
                 >
-                  <CheckCircle className="h-3 w-3" />
-                  <span className="hidden sm:inline">{isMarkingAsRead ? "..." : "Read"}</span>
+                  <MoreVertical className="h-4 w-4 text-gray-500" />
                 </button>
-              )}
+
+                {showActions === notification.id && (
+                  <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px]">
+                    {notification.status === "unread" && (
+                      <button
+                        onClick={(e) => handleMarkAsRead(notification.id, e)}
+                        disabled={isMarkingAsRead}
+                        className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 border-b border-gray-100"
+                      >
+                        <MailOpen className="h-3 w-3" />
+                        Mark as Read
+                      </button>
+                    )}
+
+                    <button
+                      onClick={(e) => handleArchive(notification.id, e)}
+                      disabled={isArchiving}
+                      className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 border-b border-gray-100"
+                    >
+                      <Archive className="h-3 w-3" />
+                      Archive
+                    </button>
+
+                    <button
+                      onClick={(e) => handleDelete(notification.id, e)}
+                      className="w-full px-3 py-2 text-left text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                      Delete
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         ))}
     </div>
   )
 
+  // Update the filter logic for the new "read" tab
+  const getFilteredNotifications = () => {
+    switch (activeTab) {
+      case "unread":
+        return roleBasedNotifications.filter((n) => n.status === "unread")
+      case "read":
+        return roleBasedNotifications.filter((n) => n.status === "read")
+      default:
+        return roleBasedNotifications
+    }
+  }
+
+  const finalFilteredNotifications = filterNotificationsBySearch(getFilteredNotifications())
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-semibold mb-4">Notifications</h1>
-
-      {/* Tab Navigation */}
-      <div className="mb-4">
-        <button
-          className={`px-4 py-2 rounded-l-md ${activeTab === "all" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700"}`}
-          onClick={() => handleTabChange("all")}
-        >
-          All Notifications
-        </button>
-        <button
-          className={`px-4 py-2 rounded-r-md ${activeTab === "unread" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700"}`}
-          onClick={() => handleTabChange("unread")}
-        >
-          Unread ({unreadNotifications.length})
-        </button>
-      </div>
-
-      {/* Notifications Content */}
       <NotificationsContent />
     </div>
   )

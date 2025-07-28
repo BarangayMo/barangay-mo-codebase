@@ -161,19 +161,89 @@ export const useNotifications = () => {
 
   const archiveNotificationMutation = useMutation({
     mutationFn: async (notificationId: string) => {
-      const { error } = await supabase
+      console.log("Archiving notification:", notificationId)
+
+      const { data, error } = await supabase
         .from("notifications")
         .update({
           status: "archived",
           updated_at: new Date().toISOString(),
         })
         .eq("id", notificationId)
+        .select()
 
-      if (error) throw error
+      if (error) {
+        console.error("Error archiving notification:", error)
+        throw error
+      }
+
+      console.log("Successfully archived notification:", data)
+      return data
     },
-    onSuccess: () => {
+    onMutate: async (notificationId) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["notifications"] })
+
+      // Snapshot the previous value
+      const previousNotifications = queryClient.getQueryData(["notifications", user?.id, userRole])
+
+      // Optimistically remove the notification from the list
+      queryClient.setQueryData(["notifications", user?.id, userRole], (old: Notification[] | undefined) => {
+        if (!old) return old
+        return old.filter((notification) => notification.id !== notificationId)
+      })
+
+      // Return a context object with the snapshotted value
+      return { previousNotifications }
+    },
+    onError: (err, notificationId, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      queryClient.setQueryData(["notifications", user?.id, userRole], context?.previousNotifications)
+      console.error("Failed to archive notification:", err)
+    },
+    onSettled: () => {
+      // Always refetch after error or success
       queryClient.invalidateQueries({ queryKey: ["notifications"] })
-      queryClient.invalidateQueries({ queryKey: ["archivedNotifications"] })
+    },
+  })
+
+  const deleteNotificationMutation = useMutation({
+    mutationFn: async (notificationId: string) => {
+      console.log("Deleting notification:", notificationId)
+
+      const { error } = await supabase.from("notifications").delete().eq("id", notificationId)
+
+      if (error) {
+        console.error("Error deleting notification:", error)
+        throw error
+      }
+
+      console.log("Successfully deleted notification:", notificationId)
+    },
+    onMutate: async (notificationId) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["notifications"] })
+
+      // Snapshot the previous value
+      const previousNotifications = queryClient.getQueryData(["notifications", user?.id, userRole])
+
+      // Optimistically remove the notification from the list
+      queryClient.setQueryData(["notifications", user?.id, userRole], (old: Notification[] | undefined) => {
+        if (!old) return old
+        return old.filter((notification) => notification.id !== notificationId)
+      })
+
+      // Return a context object with the snapshotted value
+      return { previousNotifications }
+    },
+    onError: (err, notificationId, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      queryClient.setQueryData(["notifications", user?.id, userRole], context?.previousNotifications)
+      console.error("Failed to delete notification:", err)
+    },
+    onSettled: () => {
+      // Always refetch after error or success
+      queryClient.invalidateQueries({ queryKey: ["notifications"] })
     },
   })
 
@@ -258,10 +328,12 @@ export const useNotifications = () => {
     unreadCount,
     markAsRead: markAsReadMutation.mutate,
     archiveNotification: archiveNotificationMutation.mutate,
+    deleteNotification: deleteNotificationMutation.mutate,
     unarchiveNotification: unarchiveNotificationMutation.mutate,
     markAllAsRead: markAllAsReadMutation.mutate,
     isMarkingAsRead: markAsReadMutation.isPending,
     isArchiving: archiveNotificationMutation.isPending,
+    isDeleting: deleteNotificationMutation.isPending,
     isUnarchiving: unarchiveNotificationMutation.isPending,
     isMarkingAllAsRead: markAllAsReadMutation.isPending,
   }
