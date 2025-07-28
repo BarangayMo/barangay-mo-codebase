@@ -1,6 +1,7 @@
+//my-changes
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, User, ShoppingBag, Menu, LogOut, Home, MessageSquare, BarChart3, FolderOpen, Settings, UsersIcon, Hospital, ClipboardList, Siren, FileText, Store, LifeBuoy, Info, Phone, Heart } from "lucide-react";
+import { Bell, User, ShoppingBag, Menu, LogOut, Home, MessageSquare, BarChart3, FolderOpen, Settings,Briefcase,ShoppingCart, UsersIcon, Hospital, ClipboardList, Siren, FileText, Store, LifeBuoy, Info, Phone, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { HeaderLogo } from "./header/HeaderLogo";
@@ -279,7 +280,17 @@ export const Header = () => {
                     name: "RBI Forms",
                     icon: ClipboardList,
                     href: "/official/rbi-forms"
+                  },
+                        {
+                    name: "Job Management",
+                    icon: Briefcase,
+                    href: "/official/jobs"
                   }, {
+                    name: "Product Management",
+                    icon: ShoppingCart,
+                    href: "/official/products"
+                  }, 
+                        {
                     name: "Emergency Response",
                     icon: Siren,
                     href: "/official/emergency-response"
