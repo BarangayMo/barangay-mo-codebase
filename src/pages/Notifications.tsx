@@ -1,5 +1,5 @@
 "use client"
-
+//my-change
 import type React from "react"
 
 import { useState } from "react"
@@ -296,20 +296,9 @@ const Notifications = () => {
     setShowActions(showActions === notificationId ? null : notificationId)
   }
 
- const handleBackToDashboard = () => {
-  const role = user?.role; // Replace with your actual role source (e.g., useAuth()?.user?.role)
-
-  if (role === "resident") {
-    window.location.href = "/resident/home";
-  } else if (role === "official") {
-    window.location.href = "/official/official-dashboard";
-  } else if (role === "super-admin") {
-    window.location.href = "/admin/dashboard";
-  } else {
-    window.location.href = "/dashboard"; // fallback
+  const handleBackToDashboard = () => {
+    window.location.href = "/dashboard"
   }
-};
-
 
   const handleMarkAllAsRead = () => {
     if (unreadCount > 0) {
