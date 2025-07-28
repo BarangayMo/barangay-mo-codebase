@@ -59,18 +59,18 @@ export const RbiApprovalModal = ({ isOpen, onClose, form, onSuccess }: RbiApprov
 
       if (rbiError) throw rbiError
 
-      // If approved, update the resident's profile status
+      // If approved, update the resident's profile's is_approved status
       if (approved) {
         const { error: profileError } = await supabase
           .from("profiles")
-          .update({ status: "approved" }) // Reverted to 'approved' (lowercase)
+          .update({ is_approved: true }) // Updated to set is_approved to true
           .eq("id", form.user_id)
 
         if (profileError) {
-          console.error("Error updating resident profile status:", profileError)
+          console.error("Error updating resident profile approval status:", profileError)
           toast({
             title: "Profile Update Failed",
-            description: "Failed to update resident's profile status. Please check manually.",
+            description: "Failed to update resident's approval status. Please check manually.",
             variant: "destructive",
           })
         } else {
