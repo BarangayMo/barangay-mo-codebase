@@ -499,7 +499,7 @@ const OfficialsDashboard = () => {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base font-semibold text-gray-900">Barangay Officials</h3>
-                  <Link to="/users/officials" className="text-red-500 text-sm font-medium">View All</Link>
+                  <Link to="admin/users/officials" className="text-red-500 text-sm font-medium">View All</Link>
                 </div>
                 <div className="space-y-3">
                   {barangayOfficials.slice(0, 3).map((official, index) => (
@@ -761,7 +761,7 @@ const OfficialsDashboard = () => {
                   <div className="mb-8">
                     <div className="flex items-center justify-between mb-6">
                       <h3 className="text-lg lg:text-xl font-semibold text-gray-900">Barangay Officials</h3>
-                      <Link to="/users/officials" className="text-red-500 text-sm font-medium hover:underline flex-shrink-0">View All</Link>
+                      <Link to="admin/users/officials" className="text-red-500 text-sm font-medium hover:underline flex-shrink-0">View All</Link>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {barangayOfficials.slice(0, 6).map((official, index) => (
