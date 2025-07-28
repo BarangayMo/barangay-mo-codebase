@@ -302,19 +302,26 @@ export const Header = () => {
 
                 {/* Authentication Section */}
                 <div className="border-t pt-4">
-                  {isAuthenticated ? <button onClick={handleLogout} className={`flex items-center gap-3 px-3 py-3 rounded-lg hover:${userRole === "official" ? "bg-red-50" : userRole === "superadmin" ? "bg-purple-50" : "bg-blue-50"} cursor-pointer ${userRole === "official" ? "text-red-600" : userRole === "superadmin" ? "text-purple-600" : "text-blue-600"} w-full text-left`}>
-                      <LogOut className="h-5 w-5" />
-                      <span className="text-sm font-medium">Sign Out</span>
-                    </button> : <div className="space-y-2">
-                      <Link to="/login" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-blue-50 cursor-pointer text-blue-600 w-full" onClick={() => setIsMobileMenuOpen(false)}>
-                        <User className="h-5 w-5" />
-                        <span className="text-sm font-medium">Sign In</span>
-                      </Link>
-                      <Link to="/register" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-green-50 cursor-pointer text-green-600 w-full" onClick={() => setIsMobileMenuOpen(false)}>
-                        <User className="h-5 w-5" />
-                        <span className="text-sm font-medium">Register</span>
-                      </Link>
-                    </div>}
+      <button
+        onClick={handleLogout}
+        className={`flex items-center gap-3 px-3 py-3 rounded-lg hover:${
+          userRole === "official"
+            ? "bg-red-50"
+            : userRole === "superadmin"
+            ? "bg-purple-50"
+            : "bg-blue-50"
+        } cursor-pointer ${
+          userRole === "official"
+            ? "text-red-600"
+            : userRole === "superadmin"
+            ? "text-purple-600"
+            : "text-blue-600"
+        } w-full text-left`}
+      >
+        <LogOut className="h-5 w-5" />
+        <span className="text-sm font-medium">Sign Out</span>
+      </button>
+    </div>
                 </div>
               </div>
             </div>
