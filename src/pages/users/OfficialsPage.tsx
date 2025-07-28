@@ -1,5 +1,5 @@
 "use client"
-
+//my-changes
 import { useState, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { MoreVertical, Eye, PenLine, Trash2, Phone } from "lucide-react"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { OfficialDetailsModal } from "@/components/officials/officialDetailsModal"
+import { OfficialDetailsModal } from "@/components/officials/OfficialDetailsModal"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
