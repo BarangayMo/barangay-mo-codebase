@@ -24,6 +24,8 @@ export interface Official {
   approved_by?: string | null;
   approved_at?: string | null;
   submitted_at?: string | null;
+  
+  years_of_service?: number;
   achievements?: string[] | null;
   password_hash?: string | null;
   created_at?: string;

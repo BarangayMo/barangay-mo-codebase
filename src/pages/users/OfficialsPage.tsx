@@ -209,8 +209,8 @@ const OfficialsPage = () => {
           phone_number: null,
           email: null,
           years_of_service: 0,
-          term_start: null,
-          term_end: null,
+         
+          
           achievements: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
