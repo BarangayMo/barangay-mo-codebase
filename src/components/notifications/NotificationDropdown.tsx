@@ -1,323 +1,231 @@
+"use client"
 
-import { useState } from 'react';
-import { formatDistanceToNow } from 'date-fns';
-import { Bell, Search, CheckCircle, Clock, AlertTriangle, Info, X, MessageSquare, FileText, Users, UserCheck } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useNotifications } from '@/hooks/useNotifications';
-import { useAuth } from '@/contexts/AuthContext';
-import { cn } from '@/lib/utils';
-import { Link } from 'react-router-dom';
-import type { Notification } from '@/hooks/useNotifications';
+import React, { useState, useEffect, useRef } from "react"
+import { BellIcon } from "@heroicons/react/24/outline"
+import { XMarkIcon } from "@heroicons/react/24/solid"
+import { usePopper } from "react-popper"
+import { useAuth } from "@/contexts/AuthContext"
+import type { INotification } from "@/interfaces/INotification"
 
 interface NotificationDropdownProps {
-  onClose: () => void;
+  notifications: INotification[]
+  onMarkAsRead: (id: string) => void
+  onClearAll: () => void
 }
 
-const getCategoryIcon = (category: string) => {
-  switch (category) {
-    case 'system':
-    case 'general':
-      return <Info className="h-4 w-4 text-blue-500" />;
-    case 'registration':
-      return <UserCheck className="h-4 w-4 text-green-500" />;
-    case 'message':
-    case 'feedback':
-      return <MessageSquare className="h-4 w-4 text-purple-500" />;
-    case 'finance':
-    case 'approval':
-      return <FileText className="h-4 w-4 text-orange-500" />;
-    case 'meeting':
-      return <Users className="h-4 w-4 text-blue-500" />;
-    case 'project':
-    case 'milestone':
-      return <CheckCircle className="h-4 w-4 text-green-500" />;
-    case 'task':
-    case 'deadline':
-      return <AlertTriangle className="h-4 w-4 text-orange-500" />;
-    case 'community':
-      return <Users className="h-4 w-4 text-green-500" />;
-    case 'job':
-      return <FileText className="h-4 w-4 text-blue-500" />;
-    case 'service':
-      return <Users className="h-4 w-4 text-purple-500" />;
-    case 'product':
-      return <FileText className="h-4 w-4 text-orange-500" />;
-    default:
-      return <Bell className="h-4 w-4 text-gray-500" />;
-  }
-};
+const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ notifications, onMarkAsRead, onClearAll }) => {
+  const [isOpen, setIsOpen] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("")
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const { user } = useAuth()
+  const userRole = user?.role || "guest" // Default to 'guest' if user or role is undefined
 
-const getPriorityColor = (priority: string) => {
-  switch (priority) {
-    case 'urgent':
-      return 'text-red-600 bg-red-50 border-red-200';
-    case 'high':
-      return 'text-orange-600 bg-orange-50 border-orange-200';
-    case 'normal':
-      return 'text-blue-600 bg-blue-50 border-blue-200';
-    case 'low':
-      return 'text-gray-600 bg-gray-50 border-gray-200';
-    default:
-      return 'text-blue-600 bg-blue-50 border-blue-200';
-  }
-};
+  const { styles, attributes } = usePopper(buttonRef.current, dropdownRef.current, {
+    placement: "bottom-end",
+    modifiers: [
+      {
+        name: "offset",
+        options: {
+          offset: [0, 4],
+        },
+      },
+    ],
+  })
 
-const NotificationItem = ({ notification, onMarkAsRead }: { notification: Notification; onMarkAsRead: (id: string) => void }) => {
-  const isUnread = notification.status === 'unread';
-  
+  useEffect(() => {
+    if (!isOpen) return
+
+    const { styles: newStyles, attributes: newAttributes } = usePopper(buttonRef.current, dropdownRef.current, {
+      placement: "bottom-end",
+      modifiers: [
+        {
+          name: "offset",
+          options: {
+            offset: [0, 4],
+          },
+        },
+      ],
+    })
+
+    styles.popper = newStyles.popper
+    attributes.popper = newAttributes.popper
+  }, [isOpen])
+
+  const toggleDropdown = () => {
+    setIsOpen(!isOpen)
+  }
+
+  const closeDropdown = () => {
+    setIsOpen(false)
+  }
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value)
+  }
+
+  // Role-based filtering and search logic
+  const filteredNotifications = React.useMemo(() => {
+    // Updated role-based filtering to match the main notifications page
+    const roleBasedNotifications = notifications.filter((notification) => {
+      // General notifications are visible to everyone
+      if (notification.category === "general" || notification.category === "system") {
+        return true
+      }
+
+      const shouldShow = false
+      switch (userRole) {
+        case "superadmin":
+          // Superadmins can see all notifications
+          return true
+        case "official":
+          // Officials can see work-related notifications + job/product/community
+          return [
+            "task",
+            "deadline",
+            "milestone",
+            "message",
+            "finance",
+            "meeting",
+            "project",
+            "feedback",
+            "job",
+            "product",
+            "community",
+            "job_posting",
+            "product_listing",
+            "community_post",
+          ].includes(notification.category)
+        case "resident":
+          // Residents can see personal and approval notifications + job/product/community
+          return [
+            "approval",
+            "message",
+            "feedback",
+            "registration",
+            "job",
+            "product",
+            "community",
+            "job_posting",
+            "product_listing",
+            "community_post",
+          ].includes(notification.category)
+        default:
+          // Fallback: show general notifications for any unrecognized role
+          return ["general", "system"].includes(notification.category)
+      }
+    })
+
+    console.log("NotificationDropdown filtering:", {
+      total: notifications.length,
+      afterRoleFilter: roleBasedNotifications.length,
+      userRole,
+      categories: [...new Set(notifications.map((n) => n.category))],
+      filteredCategories: [...new Set(roleBasedNotifications.map((n) => n.category))],
+    })
+
+    const searchFiltered = roleBasedNotifications.filter((notification) =>
+      notification.message.toLowerCase().includes(searchTerm.toLowerCase()),
+    )
+
+    console.log("NotificationDropdown: Filtering results:", {
+      total: notifications.length,
+      afterRoleFilter: roleBasedNotifications.length,
+      afterSearchFilter: searchFiltered.length,
+      userRole,
+      categories: [...new Set(notifications.map((n) => n.category))],
+      filteredCategories: [...new Set(roleBasedNotifications.map((n) => n.category))],
+    })
+
+    return searchFiltered
+  }, [notifications, searchTerm, userRole])
+
   return (
-    <div className={cn(
-      "p-3 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer",
-      isUnread && "bg-blue-50/50"
-    )}>
-      <div className="flex items-start gap-3">
-        <div className="flex-shrink-0 mt-0.5">
-          {getCategoryIcon(notification.category)}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex-1">
-              <h4 className={cn(
-                "text-sm font-medium mb-1",
-                isUnread ? "text-gray-900" : "text-gray-700"
-              )}>
-                {notification.title}
-              </h4>
-              <p className="text-xs text-gray-600 mb-2 line-clamp-2">
-                {notification.message}
-              </p>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500">
-                  {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
-                </span>
-                {isUnread && (
-                  <Badge variant="secondary" className={cn("text-xs px-1.5 py-0.5", getPriorityColor(notification.priority))}>
-                    {notification.priority}
-                  </Badge>
-                )}
+    <div className="relative">
+      <button
+        ref={buttonRef}
+        onClick={toggleDropdown}
+        className="relative inline-flex items-center justify-center rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+      >
+        <span className="sr-only">View notifications</span>
+        <BellIcon className="h-6 w-6" aria-hidden="true" />
+        {notifications.filter((n) => !n.read).length > 0 && (
+          <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
+            {notifications.filter((n) => !n.read).length}
+          </span>
+        )}
+      </button>
+
+      {isOpen && (
+        <div
+          ref={dropdownRef}
+          style={styles.popper}
+          {...attributes.popper}
+          className="absolute z-10 mt-2 w-80 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+          role="menu"
+          aria-orientation="vertical"
+          aria-labelledby="menu-button"
+          tabIndex={-1}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="py-1" role="none">
+            <div className="px-4 py-2">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-gray-900">Notifications</h3>
+                <button onClick={closeDropdown}>
+                  <XMarkIcon className="h-5 w-5 text-gray-500" aria-hidden="true" />
+                </button>
+              </div>
+              <div className="mt-2">
+                <input
+                  type="text"
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  placeholder="Search notifications"
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                />
               </div>
             </div>
-            {isUnread && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onMarkAsRead(notification.id);
-                }}
-                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-6 w-6 p-0"
-              >
-                <CheckCircle className="h-3 w-3" />
-              </Button>
+
+            {filteredNotifications.length === 0 ? (
+              <div className="px-4 py-2 text-sm text-gray-700">No notifications</div>
+            ) : (
+              filteredNotifications.map((notification) => (
+                <div
+                  key={notification.id}
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
+                  tabIndex={-1}
+                >
+                  <div className="flex justify-between">
+                    <p>{notification.message}</p>
+                    {!notification.read && (
+                      <button
+                        onClick={() => {
+                          onMarkAsRead(notification.id)
+                        }}
+                        className="ml-2 text-indigo-600 hover:text-indigo-800"
+                      >
+                        Mark as Read
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))
             )}
+
+            <div className="border-t border-gray-100">
+              <div className="px-4 py-2">
+                <button onClick={onClearAll} className="text-sm text-gray-700 hover:bg-gray-100 block w-full text-left">
+                  Clear All
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
-  );
-};
+  )
+}
 
-export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const { userRole } = useAuth();
-  const {
-    notifications,
-    isLoading,
-    unreadCount,
-    markAsRead,
-    markAllAsRead,
-    isMarkingAllAsRead
-  } = useNotifications();
-
-  // Updated role-based filtering to include new notification types
-  const roleBasedNotifications = notifications.filter(notification => {
-    // General notifications are visible to everyone
-    if (notification.category === 'general' || notification.category === 'system') {
-      return true;
-    }
-
-    switch (userRole) {
-      case 'superadmin':
-        // Superadmins can see all notifications
-        return true;
-      case 'official':
-        // Officials can see work-related notifications and new content notifications
-        return ['task', 'deadline', 'milestone', 'message', 'finance', 'meeting', 'project', 'feedback', 'community', 'job', 'service', 'product'].includes(notification.category);
-      case 'resident':
-        // Residents can see personal notifications and new content notifications
-        return ['approval', 'message', 'feedback', 'registration', 'community', 'job', 'service', 'product'].includes(notification.category);
-      default:
-        // Fallback: show general notifications and new content for any unrecognized role
-        return ['general', 'system', 'community', 'job', 'service', 'product'].includes(notification.category);
-    }
-  });
-
-  const filteredNotifications = roleBasedNotifications.filter(notification =>
-    notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    notification.message.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const unreadNotifications = filteredNotifications.filter(n => n.status === 'unread');
-  const urgentNotifications = filteredNotifications.filter(n => n.priority === 'urgent');
-  const normalNotifications = filteredNotifications.filter(n => n.priority === 'normal');
-
-  // Group notifications by date for "All" tab
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-
-  const todayNotifications = filteredNotifications.filter(n => {
-    const notifDate = new Date(n.created_at);
-    return notifDate.toDateString() === today.toDateString();
-  });
-
-  const yesterdayNotifications = filteredNotifications.filter(n => {
-    const notifDate = new Date(n.created_at);
-    return notifDate.toDateString() === yesterday.toDateString();
-  });
-
-  return (
-    <div className="w-80 bg-white rounded-lg shadow-lg border border-gray-200">
-      {/* Header */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-gray-900">Notifications</h3>
-          <Button variant="ghost" size="sm" onClick={onClose} className="h-6 w-6 p-0">
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-        
-        {/* Search */}
-        <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder="Search notifications..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 h-8 text-sm border-blue-200 focus:border-blue-500"
-          />
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center justify-between">
-          {unreadCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => markAllAsRead()}
-              disabled={isMarkingAllAsRead}
-              className="text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-7 px-2"
-            >
-              Mark all as read
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Filter Tabs */}
-      <Tabs defaultValue="all" className="w-full">
-        <TabsList className="w-full h-10 p-1 bg-gray-50 rounded-none border-b">
-          <TabsTrigger value="all" className="flex-1 text-xs h-8 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700">
-            All ({filteredNotifications.length})
-          </TabsTrigger>
-          <TabsTrigger value="unread" className="flex-1 text-xs h-8 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700">
-            Unread ({unreadNotifications.length})
-          </TabsTrigger>
-          <TabsTrigger value="urgent" className="flex-1 text-xs h-8 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700">
-            Urgent ({urgentNotifications.length})
-          </TabsTrigger>
-        </TabsList>
-
-        <div className="max-h-80">
-          <ScrollArea className="h-80">
-            <TabsContent value="all" className="m-0">
-              {/* Today */}
-              {todayNotifications.length > 0 && (
-                <div>
-                  <div className="px-4 py-2 bg-gray-50 border-b">
-                    <span className="text-xs font-medium text-gray-700">Today</span>
-                  </div>
-                  {todayNotifications.slice(0, 3).map((notification) => (
-                    <NotificationItem
-                      key={notification.id}
-                      notification={notification}
-                      onMarkAsRead={markAsRead}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {/* Yesterday */}
-              {yesterdayNotifications.length > 0 && (
-                <div>
-                  <div className="px-4 py-2 bg-gray-50 border-b">
-                    <span className="text-xs font-medium text-gray-700">Yesterday</span>
-                  </div>
-                  {yesterdayNotifications.slice(0, 3).map((notification) => (
-                    <NotificationItem
-                      key={notification.id}
-                      notification={notification}
-                      onMarkAsRead={markAsRead}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {filteredNotifications.length === 0 && (
-                <div className="p-8 text-center">
-                  <Bell className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm text-gray-500">No notifications found</p>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="unread" className="m-0">
-              {unreadNotifications.slice(0, 5).map((notification) => (
-                <NotificationItem
-                  key={notification.id}
-                  notification={notification}
-                  onMarkAsRead={markAsRead}
-                />
-              ))}
-              {unreadNotifications.length === 0 && (
-                <div className="p-8 text-center">
-                  <CheckCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm text-gray-500">No unread notifications</p>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="urgent" className="m-0">
-              {urgentNotifications.slice(0, 5).map((notification) => (
-                <NotificationItem
-                  key={notification.id}
-                  notification={notification}
-                  onMarkAsRead={markAsRead}
-                />
-              ))}
-              {urgentNotifications.length === 0 && (
-                <div className="p-8 text-center">
-                  <AlertTriangle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm text-gray-500">No urgent notifications</p>
-                </div>
-              )}
-            </TabsContent>
-          </ScrollArea>
-        </div>
-
-        {/* View All Button - Full Width at Bottom */}
-        <div className="p-3 border-t bg-gray-50">
-          <Button asChild className="w-full bg-blue-600 hover:bg-blue-700" variant="default" size="sm">
-            <Link to="/notifications" onClick={onClose}>
-              View All Notifications
-            </Link>
-          </Button>
-        </div>
-      </Tabs>
-    </div>
-  );
-};
+export default NotificationDropdown
