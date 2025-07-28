@@ -1,90 +1,112 @@
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import { CheckCircle, XCircle, User, MapPin, Calendar, Phone, Mail } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
+"use client"
+
+import { useState } from "react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Textarea } from "@/components/ui/textarea"
+import { useToast } from "@/hooks/use-toast"
+import { supabase } from "@/integrations/supabase/client"
+import { useAuth } from "@/contexts/AuthContext"
+import { CheckCircle, XCircle, User } from "lucide-react"
+import { useQueryClient } from "@tanstack/react-query"
 
 interface RbiForm {
-  id: string;
-  rbi_number: string | null;
-  status: string;
-  submitted_at: string;
-  form_data: any;
-  user_id: string;
+  id: string
+  rbi_number: string | null
+  status: string
+  submitted_at: string
+  form_data: any
+  user_id: string
   profile?: {
-    first_name: string;
-    last_name: string;
-    avatar_url?: string;
-  };
+    first_name: string
+    last_name: string
+    avatar_url?: string
+  }
 }
 
 interface RbiApprovalModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  form: RbiForm | null;
-  onSuccess: () => void;
+  isOpen: boolean
+  onClose: () => void
+  form: RbiForm | null
+  onSuccess: () => void
 }
 
 export const RbiApprovalModal = ({ isOpen, onClose, form, onSuccess }: RbiApprovalModalProps) => {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [notes, setNotes] = useState("");
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [notes, setNotes] = useState("")
+  const { user } = useAuth()
+  const { toast } = useToast()
+  const queryClient = useQueryClient()
 
-  if (!form) return null;
+  if (!form) return null
 
   const handleApproval = async (approved: boolean) => {
-    if (!user?.id) return;
-    
-    setIsProcessing(true);
+    if (!user?.id) return
+
+    setIsProcessing(true)
     try {
-      const { error } = await supabase
-        .from('rbi_forms')
+      // Update RBI form status
+      const { error: rbiError } = await supabase
+        .from("rbi_forms")
         .update({
-          status: approved ? 'approved' : 'rejected',
+          status: approved ? "approved" : "rejected",
           reviewed_at: new Date().toISOString(),
           reviewed_by: user.id,
-          admin_notes: notes || null
+          admin_notes: notes || null,
         })
-        .eq('id', form.id);
+        .eq("id", form.id)
 
-      if (error) throw error;
+      if (rbiError) throw rbiError
+
+      // If approved, update the resident's profile status
+      if (approved) {
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update({ status: "approved" })
+          .eq("id", form.user_id)
+
+        if (profileError) {
+          console.error("Error updating resident profile status:", profileError)
+          toast({
+            title: "Profile Update Failed",
+            description: "Failed to update resident's profile status. Please check manually.",
+            variant: "destructive",
+          })
+        } else {
+          // Invalidate profiles query to reflect the status change
+          await queryClient.invalidateQueries({ queryKey: ["profiles", form.user_id] })
+          await queryClient.invalidateQueries({ queryKey: ["profiles"] }) // Invalidate general profiles list
+        }
+      }
 
       // Invalidate all relevant query keys to refresh the data
-      await queryClient.invalidateQueries({ queryKey: ['rbi-forms'] });
-      await queryClient.invalidateQueries({ queryKey: ['admin-rbi-forms'] });
-      await queryClient.invalidateQueries({ predicate: (query) => 
-        query.queryKey[0] === 'user-rbi-forms' 
-      });
-      
+      await queryClient.invalidateQueries({ queryKey: ["rbi-forms"] })
+      await queryClient.invalidateQueries({ queryKey: ["admin-rbi-forms"] })
+      await queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] === "user-rbi-forms" })
+
       toast({
         title: approved ? "Application Approved" : "Application Rejected",
-        description: `RBI application ${form.rbi_number || 'pending'} has been ${approved ? 'approved' : 'rejected'}.`,
-      });
+        description: `RBI application ${form.rbi_number || "pending"} has been ${approved ? "approved" : "rejected"}.`,
+      })
 
-      onSuccess();
-      onClose();
+      onSuccess()
+      onClose()
     } catch (error) {
-      console.error('Error updating RBI form:', error);
+      console.error("Error processing RBI form:", error)
       toast({
         title: "Error",
         description: "Failed to process the application. Please try again.",
-        variant: "destructive"
-      });
+        variant: "destructive",
+      })
     } finally {
-      setIsProcessing(false);
+      setIsProcessing(false)
     }
-  };
+  }
 
-  const personalDetails = form.form_data?.personalDetails || {};
-  const addressDetails = form.form_data?.address || {};
-  const otherDetails = form.form_data?.otherDetails || {};
+  const personalDetails = form.form_data?.personalDetails || {}
+  const addressDetails = form.form_data?.address || {}
+  const otherDetails = form.form_data?.otherDetails || {}
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -95,7 +117,6 @@ export const RbiApprovalModal = ({ isOpen, onClose, form, onSuccess }: RbiApprov
             RBI Application Review
           </DialogTitle>
         </DialogHeader>
-
         <div className="space-y-6">
           {/* Header Info */}
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
@@ -104,13 +125,9 @@ export const RbiApprovalModal = ({ isOpen, onClose, form, onSuccess }: RbiApprov
                 {personalDetails.firstName} {personalDetails.lastName}
               </h3>
               <p className="text-sm text-gray-600">RBI #{form.rbi_number}</p>
-              <p className="text-xs text-gray-500">
-                Submitted: {new Date(form.submitted_at).toLocaleDateString()}
-              </p>
+              <p className="text-xs text-gray-500">Submitted: {new Date(form.submitted_at).toLocaleDateString()}</p>
             </div>
-            <Badge variant={form.status === 'submitted' ? 'default' : 'secondary'}>
-              {form.status}
-            </Badge>
+            <Badge variant={form.status === "submitted" ? "default" : "secondary"}>{form.status}</Badge>
           </div>
 
           {/* Personal Information */}
@@ -120,23 +137,26 @@ export const RbiApprovalModal = ({ isOpen, onClose, form, onSuccess }: RbiApprov
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Full Name:</span>
-                  <span>{personalDetails.firstName} {personalDetails.middleName} {personalDetails.lastName} {personalDetails.suffix}</span>
+                  <span>
+                    {personalDetails.firstName} {personalDetails.middleName} {personalDetails.lastName}{" "}
+                    {personalDetails.suffix}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Date of Birth:</span>
-                  <span>{otherDetails.dateOfBirth || 'N/A'}</span>
+                  <span>{otherDetails.dateOfBirth || "N/A"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Gender:</span>
-                  <span>{otherDetails.sex || 'N/A'}</span>
+                  <span>{otherDetails.sex || "N/A"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Civil Status:</span>
-                  <span>{otherDetails.civilStatus || 'N/A'}</span>
+                  <span>{otherDetails.civilStatus || "N/A"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Contact:</span>
-                  <span>{otherDetails.contactNumber || 'N/A'}</span>
+                  <span>{otherDetails.contactNumber || "N/A"}</span>
                 </div>
                 {otherDetails.email && (
                   <div className="flex justify-between">
@@ -152,23 +172,23 @@ export const RbiApprovalModal = ({ isOpen, onClose, form, onSuccess }: RbiApprov
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">House #:</span>
-                  <span>{addressDetails.houseNumber || 'N/A'}</span>
+                  <span>{addressDetails.houseNumber || "N/A"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Street:</span>
-                  <span>{addressDetails.street || 'N/A'}</span>
+                  <span>{addressDetails.street || "N/A"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Barangay:</span>
-                  <span>{addressDetails.barangay || 'N/A'}</span>
+                  <span>{addressDetails.barangay || "N/A"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Zone/Purok:</span>
-                  <span>{addressDetails.zone || 'N/A'}</span>
+                  <span>{addressDetails.zone || "N/A"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Residence Since:</span>
-                  <span>{addressDetails.residenceSince || 'N/A'}</span>
+                  <span>{addressDetails.residenceSince || "N/A"}</span>
                 </div>
               </div>
             </div>
@@ -183,27 +203,26 @@ export const RbiApprovalModal = ({ isOpen, onClose, form, onSuccess }: RbiApprov
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Educational Attainment:</span>
-                      <span>{form.form_data.education.attainment || 'N/A'}</span>
+                      <span>{form.form_data.education.attainment || "N/A"}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Profession:</span>
-                      <span>{form.form_data.education.profession || 'N/A'}</span>
+                      <span>{form.form_data.education.profession || "N/A"}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Job Status:</span>
-                      <span>{form.form_data.education.jobStatus || 'N/A'}</span>
+                      <span>{form.form_data.education.jobStatus || "N/A"}</span>
                     </div>
                   </div>
                 </div>
               )}
-
               {form.form_data?.health && (
                 <div className="space-y-4">
                   <h4 className="font-medium text-gray-900 border-b pb-2">Health Information</h4>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Has Condition:</span>
-                      <span>{form.form_data.health.hasCondition || 'N/A'}</span>
+                      <span>{form.form_data.health.hasCondition || "N/A"}</span>
                     </div>
                     {form.form_data.health.condition && (
                       <div className="flex justify-between">
@@ -233,11 +252,7 @@ export const RbiApprovalModal = ({ isOpen, onClose, form, onSuccess }: RbiApprov
 
           {/* Action Buttons */}
           <div className="flex justify-end space-x-3 pt-4 border-t">
-            <Button
-              variant="outline"
-              onClick={onClose}
-              disabled={isProcessing}
-            >
+            <Button variant="outline" onClick={onClose} disabled={isProcessing}>
               Cancel
             </Button>
             <Button
@@ -261,5 +276,5 @@ export const RbiApprovalModal = ({ isOpen, onClose, form, onSuccess }: RbiApprov
         </div>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}
