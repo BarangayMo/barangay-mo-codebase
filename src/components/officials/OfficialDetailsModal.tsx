@@ -1,14 +1,13 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { User, Camera, ChevronLeft } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface OfficialData {
+  id?: string | null;
   position: string;
   firstName?: string;
   middleName?: string;
@@ -86,10 +85,10 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
     console.log('Saving official data:', formData);
     
     // Validate required fields
-    if (!formData.firstName.trim() || !formData.lastName.trim()) {
+    if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.position) {
       toast({
         title: "Error",
-        description: "First name and last name are required",
+        description: "First name, last name, and position are required",
         variant: "destructive",
       });
       return;
@@ -99,20 +98,15 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
       const dataToSave = {
         ...formData,
         suffix: formData.suffix === "none" ? "" : formData.suffix,
-        isCompleted: true
+        isCompleted: true,
+        id: official?.id || null
       };
 
       console.log('Data to save:', dataToSave);
 
       // Call the parent's onSave function
-      onSave(dataToSave);
+      await onSave(dataToSave);
       
-      toast({
-        title: "Success",
-        description: "Official details saved successfully",
-      });
-      
-      onClose();
     } catch (error) {
       console.error('Error saving official:', error);
       toast({
@@ -157,7 +151,9 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
             <button onClick={onClose} className="text-white hover:text-gray-200 transition-colors">
               <ChevronLeft className="h-6 w-6" />
             </button>
-            <h1 className="text-center text-lg font-semibold">Edit Barangay Official</h1>
+            <h1 className="text-center text-lg font-semibold">
+              {official?.id ? 'Edit Barangay Official' : 'Add Barangay Official'}
+            </h1>
             <div className="w-6" />
           </div>
 
@@ -179,6 +175,24 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
               {/* Official Details Form */}
               <div className="space-y-6">
                 <h3 className="font-semibold text-gray-900 text-lg mb-4">Official Details</h3>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="position" className="text-sm font-medium text-gray-700">
+                    Position *
+                  </Label>
+                  <Select value={formData.position} onValueChange={(value) => handleInputChange('position', value)}>
+                    <SelectTrigger className="bg-gray-50 border-gray-200 h-12">
+                      <SelectValue placeholder="Select position..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ALL_POSITIONS.map((position) => (
+                        <SelectItem key={position} value={position}>
+                          {position}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">
@@ -237,24 +251,6 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
                     </SelectContent>
                   </Select>
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="position" className="text-sm font-medium text-gray-700">
-                    Position *
-                  </Label>
-                  <Select value={formData.position} onValueChange={(value) => handleInputChange('position', value)}>
-                    <SelectTrigger className="bg-gray-50 border-gray-200 h-12">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ALL_POSITIONS.map((position) => (
-                        <SelectItem key={position} value={position}>
-                          {position}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
             </div>
           </div>
@@ -272,9 +268,9 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
               <Button 
                 onClick={handleSave}
                 className="flex-1 bg-red-600 hover:bg-red-700 text-white h-12"
-                disabled={!formData.firstName.trim() || !formData.lastName.trim()}
+                disabled={!formData.firstName.trim() || !formData.lastName.trim() || !formData.position}
               >
-                Save Changes
+                {official?.id ? 'Update Official' : 'Add Official'}
               </Button>
             </div>
           </div>

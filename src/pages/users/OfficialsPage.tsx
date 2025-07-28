@@ -54,9 +54,10 @@ import { MobileNavbar } from "@/components/layout/MobileNavbar";
 import { useNavigate } from "react-router-dom";
 import { useOfficials } from "@/hooks/use-officials-data";
 import { format } from "date-fns";
-import { OfficialDetailsModal } from "@/components/officials/OfficialDetailsModal";
+import { OfficialDetailsModal } from "../components/officials/OfficialDetailsModal";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 // Fetch officials from the specific barangay
 const fetchBarangayOfficials = async (barangayName: string, region: string) => {
@@ -121,6 +122,7 @@ const OfficialsPage = () => {
   const [selectedOfficial, setSelectedOfficial] = useState<any>(null);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   // For now, we'll use hardcoded values - in a real app, this would come from context/state
   // You should replace these with actual selected barangay data
@@ -228,21 +230,136 @@ const OfficialsPage = () => {
 
   const handleAddOfficial = () => {
     setSelectedOfficial({
+      id: null,
       position: "",
       firstName: "",
       middleName: "",
       lastName: "",
       suffix: "",
-      isCompleted: false
+      isCompleted: false,
+      barangay: selectedBarangay,
+      region: selectedRegion,
+      status: 'active',
+      contact_phone: null,
+      contact_email: null,
+      years_of_service: 0,
+      achievements: null
     });
     setShowAddModal(true);
   };
 
-  const handleSaveOfficial = (data: any) => {
+  const handleSaveOfficial = async (data: any) => {
     console.log('Saving new official:', data);
-    // Here you would typically save to the database
-    setShowAddModal(false);
-    setSelectedOfficial(null);
+    
+    try {
+      if (selectedOfficial?.id) {
+        // Update existing official
+        const { error } = await supabase
+          .from('officials')
+          .update({
+            position: data.position,
+            firstName: data.firstName,
+            middleName: data.middleName,
+            lastName: data.lastName,
+            suffix: data.suffix || null,
+            barangay: selectedBarangay,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', selectedOfficial.id);
+
+        if (error) throw error;
+        
+        toast({
+          title: "Success",
+          description: "Official updated successfully",
+        });
+      } else {
+        // Create new official
+        const { error } = await supabase
+          .from('officials')
+          .insert({
+            position: data.position,
+            barangay: selectedBarangay,
+            firstName: data.firstName,
+            middleName: data.middleName,
+            lastName: data.lastName,
+            suffix: data.suffix || null,
+            status: 'active',
+            contact_phone: null,
+            contact_email: null,
+            years_of_service: 0,
+            term_start: null,
+            term_end: null,
+            achievements: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+
+        if (error) throw error;
+        
+        toast({
+          title: "Success",
+          description: "Official added successfully",
+        });
+      }
+      
+      // Refresh the officials data by invalidating the query
+      window.location.reload();
+      
+    } catch (error) {
+      console.error('Error saving official:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save official. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setShowAddModal(false);
+      setSelectedOfficial(null);
+    }
+  };
+
+  const handleEditOfficial = (official: any) => {
+    setSelectedOfficial({
+      ...official,
+      isCompleted: true
+    });
+    setShowAddModal(true);
+  };
+
+  const handleDeleteOfficial = async (official: any) => {
+    const officialName = official.firstName && official.lastName 
+      ? `${official.firstName} ${official.lastName}` 
+      : official.position;
+      
+    if (!confirm(`Are you sure you want to remove ${officialName} from the officials list?`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('officials')
+        .delete()
+        .eq('id', official.id);
+
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Official removed successfully",
+      });
+      
+      // Refresh the officials data by invalidating the query
+      window.location.reload();
+      
+    } catch (error) {
+      console.error('Error deleting official:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove official. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isLoading) {
@@ -512,12 +629,15 @@ const OfficialsPage = () => {
                                           <Eye className="h-4 w-4 mr-2" />
                                           View Profile
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleEditOfficial(official)}>
                                           <PenLine className="h-4 w-4 mr-2" />
                                           Edit
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
-                                        <DropdownMenuItem className="text-red-600">
+                                        <DropdownMenuItem 
+                                          className="text-red-600"
+                                          onClick={() => handleDeleteOfficial(official)}
+                                        >
                                           <Trash2 className="h-4 w-4 mr-2" />
                                           Remove
                                         </DropdownMenuItem>
@@ -645,7 +765,7 @@ const OfficialsPage = () => {
                                   <DropdownMenuItem>
                                     <Eye className="mr-2 h-4 w-4" /> View Profile
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleEditOfficial(official)}>
                                     <PenLine className="mr-2 h-4 w-4" /> Edit Details
                                   </DropdownMenuItem>
                                   {official.contact_phone && (
@@ -654,7 +774,10 @@ const OfficialsPage = () => {
                                     </DropdownMenuItem>
                                   )}
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem className="text-red-600">
+                                  <DropdownMenuItem 
+                                    className="text-red-600"
+                                    onClick={() => handleDeleteOfficial(official)}
+                                  >
                                     <Trash2 className="mr-2 h-4 w-4" /> Remove
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -705,7 +828,8 @@ const OfficialsPage = () => {
           middleName: "",
           lastName: "",
           suffix: "",
-          isCompleted: false
+         isCompleted: false,
+         id: null
         }}
         onSave={handleSaveOfficial}
       />
