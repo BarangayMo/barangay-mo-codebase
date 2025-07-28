@@ -69,7 +69,6 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
     region: "",
     achievements: "",
     years_of_service: "",
-    barangay: "",
   })
 
   const [provinces, setProvinces] = useState<string[]>([])
@@ -98,7 +97,6 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
           ? official.achievements.join(", ")
           : official.achievements || "",
         years_of_service: official.years_of_service?.toString() || "",
-        barangay: official.barangay || "",
       })
     }
   }, [official, isOpen])
@@ -207,7 +205,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
       const { data: session } = await supabase.auth.getSession()
       console.log("Current session:", session)
 
-      // Prepare the data for insertion - only include fields that exist in the table
+      // Prepare the data for insertion - removed barangay, term_start, term_end
       const officialData = {
         user_id: user.id,
         first_name: formData.first_name.trim(),
@@ -218,7 +216,6 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
         phone_number: formData.phone_number.trim(),
         landline_number: formData.landline_number?.trim() || null,
         email: formData.email.trim(),
-        barangay: formData.barangay?.trim() || "",
         municipality: formData.municipality,
         province: formData.province,
         region: formData.region,
@@ -230,8 +227,6 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
           : null,
         years_of_service: formData.years_of_service ? Number.parseInt(formData.years_of_service) : null,
         status: "pending" as const,
-        term_start: null,
-        term_end: null,
       }
 
       console.log("Inserting official data:", officialData)
@@ -335,7 +330,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
 
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto">
-            <div className="p-6 space-y-6 max-w-md mx-auto pb-32">
+            <div className="p-6 space-y-6 max-w-md mx-auto pb-24">
               {/* Profile Picture Section */}
               <div className="flex flex-col items-center space-y-3">
                 <div className="relative">
@@ -549,24 +544,12 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
                     className="bg-gray-50 border-gray-200 h-12"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="barangay" className="text-sm font-medium text-gray-700">
-                    Barangay (Optional)
-                  </Label>
-                  <Input
-                    id="barangay"
-                    value={formData.barangay}
-                    onChange={(e) => handleInputChange("barangay", e.target.value)}
-                    placeholder="Enter barangay"
-                    className="bg-gray-50 border-gray-200 h-12"
-                  />
-                </div>
               </div>
             </div>
           </div>
 
-          {/* Fixed Bottom Action Buttons */}
-          <div className="p-4 sm:p-6 border-t bg-white shrink-0">
+          {/* Fixed Bottom Action Buttons - Fixed mobile visibility */}
+          <div className="p-4 sm:p-6 border-t bg-white shrink-0 safe-area-inset-bottom">
             <div className="flex space-x-3 max-w-md mx-auto">
               <Button variant="outline" onClick={onClose} className="flex-1 border-gray-300 h-12 bg-transparent">
                 Cancel
