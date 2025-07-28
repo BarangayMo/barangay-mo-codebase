@@ -1,6 +1,7 @@
+//my-changes
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, User, ShoppingBag, Menu, LogOut, Home, MessageSquare, BarChart3, FolderOpen, Settings, UsersIcon, Hospital, ClipboardList, Siren, FileText, Store, LifeBuoy, Info, Phone, Heart } from "lucide-react";
+import { Bell, User, ShoppingBag, Menu, LogOut, Home, MessageSquare, BarChart3, FolderOpen, Settings,Briefcase,ShoppingCart, UsersIcon, Hospital, ClipboardList, Siren, FileText, Store, LifeBuoy, Info, Phone, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { HeaderLogo } from "./header/HeaderLogo";
@@ -88,7 +89,7 @@ export const Header = () => {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-80 p-0">
-              <div className="p-4 space-y-6 flex-grow overflow-y-auto">
+              <div className="p-4 space-y-6 overflow-y-auto h-full">
                 {/* Header section - different for authenticated/unauthenticated */}
                 {isAuthenticated ? <div className={`${userRole === "official" ? "bg-red-50 border-red-100" : userRole === "superadmin" ? "bg-purple-50 border-purple-100" : "bg-blue-50 border-blue-100"} p-4 rounded-lg border`}>
                     <div className="flex items-center gap-3 mb-2">
@@ -279,7 +280,17 @@ export const Header = () => {
                     name: "RBI Forms",
                     icon: ClipboardList,
                     href: "/official/rbi-forms"
+                  },
+                        {
+                    name: "Job Management",
+                    icon: Briefcase,
+                    href: "/official/jobs"
                   }, {
+                    name: "Product Management",
+                    icon: ShoppingCart,
+                    href: "/official/products"
+                  }, 
+                        {
                     name: "Emergency Response",
                     icon: Siren,
                     href: "/official/emergency-response"
