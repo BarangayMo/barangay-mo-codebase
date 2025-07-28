@@ -126,9 +126,9 @@ export const NotificationCard = ({ notification, onMarkAsRead, onArchive }: Noti
             </div>
 
             <div className="flex items-center gap-1">
-              {notification.action_url && (
+              {notification.link_url && (
                 <Button asChild variant="ghost" size="sm">
-                  <Link to={notification.action_url}>
+                  <Link to={notification.link_url}>
                     <ExternalLink className="h-3 w-3" />
                   </Link>
                 </Button>

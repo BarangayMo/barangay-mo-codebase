@@ -12,6 +12,7 @@ interface NotificationItemProps {
   showActions?: boolean;
   actions?: React.ReactNode;
   bg?: string;
+  status?: 'read' | 'unread'; // ✅ Add this
 }
 
 export function NotificationItem({
@@ -23,8 +24,10 @@ export function NotificationItem({
   badgeIcon,
   showActions,
   actions,
+  status = 'read', // ✅ Default to read
   bg = "bg-white"
 }: NotificationItemProps) {
+  const bg = status === 'unread' ? 'bg-gray-100' : 'bg-white'; // ✅ Dynamic background
   return (
     <div className={`w-full ${bg} py-3 px-2 sm:px-6 flex flex-col sm:flex-row items-start gap-2 border-b last:border-b-0`}>
       <div className="relative shrink-0">
