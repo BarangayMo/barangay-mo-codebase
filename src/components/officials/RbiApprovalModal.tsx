@@ -59,7 +59,9 @@ export const RbiApprovalModal = ({ isOpen, onClose, form, onSuccess }: RbiApprov
       // Invalidate all relevant query keys to refresh the data
       await queryClient.invalidateQueries({ queryKey: ['rbi-forms'] });
       await queryClient.invalidateQueries({ queryKey: ['admin-rbi-forms'] });
-      await queryClient.invalidateQueries({ queryKey: ['user-rbi-forms'] });
+      await queryClient.invalidateQueries({ predicate: (query) => 
+        query.queryKey[0] === 'user-rbi-forms' 
+      });
       
       toast({
         title: approved ? "Application Approved" : "Application Rejected",
