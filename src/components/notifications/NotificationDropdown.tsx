@@ -1,10 +1,11 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from "react"
-import { BellIcon } from "@heroicons/react/24/outline"
-import { XMarkIcon } from "@heroicons/react/24/solid"
-import { usePopper } from "react-popper"
+import { useState } from "react"
+import { Bell, X } from "lucide-react"
+import { Input } from "@/components/ui/input"
 import { useAuth } from "@/contexts/AuthContext"
+import React, { useEffect, useRef } from "react"
+import { usePopper } from "react-popper"
 import type { INotification } from "@/interfaces/INotification"
 
 interface NotificationDropdownProps {
@@ -33,25 +34,6 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ notificatio
     ],
   })
 
-  useEffect(() => {
-    if (!isOpen) return
-
-    const { styles: newStyles, attributes: newAttributes } = usePopper(buttonRef.current, dropdownRef.current, {
-      placement: "bottom-end",
-      modifiers: [
-        {
-          name: "offset",
-          options: {
-            offset: [0, 4],
-          },
-        },
-      ],
-    })
-
-    styles.popper = newStyles.popper
-    attributes.popper = newAttributes.popper
-  }, [isOpen])
-
   const toggleDropdown = () => {
     setIsOpen(!isOpen)
   }
@@ -73,7 +55,6 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ notificatio
         return true
       }
 
-      const shouldShow = false
       switch (userRole) {
         case "superadmin":
           // Superadmins can see all notifications
@@ -140,6 +121,10 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ notificatio
     return searchFiltered
   }, [notifications, searchTerm, userRole])
 
+  useEffect(() => {
+    if (!isOpen) return
+  }, [isOpen])
+
   return (
     <div className="relative">
       <button
@@ -148,7 +133,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ notificatio
         className="relative inline-flex items-center justify-center rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
       >
         <span className="sr-only">View notifications</span>
-        <BellIcon className="h-6 w-6" aria-hidden="true" />
+        <Bell className="h-6 w-6" aria-hidden="true" />
         {notifications.filter((n) => !n.read).length > 0 && (
           <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
             {notifications.filter((n) => !n.read).length}
@@ -173,11 +158,11 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ notificatio
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium text-gray-900">Notifications</h3>
                 <button onClick={closeDropdown}>
-                  <XMarkIcon className="h-5 w-5 text-gray-500" aria-hidden="true" />
+                  <X className="h-5 w-5 text-gray-500" aria-hidden="true" />
                 </button>
               </div>
               <div className="mt-2">
-                <input
+                <Input
                   type="text"
                   className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   placeholder="Search notifications"
