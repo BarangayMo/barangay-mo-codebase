@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { MoreVertical, Eye, PenLine, Trash2, Phone } from "lucide-react"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { OfficialDetailsModal } from "@/components/official-details-modal"
+import { OfficialDetailsModal } from "@/components/officials/officialDetailsModal"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
