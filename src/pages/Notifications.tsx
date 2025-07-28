@@ -236,24 +236,55 @@ const Notifications = () => {
     if (notification.action_url) {
       window.open(notification.action_url, "_blank")
     } else {
-      // Generate default URLs based on category
+      // Generate specific URLs based on category and metadata
       let defaultUrl = ""
+
+      // Try to get the specific ID from metadata
+      const metadata = notification.metadata || {}
+      const jobId = metadata.job_id
+      const productId = metadata.product_id
+      const serviceId = metadata.service_id
+      const communityId = metadata.community_id || metadata.post_id
+
       switch (notification.category) {
         case "jobs":
-          defaultUrl = "/jobs"
+        case "job":
+        case "job_posting":
+          if (jobId) {
+            defaultUrl = `/jobs/${jobId}`
+          } else {
+            defaultUrl = "/jobs"
+          }
           break
         case "services":
-          defaultUrl = "/services"
+        case "service":
+          if (serviceId) {
+            defaultUrl = `/services/${serviceId}`
+          } else {
+            defaultUrl = "/services"
+          }
           break
         case "community":
-          defaultUrl = "/community"
+        case "community_post":
+          if (communityId) {
+            defaultUrl = `/community/posts/${communityId}`
+          } else {
+            defaultUrl = "/community"
+          }
           break
         case "product":
-          defaultUrl = "/products"
+        case "product_listing":
+          if (productId) {
+            defaultUrl = `/products/${productId}`
+          } else {
+            defaultUrl = "/products"
+          }
           break
         default:
           defaultUrl = "/dashboard"
       }
+
+      console.log("Navigating to:", defaultUrl, "with metadata:", metadata)
 
       // Use window.location for internal navigation
       window.location.href = defaultUrl
