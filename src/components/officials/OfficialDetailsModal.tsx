@@ -8,31 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { User, Camera, ChevronLeft } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
-
-interface OfficialData {
-  id?: string | null
-  position: string
-  first_name: string
-  middle_name?: string
-  last_name: string
-  suffix?: string
-  phone_number: string
-  landline_number?: string
-  email: string
-  barangay?: string
-  municipality: string
-  province: string
-  region: string
-  achievements?: string
-  isCompleted: boolean
-  years_of_service?: number
-}
+import type { Official } from "@/hooks/use-officials-data"
 
 interface OfficialDetailsModalProps {
   isOpen: boolean
   onClose: () => void
-  official: OfficialData
-  onSave: (data: Partial<OfficialData>) => void
+  official: Official
+  onSave: (data: Partial<Official>) => void
 }
 
 const SUFFIX_OPTIONS = ["Jr.", "Sr.", "II", "III", "IV", "V"]
@@ -111,7 +93,9 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
         municipality: official.municipality || "",
         province: official.province || "",
         region: official.region || "",
-        achievements: official.achievements || "",
+        achievements: Array.isArray(official.achievements)
+          ? official.achievements.join(", ")
+          : official.achievements || "",
         years_of_service: official.years_of_service?.toString() || "",
         barangay: official.barangay || "",
       })
@@ -206,8 +190,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
               .split(",")
               .map((a) => a.trim())
               .filter(Boolean)
-              .join(",")
-          : "",
+          : null,
         years_of_service: formData.years_of_service ? Number.parseInt(formData.years_of_service) : null,
         id: official?.id || null,
       }
