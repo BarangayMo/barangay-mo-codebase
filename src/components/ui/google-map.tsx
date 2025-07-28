@@ -66,6 +66,7 @@ export const GoogleMap = ({
       "location:",
       location,
     )
+    // Only initialize if all conditions are met: maps API ready, container available, and location provided
     if (location && mapContainer.current && isMapsReady) {
       initializeMap()
     }
@@ -79,7 +80,7 @@ export const GoogleMap = ({
       }
       mapInstance.current = null
     }
-  }, [location, isMapsReady]) // Added location to dependency array
+  }, [location, isMapsReady, mapContainer.current]) // Added mapContainer.current to dependency array
 
   const initializeMap = async (attempt = 1): Promise<void> => {
     console.log("GoogleMap: initializeMap function invoked.") // Added this log
@@ -195,22 +196,6 @@ export const GoogleMap = ({
       }
     }
   }
-
-  useEffect(() => {
-    if (location && mapContainer.current && isMapsReady) {
-      initializeMap()
-    }
-
-    return () => {
-      if (infoWindowInstance.current) {
-        infoWindowInstance.current.close()
-      }
-      if (markerInstance.current) {
-        markerInstance.current.setMap(null)
-      }
-      mapInstance.current = null
-    }
-  }, [location, isMapsReady])
 
   const handleRetry = () => {
     setRetryCount(0)

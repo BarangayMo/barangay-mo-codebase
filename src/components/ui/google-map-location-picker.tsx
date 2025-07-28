@@ -45,14 +45,22 @@ export const GoogleMapLocationPicker = ({
     const loadMaps = async () => {
       try {
         await loadGoogleMaps()
-        setIsMapsReady(true)
+        // After loadGoogleMaps resolves, check if window.google.maps is actually available
+        if (typeof window.google !== "undefined" && typeof window.google.maps !== "undefined") {
+          setIsMapsReady(true)
+        } else {
+          console.error("❌ Google Maps API not globally available after loadGoogleMaps resolved in picker.")
+          setError("Google Maps API not available.")
+        }
       } catch (err) {
         console.error("❌ Error loading Google Maps:", err)
         setError("Google Maps failed to load")
+      } finally {
+        setLoading(false) // Ensure loading is set to false after attempt
       }
     }
     loadMaps()
-  }, [])
+  }, []) // Run only once on mount
 
   useEffect(() => {
     console.log(
@@ -60,19 +68,25 @@ export const GoogleMapLocationPicker = ({
       isMapsReady,
       "mapContainer.current:",
       mapContainer.current,
-    ) // Added this log
-    if (isMapsReady) {
+    )
+    // Only initialize if maps API is ready AND the map container is available
+    if (isMapsReady && mapContainer.current) {
       initializeMap()
     }
     return () => {
       if (markerInstance.current) markerInstance.current.setMap(null)
       if (mapInstance.current) mapInstance.current = null
     }
-  }, [isMapsReady])
+  }, [isMapsReady, mapContainer.current]) // Added mapContainer.current to dependencies
 
   const initializeMap = async () => {
     console.log("GoogleMapLocationPicker: initializeMap function invoked.") // Added this log
-    if (!mapContainer.current) return
+    if (!mapContainer.current) {
+      console.error("❌ GoogleMapLocationPicker: Map container ref is null during initializeMap.")
+      setError("Map container not found.")
+      setLoading(false)
+      return
+    }
     try {
       setLoading(true)
       setError(null)
@@ -96,10 +110,10 @@ export const GoogleMapLocationPicker = ({
             url:
               "data:image/svg+xml;charset=UTF-8," +
               encodeURIComponent(`
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#3b82f6" width="32" height="32">
-                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                </svg>
-              `),
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#3b82f6" width="32" height="32">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              </svg>
+            `),
             scaledSize: new window.google.maps.Size(32, 32), // Use window.google.maps
             anchor: new window.google.maps.Point(16, 32), // Use window.google.maps
           },
