@@ -359,11 +359,34 @@ export const Header = () => {
               </Button>}
 
             {/* Profile/User Icon */}
-            <Button asChild variant="ghost" size="icon" className="rounded-full w-8 h-8">
-              <Link to={isAuthenticated ? "/resident-profile" : "/login"}>
-                <User className="h-5 w-5" />
-              </Link>
-            </Button>
+           {isAuthenticated && (
+  <DropdownMenu>
+    <DropdownMenuTrigger asChild>
+      <Button variant="ghost" size="icon" className="rounded-full w-8 h-8">
+        <User className="h-5 w-5" />
+      </Button>
+    </DropdownMenuTrigger>
+
+    <DropdownMenuContent align="end" className="w-44">
+      <DropdownMenuItem asChild>
+        <Link to="/resident-profile" className="flex items-center">
+          <User className="mr-2 h-4 w-4" />
+          Profile
+        </Link>
+      </DropdownMenuItem>
+
+      <DropdownMenuSeparator />
+
+      <DropdownMenuItem
+        onClick={handleLogout}
+        className="text-red-600 focus:text-red-600"
+      >
+        <LogOut className="mr-2 h-4 w-4" />
+        Logout
+      </DropdownMenuItem>
+    </DropdownMenuContent>
+  </DropdownMenu>
+)}
           </div>
         </div>
       </header>;
