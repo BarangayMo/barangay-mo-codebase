@@ -1,116 +1,24 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useAuth } from "../contexts/AuthContext"
-import { db } from "../firebase"
-import { collection, query, where, onSnapshot, doc, updateDoc } from "firebase/firestore"
-import { useSearch } from "../contexts/SearchContext"
-import { useDebounce } from "../hooks/useDebounce"
-import NotificationItem from "./NotificationItem"
+import { useState } from "react"
+import { useAuth } from "@/contexts/AuthContext"
+import { useSearch } from "@/contexts/SearchContext"
+import { useDebounce } from "@/hooks/useDebounce"
+import { useNotifications } from "@/hooks/useNotifications"
 import { cn } from "@/lib/utils"
 import { Bell, Clock, AlertTriangle, Briefcase, Settings } from "lucide-react"
-
-// Define the Notification type
-interface Notification {
-  id: string
-  title: string
-  message: string
-  timestamp: any
-  read: boolean
-  category: string
-  userId: string
-  data?: any
-}
+import type { Notification } from "@/hooks/useNotifications"
 
 const Notifications = () => {
-  const { currentUser } = useAuth()
+  const { userRole } = useAuth()
   const { searchTerm } = useSearch()
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
-  const [notifications, setNotifications] = useState<Notification[]>([])
+  const { notifications, isLoading, error, unreadCount } = useNotifications()
   const [activeTab, setActiveTab] = useState<string>("all")
-  const [loading, setLoading] = useState<boolean>(true)
-  const [error, setError] = useState<string | null>(null)
-  const [userRole, setUserRole] = useState<string | null>(null)
-  const [unreadNotifications, setUnreadNotifications] = useState<Notification[]>([])
-  const [urgentNotifications, setUrgentNotifications] = useState<Notification[]>([])
-
-  useEffect(() => {
-    if (currentUser) {
-      const userDocRef = doc(db, "users", currentUser.uid)
-
-      const unsubscribeUser = onSnapshot(userDocRef, (docSnapshot) => {
-        if (docSnapshot.exists()) {
-          setUserRole(docSnapshot.data()?.role || "resident") // Default to 'resident' if role is not defined
-        } else {
-          setUserRole("resident") // Default if user doc doesn't exist
-        }
-      })
-
-      return () => unsubscribeUser()
-    } else {
-      setUserRole(null)
-    }
-  }, [currentUser])
-
-  useEffect(() => {
-    if (currentUser) {
-      setLoading(true)
-      setError(null)
-
-      const notificationsRef = collection(db, "notifications")
-      const q = query(notificationsRef, where("userId", "==", currentUser.uid))
-
-      const unsubscribe = onSnapshot(
-        q,
-        (querySnapshot) => {
-          const notificationsData: Notification[] = querySnapshot.docs.map(
-            (doc) =>
-              ({
-                id: doc.id,
-                ...doc.data(),
-              }) as Notification,
-          )
-
-          // Sort notifications by timestamp in descending order (newest first)
-          notificationsData.sort((a, b) => b.timestamp - a.timestamp)
-
-          setNotifications(notificationsData)
-          setLoading(false)
-        },
-        (error) => {
-          console.error("Error fetching notifications:", error)
-          setError("Failed to fetch notifications. Please try again.")
-          setLoading(false)
-        },
-      )
-
-      return () => unsubscribe()
-    } else {
-      setNotifications([])
-      setLoading(false)
-    }
-  }, [currentUser])
-
-  useEffect(() => {
-    setUnreadNotifications(notifications.filter((notification) => !notification.read))
-    setUrgentNotifications(notifications.filter((notification) => notification.category === "urgent"))
-  }, [notifications])
 
   const markAsRead = async (notificationId: string) => {
-    try {
-      const notificationRef = doc(db, "notifications", notificationId)
-      await updateDoc(notificationRef, { read: true })
-      // Optimistically update the local state
-      setNotifications(
-        notifications.map((notification) =>
-          notification.id === notificationId ? { ...notification, read: true } : notification,
-        ),
-      )
-      setUnreadNotifications(unreadNotifications.filter((notification) => notification.id !== notificationId))
-    } catch (error) {
-      console.error("Error marking as read:", error)
-      setError("Failed to mark as read. Please try again.")
-    }
+    // This is handled by the useNotifications hook
+    console.log("Mark as read:", notificationId)
   }
 
   // Updated role-based filtering with the actual categories from your database
@@ -197,9 +105,11 @@ const Notifications = () => {
     )
   }
 
-  const currentNotifications = activeTab === "all" ? notifications : unreadNotifications
+  const currentNotifications = activeTab === "all" ? notifications : notifications.filter((n) => n.status === "unread")
   const roleBasedNotifications = filterNotificationsByRole(currentNotifications)
   const filteredNotifications = filterNotificationsBySearch(roleBasedNotifications)
+  const unreadNotifications = notifications.filter((n) => n.status === "unread")
+  const urgentNotifications = notifications.filter((n) => n.priority === "urgent")
 
   // Define role-based color schemes
   const roleColors = {
@@ -225,7 +135,7 @@ const Notifications = () => {
       id: n.id,
       title: n.title,
       category: n.category,
-      read: n.read,
+      status: n.status,
     })),
   })
 
@@ -281,15 +191,34 @@ const Notifications = () => {
         </div>
       </div>
 
-      {loading && <div className="text-center">Loading notifications...</div>}
-      {error && <div className="text-red-500 text-center">Error: {error}</div>}
-      {!loading && !error && filteredNotifications.length === 0 && (
+      {isLoading && <div className="text-center">Loading notifications...</div>}
+      {error && <div className="text-red-500 text-center">Error: {error.message}</div>}
+      {!isLoading && !error && filteredNotifications.length === 0 && (
         <div className="text-center">No notifications found.</div>
       )}
-      {!loading &&
+      {!isLoading &&
         !error &&
         filteredNotifications.map((notification) => (
-          <NotificationItem key={notification.id} notification={notification} markAsRead={markAsRead} />
+          <div key={notification.id} className="border-b pb-3 mb-3 last:border-b-0">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1">
+                <h4
+                  className={cn(
+                    "text-sm font-medium mb-1",
+                    notification.status === "unread" ? "text-gray-900" : "text-gray-700",
+                  )}
+                >
+                  {notification.title}
+                </h4>
+                <p className="text-xs text-gray-600 mb-2">{notification.message}</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">{new Date(notification.created_at).toLocaleString()}</span>
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{notification.category}</span>
+                  <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">{notification.status}</span>
+                </div>
+              </div>
+            </div>
+          </div>
         ))}
     </div>
   )
