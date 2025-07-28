@@ -76,6 +76,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
   const [municipalities, setMunicipalities] = useState<string[]>([])
   const [loadingProvinces, setLoadingProvinces] = useState(false)
   const [loadingMunicipalities, setLoadingMunicipalities] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
   console.log("OfficialDetailsModal render:", { isOpen, official, formData })
 
@@ -171,17 +172,49 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
       })
       return
     }
+
+    setIsLoading(true)
+
     try {
-      const dataToSave = {
-        first_name: formData.first_name,
-        middle_name: formData.middle_name || null,
-        last_name: formData.last_name,
-        suffix: formData.suffix === "none" ? "" : formData.suffix,
+      // Get the authenticated user
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser()
+
+      if (authError) {
+        console.error("Auth error:", authError)
+        toast({
+          title: "Authentication Error",
+          description: "Failed to get user information. Please try logging in again.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      if (!user) {
+        toast({
+          title: "Not Authenticated",
+          description: "You must be logged in to create an official.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      console.log("Authenticated user:", user.id)
+
+      // Prepare the data for insertion
+      const officialData = {
+        user_id: user.id,
+        first_name: formData.first_name.trim(),
+        middle_name: formData.middle_name?.trim() || null,
+        last_name: formData.last_name.trim(),
+        suffix: formData.suffix === "none" ? null : formData.suffix,
         position: formData.position,
-        phone_number: formData.phone_number,
-        landline_number: formData.landline_number || null,
-        email: formData.email,
-        barangay: formData.barangay || "",
+        phone_number: formData.phone_number.trim(),
+        landline_number: formData.landline_number?.trim() || null,
+        email: formData.email.trim(),
+        barangay: formData.barangay?.trim() || "",
         municipality: formData.municipality,
         province: formData.province,
         region: formData.region,
@@ -192,25 +225,59 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
               .filter(Boolean)
           : null,
         years_of_service: formData.years_of_service ? Number.parseInt(formData.years_of_service) : null,
-        id: official?.id || null,
+        status: "pending" as const,
+        term_start: null, // You can add form fields for these if needed
+        term_end: null, // You can add form fields for these if needed
       }
-      console.log("OfficialDetailsModal: Attempting to save official with data:", dataToSave)
-      await onSave(dataToSave)
-    } catch (error) {
-      // Log the error object and all its properties
-      console.error("Error saving official:", error)
-      if (error && typeof error === "object") {
-        for (const key in error) {
-          if (Object.prototype.hasOwnProperty.call(error, key)) {
-            console.error(`Error property [${key}]:`, error[key])
-          }
+
+      console.log("Inserting official data:", officialData)
+
+      // Insert the official into the database
+      const { data, error } = await supabase.from("officials").insert(officialData).select().single()
+
+      if (error) {
+        console.error("Error creating official:", error)
+
+        // Handle specific RLS error
+        if (error.code === "42501") {
+          toast({
+            title: "Permission Error",
+            description: "You don't have permission to create officials. Please contact an administrator.",
+            variant: "destructive",
+          })
+        } else {
+          toast({
+            title: "Database Error",
+            description: error.message || "Failed to create official. Please try again.",
+            variant: "destructive",
+          })
         }
+        return
       }
+
+      console.log("Official created successfully:", data)
+
       toast({
-        title: "Error",
-        description: error?.message || "Failed to save official details",
+        title: "Success",
+        description: "Official created successfully!",
+      })
+
+      // Call the onSave callback if provided (for any additional handling)
+      if (onSave) {
+        await onSave(data)
+      }
+
+      // Close the modal on success
+      onClose()
+    } catch (error) {
+      console.error("Unexpected error:", error)
+      toast({
+        title: "Unexpected Error",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       })
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -496,6 +563,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
                 onClick={handleSave}
                 className="flex-1 bg-red-600 hover:bg-red-700 text-white h-12"
                 disabled={
+                  isLoading ||
                   !formData.first_name.trim() ||
                   !formData.last_name.trim() ||
                   !formData.position ||
@@ -506,7 +574,16 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
                   !formData.region.trim()
                 }
               >
-                {official?.id ? "Update Official" : "Add Official"}
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Creating...
+                  </>
+                ) : official?.id ? (
+                  "Update Official"
+                ) : (
+                  "Add Official"
+                )}
               </Button>
             </div>
           </div>
