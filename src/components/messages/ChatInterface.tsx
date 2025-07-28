@@ -140,10 +140,16 @@ export function ChatInterface() {
 
       // Additional validation for residents - they can only chat with their barangay official
       if (userRole === 'resident') {
-        if (!barangayOfficial) {
-          setError('No barangay official assigned to your area');
-          return;
-        }
+  if (!isApproved) {
+    setError('You need to be an approved user first');
+    return;
+  }
+
+  if (!barangayOfficial) {
+    setError('No barangay official assigned to your area');
+    return;
+  }
+}
 
         if (otherParticipantId !== barangayOfficial.id) {
           setError('Residents can only message their assigned barangay official');
