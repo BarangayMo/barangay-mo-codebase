@@ -4,12 +4,21 @@ import { useState } from "react"
 import { useNotifications } from "@/hooks/useNotifications"
 import { useAuth } from "@/contexts/AuthContext"
 import { cn } from "@/lib/utils"
-import { Bell, Clock, AlertTriangle, Briefcase, Settings } from "lucide-react"
+import { Bell, Clock, AlertTriangle, Briefcase, Settings, CheckCircle } from "lucide-react"
 import type { Notification } from "@/hooks/useNotifications"
 
 const Notifications = () => {
   const { userRole } = useAuth()
-  const { notifications, isLoading, error, unreadCount } = useNotifications()
+  const {
+    notifications,
+    isLoading,
+    error,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    isMarkingAsRead,
+    isMarkingAllAsRead,
+  } = useNotifications()
   const [activeTab, setActiveTab] = useState<string>("all")
   const [searchTerm, setSearchTerm] = useState<string>("")
 
@@ -135,6 +144,16 @@ const Notifications = () => {
     setActiveTab(tab)
   }
 
+  const handleMarkAsRead = (notificationId: string) => {
+    console.log("Attempting to mark as read:", notificationId)
+    markAsRead(notificationId)
+  }
+
+  const handleMarkAllAsRead = () => {
+    console.log("Attempting to mark all as read")
+    markAllAsRead()
+  }
+
   // Main content component
   const NotificationsContent = () => (
     <div className="w-full">
@@ -157,6 +176,19 @@ const Notifications = () => {
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
+
+      {/* Mark All as Read Button */}
+      {unreadNotifications.length > 0 && (
+        <div className="mb-4">
+          <button
+            onClick={handleMarkAllAsRead}
+            disabled={isMarkingAllAsRead}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isMarkingAllAsRead ? "Marking all as read..." : `Mark all ${unreadNotifications.length} as read`}
+          </button>
+        </div>
+      )}
 
       {/* Compact Stats for Mobile with Role Colors - Fixed overflow */}
       <div className="mb-6">
@@ -202,7 +234,13 @@ const Notifications = () => {
       {!isLoading &&
         !error &&
         filteredNotifications.map((notification) => (
-          <div key={notification.id} className="border-b pb-3 mb-3 last:border-b-0">
+          <div
+            key={notification.id}
+            className={cn(
+              "border-b pb-3 mb-3 last:border-b-0 p-3 rounded-lg",
+              notification.status === "unread" ? "bg-blue-50 border-blue-200" : "bg-white border-gray-200",
+            )}
+          >
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1">
                 <h4
@@ -217,7 +255,14 @@ const Notifications = () => {
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-gray-500">{new Date(notification.created_at).toLocaleString()}</span>
                   <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{notification.category}</span>
-                  <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">{notification.status}</span>
+                  <span
+                    className={cn(
+                      "text-xs px-2 py-1 rounded",
+                      notification.status === "unread" ? "bg-orange-100 text-orange-700" : "bg-gray-100 text-gray-700",
+                    )}
+                  >
+                    {notification.status}
+                  </span>
                   {notification.priority && (
                     <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">
                       {notification.priority}
@@ -225,6 +270,16 @@ const Notifications = () => {
                   )}
                 </div>
               </div>
+              {notification.status === "unread" && (
+                <button
+                  onClick={() => handleMarkAsRead(notification.id)}
+                  disabled={isMarkingAsRead}
+                  className="flex items-center gap-1 px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <CheckCircle className="h-3 w-3" />
+                  {isMarkingAsRead ? "..." : "Mark Read"}
+                </button>
+              )}
             </div>
           </div>
         ))}
