@@ -1,25 +1,17 @@
 "use client"
 
 import { useState } from "react"
-import { useAuth } from "@/contexts/AuthContext"
-import { useSearch } from "@/contexts/SearchContext"
-import { useDebounce } from "@/hooks/useDebounce"
 import { useNotifications } from "@/hooks/useNotifications"
+import { useAuth } from "@/contexts/AuthContext"
 import { cn } from "@/lib/utils"
 import { Bell, Clock, AlertTriangle, Briefcase, Settings } from "lucide-react"
 import type { Notification } from "@/hooks/useNotifications"
 
 const Notifications = () => {
   const { userRole } = useAuth()
-  const { searchTerm } = useSearch()
-  const debouncedSearchTerm = useDebounce(searchTerm, 300)
   const { notifications, isLoading, error, unreadCount } = useNotifications()
   const [activeTab, setActiveTab] = useState<string>("all")
-
-  const markAsRead = async (notificationId: string) => {
-    // This is handled by the useNotifications hook
-    console.log("Mark as read:", notificationId)
-  }
+  const [searchTerm, setSearchTerm] = useState<string>("")
 
   // Updated role-based filtering with the actual categories from your database
   const filterNotificationsByRole = (notificationList: Notification[]) => {
@@ -93,11 +85,11 @@ const Notifications = () => {
   }
 
   const filterNotificationsBySearch = (notificationList: Notification[]) => {
-    if (!debouncedSearchTerm) {
+    if (!searchTerm) {
       return notificationList
     }
 
-    const lowerCaseSearchTerm = debouncedSearchTerm.toLowerCase()
+    const lowerCaseSearchTerm = searchTerm.toLowerCase()
     return notificationList.filter(
       (notification) =>
         notification.title.toLowerCase().includes(lowerCaseSearchTerm) ||
@@ -154,6 +146,17 @@ const Notifications = () => {
           {[...new Set(notifications.map((n) => n.category))].join(", ")}
         </div>
       )}
+
+      {/* Search Bar */}
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Search notifications..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
 
       {/* Compact Stats for Mobile with Role Colors - Fixed overflow */}
       <div className="mb-6">
@@ -215,6 +218,11 @@ const Notifications = () => {
                   <span className="text-xs text-gray-500">{new Date(notification.created_at).toLocaleString()}</span>
                   <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{notification.category}</span>
                   <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">{notification.status}</span>
+                  {notification.priority && (
+                    <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">
+                      {notification.priority}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
