@@ -13,6 +13,8 @@ import {
   FileText,
   Users,
   UserCheck,
+  Briefcase,
+  Settings,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -50,9 +52,13 @@ const getCategoryIcon = (category: string) => {
     case "task":
     case "deadline":
       return <AlertTriangle className="h-4 w-4 text-orange-500" />
+    case "jobs":
     case "job":
     case "job_posting":
-      return <FileText className="h-4 w-4 text-blue-500" />
+      return <Briefcase className="h-4 w-4 text-blue-500" />
+    case "services":
+    case "service":
+      return <Settings className="h-4 w-4 text-green-500" />
     case "product":
     case "product_listing":
       return <FileText className="h-4 w-4 text-green-500" />
@@ -140,8 +146,10 @@ export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => 
   const { userRole } = useAuth()
   const { notifications, isLoading, unreadCount, markAsRead, markAllAsRead, isMarkingAllAsRead } = useNotifications()
 
-  // Updated role-based filtering to match the main notifications page
+  // Updated role-based filtering with the actual categories from your database
   const roleBasedNotifications = notifications.filter((notification) => {
+    console.log("NotificationDropdown: Processing notification:", notification.id, "Category:", notification.category)
+
     // General notifications are visible to everyone
     if (notification.category === "general" || notification.category === "system") {
       return true
@@ -152,7 +160,7 @@ export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => 
         // Superadmins can see all notifications
         return true
       case "official":
-        // Officials can see work-related notifications
+        // Officials can see work-related notifications including jobs and services
         return [
           "task",
           "deadline",
@@ -162,30 +170,44 @@ export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => 
           "meeting",
           "project",
           "feedback",
+          "jobs", // Your actual category
+          "services", // Your actual category
           "job",
+          "service",
           "product",
           "community",
           "job_posting",
           "product_listing",
           "community_post",
+          "work",
+          "announcement",
         ].includes(notification.category)
       case "resident":
-        // Residents can see personal and approval notifications
+        // Residents can see personal notifications including jobs and services
         return [
           "approval",
           "message",
           "feedback",
           "registration",
+          "jobs", // Your actual category
+          "services", // Your actual category
           "job",
+          "service",
           "product",
           "community",
           "job_posting",
           "product_listing",
           "community_post",
+          "personal",
+          "announcement",
+          "alert",
+          "reminder",
         ].includes(notification.category)
       default:
-        // Fallback: show general notifications for any unrecognized role
-        return ["general", "system"].includes(notification.category)
+        // More permissive fallback - include jobs and services for any role
+        return ["general", "system", "jobs", "services", "job", "service", "announcement", "alert"].includes(
+          notification.category,
+        )
     }
   })
 
