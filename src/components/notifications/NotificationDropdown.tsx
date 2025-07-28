@@ -183,12 +183,9 @@ export function NotificationDropdown() {
             {todayNotifications.slice(0, 1).map((notification) => (
               <NotificationItem key={notification.id} notification={notification} onMarkAsRead={markAsRead} />
             ))}
-            {todayNotifications.length === 0 &&
-              yesterdayNotifications
-                .slice(0, 1)
-                .map((notification) => (
-                  <NotificationItem key={notification.id} notification={notification} onMarkAsRead={markAsRead} />
-                ))}
+            {yesterdayNotifications.slice(0, 1).map((notification) => (
+              <NotificationItem key={notification.id} notification={notification} onMarkAsRead={markAsRead} />
+            ))}
           </TabsContent>
 
           <TabsContent value="unread" className="m-0">
