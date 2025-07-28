@@ -82,7 +82,24 @@ export const useNotifications = () => {
       }
 
       console.log("Raw notifications from DB:", data?.length || 0, data)
-      return data as Notification[]
+
+      // Remove duplicates based on title, message, and category
+      const uniqueNotifications =
+        data?.filter(
+          (notification, index, self) =>
+            index ===
+            self.findIndex(
+              (n) =>
+                n.title === notification.title &&
+                n.message === notification.message &&
+                n.category === notification.category &&
+                n.recipient_id === notification.recipient_id,
+            ),
+        ) || []
+
+      console.log("After removing duplicates:", uniqueNotifications.length)
+
+      return uniqueNotifications as Notification[]
     },
     enabled: !!user?.id,
     refetchInterval: 30000, // Refetch every 30 seconds
@@ -92,20 +109,52 @@ export const useNotifications = () => {
   const markAsReadMutation = useMutation({
     mutationFn: async (notificationId: string) => {
       console.log("Marking notification as read:", notificationId)
-      const { error } = await supabase
+
+      const { data, error } = await supabase
         .from("notifications")
         .update({
           status: "read",
           read_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         })
         .eq("id", notificationId)
+        .select()
 
       if (error) {
         console.error("Error marking as read:", error)
         throw error
       }
+
+      console.log("Successfully marked notification as read:", data)
+      return data
     },
-    onSuccess: () => {
+    onMutate: async (notificationId) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["notifications"] })
+
+      // Snapshot the previous value
+      const previousNotifications = queryClient.getQueryData(["notifications", user?.id, userRole])
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(["notifications", user?.id, userRole], (old: Notification[] | undefined) => {
+        if (!old) return old
+        return old.map((notification) =>
+          notification.id === notificationId
+            ? { ...notification, status: "read", read_at: new Date().toISOString() }
+            : notification,
+        )
+      })
+
+      // Return a context object with the snapshotted value
+      return { previousNotifications }
+    },
+    onError: (err, notificationId, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      queryClient.setQueryData(["notifications", user?.id, userRole], context?.previousNotifications)
+      console.error("Failed to mark notification as read:", err)
+    },
+    onSettled: () => {
+      // Always refetch after error or success
       queryClient.invalidateQueries({ queryKey: ["notifications"] })
     },
   })
@@ -155,6 +204,7 @@ export const useNotifications = () => {
         .update({
           status: "read",
           read_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         })
         .eq("recipient_id", user.id)
         .eq("status", "unread")

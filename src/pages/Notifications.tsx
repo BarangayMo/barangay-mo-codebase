@@ -1,10 +1,12 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
 import { useNotifications } from "@/hooks/useNotifications"
 import { useAuth } from "@/contexts/AuthContext"
 import { cn } from "@/lib/utils"
-import { Bell, Clock, AlertTriangle, Briefcase, Settings, CheckCircle } from "lucide-react"
+import { Bell, Clock, AlertTriangle, Briefcase, Settings, CheckCircle, ExternalLink } from "lucide-react"
 import type { Notification } from "@/hooks/useNotifications"
 
 const Notifications = () => {
@@ -144,7 +146,10 @@ const Notifications = () => {
     setActiveTab(tab)
   }
 
-  const handleMarkAsRead = (notificationId: string) => {
+  const handleMarkAsRead = (notificationId: string, event?: React.MouseEvent) => {
+    if (event) {
+      event.stopPropagation() // Prevent notification click when clicking mark as read
+    }
     console.log("Attempting to mark as read:", notificationId)
     markAsRead(notificationId)
   }
@@ -152,6 +157,42 @@ const Notifications = () => {
   const handleMarkAllAsRead = () => {
     console.log("Attempting to mark all as read")
     markAllAsRead()
+  }
+
+  const handleNotificationClick = (notification: Notification) => {
+    console.log("Notification clicked:", notification.id)
+
+    // Mark as read if it's unread
+    if (notification.status === "unread") {
+      markAsRead(notification.id)
+    }
+
+    // Navigate to the action URL if it exists
+    if (notification.action_url) {
+      window.open(notification.action_url, "_blank")
+    } else {
+      // Generate default URLs based on category
+      let defaultUrl = ""
+      switch (notification.category) {
+        case "jobs":
+          defaultUrl = "/jobs"
+          break
+        case "services":
+          defaultUrl = "/services"
+          break
+        case "community":
+          defaultUrl = "/community"
+          break
+        case "product":
+          defaultUrl = "/products"
+          break
+        default:
+          defaultUrl = "/dashboard"
+      }
+
+      // Use window.location for internal navigation
+      window.location.href = defaultUrl
+    }
   }
 
   // Main content component
@@ -236,23 +277,29 @@ const Notifications = () => {
         filteredNotifications.map((notification) => (
           <div
             key={notification.id}
+            onClick={() => handleNotificationClick(notification)}
             className={cn(
-              "border-b pb-3 mb-3 last:border-b-0 p-3 rounded-lg",
-              notification.status === "unread" ? "bg-blue-50 border-blue-200" : "bg-white border-gray-200",
+              "border-b pb-3 mb-3 last:border-b-0 p-4 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md",
+              notification.status === "unread"
+                ? "bg-blue-50 border-blue-200 hover:bg-blue-100"
+                : "bg-white border-gray-200 hover:bg-gray-50",
             )}
           >
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex-1">
-                <h4
-                  className={cn(
-                    "text-sm font-medium mb-1",
-                    notification.status === "unread" ? "text-gray-900" : "text-gray-700",
-                  )}
-                >
-                  {notification.title}
-                </h4>
-                <p className="text-xs text-gray-600 mb-2">{notification.message}</p>
-                <div className="flex items-center gap-2">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start gap-2 mb-2">
+                  <h4
+                    className={cn(
+                      "text-sm font-medium flex-1",
+                      notification.status === "unread" ? "text-gray-900" : "text-gray-700",
+                    )}
+                  >
+                    {notification.title}
+                  </h4>
+                  <ExternalLink className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                </div>
+                <p className="text-sm text-gray-600 mb-3 line-clamp-2">{notification.message}</p>
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs text-gray-500">{new Date(notification.created_at).toLocaleString()}</span>
                   <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{notification.category}</span>
                   <span
@@ -270,14 +317,17 @@ const Notifications = () => {
                   )}
                 </div>
               </div>
+
+              {/* Small Mark as Read Button */}
               {notification.status === "unread" && (
                 <button
-                  onClick={() => handleMarkAsRead(notification.id)}
+                  onClick={(e) => handleMarkAsRead(notification.id, e)}
                   disabled={isMarkingAsRead}
-                  className="flex items-center gap-1 px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1 px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                  title="Mark as read"
                 >
                   <CheckCircle className="h-3 w-3" />
-                  {isMarkingAsRead ? "..." : "Mark Read"}
+                  <span className="hidden sm:inline">{isMarkingAsRead ? "..." : "Read"}</span>
                 </button>
               )}
             </div>
