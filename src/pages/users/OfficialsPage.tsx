@@ -54,7 +54,7 @@ import { MobileNavbar } from "@/components/layout/MobileNavbar";
 import { useNavigate } from "react-router-dom";
 import { useOfficials } from "@/hooks/use-officials-data";
 import { format } from "date-fns";
-import { OfficialDetailsModal } from "../components/officials/OfficialDetailsModal";
+import { OfficialDetailsModal } from "@/components/officials/OfficialDetailsModal";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
