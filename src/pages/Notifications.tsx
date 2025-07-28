@@ -6,11 +6,27 @@ import { useState } from "react"
 import { useNotifications } from "@/hooks/useNotifications"
 import { useAuth } from "@/contexts/AuthContext"
 import { cn } from "@/lib/utils"
-import { Bell, Archive, Trash2, ExternalLink, Mail, MailOpen, MoreVertical } from "lucide-react"
+import {
+  Bell,
+  Archive,
+  Trash2,
+  ExternalLink,
+  Mail,
+  MailOpen,
+  MoreVertical,
+  ArrowLeft,
+  Search,
+  Settings,
+  CheckCircle2,
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import type { Notification } from "@/hooks/useNotifications"
 
 const Notifications = () => {
-  const { userRole } = useAuth()
+  const { user, userRole } = useAuth()
   const {
     notifications,
     archivedNotifications,
@@ -20,9 +36,11 @@ const Notifications = () => {
     markAsRead,
     archiveNotification,
     unarchiveNotification,
+    markAllAsRead,
     isMarkingAsRead,
     isArchiving,
     isUnarchiving,
+    isMarkingAllAsRead,
   } = useNotifications()
   const [activeTab, setActiveTab] = useState<string>("all")
   const [searchTerm, setSearchTerm] = useState<string>("")
@@ -247,203 +265,353 @@ const Notifications = () => {
     setShowActions(showActions === notificationId ? null : notificationId)
   }
 
-  // Main content component
-  const NotificationsContent = () => (
-    <div className="w-full">
-      {/* Debug Info - Remove this in production */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm">
-          <strong>Debug Info:</strong> Total: {notifications.length}, Role-filtered: {roleBasedNotifications.length},
-          Search-filtered: {filteredNotifications.length}, Unread: {unreadNotifications.length}, Archived:{" "}
-          {archivedNotifications.length}, Categories: {[...new Set(notifications.map((n) => n.category))].join(", ")}
-        </div>
-      )}
+  const handleBackToDashboard = () => {
+    window.location.href = "/dashboard"
+  }
 
-      {/* Search Bar */}
-      <div className="mb-4">
-        <input
-          type="text"
-          placeholder="Search notifications..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
+  const handleMarkAllAsRead = () => {
+    if (unreadCount > 0) {
+      markAllAsRead()
+    }
+  }
 
-      {/* Filter Buttons - Smaller icons */}
-      <div className="mb-6 flex items-center gap-2 flex-wrap">
-        <button
-          onClick={() => handleTabChange("all")}
-          className={cn(
-            "flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm",
-            activeTab === "all" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200",
-          )}
-        >
-          <Bell className="h-3 w-3" />
-          <span>All ({notifications.length})</span>
-        </button>
-
-        <button
-          onClick={() => handleTabChange("unread")}
-          className={cn(
-            "flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm",
-            activeTab === "unread" ? "bg-orange-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200",
-          )}
-        >
-          <Mail className="h-3 w-3" />
-          <span>Unread ({unreadNotifications.length})</span>
-        </button>
-
-        <button
-          onClick={() => handleTabChange("read")}
-          className={cn(
-            "flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm",
-            activeTab === "read" ? "bg-green-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200",
-          )}
-        >
-          <MailOpen className="h-3 w-3" />
-          <span>Read ({notifications.filter((n) => n.status === "read").length})</span>
-        </button>
-
-        <button
-          onClick={() => handleTabChange("archived")}
-          className={cn(
-            "flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm",
-            activeTab === "archived" ? "bg-purple-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200",
-          )}
-        >
-          <Archive className="h-3 w-3" />
-          <span>Archived ({archivedNotifications.length})</span>
-        </button>
-      </div>
-
-      {isLoading && <div className="text-center">Loading notifications...</div>}
-      {error && <div className="text-red-500 text-center">Error: {error.message}</div>}
-      {!isLoading && !error && filteredNotifications.length === 0 && (
-        <div className="text-center py-8">
-          <Bell className="h-8 w-8 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500">
-            {activeTab === "archived" ? "No archived notifications found." : "No notifications found."}
-          </p>
-        </div>
-      )}
-      {!isLoading &&
-        !error &&
-        filteredNotifications.map((notification) => (
-          <div
-            key={notification.id}
-            onClick={() => handleNotificationClick(notification)}
-            className={cn(
-              "border-b pb-3 mb-3 last:border-b-0 p-4 rounded-lg transition-all duration-200 hover:shadow-md relative",
-              notification.status === "unread"
-                ? "bg-blue-50 border-blue-200 hover:bg-blue-100 cursor-pointer"
-                : notification.status === "archived"
-                  ? "bg-purple-50 border-purple-200 hover:bg-purple-100"
-                  : "bg-white border-gray-200 hover:bg-gray-50 cursor-pointer",
-            )}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start gap-2 mb-2">
-                  <h4
-                    className={cn(
-                      "text-sm font-medium flex-1",
-                      notification.status === "unread" ? "text-gray-900" : "text-gray-700",
-                    )}
-                  >
-                    {notification.title}
-                  </h4>
-                  {notification.status !== "archived" && (
-                    <ExternalLink className="h-3 w-3 text-gray-400 flex-shrink-0" />
-                  )}
-                </div>
-                <p className="text-sm text-gray-600 mb-3 line-clamp-2">{notification.message}</p>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs text-gray-500">{new Date(notification.created_at).toLocaleString()}</span>
-                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{notification.category}</span>
-                  <span
-                    className={cn(
-                      "text-xs px-2 py-1 rounded",
-                      notification.status === "unread"
-                        ? "bg-orange-100 text-orange-700"
-                        : notification.status === "archived"
-                          ? "bg-purple-100 text-purple-700"
-                          : "bg-gray-100 text-gray-700",
-                    )}
-                  >
-                    {notification.status}
-                  </span>
-                  {notification.priority && (
-                    <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">
-                      {notification.priority}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Actions Menu - Smaller icon */}
-              <div className="relative">
-                <button
-                  onClick={(e) => toggleActions(notification.id, e)}
-                  className="p-1 rounded-full hover:bg-gray-200 transition-colors"
-                  title="More actions"
-                >
-                  <MoreVertical className="h-3 w-3 text-gray-500" />
-                </button>
-
-                {showActions === notification.id && (
-                  <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px]">
-                    {notification.status === "unread" && (
-                      <button
-                        onClick={(e) => handleMarkAsRead(notification.id, e)}
-                        disabled={isMarkingAsRead}
-                        className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 border-b border-gray-100"
-                      >
-                        <MailOpen className="h-3 w-3" />
-                        Mark as Read
-                      </button>
-                    )}
-
-                    {notification.status === "archived" ? (
-                      <button
-                        onClick={(e) => handleUnarchive(notification.id, e)}
-                        disabled={isUnarchiving}
-                        className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 border-b border-gray-100"
-                      >
-                        <Archive className="h-3 w-3" />
-                        Unarchive
-                      </button>
-                    ) : (
-                      <button
-                        onClick={(e) => handleArchive(notification.id, e)}
-                        disabled={isArchiving}
-                        className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 border-b border-gray-100"
-                      >
-                        <Archive className="h-3 w-3" />
-                        Archive
-                      </button>
-                    )}
-
-                    <button
-                      onClick={(e) => handleDelete(notification.id, e)}
-                      className="w-full px-3 py-2 text-left text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                      Delete
-                    </button>
-                  </div>
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Left side - Back button and title */}
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleBackToDashboard}
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span className="hidden sm:inline">Back to Dashboard</span>
+              </Button>
+              <div className="h-6 w-px bg-gray-300 hidden sm:block" />
+              <div className="flex items-center gap-3">
+                <Bell className="h-5 w-5 text-blue-600" />
+                <h1 className="text-xl font-semibold text-gray-900">Notifications</h1>
+                {unreadCount > 0 && (
+                  <Badge variant="destructive" className="bg-red-500 text-white">
+                    {unreadCount}
+                  </Badge>
                 )}
               </div>
             </div>
-          </div>
-        ))}
-    </div>
-  )
 
-  return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-semibold mb-4">Notifications</h1>
-      <NotificationsContent />
+            {/* Right side - Actions */}
+            <div className="flex items-center gap-3">
+              {unreadCount > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleMarkAllAsRead}
+                  disabled={isMarkingAllAsRead}
+                  className="flex items-center gap-2 bg-transparent"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span className="hidden sm:inline">Mark All Read</span>
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                <span className="hidden sm:inline">Settings</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Sidebar - Stats and Filters */}
+          <div className="lg:col-span-1">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Overview</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
+                  <div className="text-center p-3 bg-blue-50 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600">{notifications.length}</div>
+                    <div className="text-sm text-blue-600">Total</div>
+                  </div>
+                  <div className="text-center p-3 bg-orange-50 rounded-lg">
+                    <div className="text-2xl font-bold text-orange-600">{unreadCount}</div>
+                    <div className="text-sm text-orange-600">Unread</div>
+                  </div>
+                  <div className="text-center p-3 bg-green-50 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">
+                      {notifications.filter((n) => n.status === "read").length}
+                    </div>
+                    <div className="text-sm text-green-600">Read</div>
+                  </div>
+                  <div className="text-center p-3 bg-purple-50 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-600">{archivedNotifications.length}</div>
+                    <div className="text-sm text-purple-600">Archived</div>
+                  </div>
+                </div>
+
+                {/* User Info */}
+                <div className="pt-4 border-t border-gray-200">
+                  <div className="text-sm text-gray-600">
+                    <div className="font-medium">Logged in as:</div>
+                    <div className="text-gray-900">{user?.email}</div>
+                    <div className="text-xs text-gray-500 mt-1">Role: {userRole}</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Main Content Area */}
+          <div className="lg:col-span-3">
+            <Card>
+              <CardHeader>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <CardTitle className="text-lg">Your Notifications</CardTitle>
+
+                  {/* Search Bar */}
+                  <div className="relative max-w-sm">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
+                      type="text"
+                      placeholder="Search notifications..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-9 h-9"
+                    />
+                  </div>
+                </div>
+
+                {/* Filter Tabs */}
+                <div className="flex items-center gap-2 flex-wrap pt-4">
+                  <Button
+                    variant={activeTab === "all" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handleTabChange("all")}
+                    className="flex items-center gap-2"
+                  >
+                    <Bell className="h-3 w-3" />
+                    <span>All ({notifications.length})</span>
+                  </Button>
+
+                  <Button
+                    variant={activeTab === "unread" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handleTabChange("unread")}
+                    className="flex items-center gap-2"
+                  >
+                    <Mail className="h-3 w-3" />
+                    <span>Unread ({unreadNotifications.length})</span>
+                  </Button>
+
+                  <Button
+                    variant={activeTab === "read" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handleTabChange("read")}
+                    className="flex items-center gap-2"
+                  >
+                    <MailOpen className="h-3 w-3" />
+                    <span>Read ({notifications.filter((n) => n.status === "read").length})</span>
+                  </Button>
+
+                  <Button
+                    variant={activeTab === "archived" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handleTabChange("archived")}
+                    className="flex items-center gap-2"
+                  >
+                    <Archive className="h-3 w-3" />
+                    <span>Archived ({archivedNotifications.length})</span>
+                  </Button>
+                </div>
+              </CardHeader>
+
+              <CardContent>
+                {/* Debug Info - Remove this in production */}
+                {process.env.NODE_ENV === "development" && (
+                  <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm">
+                    <strong>Debug Info:</strong> Total: {notifications.length}, Role-filtered:{" "}
+                    {roleBasedNotifications.length}, Search-filtered: {filteredNotifications.length}, Unread:{" "}
+                    {unreadNotifications.length}, Archived: {archivedNotifications.length}, Categories:{" "}
+                    {[...new Set(notifications.map((n) => n.category))].join(", ")}
+                  </div>
+                )}
+
+                {/* Loading State */}
+                {isLoading && (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-500">Loading notifications...</p>
+                  </div>
+                )}
+
+                {/* Error State */}
+                {error && (
+                  <div className="text-center py-8">
+                    <div className="text-red-500 mb-4">
+                      <Bell className="h-8 w-8 mx-auto mb-2" />
+                      <p>Error loading notifications</p>
+                      <p className="text-sm">{error.message}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Empty State */}
+                {!isLoading && !error && filteredNotifications.length === 0 && (
+                  <div className="text-center py-12">
+                    <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      {activeTab === "archived" ? "No archived notifications" : "No notifications found"}
+                    </h3>
+                    <p className="text-gray-500">
+                      {activeTab === "archived"
+                        ? "Archived notifications will appear here."
+                        : searchTerm
+                          ? "Try adjusting your search terms."
+                          : "New notifications will appear here when they arrive."}
+                    </p>
+                  </div>
+                )}
+
+                {/* Notifications List */}
+                {!isLoading && !error && filteredNotifications.length > 0 && (
+                  <div className="space-y-3">
+                    {filteredNotifications.map((notification) => (
+                      <div
+                        key={notification.id}
+                        onClick={() => handleNotificationClick(notification)}
+                        className={cn(
+                          "p-4 rounded-lg border transition-all duration-200 hover:shadow-md relative",
+                          notification.status === "unread"
+                            ? "bg-blue-50 border-blue-200 hover:bg-blue-100 cursor-pointer"
+                            : notification.status === "archived"
+                              ? "bg-purple-50 border-purple-200 hover:bg-purple-100"
+                              : "bg-white border-gray-200 hover:bg-gray-50 cursor-pointer",
+                        )}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start gap-2 mb-2">
+                              <h4
+                                className={cn(
+                                  "text-sm font-medium flex-1",
+                                  notification.status === "unread" ? "text-gray-900" : "text-gray-700",
+                                )}
+                              >
+                                {notification.title}
+                              </h4>
+                              {notification.status !== "archived" && (
+                                <ExternalLink className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-600 mb-3 line-clamp-2">{notification.message}</p>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-xs text-gray-500">
+                                {new Date(notification.created_at).toLocaleString()}
+                              </span>
+                              <Badge variant="outline" className="text-xs">
+                                {notification.category}
+                              </Badge>
+                              <Badge
+                                variant={
+                                  notification.status === "unread"
+                                    ? "destructive"
+                                    : notification.status === "archived"
+                                      ? "secondary"
+                                      : "outline"
+                                }
+                                className="text-xs"
+                              >
+                                {notification.status}
+                              </Badge>
+                              {notification.priority && (
+                                <Badge variant="outline" className="text-xs">
+                                  {notification.priority}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Actions Menu */}
+                          <div className="relative">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => toggleActions(notification.id, e)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <MoreVertical className="h-3 w-3" />
+                            </Button>
+
+                            {showActions === notification.id && (
+                              <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[140px]">
+                                {notification.status === "unread" && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => handleMarkAsRead(notification.id, e)}
+                                    disabled={isMarkingAsRead}
+                                    className="w-full justify-start text-left text-sm hover:bg-gray-50 flex items-center gap-2 border-b border-gray-100 rounded-none"
+                                  >
+                                    <MailOpen className="h-3 w-3" />
+                                    Mark as Read
+                                  </Button>
+                                )}
+
+                                {notification.status === "archived" ? (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => handleUnarchive(notification.id, e)}
+                                    disabled={isUnarchiving}
+                                    className="w-full justify-start text-left text-sm hover:bg-gray-50 flex items-center gap-2 border-b border-gray-100 rounded-none"
+                                  >
+                                    <Archive className="h-3 w-3" />
+                                    Unarchive
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => handleArchive(notification.id, e)}
+                                    disabled={isArchiving}
+                                    className="w-full justify-start text-left text-sm hover:bg-gray-50 flex items-center gap-2 border-b border-gray-100 rounded-none"
+                                  >
+                                    <Archive className="h-3 w-3" />
+                                    Archive
+                                  </Button>
+                                )}
+
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => handleDelete(notification.id, e)}
+                                  className="w-full justify-start text-left text-sm hover:bg-red-50 text-red-600 flex items-center gap-2 rounded-none"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                  Delete
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
