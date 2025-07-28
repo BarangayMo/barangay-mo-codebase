@@ -1,345 +1,285 @@
-"use client"
 
-import type React from "react"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { User, Camera, ChevronLeft } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
-import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { CalendarDays, Phone, Mail, Award, User } from "lucide-react"
-
-interface OfficialDetailsModalProps {
-  isOpen: boolean
-  onClose: () => void
-  official: any
-  onSave: (data: any) => void
-  isEditing?: boolean
-  isLoading?: boolean
+interface OfficialData {
+  position: string;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  suffix?: string;
+  isCompleted: boolean;
 }
 
-const positions = [
+interface OfficialDetailsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  official: OfficialData;
+  onSave: (data: Partial<OfficialData>) => void;
+}
+
+const SUFFIX_OPTIONS = [
+  "Jr.",
+  "Sr.",
+  "II",
+  "III",
+  "IV",
+  "V"
+];
+
+const ALL_POSITIONS = [
   "Punong Barangay",
   "Barangay Secretary",
   "Barangay Treasurer",
-  "Sangguniang Barangay Member",
-  "SK Chairman",
-  "SK Secretary",
-  "SK Treasurer",
-  "Barangay Health Worker",
-  "Barangay Tanod",
-  "Barangay Nutrition Scholar",
-]
+  "Sangguniang Barangay Member 1",
+  "Sangguniang Barangay Member 2",
+  "Sangguniang Barangay Member 3",
+  "Sangguniang Barangay Member 4",
+  "Sangguniang Barangay Member 5",
+  "Sangguniang Barangay Member 6",
+  "Sangguniang Barangay Member 7",
+  "SK Chairperson"
+];
 
-export function OfficialDetailsModal({
-  isOpen,
-  onClose,
-  official,
-  onSave,
-  isEditing = false,
-  isLoading = false,
-}: OfficialDetailsModalProps) {
+export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: OfficialDetailsModalProps) {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
-    position: "",
     firstName: "",
     middleName: "",
     lastName: "",
-    suffix: "",
-    contact_phone: "",
-    contact_email: "",
-    term_start: "",
-    term_end: "",
-    status: "active",
-    achievements: "",
-    years_of_service: 0,
-  })
+    suffix: "none",
+    position: ""
+  });
 
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  console.log('OfficialDetailsModal render:', { isOpen, official, formData });
 
   useEffect(() => {
-    if (official) {
+    if (official && isOpen) {
+      console.log('OfficialDetailsModal useEffect - official data:', official);
+      
+      // Set form data with the official's data, ensuring we handle undefined/null values
       setFormData({
-        position: official.position || "",
-        firstName: official.firstName || official.first_name || "",
-        middleName: official.middleName || official.middle_name || "",
-        lastName: official.lastName || official.last_name || "",
-        suffix: official.suffix || "",
-        contact_phone: official.contact_phone || "",
-        contact_email: official.contact_email || "",
-        term_start: official.term_start || "",
-        term_end: official.term_end || "",
-        status: official.status || "active",
-        achievements: official.achievements || "",
-        years_of_service: official.years_of_service || 0,
-      })
+        firstName: official.firstName || "",
+        middleName: official.middleName || "",
+        lastName: official.lastName || "",
+        suffix: official.suffix || "none",
+        position: official.position || ""
+      });
+      
+      console.log('Form data set to:', {
+        firstName: official.firstName || "",
+        middleName: official.middleName || "",
+        lastName: official.lastName || "",
+        suffix: official.suffix || "none",
+        position: official.position || ""
+      });
     }
-  }, [official])
+  }, [official, isOpen]);
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {}
-
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = "First name is required"
-    }
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = "Last name is required"
-    }
-    if (!formData.position) {
-      newErrors.position = "Position is required"
-    }
-    if (formData.contact_email && !/\S+@\S+\.\S+/.test(formData.contact_email)) {
-      newErrors.contact_email = "Invalid email format"
+  const handleSave = async () => {
+    console.log('Saving official data:', formData);
+    
+    // Validate required fields
+    if (!formData.firstName.trim() || !formData.lastName.trim()) {
+      toast({
+        title: "Error",
+        description: "First name and last name are required",
+        variant: "destructive",
+      });
+      return;
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+    try {
+      const dataToSave = {
+        ...formData,
+        suffix: formData.suffix === "none" ? "" : formData.suffix,
+        isCompleted: true
+      };
+
+      console.log('Data to save:', dataToSave);
+
+      // Call the parent's onSave function
+      onSave(dataToSave);
+      
+      toast({
+        title: "Success",
+        description: "Official details saved successfully",
+      });
+      
+      onClose();
+    } catch (error) {
+      console.error('Error saving official:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save official details",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    console.log('Input change:', field, value);
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  if (!isOpen) {
+    return null;
   }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!validateForm()) {
-      return
-    }
-
-    onSave(formData)
-  }
-
-  const handleInputChange = (field: string, value: string | number) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }))
-    }
-  }
-
-  const isReadOnly = official?.readOnly
-  const isRegionalOfficial = official?.id?.includes("REGION")
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" />
-            {isReadOnly ? "Official Details" : isEditing ? "Edit Official" : "Add New Official"}
-          </DialogTitle>
-        </DialogHeader>
-
-        {isReadOnly ? (
-          // Read-only view
-          <div className="space-y-6">
-            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-              <Avatar className="w-16 h-16">
-                <AvatarImage src={official.avatar_url || "/placeholder.svg"} />
-                <AvatarFallback className="bg-red-100 text-red-600 text-lg">
-                  {formData.firstName?.[0]}
-                  {formData.lastName?.[0]}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h3 className="text-xl font-semibold">
-                  {formData.firstName} {formData.middleName} {formData.lastName} {formData.suffix}
-                </h3>
-                <p className="text-gray-600">{formData.position}</p>
-                <Badge variant={formData.status === "active" ? "default" : "secondary"}>{formData.status}</Badge>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {formData.contact_phone && (
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-gray-500" />
-                  <span>{formData.contact_phone}</span>
-                </div>
-              )}
-              {formData.contact_email && (
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-gray-500" />
-                  <span>{formData.contact_email}</span>
-                </div>
-              )}
-              {formData.term_start && (
-                <div className="flex items-center gap-2">
-                  <CalendarDays className="h-4 w-4 text-gray-500" />
-                  <span>
-                    Term: {formData.term_start} - {formData.term_end || "Present"}
-                  </span>
-                </div>
-              )}
-              <div className="flex items-center gap-2">
-                <Award className="h-4 w-4 text-gray-500" />
-                <span>{formData.years_of_service} years of service</span>
-              </div>
-            </div>
-
-            {formData.achievements && (
-              <div>
-                <h4 className="font-medium mb-2">Achievements</h4>
-                <p className="text-gray-600">{formData.achievements}</p>
-              </div>
-            )}
-
-            {isRegionalOfficial && (
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-800">This is a regional official record and cannot be modified.</p>
-              </div>
-            )}
+    <>
+      {/* Backdrop */}
+      <div 
+        className={`fixed inset-0 bg-black/50 z-50 transition-opacity duration-300 ${
+          isOpen ? 'opacity-100' : 'opacity-0'
+        }`}
+        onClick={onClose}
+      />
+      
+      {/* Full Screen Modal */}
+      <div 
+        className={`fixed inset-0 z-50 flex items-end transition-transform duration-500 ease-out ${
+          isOpen ? 'translate-y-0' : 'translate-y-full'
+        }`}
+      >
+        <div className="w-full h-full bg-white flex flex-col animate-in slide-in-from-bottom duration-500">
+          {/* Red Header */}
+          <div className="bg-red-600 text-white px-6 py-4 flex items-center justify-between shrink-0">
+            <button onClick={onClose} className="text-white hover:text-gray-200 transition-colors">
+              <ChevronLeft className="h-6 w-6" />
+            </button>
+            <h1 className="text-center text-lg font-semibold">Edit Barangay Official</h1>
+            <div className="w-6" />
           </div>
-        ) : (
-          // Edit/Add form
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="firstName">First Name *</Label>
-                <Input
-                  id="firstName"
-                  value={formData.firstName}
-                  onChange={(e) => handleInputChange("firstName", e.target.value)}
-                  className={errors.firstName ? "border-red-500" : ""}
-                />
-                {errors.firstName && <p className="text-sm text-red-500 mt-1">{errors.firstName}</p>}
+
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-6 space-y-6 max-w-md mx-auto">
+              {/* Profile Picture Section */}
+              <div className="flex flex-col items-center space-y-3">
+                <div className="relative">
+                  <div className="w-24 h-24 bg-gray-300 rounded-full flex items-center justify-center">
+                    <User className="h-12 w-12 text-gray-600" />
+                  </div>
+                  <button className="absolute -bottom-1 -right-1 w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center hover:bg-gray-700 transition-colors">
+                    <Camera className="h-4 w-4 text-white" />
+                  </button>
+                </div>
               </div>
 
-              <div>
-                <Label htmlFor="lastName">Last Name *</Label>
-                <Input
-                  id="lastName"
-                  value={formData.lastName}
-                  onChange={(e) => handleInputChange("lastName", e.target.value)}
-                  className={errors.lastName ? "border-red-500" : ""}
-                />
-                {errors.lastName && <p className="text-sm text-red-500 mt-1">{errors.lastName}</p>}
-              </div>
+              {/* Official Details Form */}
+              <div className="space-y-6">
+                <h3 className="font-semibold text-gray-900 text-lg mb-4">Official Details</h3>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">
+                    First Name *
+                  </Label>
+                  <Input
+                    id="firstName"
+                    value={formData.firstName}
+                    onChange={(e) => handleInputChange('firstName', e.target.value)}
+                    placeholder="Enter first name"
+                    className="bg-gray-50 border-gray-200 h-12"
+                  />
+                </div>
 
-              <div>
-                <Label htmlFor="middleName">Middle Name</Label>
-                <Input
-                  id="middleName"
-                  value={formData.middleName}
-                  onChange={(e) => handleInputChange("middleName", e.target.value)}
-                />
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="middleName" className="text-sm font-medium text-gray-700">
+                    Middle Name (Optional)
+                  </Label>
+                  <Input
+                    id="middleName"
+                    value={formData.middleName}
+                    onChange={(e) => handleInputChange('middleName', e.target.value)}
+                    placeholder="Enter middle name"
+                    className="bg-gray-50 border-gray-200 h-12"
+                  />
+                </div>
 
-              <div>
-                <Label htmlFor="suffix">Suffix</Label>
-                <Input
-                  id="suffix"
-                  value={formData.suffix}
-                  onChange={(e) => handleInputChange("suffix", e.target.value)}
-                  placeholder="Jr., Sr., III, etc."
-                />
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">
+                    Last Name *
+                  </Label>
+                  <Input
+                    id="lastName"
+                    value={formData.lastName}
+                    onChange={(e) => handleInputChange('lastName', e.target.value)}
+                    placeholder="Enter last name"
+                    className="bg-gray-50 border-gray-200 h-12"
+                  />
+                </div>
 
-              <div className="md:col-span-2">
-                <Label htmlFor="position">Position *</Label>
-                <Select value={formData.position} onValueChange={(value) => handleInputChange("position", value)}>
-                  <SelectTrigger className={errors.position ? "border-red-500" : ""}>
-                    <SelectValue placeholder="Select position" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {positions.map((position) => (
-                      <SelectItem key={position} value={position}>
-                        {position}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.position && <p className="text-sm text-red-500 mt-1">{errors.position}</p>}
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="suffix" className="text-sm font-medium text-gray-700">
+                    Suffix (Optional)
+                  </Label>
+                  <Select value={formData.suffix} onValueChange={(value) => handleInputChange('suffix', value)}>
+                    <SelectTrigger className="bg-gray-50 border-gray-200 h-12">
+                      <SelectValue placeholder="Select suffix..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {SUFFIX_OPTIONS.map((suffix) => (
+                        <SelectItem key={suffix} value={suffix}>
+                          {suffix}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div>
-                <Label htmlFor="contact_phone">Phone Number</Label>
-                <Input
-                  id="contact_phone"
-                  value={formData.contact_phone}
-                  onChange={(e) => handleInputChange("contact_phone", e.target.value)}
-                  placeholder="+63 XXX XXX XXXX"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="contact_email">Email Address</Label>
-                <Input
-                  id="contact_email"
-                  type="email"
-                  value={formData.contact_email}
-                  onChange={(e) => handleInputChange("contact_email", e.target.value)}
-                  className={errors.contact_email ? "border-red-500" : ""}
-                />
-                {errors.contact_email && <p className="text-sm text-red-500 mt-1">{errors.contact_email}</p>}
-              </div>
-
-              <div>
-                <Label htmlFor="term_start">Term Start</Label>
-                <Input
-                  id="term_start"
-                  type="date"
-                  value={formData.term_start}
-                  onChange={(e) => handleInputChange("term_start", e.target.value)}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="term_end">Term End</Label>
-                <Input
-                  id="term_end"
-                  type="date"
-                  value={formData.term_end}
-                  onChange={(e) => handleInputChange("term_end", e.target.value)}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="status">Status</Label>
-                <Select value={formData.status} onValueChange={(value) => handleInputChange("status", value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="years_of_service">Years of Service</Label>
-                <Input
-                  id="years_of_service"
-                  type="number"
-                  min="0"
-                  value={formData.years_of_service}
-                  onChange={(e) => handleInputChange("years_of_service", Number.parseInt(e.target.value) || 0)}
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <Label htmlFor="achievements">Achievements</Label>
-                <Textarea
-                  id="achievements"
-                  value={formData.achievements}
-                  onChange={(e) => handleInputChange("achievements", e.target.value)}
-                  placeholder="Notable achievements, awards, or accomplishments..."
-                  rows={3}
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="position" className="text-sm font-medium text-gray-700">
+                    Position *
+                  </Label>
+                  <Select value={formData.position} onValueChange={(value) => handleInputChange('position', value)}>
+                    <SelectTrigger className="bg-gray-50 border-gray-200 h-12">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ALL_POSITIONS.map((position) => (
+                        <SelectItem key={position} value={position}>
+                          {position}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
+          </div>
 
-            <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={onClose}>
+          {/* Fixed Bottom Action Buttons */}
+          <div className="p-6 border-t bg-white shrink-0">
+            <div className="flex space-x-3 max-w-md mx-auto">
+              <Button 
+                variant="outline" 
+                onClick={onClose}
+                className="flex-1 border-gray-300 h-12"
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Saving..." : isEditing ? "Update Official" : "Add Official"}
+              <Button 
+                onClick={handleSave}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white h-12"
+                disabled={!formData.firstName.trim() || !formData.lastName.trim()}
+              >
+                Save Changes
               </Button>
             </div>
-          </form>
-        )}
-      </DialogContent>
-    </Dialog>
-  )
+          </div>
+        </div>
+      </div>
+    </>
+  );
 }
