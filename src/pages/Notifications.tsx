@@ -1,8 +1,9 @@
 "use client"
-//my-change
+
 import type React from "react"
 
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { useNotifications } from "@/hooks/useNotifications"
 import { useAuth } from "@/contexts/AuthContext"
 import { cn } from "@/lib/utils"
@@ -26,6 +27,7 @@ import { Badge } from "@/components/ui/badge"
 import type { Notification } from "@/hooks/useNotifications"
 
 const Notifications = () => {
+  const navigate = useNavigate()
   const { user, userRole } = useAuth()
   const {
     notifications,
@@ -286,8 +288,8 @@ const Notifications = () => {
 
       console.log("Navigating to:", defaultUrl, "with metadata:", metadata)
 
-      // Use window.location for internal navigation
-      window.location.href = defaultUrl
+      // Use React Router navigate instead of window.location.href
+      navigate(defaultUrl)
     }
   }
 
@@ -296,20 +298,20 @@ const Notifications = () => {
     setShowActions(showActions === notificationId ? null : notificationId)
   }
 
- const handleBackToDashboard = () => {
-  const role = user?.role; // Replace with your actual role source (e.g., useAuth()?.user?.role)
+  const handleBackToDashboard = () => {
+    const role = user?.role || userRole // Use whichever property contains the role
 
-  if (role === "resident") {
-    window.location.href = "/resident/home";
-  } else if (role === "official") {
-    window.location.href = "/official-dashboard";
-  } else if (role === "super-admin") {
-    window.location.href = "/admin/dashboard";
-  } else {
-    window.location.href = "/dashboard"; // fallback
+    // Navigate to role-specific dashboard using React Router
+    if (role === "resident") {
+      navigate("/resident/home")
+    } else if (role === "official") {
+      navigate("/official-dashboard")
+    } else if (role === "super-admin" || role === "superadmin") {
+      navigate("/admin/dashboard")
+    } else {
+      navigate("/dashboard") // fallback
+    }
   }
-};
-
 
   const handleMarkAllAsRead = () => {
     if (unreadCount > 0) {
