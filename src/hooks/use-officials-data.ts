@@ -8,6 +8,10 @@ export interface Official {
   user_id: string | null;
   position: string;
   barangay: string;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  suffix?: string;
   term_start: string | null;
   term_end: string | null;
   status: 'active' | 'inactive';
@@ -25,7 +29,7 @@ export const useOfficials = (barangay?: string) => {
     queryFn: async () => {
       try {
         let query = supabase
-          .from('officials' as any)
+          .from('officials')
           .select('*')
           .order('created_at', { ascending: false });
 
@@ -35,7 +39,7 @@ export const useOfficials = (barangay?: string) => {
 
         const { data, error } = await query;
         if (error) throw error;
-        return (data as unknown as Official[]) || [];
+        return (data as Official[]) || [];
       } catch (error) {
         console.error('Error fetching officials:', error);
         return [];
@@ -52,13 +56,13 @@ export const useCreateOfficial = () => {
     mutationFn: async (official: Omit<Official, 'id' | 'created_at' | 'updated_at'>) => {
       try {
         const { data, error } = await supabase
-          .from('officials' as any)
+          .from('officials')
           .insert(official)
           .select()
           .single();
 
         if (error) throw error;
-        return data as unknown as Official;
+        return data as Official;
       } catch (error) {
         console.error('Error creating official:', error);
         throw error;
@@ -90,14 +94,14 @@ export const useUpdateOfficial = () => {
     mutationFn: async ({ id, ...updates }: Partial<Official> & { id: string }) => {
       try {
         const { data, error } = await supabase
-          .from('officials' as any)
+          .from('officials')
           .update(updates)
           .eq('id', id)
           .select()
           .single();
 
         if (error) throw error;
-        return data as unknown as Official;
+        return data as Official;
       } catch (error) {
         console.error('Error updating official:', error);
         throw error;
