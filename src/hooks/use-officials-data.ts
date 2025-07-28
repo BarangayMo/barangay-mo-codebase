@@ -2,6 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext"; // Or your actual auth hook
 
 export interface Official {
   id: string;
@@ -60,38 +61,27 @@ export const useOfficials = (barangay?: string) => {
 export const useCreateOfficial = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth(); // get current user
 
   return useMutation({
     mutationFn: async (official: Omit<Official, 'id' | 'created_at' | 'updated_at'>) => {
-      try {
-        const { data, error } = await supabase
-          .from('officials')
-          .insert(official)
-          .select()
-          .single();
+      if (!user) throw new Error("Not authenticated");
 
-        if (error) throw error;
-        return data as Official;
-      } catch (error) {
-        console.error('Error creating official:', error);
-        throw error;
-      }
+      const officialWithUserId = {
+        ...official,
+        user_id: user.id, // 👈 Ensure this is passed!
+      };
+
+      const { data, error } = await supabase
+        .from('officials')
+        .insert(officialWithUserId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as Official;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['officials'] });
-      toast({
-        title: "Success",
-        description: "Official added successfully.",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to add official. Please try again.",
-        variant: "destructive",
-      });
-      console.error('Create official error:', error);
-    },
+    ...
   });
 };
 
