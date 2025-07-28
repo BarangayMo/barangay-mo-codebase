@@ -418,14 +418,7 @@ export default function OfficialJobsPage() {
                   </Button>
                 </div>
 
-                {/* Map */}
-                {selectedJob.location && (
-                  <div className="mb-6">
-                    <div className="h-48 sm:h-64">
-                      <JobMap location={selectedJob.location} />
-                    </div>
-                  </div>
-                )}
+                
 
                 {/* Job Details Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6">
