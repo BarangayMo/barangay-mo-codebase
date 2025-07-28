@@ -19,6 +19,7 @@ interface OfficialData {
   phone_number: string
   landline_number?: string
   email: string
+  barangay?: string
   municipality: string
   province: string
   region: string
@@ -86,6 +87,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
     region: "",
     achievements: "",
     years_of_service: "",
+    barangay: "",
   })
 
   const [provinces, setProvinces] = useState<string[]>([])
@@ -111,6 +113,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
         region: official.region || "",
         achievements: official.achievements || "",
         years_of_service: official.years_of_service?.toString() || "",
+        barangay: official.barangay || "",
       })
     }
   }, [official, isOpen])
@@ -128,7 +131,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
         if (!error && data) {
           const provinceList = data
             .map((item: any) => item.PROVINCE)
-            .filter((province: any) => province && typeof province === "string" && province.trim() !== "")
+            .filter((province: any) => province && typeof province === "string" && province.trim() !== "") as string[]
           setProvinces([...new Set(provinceList)].sort())
         }
         setLoadingProvinces(false)
@@ -155,7 +158,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
             .map((item: any) => item["CITY/MUNICIPALITY"])
             .filter(
               (municipality: any) => municipality && typeof municipality === "string" && municipality.trim() !== "",
-            )
+            ) as string[]
           setMunicipalities([...new Set(municipalityList)].sort())
         }
         setLoadingMunicipalities(false)
@@ -203,7 +206,8 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
               .split(",")
               .map((a) => a.trim())
               .filter(Boolean)
-          : [],
+              .join(",")
+          : "",
         years_of_service: formData.years_of_service ? Number.parseInt(formData.years_of_service) : null,
         id: official?.id || null,
       }
@@ -480,6 +484,18 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
                     value={formData.years_of_service}
                     onChange={(e) => handleInputChange("years_of_service", e.target.value)}
                     placeholder="Enter years of service"
+                    className="bg-gray-50 border-gray-200 h-12"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="barangay" className="text-sm font-medium text-gray-700">
+                    Barangay (Optional)
+                  </Label>
+                  <Input
+                    id="barangay"
+                    value={formData.barangay}
+                    onChange={(e) => handleInputChange("barangay", e.target.value)}
+                    placeholder="Enter barangay"
                     className="bg-gray-50 border-gray-200 h-12"
                   />
                 </div>

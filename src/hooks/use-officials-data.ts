@@ -1,173 +1,70 @@
-//my-changes
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+"use client"
 
-export interface Official {
-  id: string;
-  user_id?: string | null;
-  first_name: string;
-  middle_name?: string | null;
-  last_name: string;
-  suffix?: string | null;
-  phone_number: string;
-  landline_number?: string | null;
-  email: string;
-  position: string;
-  barangay: string;
-  municipality: string;
-  province: string;
-  region: string;
-  status: 'pending' | 'approved' | 'rejected' | 'active' | 'inactive';
-  is_approved?: boolean;
-  rejection_reason?: string | null;
-  approved_by?: string | null;
-  approved_at?: string | null;
-  submitted_at?: string | null;
-  
-  years_of_service?: number;
-  achievements?: string[] | null;
-  password_hash?: string | null;
-  created_at?: string;
-  updated_at?: string;
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { deleteOfficialFn, getOfficialsFn, updateOfficialFn } from "./officials-api"
+import { useToast } from "@/components/ui/use-toast"
+import type { Official } from "@/types"
+import { supabase } from "@/lib/supabase"
+
+export const useOfficials = () => {
+  return useQuery({
+    queryKey: ["officials"],
+    queryFn: getOfficialsFn,
+  })
 }
 
-export const useOfficials = (barangay?: string) => {
-  return useQuery({
-    queryKey: ['officials', barangay],
-    queryFn: async () => {
-      try {
-        let query = supabase
-          .from('officials')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (barangay) {
-          query = query.eq('barangay', barangay);
-        }
-
-        const { data, error } = await query;
-        if (error) throw error;
-        return (data as Official[]) || [];
-      } catch (error) {
-        console.error('Error fetching officials:', error);
-        return [];
-      }
-    },
-  });
-};
-
 export const useCreateOfficial = () => {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-  const { user } = useAuth();
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
 
   return useMutation({
-    mutationFn: async (
-      official: Omit<Official, "id" | "created_at" | "updated_at" | "user_id">
-    ) => {
-      if (!user) throw new Error("User not authenticated");
-
-      const officialWithUserId = {
-        ...official,
-        user_id: user.id, // ✅ This ensures the RLS condition is met
-      };
-
-      const { data, error } = await supabase
-        .from("officials")
-        .insert(officialWithUserId)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data as Official;
-    },
-
-    onSuccess: () => {
-      queryClient.invalidateQueries(["officials"]);
-      toast({ title: "Official added successfully" });
-    },
-
-    onError: (error) => {
-      toast({
-        title: "Error creating official",
-        description: (error as Error).message,
-        variant: "destructive",
-      });
-    },
-  });
-};
-export const useUpdateOfficial = () => {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
-  return useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<Official> & { id: string }) => {
+    mutationFn: async (official: Omit<Official, "id" | "created_at" | "updated_at">) => {
       try {
-        const { data, error } = await supabase
-          .from('officials')
-          .update(updates)
-          .eq('id', id)
-          .select()
-          .single();
+        const { data, error } = await supabase.from("officials").insert(official).select().single()
 
-        if (error) throw error;
-        return data as Official;
+        if (error) throw error
+        return data as Official
       } catch (error) {
-        console.error('Error updating official:', error);
-        throw error;
+        console.error("Error creating official:", error)
+        throw error
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['officials'] });
+      queryClient.invalidateQueries({ queryKey: ["officials"] })
       toast({
         title: "Success",
-        description: "Official updated successfully.",
-      });
+        description: "Official added successfully.",
+      })
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to update official. Please try again.",
+        description: "Failed to add official. Please try again.",
         variant: "destructive",
-      });
-      console.error('Update official error:', error);
+      })
+      console.error("Create official error:", error)
     },
-  });
-};
+  })
+}
+
+export const useUpdateOfficial = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: updateOfficialFn,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["officials"] })
+    },
+  })
+}
 
 export const useDeleteOfficial = () => {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
+  const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (id: string) => {
-      try {
-        const { error } = await supabase
-          .from('officials')
-          .delete()
-          .eq('id', id);
-        if (error) throw error;
-        return id;
-      } catch (error) {
-        console.error('Error deleting official:', error);
-        throw error;
-      }
-    },
+    mutationFn: deleteOfficialFn,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['officials'] });
-      toast({
-        title: "Success",
-        description: "Official removed successfully.",
-      });
+      queryClient.invalidateQueries({ queryKey: ["officials"] })
     },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to remove official. Please try again.",
-        variant: "destructive",
-      });
-      console.error('Delete official error:', error);
-    },
-  });
-};
+  })
+}
