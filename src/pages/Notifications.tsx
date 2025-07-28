@@ -64,6 +64,7 @@ const Notifications = () => {
 
       switch (userRole) {
         case "superadmin":
+        case "super-admin":
           // Superadmins can see all notifications
           return true
         case "official":
@@ -302,11 +303,12 @@ const Notifications = () => {
     const role = user?.role || userRole // Use whichever property contains the role
 
     // Navigate to role-specific dashboard using React Router
+    // Handle both possible role formats
     if (role === "resident") {
       navigate("/resident/home")
     } else if (role === "official") {
       navigate("/official-dashboard")
-    } else if (role === "super-admin" || role === "superadmin") {
+    } else if (role === "superadmin" || role === "super-admin") {
       navigate("/admin/dashboard")
     } else {
       navigate("/dashboard") // fallback

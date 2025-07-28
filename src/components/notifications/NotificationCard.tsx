@@ -1,17 +1,18 @@
+"use client"
+
 import type React from "react"
-import { Bell, ExternalLink } from "lucide-react"
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
-import { Button } from "./ui/button"
-import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card"
-import { Link } from "react-router-dom"
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { ExternalLink } from "lucide-react"
 
 interface Notification {
   id: string
   title: string
   description: string
-  avatar_url?: string
-  action_url?: string
-  created_at: string
+  avatar_url: string
+  action_url: string
 }
 
 interface NotificationCardProps {
@@ -20,26 +21,23 @@ interface NotificationCardProps {
 
 const NotificationCard: React.FC<NotificationCardProps> = ({ notification }) => {
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{notification.title}</CardTitle>
-        <Bell className="h-4 w-4 text-gray-500" />
-      </CardHeader>
-      <CardDescription>{notification.description}</CardDescription>
-      <CardFooter className="flex justify-between">
-        <Avatar>
-          {notification.avatar_url ? (
+    <Card className="w-[380px] dark:bg-zinc-950">
+      <CardHeader>
+        <div className="flex items-center space-x-4">
+          <Avatar>
             <AvatarImage src={notification.avatar_url || "/placeholder.svg"} />
-          ) : (
-            <AvatarFallback>{notification.title.substring(0, 2).toUpperCase()}</AvatarFallback>
-          )}
-        </Avatar>
-        <div className="text-xs text-muted-foreground">{notification.created_at}</div>
+            <AvatarFallback>CN</AvatarFallback>
+          </Avatar>
+          <div>
+            <CardTitle>{notification.title}</CardTitle>
+            <CardDescription>{notification.description}</CardDescription>
+          </div>
+        </div>
+      </CardHeader>
+      <CardFooter className="justify-end">
         {notification.action_url && (
-          <Button asChild variant="ghost" size="sm">
-            <Link to={notification.action_url}>
-              <ExternalLink className="h-3 w-3" />
-            </Link>
+          <Button variant="ghost" size="sm" onClick={() => window.open(notification.action_url, "_blank")}>
+            <ExternalLink className="h-3 w-3" />
           </Button>
         )}
       </CardFooter>
