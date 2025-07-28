@@ -88,8 +88,7 @@ export const Header = () => {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-80 p-0">
-               <div className="h-screen flex flex-col">
-              <div className="p-4 space-y-6 flex-1 overflow-y-auto">
+              <div className="p-4 space-y-6 overflow-y-auto h-full">
                 {/* Header section - different for authenticated/unauthenticated */}
                 {isAuthenticated ? <div className={`${userRole === "official" ? "bg-red-50 border-red-100" : userRole === "superadmin" ? "bg-purple-50 border-purple-100" : "bg-blue-50 border-blue-100"} p-4 rounded-lg border`}>
                     <div className="flex items-center gap-3 mb-2">
@@ -295,7 +294,14 @@ export const Header = () => {
                 <div className="border-t pt-4">
                   {isAuthenticated ? <button onClick={handleLogout} className={`flex items-center gap-3 px-3 py-3 rounded-lg hover:${userRole === "official" ? "bg-red-50" : userRole === "superadmin" ? "bg-purple-50" : "bg-blue-50"} cursor-pointer ${userRole === "official" ? "text-red-600" : userRole === "superadmin" ? "text-purple-600" : "text-blue-600"} w-full text-left`}>
                       <LogOut className="h-5 w-5" />
-                      <span className="text-sm font-medium">Sign Out</span>
+                       <div className="border-t pt-2 mt-4">
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors text-red-600 dark:text-red-400"
+                >
+                  <LifeBuoy className="h-5 w-5" />
+                  <span>Sign Out</span>
+                </button>
                     </button> : <div className="space-y-2">
                       <Link to="/login" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-blue-50 cursor-pointer text-blue-600 w-full" onClick={() => setIsMobileMenuOpen(false)}>
                         <User className="h-5 w-5" />
@@ -308,7 +314,6 @@ export const Header = () => {
                     </div>}
                 </div>
               </div>
-            </div>
             </SheetContent>
           </Sheet>
           
