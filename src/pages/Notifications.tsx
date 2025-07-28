@@ -64,7 +64,7 @@ const Notifications = () => {
 
       switch (userRole) {
         case "superadmin":
-        case "super-admin":
+        case "superadmin":
           // Superadmins can see all notifications
           return true
         case "official":
