@@ -279,7 +279,18 @@ export const Header = () => {
                     name: "RBI Forms",
                     icon: ClipboardList,
                     href: "/official/rbi-forms"
-                  }, {
+                  },
+                        {
+                    name: "Job Management",
+                    icon: BriefCase,
+                    href: "/official/rbi-forms"
+                  },
+                        {
+                    name: "Product Management",
+                    icon: shoppingCart,
+                    href: "/official/rbi-forms"
+                  },
+                        {
                     name: "Emergency Response",
                     icon: Siren,
                     href: "/official/emergency-response"
