@@ -302,7 +302,7 @@ const Notifications = () => {
   if (role === "resident") {
     window.location.href = "/resident/home";
   } else if (role === "official") {
-    window.location.href = "/official/dashboard";
+    window.location.href = "/official-dashboard";
   } else if (role === "super-admin") {
     window.location.href = "/admin/dashboard";
   } else {
