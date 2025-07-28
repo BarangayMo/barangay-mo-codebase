@@ -1,40 +1,16 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { MapPin } from "lucide-react"
 import { GoogleMap } from "./google-map"
-import { loadGoogleMaps } from "@/services/googleMaps" // Assuming this path is correct
 
 interface JobMapProps {
   location: string
   className?: string
+  isMapsReady: boolean // New prop to indicate if maps API is loaded
 }
 
-export const JobMap = ({ location, className }: JobMapProps) => {
-  const [isMapsReady, setIsMapsReady] = useState(false)
-
-  useEffect(() => {
-    const init = async () => {
-      try {
-        // loadGoogleMaps handles fetching the API key internally and ensures the script is loaded once.
-        await loadGoogleMaps()
-        // After loadGoogleMaps resolves, explicitly check if window.google.maps is available
-        if (typeof window.google !== "undefined" && typeof window.google.maps !== "undefined") {
-          setIsMapsReady(true)
-        } else {
-          console.error("❌ JobMap: Google Maps API not globally available after loadGoogleMaps resolved.")
-          setIsMapsReady(false)
-        }
-      } catch (err) {
-        console.error("❌ JobMap: Google Maps failed to load:", err)
-        setIsMapsReady(false)
-      }
-    }
-    init()
-    // This effect should only run once on mount to load the script.
-  }, []) // Empty dependency array to run only once on mount
-
-  // Display loading message while maps API is not ready
+export const JobMap = ({ location, className, isMapsReady }: JobMapProps) => {
+  // Display loading message if maps API is not ready
   if (!isMapsReady) {
     return (
       <div className={`relative h-64 border border-border rounded-lg overflow-hidden ${className}`}>
@@ -43,7 +19,7 @@ export const JobMap = ({ location, className }: JobMapProps) => {
             <div className="text-sm text-muted-foreground">
               Loading map...
               <br />
-              <small>(If this message stays, check console logs for Google Maps errors)</small>
+              <small>(Map is loading with the page)</small>
             </div>
           </div>
         </div>
@@ -52,9 +28,6 @@ export const JobMap = ({ location, className }: JobMapProps) => {
   }
 
   // If maps are ready but no location is provided, show the "No location specified" fallback
-  // Note: The outer JSX `selectedJob.location &&` already ensures `location` is truthy when JobMap is mounted.
-  // This check primarily handles cases where `location` might become falsy after initial render,
-  // or if the outer check allows empty strings that `GoogleMap` itself cannot process.
   if (!location) {
     return (
       <div className={`relative h-64 border border-border rounded-lg overflow-hidden ${className}`}>
