@@ -1,6 +1,7 @@
+//my-changes
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, User, ShoppingBag, Menu, LogOut, Home, MessageSquare, BarChart3, FolderOpen, Settings, UsersIcon, Hospital, ClipboardList, Siren, FileText, Store, LifeBuoy, Info, Phone, Heart } from "lucide-react";
+import { Bell, User, ShoppingBag, Menu, LogOut, Home, MessageSquare, BarChart3, FolderOpen, Settings,Briefcase,ShoppingCart, UsersIcon, Hospital, ClipboardList, Siren, FileText, Store, LifeBuoy, Info, Phone, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { HeaderLogo } from "./header/HeaderLogo";
@@ -279,7 +280,17 @@ export const Header = () => {
                     name: "RBI Forms",
                     icon: ClipboardList,
                     href: "/official/rbi-forms"
+                  },
+                        {
+                    name: "Job Management",
+                    icon: Briefcase,
+                    href: "/official/jobs"
                   }, {
+                    name: "Product Management",
+                    icon: ShoppingCart,
+                    href: "/official/products"
+                  }, 
+                        {
                     name: "Emergency Response",
                     icon: Siren,
                     href: "/official/emergency-response"
@@ -294,14 +305,7 @@ export const Header = () => {
                 <div className="border-t pt-4">
                   {isAuthenticated ? <button onClick={handleLogout} className={`flex items-center gap-3 px-3 py-3 rounded-lg hover:${userRole === "official" ? "bg-red-50" : userRole === "superadmin" ? "bg-purple-50" : "bg-blue-50"} cursor-pointer ${userRole === "official" ? "text-red-600" : userRole === "superadmin" ? "text-purple-600" : "text-blue-600"} w-full text-left`}>
                       <LogOut className="h-5 w-5" />
-                       <div className="border-t pt-2 mt-4">
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors text-red-600 dark:text-red-400"
-                >
-                  <LifeBuoy className="h-5 w-5" />
-                  <span>Sign Out</span>
-                </button>
+                      <span className="text-sm font-medium">Sign Out</span>
                     </button> : <div className="space-y-2">
                       <Link to="/login" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-blue-50 cursor-pointer text-blue-600 w-full" onClick={() => setIsMobileMenuOpen(false)}>
                         <User className="h-5 w-5" />
