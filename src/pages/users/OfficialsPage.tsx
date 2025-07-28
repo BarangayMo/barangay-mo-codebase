@@ -1,4 +1,4 @@
-
+//my-changes
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -52,67 +52,12 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileNavbar } from "@/components/layout/MobileNavbar";
 import { useNavigate } from "react-router-dom";
-import { useOfficials } from "@/hooks/use-officials-data";
+import { useOfficials, useCreateOfficial, useUpdateOfficial, useDeleteOfficial } from "@/hooks/use-officials-data";
 import { format } from "date-fns";
 import { OfficialDetailsModal } from "@/components/officials/OfficialDetailsModal";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-
-// Fetch officials from the specific barangay
-const fetchBarangayOfficials = async (barangayName: string, region: string) => {
-  if (!barangayName || !region) {
-    return [];
-  }
-
-  console.log(`Fetching officials for barangay: ${barangayName}, region: ${region}`);
-  
-  try {
-    const { data, error } = await supabase
-      .from(region as any)
-      .select('*')
-      .eq('BARANGAY', barangayName);
-    
-    if (error) {
-      console.error(`Error fetching from ${region}:`, error);
-      return [];
-    }
-
-    if (!data || data.length === 0) {
-      console.log(`No officials found for barangay ${barangayName} in region ${region}`);
-      return [];
-    }
-
-    const transformedOfficials = data.map((official: any) => ({
-      id: `${region}-${official.FIRSTNAME}-${official.LASTNAME}-${official.POSITION}`,
-      user_id: null,
-      position: official.POSITION || 'Unknown Position',
-      barangay: official.BARANGAY || barangayName,
-      term_start: null,
-      term_end: null,
-      status: 'active' as const,
-      contact_phone: official['BARANGAY HALL TELNO'] || null,
-      contact_email: null,
-      years_of_service: 0,
-      achievements: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      firstName: official.FIRSTNAME,
-      lastName: official.LASTNAME,
-      middleName: official.MIDDLENAME,
-      suffix: official.SUFFIX,
-      region: region,
-      municipality: official['CITY/MUNICIPALITY'],
-      province: official.PROVINCE
-    }));
-    
-    console.log(`Found ${transformedOfficials.length} officials for ${barangayName}`);
-    return transformedOfficials;
-  } catch (error) {
-    console.error(`Error fetching from ${region}:`, error);
-    return [];
-  }
-};
 
 const OfficialsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -127,14 +72,14 @@ const OfficialsPage = () => {
   // For now, we'll use hardcoded values - in a real app, this would come from context/state
   // You should replace these with actual selected barangay data
   const selectedBarangay = "Barangay 1"; // This should come from user selection
-  const selectedRegion = "REGION 3"; // This should come from user selection
-  
-  // Fetch officials data for the selected barangay
-  const { data: officials = [], isLoading } = useQuery({
-    queryKey: ['barangay-officials', selectedBarangay, selectedRegion],
-    queryFn: () => fetchBarangayOfficials(selectedBarangay, selectedRegion),
-    enabled: !!selectedBarangay && !!selectedRegion,
-  });
+
+  // Fetch officials data from the 'officials' table for the selected barangay
+  const { data: officials = [], isLoading, refetch } = useOfficials(selectedBarangay);
+
+  // Mutations for CRUD
+  const createOfficial = useCreateOfficial();
+  const updateOfficial = useUpdateOfficial();
+  const deleteOfficial = useDeleteOfficial();
 
   // Official roles with their corresponding icons and counts
   const officialRoles = [
@@ -199,8 +144,8 @@ const OfficialsPage = () => {
   const filteredOfficials = officials.filter((official) => {
     const matchesSearch = 
       official.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (official.firstName && official.firstName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (official.lastName && official.lastName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (official.first_name && official.first_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (official.last_name && official.last_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
       official.barangay.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === "all" || official.status === statusFilter;
@@ -211,9 +156,9 @@ const OfficialsPage = () => {
 
   const uniquePositions = [...new Set(officials.map(official => official.position))];
 
-  // Count active and inactive officials - since all are active from region tables, we can count directly
-  const activeCount = officials.length; // All officials from region tables are active
-  const inactiveCount = 0; // No inactive officials from region tables
+  // Count active and inactive officials
+  const activeCount = officials.filter(o => o.status === 'active').length;
+  const inactiveCount = officials.filter(o => o.status === 'inactive').length;
 
   const handleOfficialClick = (official: any) => {
     if (official.position === "Punong Barangay") {
@@ -232,16 +177,15 @@ const OfficialsPage = () => {
     setSelectedOfficial({
       id: null,
       position: "",
-      firstName: "",
-      middleName: "",
-      lastName: "",
+      first_name: "",
+      middle_name: "",
+      last_name: "",
       suffix: "",
       isCompleted: false,
       barangay: selectedBarangay,
-      region: selectedRegion,
       status: 'active',
-      contact_phone: null,
-      contact_email: null,
+      phone_number: null,
+      email: null,
       years_of_service: 0,
       achievements: null
     });
@@ -249,70 +193,31 @@ const OfficialsPage = () => {
   };
 
   const handleSaveOfficial = async (data: any) => {
-    console.log('Saving new official:', data);
-    
     try {
       if (selectedOfficial?.id) {
-        // Update existing official
-        const { error } = await supabase
-          .from('officials')
-          .update({
-            position: data.position,
-            firstName: data.firstName,
-            middleName: data.middleName,
-            lastName: data.lastName,
-            suffix: data.suffix || null,
-            barangay: selectedBarangay,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', selectedOfficial.id);
-
-        if (error) throw error;
-        
-        toast({
-          title: "Success",
-          description: "Official updated successfully",
+        await updateOfficial.mutateAsync({
+          id: selectedOfficial.id,
+          ...data,
+          barangay: selectedBarangay,
+          updated_at: new Date().toISOString(),
         });
       } else {
-        // Create new official
-        const { error } = await supabase
-          .from('officials')
-          .insert({
-            position: data.position,
-            barangay: selectedBarangay,
-            firstName: data.firstName,
-            middleName: data.middleName,
-            lastName: data.lastName,
-            suffix: data.suffix || null,
-            status: 'active',
-            contact_phone: null,
-            contact_email: null,
-            years_of_service: 0,
-            term_start: null,
-            term_end: null,
-            achievements: null,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          });
-
-        if (error) throw error;
-        
-        toast({
-          title: "Success",
-          description: "Official added successfully",
+        await createOfficial.mutateAsync({
+          ...data,
+          barangay: selectedBarangay,
+          status: 'active',
+          phone_number: null,
+          email: null,
+          years_of_service: 0,
+          term_start: null,
+          term_end: null,
+          achievements: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         });
       }
-      
-      // Refresh the officials data by invalidating the query
-      window.location.reload();
-      
     } catch (error) {
-      console.error('Error saving official:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save official. Please try again.",
-        variant: "destructive",
-      });
+      // Error handled by hooks
     } finally {
       setShowAddModal(false);
       setSelectedOfficial(null);
@@ -328,37 +233,16 @@ const OfficialsPage = () => {
   };
 
   const handleDeleteOfficial = async (official: any) => {
-    const officialName = official.firstName && official.lastName 
-      ? `${official.firstName} ${official.lastName}` 
+    const officialName = official.first_name && official.last_name 
+      ? `${official.first_name} ${official.last_name}` 
       : official.position;
-      
     if (!confirm(`Are you sure you want to remove ${officialName} from the officials list?`)) {
       return;
     }
-
     try {
-      const { error } = await supabase
-        .from('officials')
-        .delete()
-        .eq('id', official.id);
-
-      if (error) throw error;
-      
-      toast({
-        title: "Success",
-        description: "Official removed successfully",
-      });
-      
-      // Refresh the officials data by invalidating the query
-      window.location.reload();
-      
+      await deleteOfficial.mutateAsync(official.id);
     } catch (error) {
-      console.error('Error deleting official:', error);
-      toast({
-        title: "Error",
-        description: "Failed to remove official. Please try again.",
-        variant: "destructive",
-      });
+      // Error handled by hook
     }
   };
 
@@ -405,7 +289,7 @@ const OfficialsPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Officials Management</h1>
-                <p className="text-gray-600 mt-1">Manage officials for {selectedBarangay}, {selectedRegion}</p>
+                <p className="text-gray-600 mt-1">Manage officials for {selectedBarangay}</p>
               </div>
               <Button 
                 className="bg-red-600 hover:bg-red-700 text-white"
@@ -594,8 +478,8 @@ const OfficialsPage = () => {
                             <div className="flex items-start gap-3">
                               <Avatar className="h-14 w-14 border-2 border-gray-200 flex-shrink-0">
                                 <AvatarFallback className="bg-red-600 text-white font-semibold text-sm">
-                                  {official.firstName ? official.firstName.substring(0, 1) : official.position.substring(0, 1)}
-                                  {official.lastName ? official.lastName.substring(0, 1) : official.position.substring(1, 2)}
+                                  {official.first_name ? official.first_name.substring(0, 1) : official.position.substring(0, 1)}
+                                  {official.last_name ? official.last_name.substring(0, 1) : official.position.substring(1, 2)}
                                 </AvatarFallback>
                               </Avatar>
                               
@@ -604,8 +488,8 @@ const OfficialsPage = () => {
                                 <div className="flex items-start justify-between mb-3">
                                   <div className="min-w-0 flex-1">
                                     <h3 className="font-semibold text-gray-900 text-base mb-1">
-                                      {official.firstName && official.lastName 
-                                        ? `${official.firstName} ${official.lastName}`
+                                      {official.first_name && official.last_name 
+                                        ? `${official.first_name} ${official.last_name}`
                                         : official.position
                                       }
                                     </h3>
@@ -652,10 +536,10 @@ const OfficialsPage = () => {
                                     <MapPin className="h-4 w-4 flex-shrink-0" />
                                     <span className="truncate">{official.barangay}</span>
                                   </div>
-                                  {official.contact_phone && (
+                                  {official.phone_number && (
                                     <div className="flex items-center gap-2 text-sm text-gray-600">
                                       <Phone className="h-4 w-4 flex-shrink-0" />
-                                      <span>{official.contact_phone}</span>
+                                      <span>{official.phone_number}</span>
                                     </div>
                                   )}
                                   <div className="flex items-center justify-between text-sm text-gray-600 pt-2 border-t border-gray-100">
@@ -705,14 +589,14 @@ const OfficialsPage = () => {
                               <div className="flex items-center gap-3">
                                 <Avatar className="h-12 w-12 border-2 border-gray-200">
                                   <AvatarFallback className="bg-red-600 text-white font-semibold">
-                                    {official.firstName ? official.firstName.substring(0, 1) : official.position.substring(0, 1)}
-                                    {official.lastName ? official.lastName.substring(0, 1) : official.position.substring(1, 2)}
+                                    {official.first_name ? official.first_name.substring(0, 1) : official.position.substring(0, 1)}
+                                    {official.last_name ? official.last_name.substring(0, 1) : official.position.substring(1, 2)}
                                   </AvatarFallback>
                                 </Avatar>
                                 <div className="space-y-1">
                                   <p className="font-semibold text-gray-900">
-                                    {official.firstName && official.lastName 
-                                      ? `${official.firstName} ${official.lastName}`
+                                    {official.first_name && official.last_name 
+                                      ? `${official.first_name} ${official.last_name}`
                                       : 'N/A'
                                     }
                                   </p>
@@ -731,13 +615,13 @@ const OfficialsPage = () => {
                             </TableCell>
                             <TableCell className="py-4">
                               <div className="space-y-1">
-                                {official.contact_phone && (
+                                {official.phone_number && (
                                   <div className="flex items-center gap-2 text-sm text-gray-600">
                                     <Phone className="h-3.5 w-3.5" />
-                                    <span>{official.contact_phone}</span>
+                                    <span>{official.phone_number}</span>
                                   </div>
                                 )}
-                                {!official.contact_phone && (
+                                {!official.phone_number && (
                                   <span className="text-sm text-gray-400">No contact info</span>
                                 )}
                               </div>
@@ -768,7 +652,7 @@ const OfficialsPage = () => {
                                   <DropdownMenuItem onClick={() => handleEditOfficial(official)}>
                                     <PenLine className="mr-2 h-4 w-4" /> Edit Details
                                   </DropdownMenuItem>
-                                  {official.contact_phone && (
+                                  {official.phone_number && (
                                     <DropdownMenuItem>
                                       <Phone className="mr-2 h-4 w-4" /> Call
                                     </DropdownMenuItem>
@@ -824,9 +708,9 @@ const OfficialsPage = () => {
         }}
         official={selectedOfficial || {
           position: "",
-          firstName: "",
-          middleName: "",
-          lastName: "",
+          first_name: "",
+          middle_name: "",
+          last_name: "",
           suffix: "",
          isCompleted: false,
          id: null

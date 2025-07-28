@@ -1,3 +1,4 @@
+//my-changes
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,14 +6,22 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { User, Camera, ChevronLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface OfficialData {
   id?: string | null;
   position: string;
-  firstName?: string;
-  middleName?: string;
-  lastName?: string;
+  first_name: string;
+  middle_name?: string;
+  last_name: string;
   suffix?: string;
+  phone_number: string;
+  landline_number?: string;
+  email: string;
+  municipality: string;
+  province: string;
+  region: string;
+  achievements?: string;
   isCompleted: boolean;
 }
 
@@ -46,72 +55,155 @@ const ALL_POSITIONS = [
   "SK Chairperson"
 ];
 
+const PHILIPPINE_REGIONS = [
+  { code: "REGION 1", name: "Ilocos Region (Region I)" },
+  { code: "REGION 2", name: "Cagayan Valley (Region II)" },
+  { code: "REGION 3", name: "Central Luzon (Region III)" },
+  { code: "REGION 4A", name: "CALABARZON (Region IV-A)" },
+  { code: "REGION 4B", name: "MIMAROPA (Region IV-B)" },
+  { code: "REGION 5", name: "Bicol Region (Region V)" },
+  { code: "REGION 6", name: "Western Visayas (Region VI)" },
+  { code: "REGION 7", name: "Central Visayas (Region VII)" },
+  { code: "REGION 8", name: "Eastern Visayas (Region VIII)" },
+  { code: "REGION 9", name: "Zamboanga Peninsula (Region IX)" },
+  { code: "REGION 10", name: "Northern Mindanao (Region X)" },
+  { code: "REGION 11", name: "Davao Region (Region XI)" },
+  { code: "REGION 12", name: "SOCCSKSARGEN (Region XII)" },
+  { code: "REGION 13", name: "Caraga (Region XIII)" },
+  { code: "NCR", name: "National Capital Region (NCR)" },
+  { code: "CAR", name: "Cordillera Administrative Region (CAR)" },
+  { code: "BARMM", name: "Bangsamoro Autonomous Region in Muslim Mindanao (BARMM)" },
+];
+
 export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: OfficialDetailsModalProps) {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
-    firstName: "",
-    middleName: "",
-    lastName: "",
+    first_name: "",
+    middle_name: "",
+    last_name: "",
     suffix: "none",
-    position: ""
+    position: "",
+    phone_number: "",
+    landline_number: "",
+    email: "",
+    municipality: "",
+    province: "",
+    region: "",
+    achievements: ""
   });
+
+  const [provinces, setProvinces] = useState<string[]>([]);
+  const [municipalities, setMunicipalities] = useState<string[]>([]);
+  const [loadingProvinces, setLoadingProvinces] = useState(false);
+  const [loadingMunicipalities, setLoadingMunicipalities] = useState(false);
 
   console.log('OfficialDetailsModal render:', { isOpen, official, formData });
 
   useEffect(() => {
     if (official && isOpen) {
-      console.log('OfficialDetailsModal useEffect - official data:', official);
-      
-      // Set form data with the official's data, ensuring we handle undefined/null values
       setFormData({
-        firstName: official.firstName || "",
-        middleName: official.middleName || "",
-        lastName: official.lastName || "",
+        first_name: official.first_name || "",
+        middle_name: official.middle_name || "",
+        last_name: official.last_name || "",
         suffix: official.suffix || "none",
-        position: official.position || ""
-      });
-      
-      console.log('Form data set to:', {
-        firstName: official.firstName || "",
-        middleName: official.middleName || "",
-        lastName: official.lastName || "",
-        suffix: official.suffix || "none",
-        position: official.position || ""
+        position: official.position || "",
+        phone_number: official.phone_number || "",
+        landline_number: official.landline_number || "",
+        email: official.email || "",
+        municipality: official.municipality || "",
+        province: official.province || "",
+        region: official.region || "",
+        achievements: official.achievements || ""
       });
     }
   }, [official, isOpen]);
 
+  useEffect(() => {
+    if (formData.region) {
+      setLoadingProvinces(true);
+      setProvinces([]);
+      (async () => {
+        const { data, error } = await (supabase as any)
+          .from(formData.region)
+          .select('PROVINCE')
+          .not('PROVINCE', 'is', null)
+          .neq('PROVINCE', '');
+        if (!error && data) {
+          const provinceList = data.map((item: any) => item.PROVINCE).filter((province: any) => province && typeof province === 'string' && province.trim() !== '');
+          setProvinces([...new Set(provinceList)].sort());
+        }
+        setLoadingProvinces(false);
+      })();
+    } else {
+      setProvinces([]);
+    }
+    setFormData(prev => ({ ...prev, province: "", municipality: "" }));
+  }, [formData.region]);
+
+  useEffect(() => {
+    if (formData.region && formData.province) {
+      setLoadingMunicipalities(true);
+      setMunicipalities([]);
+      (async () => {
+        const { data, error } = await (supabase as any)
+          .from(formData.region)
+          .select('"CITY/MUNICIPALITY"')
+          .eq('PROVINCE', formData.province)
+          .not('"CITY/MUNICIPALITY"', 'is', null)
+          .neq('"CITY/MUNICIPALITY"', '');
+        if (!error && data) {
+          const municipalityList = data.map((item: any) => item['CITY/MUNICIPALITY']).filter((municipality: any) => municipality && typeof municipality === 'string' && municipality.trim() !== '');
+          setMunicipalities([...new Set(municipalityList)].sort());
+        }
+        setLoadingMunicipalities(false);
+      })();
+    } else {
+      setMunicipalities([]);
+    }
+    setFormData(prev => ({ ...prev, municipality: "" }));
+  }, [formData.region, formData.province]);
+
   const handleSave = async () => {
-    console.log('Saving official data:', formData);
-    
-    // Validate required fields
-    if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.position) {
+    if (!formData.first_name.trim() || !formData.last_name.trim() || !formData.position || !formData.phone_number.trim() || !formData.email.trim() || !formData.municipality.trim() || !formData.province.trim() || !formData.region.trim()) {
       toast({
         title: "Error",
-        description: "First name, last name, and position are required",
+        description: "All required fields must be filled.",
         variant: "destructive",
       });
       return;
     }
-
     try {
       const dataToSave = {
-        ...formData,
+        first_name: formData.first_name,
+        middle_name: formData.middle_name || null,
+        last_name: formData.last_name,
         suffix: formData.suffix === "none" ? "" : formData.suffix,
-        isCompleted: true,
+        position: formData.position,
+        phone_number: formData.phone_number,
+        landline_number: formData.landline_number || null,
+        email: formData.email,
+        barangay: formData.barangay || "",
+        municipality: formData.municipality,
+        province: formData.province,
+        region: formData.region,
+        achievements: formData.achievements ? formData.achievements.split(',').map(a => a.trim()).filter(Boolean) : [],
         id: official?.id || null
       };
-
-      console.log('Data to save:', dataToSave);
-
-      // Call the parent's onSave function
+      console.log('OfficialDetailsModal: Attempting to save official with data:', dataToSave);
       await onSave(dataToSave);
-      
     } catch (error) {
+      // Log the error object and all its properties
       console.error('Error saving official:', error);
+      if (error && typeof error === 'object') {
+        for (const key in error) {
+          if (Object.prototype.hasOwnProperty.call(error, key)) {
+            console.error(`Error property [${key}]:`, error[key]);
+          }
+        }
+      }
       toast({
         title: "Error",
-        description: "Failed to save official details",
+        description: error?.message || "Failed to save official details",
         variant: "destructive",
       });
     }
@@ -159,7 +251,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
 
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto">
-            <div className="p-6 space-y-6 max-w-md mx-auto">
+            <div className="p-6 space-y-6 max-w-md mx-auto pb-32">
               {/* Profile Picture Section */}
               <div className="flex flex-col items-center space-y-3">
                 <div className="relative">
@@ -195,39 +287,39 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">
+                  <Label htmlFor="first_name" className="text-sm font-medium text-gray-700">
                     First Name *
                   </Label>
                   <Input
-                    id="firstName"
-                    value={formData.firstName}
-                    onChange={(e) => handleInputChange('firstName', e.target.value)}
+                    id="first_name"
+                    value={formData.first_name}
+                    onChange={(e) => handleInputChange('first_name', e.target.value)}
                     placeholder="Enter first name"
                     className="bg-gray-50 border-gray-200 h-12"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="middleName" className="text-sm font-medium text-gray-700">
+                  <Label htmlFor="middle_name" className="text-sm font-medium text-gray-700">
                     Middle Name (Optional)
                   </Label>
                   <Input
-                    id="middleName"
-                    value={formData.middleName}
-                    onChange={(e) => handleInputChange('middleName', e.target.value)}
+                    id="middle_name"
+                    value={formData.middle_name}
+                    onChange={(e) => handleInputChange('middle_name', e.target.value)}
                     placeholder="Enter middle name"
                     className="bg-gray-50 border-gray-200 h-12"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">
+                  <Label htmlFor="last_name" className="text-sm font-medium text-gray-700">
                     Last Name *
                   </Label>
                   <Input
-                    id="lastName"
-                    value={formData.lastName}
-                    onChange={(e) => handleInputChange('lastName', e.target.value)}
+                    id="last_name"
+                    value={formData.last_name}
+                    onChange={(e) => handleInputChange('last_name', e.target.value)}
                     placeholder="Enter last name"
                     className="bg-gray-50 border-gray-200 h-12"
                   />
@@ -251,6 +343,116 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone_number" className="text-sm font-medium text-gray-700">
+                    Phone Number *
+                  </Label>
+                  <Input
+                    id="phone_number"
+                    value={formData.phone_number}
+                    onChange={(e) => handleInputChange('phone_number', e.target.value)}
+                    placeholder="Enter phone number"
+                    className="bg-gray-50 border-gray-200 h-12"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="landline_number" className="text-sm font-medium text-gray-700">
+                    Landline Number (Optional)
+                  </Label>
+                  <Input
+                    id="landline_number"
+                    value={formData.landline_number}
+                    onChange={(e) => handleInputChange('landline_number', e.target.value)}
+                    placeholder="Enter landline number"
+                    className="bg-gray-50 border-gray-200 h-12"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                    Email *
+                  </Label>
+                  <Input
+                    id="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    placeholder="Enter email address"
+                    className="bg-gray-50 border-gray-200 h-12"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="region" className="text-sm font-medium text-gray-700">
+                    Region *
+                  </Label>
+                  <Select
+                    value={formData.region}
+                    onValueChange={(value) => handleInputChange('region', value)}
+                  >
+                    <SelectTrigger className="bg-gray-50 border-gray-200 h-12">
+                      <SelectValue placeholder="Select region..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PHILIPPINE_REGIONS.map((region) => (
+                        <SelectItem key={region.code} value={region.code}>
+                          {region.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="province" className="text-sm font-medium text-gray-700">
+                    Province *
+                  </Label>
+                  <Select
+                    value={formData.province}
+                    onValueChange={(value) => handleInputChange('province', value)}
+                    disabled={!formData.region || loadingProvinces}
+                  >
+                    <SelectTrigger className="bg-gray-50 border-gray-200 h-12">
+                      <SelectValue placeholder={loadingProvinces ? "Loading..." : "Select province..."} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {provinces.map((province) => (
+                        <SelectItem key={province} value={province}>
+                          {province}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="municipality" className="text-sm font-medium text-gray-700">
+                    Municipality *
+                  </Label>
+                  <Select
+                    value={formData.municipality}
+                    onValueChange={(value) => handleInputChange('municipality', value)}
+                    disabled={!formData.region || !formData.province || loadingMunicipalities}
+                  >
+                    <SelectTrigger className="bg-gray-50 border-gray-200 h-12">
+                      <SelectValue placeholder={loadingMunicipalities ? "Loading..." : "Select municipality..."} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {municipalities.map((municipality) => (
+                        <SelectItem key={municipality} value={municipality}>
+                          {municipality}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="achievements" className="text-sm font-medium text-gray-700">
+                    Achievements (comma separated, optional)
+                  </Label>
+                  <Input
+                    id="achievements"
+                    value={formData.achievements}
+                    onChange={(e) => handleInputChange('achievements', e.target.value)}
+                    placeholder="e.g. Outstanding Leadership, Community Development"
+                    className="bg-gray-50 border-gray-200 h-12"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -268,7 +470,16 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
               <Button 
                 onClick={handleSave}
                 className="flex-1 bg-red-600 hover:bg-red-700 text-white h-12"
-                disabled={!formData.firstName.trim() || !formData.lastName.trim() || !formData.position}
+                disabled={
+                  !formData.first_name.trim() ||
+                  !formData.last_name.trim() ||
+                  !formData.position ||
+                  !formData.phone_number.trim() ||
+                  !formData.email.trim() ||
+                  !formData.municipality.trim() ||
+                  !formData.province.trim() ||
+                  !formData.region.trim()
+                }
               >
                 {official?.id ? 'Update Official' : 'Add Official'}
               </Button>

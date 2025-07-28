@@ -1,26 +1,36 @@
-
+//my-changes
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 export interface Official {
   id: string;
-  user_id: string | null;
+  user_id?: string | null;
+  first_name: string;
+  middle_name?: string | null;
+  last_name: string;
+  suffix?: string | null;
+  phone_number: string;
+  landline_number?: string | null;
+  email: string;
   position: string;
   barangay: string;
-  firstName?: string;
-  middleName?: string;
-  lastName?: string;
-  suffix?: string;
-  term_start: string | null;
-  term_end: string | null;
-  status: 'active' | 'inactive';
-  contact_phone: string | null;
-  contact_email: string | null;
-  years_of_service: number;
-  achievements: string[] | null;
-  created_at: string;
-  updated_at: string;
+  municipality: string;
+  province: string;
+  region: string;
+  status: 'pending' | 'approved' | 'rejected' | 'active' | 'inactive';
+  is_approved?: boolean;
+  rejection_reason?: string | null;
+  approved_by?: string | null;
+  approved_at?: string | null;
+  submitted_at?: string | null;
+  term_start?: string | null;
+  term_end?: string | null;
+  years_of_service?: number;
+  achievements?: string[] | null;
+  password_hash?: string | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export const useOfficials = (barangay?: string) => {
@@ -121,6 +131,42 @@ export const useUpdateOfficial = () => {
         variant: "destructive",
       });
       console.error('Update official error:', error);
+    },
+  });
+};
+
+export const useDeleteOfficial = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      try {
+        const { error } = await supabase
+          .from('officials')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        return id;
+      } catch (error) {
+        console.error('Error deleting official:', error);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['officials'] });
+      toast({
+        title: "Success",
+        description: "Official removed successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to remove official. Please try again.",
+        variant: "destructive",
+      });
+      console.error('Delete official error:', error);
     },
   });
 };
