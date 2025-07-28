@@ -282,13 +282,13 @@ export const Header = () => {
                     icon: ClipboardList,
                     href: "/official/rbi-forms"
                   },{
-                    name: "Product Management",
-                    icon: ShoppingCart,
-                    href: "/official/products"
-                  },{
                     name: "Job Management",
                     icon: Briefcase,
                     href: "/official/jobs"
+                  },{
+                    name: "Product Management",
+                    icon: ShoppingCart,
+                    href: "/official/products"
                   }, {
                     name: "Emergency Response",
                     icon: Siren,
