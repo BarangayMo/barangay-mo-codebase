@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { CheckCircle, XCircle, User, MapPin, Calendar, Phone, Mail } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface RbiForm {
   id: string;
@@ -34,6 +35,7 @@ export const RbiApprovalModal = ({ isOpen, onClose, form, onSuccess }: RbiApprov
   const [notes, setNotes] = useState("");
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   if (!form) return null;
 
@@ -68,6 +70,11 @@ export const RbiApprovalModal = ({ isOpen, onClose, form, onSuccess }: RbiApprov
         .eq('id', form.id);
 
       if (error) throw error;
+
+      // Invalidate all relevant query keys to refresh the data
+      await queryClient.invalidateQueries({ queryKey: ['rbi-forms'] });
+      await queryClient.invalidateQueries({ queryKey: ['admin-rbi-forms'] });
+      await queryClient.invalidateQueries({ queryKey: ['user-rbi-forms'] });
 
       const reviewerTitle = userProfile.role === 'superadmin' ? 'Super Admin' : 'Barangay Official';
       
