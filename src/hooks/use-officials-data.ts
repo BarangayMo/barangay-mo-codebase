@@ -2,7 +2,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext"; // Or your actual auth hook
 
 export interface Official {
   id: string;
@@ -61,19 +60,21 @@ export const useOfficials = (barangay?: string) => {
 export const useCreateOfficial = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { user } = useAuth(); // get current user
+  const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (official: Omit<Official, 'id' | 'created_at' | 'updated_at'>) => {
-      if (!user) throw new Error("Not authenticated");
+    mutationFn: async (
+      official: Omit<Official, "id" | "created_at" | "updated_at" | "user_id">
+    ) => {
+      if (!user) throw new Error("User not authenticated");
 
       const officialWithUserId = {
         ...official,
-        user_id: user.id, // 👈 Ensure this is passed!
+        user_id: user.id, // ✅ This ensures the RLS condition is met
       };
 
       const { data, error } = await supabase
-        .from('officials')
+        .from("officials")
         .insert(officialWithUserId)
         .select()
         .single();
@@ -81,10 +82,21 @@ export const useCreateOfficial = () => {
       if (error) throw error;
       return data as Official;
     },
-    ...
+
+    onSuccess: () => {
+      queryClient.invalidateQueries(["officials"]);
+      toast({ title: "Official added successfully" });
+    },
+
+    onError: (error) => {
+      toast({
+        title: "Error creating official",
+        description: (error as Error).message,
+        variant: "destructive",
+      });
+    },
   });
 };
-
 export const useUpdateOfficial = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
