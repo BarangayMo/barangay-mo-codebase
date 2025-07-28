@@ -69,7 +69,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
     region: "",
     achievements: "",
     years_of_service: "",
-    barangay: "",
+   
   })
 
   const [provinces, setProvinces] = useState<string[]>([])
@@ -98,7 +98,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
           ? official.achievements.join(", ")
           : official.achievements || "",
         years_of_service: official.years_of_service?.toString() || "",
-        barangay: official.barangay || "",
+        
       })
     }
   }, [official, isOpen])
@@ -214,7 +214,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
         phone_number: formData.phone_number.trim(),
         landline_number: formData.landline_number?.trim() || null,
         email: formData.email.trim(),
-        barangay: formData.barangay?.trim() || "",
+       
         municipality: formData.municipality,
         province: formData.province,
         region: formData.region,
@@ -226,8 +226,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
           : null,
         years_of_service: formData.years_of_service ? Number.parseInt(formData.years_of_service) : null,
         status: "pending" as const,
-        term_start: null, // You can add form fields for these if needed
-        term_end: null, // You can add form fields for these if needed
+
       }
 
       console.log("Inserting official data:", officialData)
@@ -537,18 +536,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
                     className="bg-gray-50 border-gray-200 h-12"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="barangay" className="text-sm font-medium text-gray-700">
-                    Barangay (Optional)
-                  </Label>
-                  <Input
-                    id="barangay"
-                    value={formData.barangay}
-                    onChange={(e) => handleInputChange("barangay", e.target.value)}
-                    placeholder="Enter barangay"
-                    className="bg-gray-50 border-gray-200 h-12"
-                  />
-                </div>
+                
               </div>
             </div>
           </div>
