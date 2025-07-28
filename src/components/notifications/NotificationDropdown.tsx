@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { Bell, Search, CheckCircle, Clock, AlertTriangle, Info, X, MessageSquare, FileText, Users, UserCheck } from 'lucide-react';
@@ -37,6 +38,14 @@ const getCategoryIcon = (category: string) => {
     case 'task':
     case 'deadline':
       return <AlertTriangle className="h-4 w-4 text-orange-500" />;
+    case 'community':
+      return <Users className="h-4 w-4 text-green-500" />;
+    case 'job':
+      return <FileText className="h-4 w-4 text-blue-500" />;
+    case 'service':
+      return <Users className="h-4 w-4 text-purple-500" />;
+    case 'product':
+      return <FileText className="h-4 w-4 text-orange-500" />;
     default:
       return <Bell className="h-4 w-4 text-gray-500" />;
   }
@@ -124,7 +133,7 @@ export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => 
     isMarkingAllAsRead
   } = useNotifications();
 
-  // Updated role-based filtering to match the main notifications page
+  // Updated role-based filtering to include new notification types
   const roleBasedNotifications = notifications.filter(notification => {
     // General notifications are visible to everyone
     if (notification.category === 'general' || notification.category === 'system') {
@@ -136,14 +145,14 @@ export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => 
         // Superadmins can see all notifications
         return true;
       case 'official':
-        // Officials can see work-related notifications
-        return ['task', 'deadline', 'milestone', 'message', 'finance', 'meeting', 'project', 'feedback'].includes(notification.category);
+        // Officials can see work-related notifications and new content notifications
+        return ['task', 'deadline', 'milestone', 'message', 'finance', 'meeting', 'project', 'feedback', 'community', 'job', 'service', 'product'].includes(notification.category);
       case 'resident':
-        // Residents can see personal and approval notifications
-        return ['approval', 'message', 'feedback', 'registration'].includes(notification.category);
+        // Residents can see personal notifications and new content notifications
+        return ['approval', 'message', 'feedback', 'registration', 'community', 'job', 'service', 'product'].includes(notification.category);
       default:
-        // Fallback: show general notifications for any unrecognized role
-        return ['general', 'system'].includes(notification.category);
+        // Fallback: show general notifications and new content for any unrecognized role
+        return ['general', 'system', 'community', 'job', 'service', 'product'].includes(notification.category);
     }
   });
 
