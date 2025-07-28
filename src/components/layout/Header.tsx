@@ -1,7 +1,7 @@
 //my-changes
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, User, ShoppingBag, Menu, LogOut, Home, MessageSquare, BarChart3, FolderOpen, Settings,BriefCase,ShoppingCart, UsersIcon, Hospital, ClipboardList, Siren, FileText, Store, LifeBuoy, Info, Phone, Heart } from "lucide-react";
+import { Bell, User, ShoppingBag, Menu, LogOut, Home, MessageSquare, BarChart3, FolderOpen, Settings,Briefcase,ShoppingCart, UsersIcon, Hospital, ClipboardList, Siren, FileText, Store, LifeBuoy, Info, Phone, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { HeaderLogo } from "./header/HeaderLogo";
@@ -283,12 +283,12 @@ export const Header = () => {
                   },
                         {
                     name: "Job Management",
-                    icon: BriefCase,
-                    href: "/official/rbi-forms"
+                    icon: Briefcase,
+                    href: "/official/jobs"
                   }, {
                     name: "Product Management",
                     icon: ShoppingCart,
-                    href: "/official/rbi-forms"
+                    href: "/official/products"
                   }, 
                         {
                     name: "Emergency Response",
