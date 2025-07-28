@@ -1,5 +1,5 @@
 "use client"
-//my-changes
+
 import type React from "react"
 
 import { useState } from "react"
@@ -64,7 +64,7 @@ const Notifications = () => {
 
       switch (userRole) {
         case "superadmin":
-        case "superadmin":
+        case "super-admin":
           // Superadmins can see all notifications
           return true
         case "official":
