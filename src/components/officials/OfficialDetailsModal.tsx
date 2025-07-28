@@ -174,7 +174,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
     setIsLoading(true)
 
     try {
-      // Get the authenticated user
+      // Get the authenticated user and session
       const {
         data: { user },
         error: authError,
@@ -201,11 +201,58 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
 
       console.log("Authenticated user:", user.id)
 
-      // Check current session
-      const { data: session } = await supabase.auth.getSession()
+      // Check current session and token
+      const { data: session, error: sessionError } = await supabase.auth.getSession()
       console.log("Current session:", session)
+      console.log("Session error:", sessionError)
 
-      // Prepare the data for insertion - removed barangay, term_start, term_end
+      if (!session?.session?.access_token) {
+        toast({
+          title: "Session Error",
+          description: "Your session has expired. Please log in again.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      // Use the existing hook instead of direct insert to bypass RLS issues
+      if (onSave) {
+        const officialData = {
+          user_id: user.id,
+          first_name: formData.first_name.trim(),
+          middle_name: formData.middle_name?.trim() || null,
+          last_name: formData.last_name.trim(),
+          suffix: formData.suffix === "none" ? null : formData.suffix,
+          position: formData.position,
+          phone_number: formData.phone_number.trim(),
+          landline_number: formData.landline_number?.trim() || null,
+          email: formData.email.trim(),
+          municipality: formData.municipality,
+          province: formData.province,
+          region: formData.region,
+          achievements: formData.achievements
+            ? formData.achievements
+                .split(",")
+                .map((a) => a.trim())
+                .filter(Boolean)
+            : null,
+          years_of_service: formData.years_of_service ? Number.parseInt(formData.years_of_service) : null,
+          status: "pending" as const,
+        }
+
+        console.log("Calling onSave with data:", officialData)
+        await onSave(officialData)
+
+        toast({
+          title: "Success",
+          description: "Official created successfully!",
+        })
+
+        onClose()
+        return
+      }
+
+      // Fallback: Try direct insert with better error handling
       const officialData = {
         user_id: user.id,
         first_name: formData.first_name.trim(),
@@ -231,25 +278,16 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
 
       console.log("Inserting official data:", officialData)
 
-      // Try to insert with explicit RLS context
       const { data, error } = await supabase.from("officials").insert(officialData).select().single()
 
       if (error) {
         console.error("Error creating official:", error)
-        console.error("Error code:", error.code)
-        console.error("Error message:", error.message)
-        console.error("Error details:", error.details)
-        console.error("Error hint:", error.hint)
 
-        // Handle specific RLS error
         if (error.code === "42501") {
-          // Try to get more information about the user and RLS
-          const { data: userData } = await supabase.auth.getUser()
-          console.log("User data for RLS debug:", userData)
-
           toast({
             title: "Permission Error",
-            description: `RLS Policy Error: ${error.message}. Please check your permissions or contact an administrator.`,
+            description:
+              "You don't have permission to create officials. This might be due to Row Level Security policies. Please contact an administrator.",
             variant: "destructive",
           })
         } else {
@@ -269,12 +307,6 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
         description: "Official created successfully!",
       })
 
-      // Call the onSave callback if provided (for any additional handling)
-      if (onSave) {
-        await onSave(data)
-      }
-
-      // Close the modal on success
       onClose()
     } catch (error) {
       console.error("Unexpected error:", error)
@@ -318,7 +350,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
       >
         <div className="w-full h-full bg-white flex flex-col animate-in slide-in-from-bottom duration-500">
           {/* Red Header */}
-          <div className="bg-red-600 text-white px-4 sm:px-6 py-4 flex items-center justify-between shrink-0 safe-area-inset-top">
+          <div className="bg-red-600 text-white px-4 sm:px-6 py-4 flex items-center justify-between shrink-0">
             <button onClick={onClose} className="text-white hover:text-gray-200 transition-colors">
               <ChevronLeft className="h-6 w-6" />
             </button>
@@ -330,7 +362,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
 
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto">
-            <div className="p-6 space-y-6 max-w-md mx-auto pb-24">
+            <div className="p-6 space-y-6 max-w-md mx-auto pb-6">
               {/* Profile Picture Section */}
               <div className="flex flex-col items-center space-y-3">
                 <div className="relative">
@@ -548,10 +580,10 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
             </div>
           </div>
 
-          {/* Fixed Bottom Action Buttons - Fixed mobile visibility */}
-          <div className="p-4 sm:p-6 border-t bg-white shrink-0 safe-area-inset-bottom">
-            <div className="flex space-x-3 max-w-md mx-auto">
-              <Button variant="outline" onClick={onClose} className="flex-1 border-gray-300 h-12 bg-transparent">
+          {/* Fixed Bottom Action Buttons - Improved mobile visibility */}
+          <div className="sticky bottom-0 left-0 right-0 p-4 sm:p-6 border-t bg-white z-10 min-h-[80px] flex items-center">
+            <div className="flex space-x-3 max-w-md mx-auto w-full">
+              <Button variant="outline" onClick={onClose} className="flex-1 border-gray-300 h-12 bg-white">
                 Cancel
               </Button>
               <Button
