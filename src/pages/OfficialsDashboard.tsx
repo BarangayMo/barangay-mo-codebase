@@ -1,5 +1,5 @@
 "use client"
-//my-changes
+
 import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -701,65 +701,79 @@ const OfficialsDashboard = () => {
                       </p>
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0">
-                      <Button variant="outline" className="flex items-center gap-2 text-sm bg-transparent">
+                      <Button
+                        variant="outline"
+                        className="flex items-center gap-2 text-sm px-4 py-2 h-10 bg-white border-gray-300 hover:bg-gray-50"
+                      >
                         <CalendarDays className="h-4 w-4" />
-                        <span className="hidden sm:inline">This Month</span>
+                        <span>This Month</span>
                       </Button>
-                      <Button variant="outline" className="flex items-center gap-2 text-sm bg-transparent">
+                      <Button
+                        variant="outline"
+                        className="flex items-center gap-2 text-sm px-4 py-2 h-10 bg-white border-gray-300 hover:bg-gray-50"
+                      >
                         <Filter className="h-4 w-4" />
-                        <span className="hidden sm:inline">Filter</span>
+                        <span>Filter</span>
                       </Button>
                     </div>
                   </div>
 
                   {/* Community Stats */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6 mb-8">
-                    <Card className="p-4 lg:p-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
+                    <Card className="p-4 lg:p-6 bg-white shadow-sm border border-gray-100">
                       <div className="flex items-center justify-between mb-4">
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm text-gray-600 truncate">Total Residents</p>
-                          <p className="text-xl lg:text-2xl font-bold text-gray-900">{residentsCount || 0}</p>
-                          <p className="text-sm text-green-600 flex items-center">
-                            ↗ 12% <span className="text-gray-500 ml-1 hidden sm:inline">from last month</span>
+                          <p className="text-sm text-gray-600 mb-1">Total Residents</p>
+                          <p className="text-2xl lg:text-3xl font-bold text-gray-900">{residentsCount || 0}</p>
+                          <p className="text-sm text-green-600 flex items-center mt-2">
+                            <span className="mr-1">↗</span>
+                            <span>12%</span>
+                            <span className="text-gray-500 ml-1 hidden lg:inline">from last month</span>
                           </p>
                         </div>
                         <div className="w-12 lg:w-16 h-6 lg:h-8 bg-gradient-to-r from-green-200 to-green-300 rounded flex-shrink-0"></div>
                       </div>
                     </Card>
 
-                    <Card className="p-4 lg:p-6">
+                    <Card className="p-4 lg:p-6 bg-white shadow-sm border border-gray-100">
                       <div className="flex items-center justify-between mb-4">
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm text-gray-600 truncate">RBI Submissions</p>
-                          <p className="text-xl lg:text-2xl font-bold text-gray-900">{rbiCount || 0}</p>
-                          <p className="text-sm text-blue-600 flex items-center">
-                            ↗ New <span className="text-gray-500 ml-1 hidden sm:inline">this month</span>
+                          <p className="text-sm text-gray-600 mb-1">RBI Submissions</p>
+                          <p className="text-2xl lg:text-3xl font-bold text-gray-900">{rbiCount || 0}</p>
+                          <p className="text-sm text-blue-600 flex items-center mt-2">
+                            <span className="mr-1">↗</span>
+                            <span>New</span>
+                            <span className="text-gray-500 ml-1 hidden lg:inline">this month</span>
                           </p>
                         </div>
                         <div className="w-12 lg:w-16 h-6 lg:h-8 bg-gradient-to-r from-blue-200 to-blue-300 rounded flex-shrink-0"></div>
                       </div>
                     </Card>
 
-                    <Card className="p-4 lg:p-6">
+                    <Card className="p-4 lg:p-6 bg-white shadow-sm border border-gray-100">
                       <div className="flex items-center justify-between mb-4">
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm text-gray-600 truncate">Active Services</p>
-                          <p className="text-xl lg:text-2xl font-bold text-gray-900">{servicesCount || 0}</p>
-                          <p className="text-sm text-purple-600 flex items-center">
-                            ↗ 3 new <span className="text-gray-500 ml-1 hidden sm:inline">this month</span>
+                          <p className="text-sm text-gray-600 mb-1">Active Services</p>
+                          <p className="text-2xl lg:text-3xl font-bold text-gray-900">{servicesCount || 0}</p>
+                          <p className="text-sm text-purple-600 flex items-center mt-2">
+                            <span className="mr-1">↗</span>
+                            <span>3 new</span>
+                            <span className="text-gray-500 ml-1 hidden lg:inline">this month</span>
                           </p>
                         </div>
                         <div className="w-12 lg:w-16 h-6 lg:h-8 bg-gradient-to-r from-purple-200 to-purple-300 rounded flex-shrink-0"></div>
                       </div>
                     </Card>
 
-                    <Card className="p-4 lg:p-6">
+                    <Card className="p-4 lg:p-6 bg-white shadow-sm border border-gray-100">
                       <div className="flex items-center justify-between mb-4">
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm text-gray-600 truncate">Pending Requests</p>
-                          <p className="text-xl lg:text-2xl font-bold text-gray-900">{pendingRequests || 0}</p>
-                          <p className="text-sm text-orange-600 flex items-center">
-                            ↓ 5 resolved <span className="text-gray-500 ml-1 hidden sm:inline">this week</span>
+                          <p className="text-sm text-gray-600 mb-1">Pending Requests</p>
+                          <p className="text-2xl lg:text-3xl font-bold text-gray-900">{pendingRequests || 0}</p>
+                          <p className="text-sm text-orange-600 flex items-center mt-2">
+                            <span className="mr-1">↓</span>
+                            <span>5 resolved</span>
+                            <span className="text-gray-500 ml-1 hidden lg:inline">this week</span>
                           </p>
                         </div>
                         <div className="w-12 lg:w-16 h-6 lg:h-8 bg-gradient-to-r from-orange-200 to-orange-300 rounded flex-shrink-0"></div>
