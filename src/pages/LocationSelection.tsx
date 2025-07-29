@@ -217,202 +217,64 @@ export default function LocationSelection() {
   }, [])
 
   const loadProvinces = async () => {
-    if (!selectedRegion) return
-    console.log("Loading provinces for region:", selectedRegion)
-    setIsLoading(true)
-    setProvinces([])
+  if (!selectedRegion) return;
 
-    try {
-      // Normalize region code for Region 3
-      const regionTable =
-        selectedRegion === "REGION 3" ||
-        selectedRegion === "Region 3" ||
-        selectedRegion === "Central Luzon (Region III)"
-          ? "REGION 3"
-          : selectedRegion
+  console.log("Loading provinces for region:", selectedRegion);
+  setIsLoading(true);
+  setProvinces([]);
 
-      console.log("Using table name:", regionTable)
+  try {
+    const regionTable = selectedRegion;
 
-      // Verify the table exists and check its structure
-      console.log("=== TABLE VERIFICATION ===")
-      try {
-        // Check if table exists by trying to get table info
-        const { data: tableInfo, error: tableError } = await (supabase as any).from(regionTable).select("*").limit(1)
+    let allRows: any[] = [];
+    let pageSize = 1000;
+    let from = 0;
+    let hasMore = true;
 
-        console.log(`Table "${regionTable}" exists:`, !tableError)
-        console.log(`Table "${regionTable}" error:`, tableError)
-        console.log(`Sample record from "${regionTable}":`, tableInfo?.[0])
-
-        // Get total count of records in this table
-        const { count: totalCount, error: countError } = await (supabase as any)
-          .from(regionTable)
-          .select("*", { count: "exact", head: true })
-
-        console.log(`Total records in table "${regionTable}":`, totalCount)
-        console.log(`Count query error:`, countError)
-
-        // Check what columns exist in the table
-        if (tableInfo && tableInfo[0]) {
-          console.log(`Columns in table "${regionTable}":`, Object.keys(tableInfo[0]))
-        }
-      } catch (tableVerifyError) {
-        console.error(`Error verifying table "${regionTable}":`, tableVerifyError)
-      }
-      console.log("=== END TABLE VERIFICATION ===")
-
-      // Additional debugging - let's see what provinces actually exist
-      console.log("=== PROVINCE ANALYSIS ===")
-      try {
-        // Get all unique provinces directly - REMOVE THE LIMIT
-        const { data: allProvinceData, error: allProvinceError } = await (supabase as any)
-          .from(regionTable)
-          .select("PROVINCE")
-          .not("PROVINCE", "is", null)
-          .neq("PROVINCE", "")
-         .range(0, 99999)
-
-
-        console.log(`Total province records (non-null/empty): ${allProvinceData?.length}`)
-        console.log(`Province query error:`, allProvinceError)
-
-        if (allProvinceData && allProvinceData.length > 0) {
-          // Get unique provinces
-          const uniqueProvincesFromDB = [...new Set(allProvinceData.map((item: any) => item.PROVINCE))]
-          console.log(`Unique provinces in database:`, uniqueProvincesFromDB.sort())
-          console.log(`Total unique provinces:`, uniqueProvincesFromDB.length)
-
-          // Check specifically for the expected Region 3 provinces
-          const expectedRegion3Provinces = [
-            "AURORA",
-            "BATAAN",
-            "BULACAN",
-            "NUEVA ECIJA",
-            "PAMPANGA",
-            "TARLAC",
-            "ZAMBALES",
-          ]
-          console.log("=== EXPECTED PROVINCE CHECK ===")
-          expectedRegion3Provinces.forEach((expected) => {
-            const found = uniqueProvincesFromDB.includes(expected)
-            console.log(`${expected}: ${found ? "✓ FOUND" : "✗ MISSING"}`)
-
-            if (!found) {
-              // Check for similar names
-              const similar = uniqueProvincesFromDB.filter((p) =>
-                p.toString().toUpperCase().includes(expected.substring(0, 3)),
-              )
-              console.log(`  Similar to ${expected}:`, similar)
-            }
-          })
-        }
-      } catch (error) {
-        console.error("Error in province analysis:", error)
-      }
-      console.log("=== END PROVINCE ANALYSIS ===")
-
-      // Get ALL records without any filtering - REMOVE THE LIMIT
-      const { data, error, count } = await (supabase as any).from(regionTable).select("PROVINCE").range(0, 100000)
-
-      console.log("Raw query result:", { data, error, totalRecords: data?.length, count })
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from(regionTable)
+        .select("PROVINCE")
+        .not("PROVINCE", "is", null)
+        .neq("PROVINCE", "")
+        .range(from, from + pageSize - 1)
+        .throwOnError();
 
       if (error) {
-        console.error("Error loading provinces:", error)
-        return
+        console.error("Error in province range query:", error);
+        break;
       }
 
-      if (data && data.length > 0) {
-        // Log first 10 records to see the structure
-        console.log("First 10 records:", data.slice(0, 10))
+      allRows.push(...(data ?? []));
+      console.log(`Fetched ${data.length} rows (Total so far: ${allRows.length})`);
 
-        // Let's also check if there are any records with the missing provinces
-        console.log("Checking for AURORA records...")
-        const auroraRecords = data.filter(
-          (item: any) => item.PROVINCE && item.PROVINCE.toString().toUpperCase().includes("AURORA"),
-        )
-        console.log("AURORA records found:", auroraRecords.length, auroraRecords.slice(0, 3))
-
-        console.log("Checking for PAMPANGA records...")
-        const pampangaRecords = data.filter(
-          (item: any) => item.PROVINCE && item.PROVINCE.toString().toUpperCase().includes("PAMPANGA"),
-        )
-        console.log("PAMPANGA records found:", pampangaRecords.length, pampangaRecords.slice(0, 3))
-
-        console.log("Checking for ZAMBALES records...")
-        const zambalesRecords = data.filter(
-          (item: any) => item.PROVINCE && item.PROVINCE.toString().toUpperCase().includes("ZAMBALES"),
-        )
-        console.log("ZAMBALES records found:", zambalesRecords.length, zambalesRecords.slice(0, 3))
-
-        // Extract provinces with more detailed logging
-        const allProvinces = data.map((item: any) => {
-          const province = item.PROVINCE
-          return province
-        })
-
-        console.log("All provinces before filtering (first 20):", allProvinces.slice(0, 20))
-        console.log("Total provinces before filtering:", allProvinces.length)
-
-        // Count occurrences of each province
-        const provinceCounts = allProvinces.reduce((acc: any, province: any) => {
-          if (province) {
-            acc[province] = (acc[province] || 0) + 1
-          }
-          return acc
-        }, {})
-        console.log("Province counts:", provinceCounts)
-
-        // Filter out null, undefined, empty strings, and non-strings
-        const validProvinces = allProvinces.filter((province: any) => {
-          const isValid =
-            province &&
-            typeof province === "string" &&
-            province.trim() !== "" &&
-            province.toLowerCase() !== "null" &&
-            province.toLowerCase() !== "undefined"
-          return isValid
-        })
-
-        console.log("Valid provinces after filtering:", validProvinces.length)
-
-        // Get unique provinces
-        const uniqueProvinces = [...new Set(validProvinces)] as string[]
-        console.log("Unique provinces:", uniqueProvinces)
-
-        // Sort provinces
-        const sortedProvinces = uniqueProvinces.sort()
-        console.log("Final sorted provinces:", sortedProvinces)
-        console.log("Total unique provinces found:", sortedProvinces.length)
-
-        // Verify expected provinces are present
-        const expectedProvinces = ["AURORA", "BATAAN", "BULACAN", "NUEVA ECIJA", "PAMPANGA", "TARLAC", "ZAMBALES"]
-        expectedProvinces.forEach((expected) => {
-          if (!sortedProvinces.includes(expected)) {
-            console.warn(`Expected province ${expected} is MISSING from results!`)
-          } else {
-            console.log(`✓ Found expected province: ${expected}`)
-          }
-        })
-
-        setProvinces(sortedProvinces)
-      } else {
-        console.log("No data returned from query")
-
-        // Let's try a different approach - get a sample of all data to see what's there
-        console.log("Trying to get sample data to debug...")
-        const { data: sampleData, error: sampleError } = await (supabase as any).from(regionTable).select("*").limit(10)
-
-        console.log("Sample data:", sampleData)
-        console.log("Sample error:", sampleError)
-
-        setProvinces([])
-      }
-    } catch (error) {
-      console.error("Exception while loading provinces:", error)
-      setProvinces([])
-    } finally {
-      setIsLoading(false)
+      hasMore = data.length === pageSize;
+      from += pageSize;
     }
+
+    const allProvinces = allRows
+      .map((row: any) => row.PROVINCE)
+      .filter(
+        (province: any) =>
+          province &&
+          typeof province === "string" &&
+          province.trim() !== "" &&
+          province.toLowerCase() !== "null" &&
+          province.toLowerCase() !== "undefined"
+      );
+
+    const uniqueProvinces = [...new Set(allProvinces)].sort();
+    console.log("Unique provinces:", uniqueProvinces);
+
+    setProvinces(uniqueProvinces);
+  } catch (error) {
+    console.error("Exception while loading provinces:", error);
+    setProvinces([]);
+  } finally {
+    setIsLoading(false);
   }
+};
+
 
   const loadMunicipalities = async () => {
     if (!selectedRegion || !selectedProvince) return
