@@ -269,7 +269,7 @@ export default function LocationSelection() {
           .select("PROVINCE")
           .not("PROVINCE", "is", null)
           .neq("PROVINCE", "")
-          .range(0, 100000)
+         .limit(100000)
 
         console.log(`Total province records (non-null/empty): ${allProvinceData?.length}`)
         console.log(`Province query error:`, allProvinceError)
