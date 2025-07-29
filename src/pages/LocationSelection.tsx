@@ -276,103 +276,134 @@ export default function LocationSelection() {
 };
 
 
-  const loadMunicipalities = async () => {
-    if (!selectedRegion || !selectedProvince) return
-    console.log("Loading municipalities for region:", selectedRegion, "province:", selectedProvince)
-    setIsLoading(true)
-    setMunicipalities([])
-    try {
-      // Normalize region code for Region 3
-      const regionTable =
-        selectedRegion === "REGION 3" ||
-        selectedRegion === "Region 3" ||
-        selectedRegion === "Central Luzon (Region III)"
-          ? "REGION 3"
-          : selectedRegion
-      const { data, error } = await (supabase as any)
+ const loadMunicipalities = async () => {
+  if (!selectedRegion || !selectedProvince) return;
+
+  console.log("Loading municipalities for region:", selectedRegion, "province:", selectedProvince);
+  setIsLoading(true);
+  setMunicipalities([]);
+
+  try {
+    const regionTable = selectedRegion;
+
+    let allRows: any[] = [];
+    let pageSize = 1000;
+    let from = 0;
+    let hasMore = true;
+
+    while (hasMore) {
+      const { data, error } = await supabase
         .from(regionTable)
         .select('"CITY/MUNICIPALITY"')
         .eq("PROVINCE", selectedProvince)
         .not('"CITY/MUNICIPALITY"', "is", null)
         .neq('"CITY/MUNICIPALITY"', "")
-      console.log("Municipalities query result:", {
-        data,
-        error,
-      })
+        .range(from, from + pageSize - 1)
+        .throwOnError();
+
       if (error) {
-        console.error("Error loading municipalities:", error)
-        return
+        console.error("Error in municipality range query:", error);
+        break;
       }
-      if (data && data.length > 0) {
-        const municipalityList = data
-          .map((item: any) => item["CITY/MUNICIPALITY"])
-          .filter((municipality: any) => municipality && typeof municipality === "string" && municipality.trim() !== "")
-        const uniqueMunicipalities = [...new Set(municipalityList)] as string[]
-        console.log("Processed municipalities:", uniqueMunicipalities.sort())
-        setMunicipalities(uniqueMunicipalities.sort())
-      } else {
-        console.log("No municipality data found for region:", selectedRegion, "province:", selectedProvince)
-        setMunicipalities([])
-      }
-    } catch (error) {
-      console.error("Error loading municipalities:", error)
-    } finally {
-      setIsLoading(false)
+
+      allRows.push(...(data ?? []));
+      console.log(`Fetched ${data.length} municipalities (Total so far: ${allRows.length})`);
+
+      hasMore = data.length === pageSize;
+      from += pageSize;
     }
+
+    const validMunicipalities = allRows
+      .map((item: any) => item["CITY/MUNICIPALITY"])
+      .filter(
+        (municipality: any) =>
+          municipality &&
+          typeof municipality === "string" &&
+          municipality.trim() !== "" &&
+          municipality.toLowerCase() !== "null" &&
+          municipality.toLowerCase() !== "undefined"
+      );
+
+    const uniqueMunicipalities = [...new Set(validMunicipalities)].sort();
+    console.log("Processed municipalities:", uniqueMunicipalities);
+
+    setMunicipalities(uniqueMunicipalities);
+  } catch (error) {
+    console.error("Error loading municipalities:", error);
+  } finally {
+    setIsLoading(false);
   }
+};
 
   const loadBarangays = async () => {
-    if (!selectedRegion || !selectedProvince || !selectedMunicipality) return
-    console.log(
-      "Loading barangays for region:",
-      selectedRegion,
-      "province:",
-      selectedProvince,
-      "municipality:",
-      selectedMunicipality,
-    )
-    setIsLoading(true)
-    setBarangays([])
-    try {
-      // Normalize region code for Region 3
-      const regionTable =
-        selectedRegion === "REGION 3" ||
-        selectedRegion === "Region 3" ||
-        selectedRegion === "Central Luzon (Region III)"
-          ? "REGION 3"
-          : selectedRegion
-      const { data, error } = await (supabase as any)
+  if (!selectedRegion || !selectedProvince || !selectedMunicipality) return;
+
+  console.log(
+    "Loading barangays for region:",
+    selectedRegion,
+    "province:",
+    selectedProvince,
+    "municipality:",
+    selectedMunicipality
+  );
+
+  setIsLoading(true);
+  setBarangays([]);
+
+  try {
+    const regionTable = selectedRegion;
+
+    let allRows: any[] = [];
+    let pageSize = 1000;
+    let from = 0;
+    let hasMore = true;
+
+    while (hasMore) {
+      const { data, error } = await supabase
         .from(regionTable)
         .select("BARANGAY")
         .eq("PROVINCE", selectedProvince)
         .eq('"CITY/MUNICIPALITY"', selectedMunicipality)
         .not("BARANGAY", "is", null)
         .neq("BARANGAY", "")
-      console.log("Barangays query result:", {
-        data,
-        error,
-      })
+        .range(from, from + pageSize - 1)
+        .throwOnError();
+
       if (error) {
-        console.error("Error loading barangays:", error)
-        return
+        console.error("Error in barangay range query:", error);
+        break;
       }
-      if (data && data.length > 0) {
-        const barangayList = data
-          .map((item: any) => item.BARANGAY)
-          .filter((barangay: any) => barangay && typeof barangay === "string" && barangay.trim() !== "")
-        const uniqueBarangays = [...new Set(barangayList)] as string[]
-        console.log("Processed barangays:", uniqueBarangays.sort())
-        setBarangays(uniqueBarangays.sort())
-      } else {
-        console.log("No barangay data found")
-        setBarangays([])
-      }
-    } catch (error) {
-      console.error("Error loading barangays:", error)
-    } finally {
-      setIsLoading(false)
+
+      allRows.push(...(data ?? []));
+      console.log(`Fetched ${data.length} barangays (Total so far: ${allRows.length})`);
+
+      hasMore = data.length === pageSize;
+      from += pageSize;
     }
+
+    const validBarangays = allRows
+      .map((item: any) => item.BARANGAY)
+      .filter(
+        (barangay: any) =>
+          barangay &&
+          typeof barangay === "string" &&
+          barangay.trim() !== "" &&
+          barangay.toLowerCase() !== "null" &&
+          barangay.toLowerCase() !== "undefined"
+      );
+
+    const uniqueBarangays = [...new Set(validBarangays)].sort();
+    console.log("Processed barangays:", uniqueBarangays);
+
+    setBarangays(uniqueBarangays);
+  } catch (error) {
+    console.error("Error loading barangays:", error);
+    setBarangays([]);
+  } finally {
+    setIsLoading(false);
   }
+};
+
 
   const handleNext = () => {
     if (selectedRegion && selectedProvince && selectedMunicipality && selectedBarangay) {
