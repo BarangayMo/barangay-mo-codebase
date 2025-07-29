@@ -263,12 +263,13 @@ export default function LocationSelection() {
       // Additional debugging - let's see what provinces actually exist
       console.log("=== PROVINCE ANALYSIS ===")
       try {
-        // Get all unique provinces directly
+        // Get all unique provinces directly - REMOVE THE LIMIT
         const { data: allProvinceData, error: allProvinceError } = await (supabase as any)
           .from(regionTable)
           .select("PROVINCE")
           .not("PROVINCE", "is", null)
           .neq("PROVINCE", "")
+        // Remove any limit to get ALL records
 
         console.log(`Total province records (non-null/empty): ${allProvinceData?.length}`)
         console.log(`Province query error:`, allProvinceError)
@@ -308,8 +309,8 @@ export default function LocationSelection() {
       }
       console.log("=== END PROVINCE ANALYSIS ===")
 
-      // Get ALL records without any filtering - let's see everything first
-      const { data, error, count } = await (supabase as any).from(regionTable).select("PROVINCE", { count: "exact" })
+      // Get ALL records without any filtering - REMOVE THE LIMIT
+      const { data, error, count } = await (supabase as any).from(regionTable).select("PROVINCE")
 
       console.log("Raw query result:", { data, error, totalRecords: data?.length, count })
 
