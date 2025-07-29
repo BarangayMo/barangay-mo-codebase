@@ -1,5 +1,4 @@
 "use client"
-//my-changes
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -105,12 +104,16 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
     if (formData.region) {
       setLoadingProvinces(true)
       setProvinces([])
-      ;(async () => {
+      // Normalize region code for Region 3 to match Supabase table
+      const regionTable = formData.region === 'REGION 3' || formData.region === 'Region 3' || formData.region === 'Central Luzon (Region III)'
+        ? 'REGION 3'
+        : formData.region;
+      (async () => {
         const { data, error } = await (supabase as any)
-          .from(formData.region)
+          .from(regionTable)
           .select('"PROVINCE"')
-          .not("PROVINCE", "is", null)
-          .neq("PROVINCE", "")
+          .not('"PROVINCE"', 'is', null)
+          .neq('"PROVINCE"', '')
         if (!error && data) {
           const provinceList = data
             .map((item: any) => item.PROVINCE)

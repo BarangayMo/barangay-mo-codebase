@@ -1,4 +1,3 @@
-//my-changes
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -58,6 +57,7 @@ import { OfficialDetailsModal } from "@/components/officials/OfficialDetailsModa
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const OfficialsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -68,6 +68,7 @@ const OfficialsPage = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // For now, we'll use hardcoded values - in a real app, this would come from context/state
   // You should replace these with actual selected barangay data
@@ -521,6 +522,7 @@ const OfficialsPage = () => {
                                         <DropdownMenuItem 
                                           className="text-red-600"
                                           onClick={() => handleDeleteOfficial(official)}
+                                          disabled={official.user_id === user?.id}
                                         >
                                           <Trash2 className="h-4 w-4 mr-2" />
                                           Remove
@@ -661,6 +663,7 @@ const OfficialsPage = () => {
                                   <DropdownMenuItem 
                                     className="text-red-600"
                                     onClick={() => handleDeleteOfficial(official)}
+                                    disabled={official.user_id === user?.id}
                                   >
                                     <Trash2 className="mr-2 h-4 w-4" /> Remove
                                   </DropdownMenuItem>
