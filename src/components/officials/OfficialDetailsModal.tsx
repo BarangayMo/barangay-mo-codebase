@@ -101,59 +101,126 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
   }, [official, isOpen])
 
   useEffect(() => {
-    if (formData.region) {
-      setLoadingProvinces(true)
-      setProvinces([])
-      // Normalize region code for Region 3 to match Supabase table
-      const regionTable = formData.region === 'REGION 3' || formData.region === 'Region 3' || formData.region === 'Central Luzon (Region III)'
-        ? 'REGION 3'
-        : formData.region;
-      (async () => {
-        const { data, error } = await (supabase as any)
-          .from(regionTable)
-          .select('"PROVINCE"')
-          .not('"PROVINCE"', 'is', null)
-          .neq('"PROVINCE"', '')
-        if (!error && data) {
-          const provinceList = data
-            .map((item: any) => item.PROVINCE)
-            .filter((province: any) => province && typeof province === "string" && province.trim() !== "") as string[]
-          setProvinces([...new Set(provinceList)].sort())
-        }
-        setLoadingProvinces(false)
-      })()
-    } else {
-      setProvinces([])
+  const loadProvinces = async () => {
+    if (!formData.region) {
+      setProvinces([]);
+      return;
     }
-    setFormData((prev) => ({ ...prev, province: "", municipality: "" }))
-  }, [formData.region])
 
-  useEffect(() => {
-    if (formData.region && formData.province) {
-      setLoadingMunicipalities(true)
-      setMunicipalities([])
-      ;(async () => {
-        const { data, error } = await (supabase as any)
-          .from(formData.region)
+    setLoadingProvinces(true);
+    setProvinces([]);
+
+    try {
+      const regionTable = formData.region;
+
+      let allRows: any[] = [];
+      let pageSize = 1000;
+      let from = 0;
+      let hasMore = true;
+
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from(regionTable)
+          .select("PROVINCE")
+          .not("PROVINCE", "is", null)
+          .neq("PROVINCE", "")
+          .range(from, from + pageSize - 1)
+          .throwOnError();
+
+        if (error) {
+          console.error("Error loading provinces:", error);
+          break;
+        }
+
+        allRows.push(...(data ?? []));
+        hasMore = data.length === pageSize;
+        from += pageSize;
+      }
+
+      const provinceList = allRows
+        .map((item: any) => item.PROVINCE)
+        .filter(
+          (province: any) =>
+            province &&
+            typeof province === "string" &&
+            province.trim() !== "" &&
+            province.toLowerCase() !== "null" &&
+            province.toLowerCase() !== "undefined"
+        );
+
+      setProvinces([...new Set(provinceList)].sort());
+    } catch (err) {
+      console.error("Exception while loading provinces:", err);
+    } finally {
+      setLoadingProvinces(false);
+    }
+  };
+
+  loadProvinces();
+  setFormData((prev) => ({ ...prev, province: "", municipality: "" }));
+}, [formData.region]);
+
+ useEffect(() => {
+  const loadMunicipalities = async () => {
+    if (!formData.region || !formData.province) {
+      setMunicipalities([]);
+      return;
+    }
+
+    setLoadingMunicipalities(true);
+    setMunicipalities([]);
+
+    try {
+      const regionTable = formData.region;
+
+      let allRows: any[] = [];
+      let pageSize = 1000;
+      let from = 0;
+      let hasMore = true;
+
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from(regionTable)
           .select('"CITY/MUNICIPALITY"')
           .eq("PROVINCE", formData.province)
           .not('"CITY/MUNICIPALITY"', "is", null)
           .neq('"CITY/MUNICIPALITY"', "")
-        if (!error && data) {
-          const municipalityList = data
-            .map((item: any) => item["CITY/MUNICIPALITY"])
-            .filter(
-              (municipality: any) => municipality && typeof municipality === "string" && municipality.trim() !== "",
-            ) as string[]
-          setMunicipalities([...new Set(municipalityList)].sort())
+          .range(from, from + pageSize - 1)
+          .throwOnError();
+
+        if (error) {
+          console.error("Error loading municipalities:", error);
+          break;
         }
-        setLoadingMunicipalities(false)
-      })()
-    } else {
-      setMunicipalities([])
+
+        allRows.push(...(data ?? []));
+        hasMore = data.length === pageSize;
+        from += pageSize;
+      }
+
+      const municipalityList = allRows
+        .map((item: any) => item["CITY/MUNICIPALITY"])
+        .filter(
+          (municipality: any) =>
+            municipality &&
+            typeof municipality === "string" &&
+            municipality.trim() !== "" &&
+            municipality.toLowerCase() !== "null" &&
+            municipality.toLowerCase() !== "undefined"
+        );
+
+      setMunicipalities([...new Set(municipalityList)].sort());
+    } catch (err) {
+      console.error("Exception while loading municipalities:", err);
+    } finally {
+      setLoadingMunicipalities(false);
     }
-    setFormData((prev) => ({ ...prev, municipality: "" }))
-  }, [formData.region, formData.province])
+  };
+
+  loadMunicipalities();
+  setFormData((prev) => ({ ...prev, municipality: "" }));
+}, [formData.region, formData.province]);
+
 
   const handleSave = async () => {
     if (
