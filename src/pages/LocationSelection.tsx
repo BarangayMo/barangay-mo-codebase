@@ -233,10 +233,37 @@ export default function LocationSelection() {
 
       console.log("Using table name:", regionTable)
 
-      // Get ALL records without any filtering - let's see everything first
-      const { data, error } = await (supabase as any).from(regionTable).select("PROVINCE")
+      // Verify the table exists and check its structure
+      console.log("=== TABLE VERIFICATION ===")
+      try {
+        // Check if table exists by trying to get table info
+        const { data: tableInfo, error: tableError } = await (supabase as any).from(regionTable).select("*").limit(1)
 
-      console.log("Raw query result:", { data, error, totalRecords: data?.length })
+        console.log(`Table "${regionTable}" exists:`, !tableError)
+        console.log(`Table "${regionTable}" error:`, tableError)
+        console.log(`Sample record from "${regionTable}":`, tableInfo?.[0])
+
+        // Get total count of records in this table
+        const { count: totalCount, error: countError } = await (supabase as any)
+          .from(regionTable)
+          .select("*", { count: "exact", head: true })
+
+        console.log(`Total records in table "${regionTable}":`, totalCount)
+        console.log(`Count query error:`, countError)
+
+        // Check what columns exist in the table
+        if (tableInfo && tableInfo[0]) {
+          console.log(`Columns in table "${regionTable}":`, Object.keys(tableInfo[0]))
+        }
+      } catch (tableVerifyError) {
+        console.error(`Error verifying table "${regionTable}":`, tableVerifyError)
+      }
+      console.log("=== END TABLE VERIFICATION ===")
+
+      // Get ALL records without any filtering - let's see everything first
+      const { data, error, count } = await (supabase as any).from(regionTable).select("PROVINCE", { count: "exact" })
+
+      console.log("Raw query result:", { data, error, totalRecords: data?.length, count })
 
       if (error) {
         console.error("Error loading provinces:", error)
@@ -244,17 +271,45 @@ export default function LocationSelection() {
       }
 
       if (data && data.length > 0) {
-        // Log first few records to see the structure
-        console.log("First 5 records:", data.slice(0, 5))
+        // Log first 10 records to see the structure
+        console.log("First 10 records:", data.slice(0, 10))
+
+        // Let's also check if there are any records with the missing provinces
+        console.log("Checking for AURORA records...")
+        const auroraRecords = data.filter(
+          (item: any) => item.PROVINCE && item.PROVINCE.toString().toUpperCase().includes("AURORA"),
+        )
+        console.log("AURORA records found:", auroraRecords.length, auroraRecords.slice(0, 3))
+
+        console.log("Checking for PAMPANGA records...")
+        const pampangaRecords = data.filter(
+          (item: any) => item.PROVINCE && item.PROVINCE.toString().toUpperCase().includes("PAMPANGA"),
+        )
+        console.log("PAMPANGA records found:", pampangaRecords.length, pampangaRecords.slice(0, 3))
+
+        console.log("Checking for ZAMBALES records...")
+        const zambalesRecords = data.filter(
+          (item: any) => item.PROVINCE && item.PROVINCE.toString().toUpperCase().includes("ZAMBALES"),
+        )
+        console.log("ZAMBALES records found:", zambalesRecords.length, zambalesRecords.slice(0, 3))
 
         // Extract provinces with more detailed logging
         const allProvinces = data.map((item: any) => {
           const province = item.PROVINCE
-          console.log("Processing record:", item, "Province value:", province, "Type:", typeof province)
           return province
         })
 
-        console.log("All provinces before filtering:", allProvinces)
+        console.log("All provinces before filtering (first 20):", allProvinces.slice(0, 20))
+        console.log("Total provinces before filtering:", allProvinces.length)
+
+        // Count occurrences of each province
+        const provinceCounts = allProvinces.reduce((acc: any, province: any) => {
+          if (province) {
+            acc[province] = (acc[province] || 0) + 1
+          }
+          return acc
+        }, {})
+        console.log("Province counts:", provinceCounts)
 
         // Filter out null, undefined, empty strings, and non-strings
         const validProvinces = allProvinces.filter((province: any) => {
@@ -264,13 +319,10 @@ export default function LocationSelection() {
             province.trim() !== "" &&
             province.toLowerCase() !== "null" &&
             province.toLowerCase() !== "undefined"
-          if (!isValid) {
-            console.log("Filtering out invalid province:", province)
-          }
           return isValid
         })
 
-        console.log("Valid provinces after filtering:", validProvinces)
+        console.log("Valid provinces after filtering:", validProvinces.length)
 
         // Get unique provinces
         const uniqueProvinces = [...new Set(validProvinces)] as string[]
@@ -294,6 +346,14 @@ export default function LocationSelection() {
         setProvinces(sortedProvinces)
       } else {
         console.log("No data returned from query")
+
+        // Let's try a different approach - get a sample of all data to see what's there
+        console.log("Trying to get sample data to debug...")
+        const { data: sampleData, error: sampleError } = await (supabase as any).from(regionTable).select("*").limit(10)
+
+        console.log("Sample data:", sampleData)
+        console.log("Sample error:", sampleError)
+
         setProvinces([])
       }
     } catch (error) {
