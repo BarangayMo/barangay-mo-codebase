@@ -95,7 +95,7 @@ import PunongBarangayDashboard from "@/pages/officials/PunongBarangayDashboard";
 import EmergencyResponse from "@/pages/officials/EmergencyResponse";
 import OfficialsJobsPage from "@/pages/officials/OfficialsJobsPage";
 import OfficialProductPage from "@/pages/officials/OfficialProductPage";
-
+import OfficialProfileView from "@/pages/officials/OfficialProfileView";
 
 
 // Import the new EmailConfirmation component
@@ -113,7 +113,6 @@ import Wishlist from "@/pages/Wishlist";
 // Import resident-specific pages
 import ResidentJobsPage from "@/pages/resident/ResidentJobsPage";
 import ResidentProductsPage from "@/pages/resident/ResidentProductsPage";
-import OfficialProfileView from "@/pages/resident/OfficialProfileView";
 
 // Import auth components
 import { EmailConfirmationHandler } from "@/components/auth/EmailConfirmationHandler";
@@ -172,6 +171,7 @@ export function AppRoutes() {
       <Route path="/official/rbi-forms" element={<ProtectedRoute><RbiForms /></ProtectedRoute>} />
       <Route path="/official/jobs" element={<ProtectedRoute><OfficialsJobsPage /></ProtectedRoute>} />
       <Route path="/official/products" element={<ProtectedRoute><OfficialProductPage /></ProtectedRoute>} />
+      <Route path="/officials/profile/:id" element={<OfficialProfileView />} />
       
       
       <Route path="/official/qr-verification" element={<ProtectedRoute><QRScanner /></ProtectedRoute>} />
