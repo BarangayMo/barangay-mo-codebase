@@ -77,6 +77,7 @@ export default function ResidentHome() {
     }
     return true;
   };
+console.log("✅ Reviewed by ID:", approvedRbi?.reviewed_by);
 
   return (
     <Layout>
