@@ -342,110 +342,118 @@ export default function RbiRegistration() {
   };
 
   const handleSubmit = async () => {
-    if (!user?.id) {
-      toast.error('Authentication Error', {
-        description: 'You must be logged in to submit the form.'
-      });
-      return;
+  if (!user?.id) {
+    toast.error('Authentication Error', {
+      description: 'You must be logged in to submit the form.'
+    });
+    return;
+  }
+
+  if (!validateAllRequiredFields()) {
+    toast.error('Validation Error', {
+      description: 'Please fill in all required fields before submitting.'
+    });
+    return;
+  }
+
+  setIsSubmitting(true);
+
+  try {
+    console.log('🚀 Submitting RBI form...', { formData, existingFormId });
+
+    // Only include JSON-safe data in form_data
+    const jsonSafeFormData = {
+      full_name: formData.full_name,
+      address: formData.address,
+      birth_date: formData.birth_date,
+      occupation: formData.occupation,
+      landmark: formData.landmark,
+      location: formData.location, // assuming location is a simple { lat, lng }
+      // Add any more JSON-safe fields explicitly here
+    };
+
+    let submitData;
+
+    if (existingFormId) {
+      const { data, error } = await supabase
+        .from('rbi_forms')
+        .update({
+          form_data: jsonSafeFormData as unknown as Json,
+          status: 'submitted',
+          barangay_id: formData.address?.barangay || user.barangay || 'Unknown',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existingFormId)
+        .eq('user_id', user.id)
+        .select('id, rbi_number, status')
+        .single();
+
+      if (error) throw error;
+      submitData = data;
+
+    } else {
+      const barangayId = formData.address?.barangay || user.barangay || 'Unknown';
+      const { data, error } = await supabase
+        .from('rbi_forms')
+        .insert([{
+          id: crypto.randomUUID(),
+          user_id: user.id,
+          form_data: jsonSafeFormData as unknown as Json,
+          status: 'submitted',
+          barangay_id: barangayId,
+          submitted_at: new Date().toISOString()
+        }])
+        .select('id, rbi_number, status')
+        .single();
+
+      if (error) throw error;
+      submitData = data;
     }
 
-    // Comprehensive validation before submission
-    if (!validateAllRequiredFields()) {
-      toast.error('Validation Error', {
-        description: 'Please fill in all required fields before submitting.'
-      });
-      return;
-    }
+    console.log('✅ Form submitted successfully:', submitData);
 
-    setIsSubmitting(true);
-    
+    // Clean up drafts
     try {
-      console.log('🚀 Submitting RBI form...', { formData, existingFormId });
-      
-      let submitData;
-      if (existingFormId) {
-        // Update existing form with proper headers
-        const { data, error } = await supabase
-          .from('rbi_forms')
-          .update({
-            form_data: formData as unknown as Json,
-            status: 'submitted',
-            barangay_id: formData.address?.barangay || user.barangay || 'Unknown',
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existingFormId)
-          .eq('user_id', user.id) // Security check
-          .select('id, rbi_number, status')
-          .single();
-          
-        if (error) throw error;
-        submitData = data;
-      } else {
-        // Create new form with proper headers
-        const barangayId = formData.address?.barangay || user.barangay || 'Unknown';
-        const { data, error } = await supabase
-          .from('rbi_forms')
-          .insert([{
-            id: crypto.randomUUID(), // Ensure unique ID
-            user_id: user.id,
-            form_data: formData as unknown as Json,
-            status: 'submitted',
-            barangay_id: barangayId,
-            submitted_at: new Date().toISOString()
-          }])
-          .select('id, rbi_number, status')
-          .single();
-          
-        if (error) throw error;
-        submitData = data;
-      }
-      
-      console.log('✅ Form submitted successfully:', submitData);
-      
-      // Clean up draft form after successful submission
-      try {
-        await supabase
-          .from('rbi_draft_forms')
-          .delete()
-          .eq('user_id', user.id);
-        console.log('✅ Draft form cleaned up');
-      } catch (cleanupError) {
-        console.warn('Draft cleanup failed:', cleanupError);
-      }
-      
-      // Update RBI completion status in context
-      if (setRbiCompleted) {
-        setRbiCompleted(true);
-      }
-      
-      const successMessage = existingFormId 
-        ? 'RBI Form Updated Successfully!' 
-        : 'RBI Registration Complete!';
-      const description = submitData.rbi_number 
-        ? `Your RBI form has been successfully ${existingFormId ? 'updated' : 'submitted'} with number: ${submitData.rbi_number}`
-        : `Your RBI form has been successfully ${existingFormId ? 'updated' : 'submitted'} and is under review.`;
-      
-      toast.success(successMessage, { description });
-      
-      navigate("/resident-home", {
-        state: { 
-          rbiNumber: submitData.rbi_number,
-          showSuccess: true 
-        }
-      });
-    } catch (error: any) {
-      console.error("Error submitting RBI form:", error);
-      
-      let errorMessage = 'There was an error submitting your form. Please try again.';
-      if (error?.code === '23505') {
-        errorMessage = 'A form with this information already exists. Please contact support.';
-      }
-      
-      toast.error('Submission Failed', { description: errorMessage });
-    } finally {
-      setIsSubmitting(false);
+      await supabase
+        .from('rbi_draft_forms')
+        .delete()
+        .eq('user_id', user.id);
+      console.log('✅ Draft form cleaned up');
+    } catch (cleanupError) {
+      console.warn('Draft cleanup failed:', cleanupError);
     }
-  };
+
+    if (setRbiCompleted) setRbiCompleted(true);
+
+    const successMessage = existingFormId
+      ? 'RBI Form Updated Successfully!'
+      : 'RBI Registration Complete!';
+    const description = submitData.rbi_number
+      ? `Your RBI form has been successfully ${existingFormId ? 'updated' : 'submitted'} with number: ${submitData.rbi_number}`
+      : `Your RBI form has been successfully ${existingFormId ? 'updated' : 'submitted'} and is under review.`;
+
+    toast.success(successMessage, { description });
+
+    navigate("/resident-home", {
+      state: {
+        rbiNumber: submitData.rbi_number,
+        showSuccess: true
+      }
+    });
+  } catch (error: any) {
+    console.error("Error submitting RBI form:", error);
+
+    let errorMessage = 'There was an error submitting your form. Please try again.';
+    if (error?.code === '23505') {
+      errorMessage = 'A form with this information already exists. Please contact support.';
+    }
+
+    toast.error('Submission Failed', { description: errorMessage });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
   
   const currentStepData = steps.find(step => step.id === currentStep) || steps[0];
   
