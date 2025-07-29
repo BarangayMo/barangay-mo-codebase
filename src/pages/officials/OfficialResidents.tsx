@@ -157,7 +157,7 @@ const OfficialResidents = () => {
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                          <Link to={`/messages/${resident.id}`}>
+                          <Link to={`/messages/${conversationId}`}>
                             <MessageCircle className="h-4 w-4 mr-2" />
                             Message Resident
                           </Link>
