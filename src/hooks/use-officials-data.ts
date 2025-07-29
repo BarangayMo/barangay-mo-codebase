@@ -62,7 +62,13 @@ export const useCreateOfficial = () => {
   return useMutation({
     mutationFn: async (official: Omit<Official, "id" | "created_at" | "updated_at">) => {
       try {
-        const { data, error } = await supabase.from("officials").insert(official).select().single()
+        // Ensure phone_number is always a string and not null/undefined
+        const officialData = {
+          ...official,
+          phone_number: official.phone_number ? String(official.phone_number) : '',
+        };
+        console.log('Creating official with data:', officialData);
+        const { data, error } = await supabase.from("officials").insert(officialData).select().single()
 
         if (error) throw error
         return data as Official
