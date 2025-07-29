@@ -446,6 +446,15 @@ export default function LocationSelection() {
   const filteredBarangays = barangays.filter(barangay => barangay.toLowerCase().includes(barangaySearch.toLowerCase()));
   const isFormValid = selectedRegion && selectedProvince && selectedMunicipality && selectedBarangay;
 
+  useEffect(() => {
+    console.log('All provinces from Supabase:', provinces);
+    if (!provinces.includes('ZAMBALES')) {
+      console.warn('ZAMBALES is missing from provinces array!');
+    }
+    console.log('Province search term:', provinceSearch);
+    console.log('Filtered provinces:', filteredProvinces);
+  }, [provinces, provinceSearch, filteredProvinces]);
+
   if (isMobile) {
     return <div className="min-h-screen bg-gray-50 flex flex-col">
         {/* Progress Bar */}
@@ -505,17 +514,25 @@ export default function LocationSelection() {
                 <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showProvinceDropdown ? 'rotate-180' : ''}`} />
               </div>
             </div>
-            {showProvinceDropdown && selectedRegion && <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                {isLoading ? <div className="p-4 text-center text-gray-500">Loading provinces...</div> : <>
-                    {selectedProvince && <button onClick={() => handleProvinceSelect(selectedProvince)} className="w-full text-left py-3 px-4 bg-blue-50 border-b border-gray-100 flex items-center gap-2">
-                        <Check className="h-4 w-4 text-blue-600" />
-                        {toTitleCase(selectedProvince)}
-                      </button>}
-                    {filteredProvinces.filter(p => p !== selectedProvince).length === 0 && provinces.length === 0 ? <div className="p-4 text-center text-gray-500">No provinces found for this region</div> : filteredProvinces.filter(p => p !== selectedProvince).length === 0 ? <div className="p-4 text-center text-gray-500">No provinces match your search</div> : filteredProvinces.filter(p => p !== selectedProvince).map((province, index) => <button key={index} onClick={() => handleProvinceSelect(province)} className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0">
-                          {toTitleCase(province)}
-                        </button>)}
-                  </>}
-              </div>}
+            {showProvinceDropdown && selectedRegion && (
+  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg" style={{ maxHeight: '240px', overflowY: 'auto' }}>
+    {isLoading ? <div className="p-4 text-center text-gray-500">Loading provinces...</div> : <>
+      {selectedProvince && <button onClick={() => handleProvinceSelect(selectedProvince)} className="w-full text-left py-3 px-4 bg-blue-50 border-b border-gray-100 flex items-center gap-2">
+        <Check className="h-4 w-4 text-blue-600" />
+        {toTitleCase(selectedProvince)}
+      </button>}
+      {filteredProvinces.filter(p => p !== selectedProvince).map((province, index) => (
+        <button
+          key={province}
+          onClick={() => handleProvinceSelect(province)}
+          className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+        >
+          {toTitleCase(province)}
+        </button>
+      ))}
+    </>}
+  </div>
+)}
           </div>
 
           {/* Municipality Dropdown */}
@@ -647,23 +664,25 @@ export default function LocationSelection() {
                   <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${showProvinceDropdown ? 'rotate-180' : ''}`} />
                 </div>
               </div>
-              {showProvinceDropdown && selectedRegion && <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                  {isLoading ? <div className="p-4 text-center text-gray-500">Loading provinces...</div> : <>
-                      {selectedProvince && <button onClick={() => handleProvinceSelect(selectedProvince)} className="w-full text-left py-3 px-4 bg-blue-50 border-b border-gray-100 flex items-center gap-2">
-                          <Check className="h-4 w-4 text-blue-600" />
-                          {toTitleCase(selectedProvince)}
-                        </button>}
-                      {filteredProvinces.filter(p => p !== selectedProvince).length === 0 && provinces.length === 0 ? <div className="p-4 text-center text-gray-500">No provinces found for this region</div> : filteredProvinces.filter(p => p !== selectedProvince).length === 0 ? <div className="p-4 text-center text-gray-500">No provinces match your search</div> : filteredProvinces.filter(p => p !== selectedProvince).map((province, index) => (
-  <button
-    key={province}
-    onClick={() => handleProvinceSelect(province)}
-    className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
-  >
-    {toTitleCase(province)}
-  </button>
-))}
-                    </>}
-                </div>}
+              {showProvinceDropdown && selectedRegion && (
+  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg" style={{ maxHeight: '240px', overflowY: 'auto' }}>
+    {isLoading ? <div className="p-4 text-center text-gray-500">Loading provinces...</div> : <>
+      {selectedProvince && <button onClick={() => handleProvinceSelect(selectedProvince)} className="w-full text-left py-3 px-4 bg-blue-50 border-b border-gray-100 flex items-center gap-2">
+        <Check className="h-4 w-4 text-blue-600" />
+        {toTitleCase(selectedProvince)}
+      </button>}
+      {filteredProvinces.filter(p => p !== selectedProvince).map((province, index) => (
+        <button
+          key={province}
+          onClick={() => handleProvinceSelect(province)}
+          className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+        >
+          {toTitleCase(province)}
+        </button>
+      ))}
+    </>}
+  </div>
+)}
             </div>
 
             {/* Municipality Dropdown */}
