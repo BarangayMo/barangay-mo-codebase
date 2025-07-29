@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { RegistrationProgress } from "@/components/ui/registration-progress";
+import { SelectItem } from "@/components/ui/select";
 
 // Hardcoded Philippine regions with their full names
 const PHILIPPINE_REGIONS = [{
@@ -212,11 +213,14 @@ export default function LocationSelection() {
     setIsLoading(true);
     setProvinces([]);
     try {
-      // Use type assertion to bypass TypeScript's strict table name checking
+      // Normalize region code for Region 3
+      const regionTable = selectedRegion === 'REGION 3' || selectedRegion === 'Region 3' || selectedRegion === 'Central Luzon (Region III)'
+        ? 'REGION 3'
+        : selectedRegion;
       const {
         data,
         error
-      } = await (supabase as any).from(selectedRegion).select('PROVINCE').not('PROVINCE', 'is', null).neq('PROVINCE', '');
+      } = await (supabase as any).from(regionTable).select('PROVINCE').not('PROVINCE', 'is', null).neq('PROVINCE', '');
       console.log('Query result:', {
         data,
         error
@@ -249,11 +253,14 @@ export default function LocationSelection() {
     setIsLoading(true);
     setMunicipalities([]);
     try {
-      // Use type assertion to bypass TypeScript's strict table name checking
+      // Normalize region code for Region 3
+      const regionTable = selectedRegion === 'REGION 3' || selectedRegion === 'Region 3' || selectedRegion === 'Central Luzon (Region III)'
+        ? 'REGION 3'
+        : selectedRegion;
       const {
         data,
         error
-      } = await (supabase as any).from(selectedRegion).select('"CITY/MUNICIPALITY"').eq('PROVINCE', selectedProvince).not('"CITY/MUNICIPALITY"', 'is', null).neq('"CITY/MUNICIPALITY"', '');
+      } = await (supabase as any).from(regionTable).select('"CITY/MUNICIPALITY"').eq('PROVINCE', selectedProvince).not('"CITY/MUNICIPALITY"', 'is', null).neq('"CITY/MUNICIPALITY"', '');
       console.log('Municipalities query result:', {
         data,
         error
@@ -284,11 +291,14 @@ export default function LocationSelection() {
     setIsLoading(true);
     setBarangays([]);
     try {
-      // Use type assertion to bypass TypeScript's strict table name checking
+      // Normalize region code for Region 3
+      const regionTable = selectedRegion === 'REGION 3' || selectedRegion === 'Region 3' || selectedRegion === 'Central Luzon (Region III)'
+        ? 'REGION 3'
+        : selectedRegion;
       const {
         data,
         error
-      } = await (supabase as any).from(selectedRegion).select('BARANGAY').eq('PROVINCE', selectedProvince).eq('"CITY/MUNICIPALITY"', selectedMunicipality).not('BARANGAY', 'is', null).neq('BARANGAY', '');
+      } = await (supabase as any).from(regionTable).select('BARANGAY').eq('PROVINCE', selectedProvince).eq('"CITY/MUNICIPALITY"', selectedMunicipality).not('BARANGAY', 'is', null).neq('BARANGAY', '');
       console.log('Barangays query result:', {
         data,
         error
@@ -429,7 +439,9 @@ export default function LocationSelection() {
   };
 
   const filteredRegions = PHILIPPINE_REGIONS.filter(region => region.name.toLowerCase().includes(regionSearch.toLowerCase()) || region.code.toLowerCase().includes(regionSearch.toLowerCase()));
-  const filteredProvinces = provinces.filter(province => province.toLowerCase().includes(provinceSearch.toLowerCase()));
+  const filteredProvinces = provinces.filter(p =>
+    p.toLowerCase().includes(provinceSearch.toLowerCase())
+  );
   const filteredMunicipalities = municipalities.filter(municipality => municipality.toLowerCase().includes(municipalitySearch.toLowerCase()));
   const filteredBarangays = barangays.filter(barangay => barangay.toLowerCase().includes(barangaySearch.toLowerCase()));
   const isFormValid = selectedRegion && selectedProvince && selectedMunicipality && selectedBarangay;
@@ -641,9 +653,15 @@ export default function LocationSelection() {
                           <Check className="h-4 w-4 text-blue-600" />
                           {toTitleCase(selectedProvince)}
                         </button>}
-                      {filteredProvinces.filter(p => p !== selectedProvince).length === 0 && provinces.length === 0 ? <div className="p-4 text-center text-gray-500">No provinces found for this region</div> : filteredProvinces.filter(p => p !== selectedProvince).length === 0 ? <div className="p-4 text-center text-gray-500">No provinces match your search</div> : filteredProvinces.filter(p => p !== selectedProvince).map((province, index) => <button key={index} onClick={() => handleProvinceSelect(province)} className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0">
-                            {toTitleCase(province)}
-                          </button>)}
+                      {filteredProvinces.filter(p => p !== selectedProvince).length === 0 && provinces.length === 0 ? <div className="p-4 text-center text-gray-500">No provinces found for this region</div> : filteredProvinces.filter(p => p !== selectedProvince).length === 0 ? <div className="p-4 text-center text-gray-500">No provinces match your search</div> : filteredProvinces.filter(p => p !== selectedProvince).map((province, index) => (
+  <button
+    key={province}
+    onClick={() => handleProvinceSelect(province)}
+    className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+  >
+    {toTitleCase(province)}
+  </button>
+))}
                     </>}
                 </div>}
             </div>
