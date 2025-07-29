@@ -58,6 +58,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { Link } from "react-router-dom";
 
 const OfficialsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -194,29 +195,39 @@ const OfficialsPage = () => {
   };
 
   const handleSaveOfficial = async (data: any) => {
+    // Ensure required fields are present
+    if (!data.email || !data.phone_number) {
+      alert('Email and phone number are required.');
+      return;
+    }
+    // Ensure status is valid
+    const validStatuses = ['pending', 'approved', 'rejected', 'active', 'inactive'];
+    let status = data.status;
+    if (!validStatuses.includes(status)) {
+      status = 'active';
+    }
+    const officialData = {
+      ...data,
+      barangay: selectedBarangay,
+      status,
+      years_of_service: 0,
+      achievements: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      user_id: data.user_id || user?.id // Set user_id if not present
+    };
+    console.log('Creating official with data:', officialData);
     try {
       if (selectedOfficial?.id) {
         await updateOfficial.mutateAsync({
           id: selectedOfficial.id,
-          ...data,
-          barangay: selectedBarangay,
-          updated_at: new Date().toISOString(),
+          ...officialData,
         });
       } else {
-        await createOfficial.mutateAsync({
-          ...data,
-          barangay: selectedBarangay,
-          status: 'active',
-          phone_number: null,
-          email: null,
-          years_of_service: 0,
-         
-          
-          achievements: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
+        await createOfficial.mutateAsync(officialData);
       }
+      // Only show success toast if no error is thrown
+      // (Toast is handled in the mutation's onSuccess, so no need to show here)
     } catch (error) {
       // Error handled by hooks
     } finally {
@@ -510,9 +521,10 @@ const OfficialsPage = () => {
                                         </Button>
                                       </DropdownMenuTrigger>
                                       <DropdownMenuContent align="end">
-                                        <DropdownMenuItem>
-                                          <Eye className="h-4 w-4 mr-2" />
-                                          View Profile
+                                        <DropdownMenuItem asChild>
+                                          <Link to={`/officials/profile/${official.id}`}>
+                                            <Eye className="mr-2 h-4 w-4" /> View Profile
+                                          </Link>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem onClick={() => handleEditOfficial(official)}>
                                           <PenLine className="h-4 w-4 mr-2" />
@@ -522,10 +534,8 @@ const OfficialsPage = () => {
                                         <DropdownMenuItem 
                                           className="text-red-600"
                                           onClick={() => handleDeleteOfficial(official)}
-                                          disabled={official.user_id === user?.id}
                                         >
-                                          <Trash2 className="h-4 w-4 mr-2" />
-                                          Remove
+                                          <Trash2 className="mr-2 h-4 w-4" /> Remove
                                         </DropdownMenuItem>
                                       </DropdownMenuContent>
                                     </DropdownMenu>
@@ -648,22 +658,18 @@ const OfficialsPage = () => {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                  <DropdownMenuItem>
-                                    <Eye className="mr-2 h-4 w-4" /> View Profile
+                                  <DropdownMenuItem asChild>
+                                    <Link to={`/officials/profile/${official.id}`}>
+                                      <Eye className="mr-2 h-4 w-4" /> View Profile
+                                    </Link>
                                   </DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => handleEditOfficial(official)}>
                                     <PenLine className="mr-2 h-4 w-4" /> Edit Details
                                   </DropdownMenuItem>
-                                  {official.phone_number && (
-                                    <DropdownMenuItem>
-                                      <Phone className="mr-2 h-4 w-4" /> Call
-                                    </DropdownMenuItem>
-                                  )}
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem 
                                     className="text-red-600"
                                     onClick={() => handleDeleteOfficial(official)}
-                                    disabled={official.user_id === user?.id}
                                   >
                                     <Trash2 className="mr-2 h-4 w-4" /> Remove
                                   </DropdownMenuItem>
