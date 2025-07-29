@@ -1,5 +1,5 @@
 "use client"
-
+//new-changes
 import { useState, useEffect, useRef } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { Button } from "@/components/ui/button"
@@ -269,7 +269,7 @@ export default function LocationSelection() {
           .select("PROVINCE")
           .not("PROVINCE", "is", null)
           .neq("PROVINCE", "")
-        // Remove any limit to get ALL records
+          .range(0, 100000)
 
         console.log(`Total province records (non-null/empty): ${allProvinceData?.length}`)
         console.log(`Province query error:`, allProvinceError)
@@ -310,7 +310,7 @@ export default function LocationSelection() {
       console.log("=== END PROVINCE ANALYSIS ===")
 
       // Get ALL records without any filtering - REMOVE THE LIMIT
-      const { data, error, count } = await (supabase as any).from(regionTable).select("PROVINCE")
+      const { data, error, count } = await (supabase as any).from(regionTable).select("PROVINCE").range(0, 100000)
 
       console.log("Raw query result:", { data, error, totalRecords: data?.length, count })
 
