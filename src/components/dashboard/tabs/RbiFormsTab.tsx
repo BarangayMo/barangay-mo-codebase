@@ -33,7 +33,7 @@ export const RbiFormsTab = () => {
         .from('rbi_forms')
         .select('*')
         .order('submitted_at', { ascending: false })
-        .limit(10);
+        .limit(1000);
 
       if (formsError) throw formsError;
 
