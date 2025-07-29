@@ -583,7 +583,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
           </div>
 
           {/* Fixed Bottom Action Buttons - Mobile Optimized */}
-          <div className="sticky bottom-0 left-0 right-0 bg-white border-t z-50">
+          <div className="sticky bottom-[64px] left-0 right-0 bg-white border-t z-50">
             {/* Extra padding and safe area for mobile devices */}
             <div className="p-4 pb-6 safe-area-bottom">
               <div className="flex space-x-3 max-w-md mx-auto w-full">
