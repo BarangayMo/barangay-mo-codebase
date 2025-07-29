@@ -108,7 +108,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
       ;(async () => {
         const { data, error } = await (supabase as any)
           .from(formData.region)
-          .select("PROVINCE")
+          .select('"PROVINCE"')
           .not("PROVINCE", "is", null)
           .neq("PROVINCE", "")
         if (!error && data) {
