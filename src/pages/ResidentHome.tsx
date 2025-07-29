@@ -26,7 +26,6 @@ export default function ResidentHome() {
   // Check RBI completion status
   const hasCompletedRbi = rbiForms && rbiForms.length > 0;
   const approvedRbi = rbiForms?.find(form => form.status === 'approved');
-  const officialId = approvedRbi?.reviewed_by;
 
   
   // Display RBI number if approved, otherwise show completion message
@@ -53,9 +52,7 @@ export default function ResidentHome() {
     { icon: ShoppingCart, label: "Marketplace", path: "/marketplace" },
     { icon: Briefcase, label: "Jobs", path: "/jobs" },
     { icon: Users, label: "Community", path: "/community" },
-   { icon: User, 
-  label: "Barangay Official", 
-  path: approvedRbi?.reviewed_by ? `/officials/profile/${approvedRbi.reviewed_by}` : "/resident/official" },
+   { icon: User, label: "Barangay Official", path: "/official-profile" },
 
   ];
 
