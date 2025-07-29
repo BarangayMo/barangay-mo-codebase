@@ -343,6 +343,7 @@ export default function RbiRegistration() {
 
   const handleSubmit = async () => {
   if (!user?.id) {
+    toast.dismiss(); 
     toast.error('Authentication Error', {
       description: 'You must be logged in to submit the form.'
     });
@@ -350,6 +351,7 @@ export default function RbiRegistration() {
   }
 
   if (!validateAllRequiredFields()) {
+    toast.dismiss(); 
     toast.error('Validation Error', {
       description: 'Please fill in all required fields before submitting.'
     });
@@ -431,7 +433,7 @@ export default function RbiRegistration() {
     const description = submitData.rbi_number
       ? `Your RBI form has been successfully ${existingFormId ? 'updated' : 'submitted'} with number: ${submitData.rbi_number}`
       : `Your RBI form has been successfully ${existingFormId ? 'updated' : 'submitted'} and is under review.`;
-
+    toast.dismiss(); 
     toast.success(successMessage, { description });
 
     navigate("/resident-home", {
@@ -447,7 +449,7 @@ export default function RbiRegistration() {
     if (error?.code === '23505') {
       errorMessage = 'A form with this information already exists. Please contact support.';
     }
-
+    toast.dismiss(); 
     toast.error('Submission Failed', { description: errorMessage });
   } finally {
     setIsSubmitting(false);
