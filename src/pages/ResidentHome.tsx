@@ -52,7 +52,7 @@ export default function ResidentHome() {
     { icon: ShoppingCart, label: "Marketplace", path: "/marketplace" },
     { icon: Briefcase, label: "Jobs", path: "/jobs" },
     { icon: Users, label: "Community", path: "/community" },
-   { icon: User, label: "Barangay Official", path: "resident/official" },
+   { icon: User, label: "Barangay Official", path: "/resident/official" },
 
   ];
 
