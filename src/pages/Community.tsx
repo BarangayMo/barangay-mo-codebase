@@ -15,13 +15,6 @@ const Community = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-  const { userRole } = useAuth();
-  
-  // Dynamic styling based on user role
-  const isOfficial = userRole === 'official';
-  const headerClass = isOfficial ? 'bg-official text-white' : 'bg-red-600 text-white';
-  const hoverClass = isOfficial ? 'hover:bg-official-dark' : 'hover:bg-red-700';
-  const titleColor = isOfficial ? 'text-official' : 'text-gray-900';
 
   return (
     <>
@@ -31,13 +24,13 @@ const Community = () => {
       
       {/* Mobile Header - moved to very top */}
       {isMobile && (
-        <div className={`fixed top-0 left-0 right-0 z-50 ${headerClass}`}>
+        <div className="fixed top-0 left-0 right-0 z-50 bg-red-600 text-white">
           <div className="flex items-center gap-3 px-4 py-3">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate(-1)}
-              className={`text-white ${hoverClass} p-1 h-8 w-8`}
+              className="text-white hover:bg-red-700 p-1 h-8 w-8"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
@@ -52,13 +45,8 @@ const Community = () => {
             {/* Desktop Header */}
             {!isMobile && (
               <div className="mb-6">
-                <h1 className={`text-2xl font-bold ${titleColor} mb-2`}>Community</h1>
-                <p className="text-gray-600">
-                  {isOfficial 
-                    ? "Connect with your barangay community as an official" 
-                    : "Connect with your barangay community"
-                  }
-                </p>
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">Community</h1>
+                <p className="text-gray-600">Connect with your barangay community</p>
               </div>
             )}
 

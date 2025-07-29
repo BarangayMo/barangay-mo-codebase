@@ -27,48 +27,12 @@ import { Link } from "react-router-dom";
 export default function OfficialProfile() {
   const { user, session } = useAuth();
 
-  // Get official profile data - fetch from officials table if user is an official
+  // Get official profile data
   const { data: officialProfile, isLoading } = useQuery({
     queryKey: ['official-profile', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
       
-      // First try to get the official data from officials table
-      const { data: officialData, error: officialError } = await supabase
-        .from('officials')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('status', 'approved')
-        .single();
-      
-      if (officialData) {
-        console.log('Found official data:', officialData);
-        return {
-          id: user.id,
-          first_name: officialData.first_name,
-          last_name: officialData.last_name,
-          middle_name: officialData.middle_name,
-          suffix: officialData.suffix,
-          phone_number: officialData.phone_number,
-          landline_number: officialData.landline_number,
-          email: officialData.email,
-          barangay: officialData.barangay,
-          municipality: officialData.municipality,
-          province: officialData.province,
-          region: officialData.region,
-          position: officialData.position,
-          // Add required fields that might be missing
-          avatar_url: null,
-          role: 'official' as any,
-          is_approved: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          officials_data: null,
-          logo_url: null
-        };
-      }
-      
-      // Fallback to profiles table
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
@@ -139,7 +103,7 @@ export default function OfficialProfile() {
 
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
             <Avatar className="w-32 h-32 border-4 border-white/20">
-              <AvatarImage src={(officialProfile as any)?.logo_url || barangayDetails?.Logo} />
+              <AvatarImage src={officialProfile?.logo_url || barangayDetails?.Logo} />
               <AvatarFallback className="text-3xl font-semibold bg-white/20 text-white">
                 {barangayDetails?.Logo ? (
                   <img src={barangayDetails.Logo} alt="Barangay Logo" className="w-full h-full object-cover" />
@@ -305,9 +269,9 @@ export default function OfficialProfile() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {(officialProfile as any)?.officials_data ? (
+                  {officialProfile?.officials_data ? (
                     <div className="grid gap-4">
-                      {Object.entries((officialProfile as any).officials_data).map(([position, official]: [string, any]) => (
+                      {Object.entries(officialProfile.officials_data).map(([position, official]: [string, any]) => (
                         <div key={position} className="flex items-center justify-between py-4 border-b border-red-100">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">

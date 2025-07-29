@@ -19,25 +19,12 @@ export function useBarangayOfficial() {
         return null;
       }
 
-      // First, let's check what officials exist for this barangay
-      const { data: officialCheck } = await supabase
-        .from('profiles')
-        .select('id, first_name, last_name, email, avatar_url, barangay, role, is_approved')
-        .eq('barangay', user.barangay)
-        .eq('role', 'official');
-
-      console.log('useBarangayOfficial - Available officials in barangay:', {
-        userBarangay: user.barangay,
-        officials: officialCheck
-      });
-
       const { data, error } = await supabase
         .from('profiles')
         .select('id, first_name, last_name, email, avatar_url, barangay, role, is_approved')
         .eq('barangay', user.barangay)
         .eq('role', 'official')
-        // Temporarily remove is_approved filter to test
-        // .eq('is_approved', true)
+        .eq('is_approved', true)
         .order('created_at', { ascending: true })
         .limit(1)
         .maybeSingle();

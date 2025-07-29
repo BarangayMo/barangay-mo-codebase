@@ -26,11 +26,6 @@ persistent_logging = false
 # Make this function public since we're retrieving public API keys
 verify_jwt = false
 
-# Configure the Auth setting for the Edge Function submit-official-registration
-[functions.submit-official-registration]
-# Make this function public since unauthenticated users need to submit registrations
-verify_jwt = false
-
 # Configure the Dashboard
 [inbucket]
 # The inbucket port to use. Defaults to 54324.

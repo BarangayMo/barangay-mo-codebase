@@ -1,7 +1,6 @@
-//my-changes
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, User, ShoppingBag, Menu, LogOut, Home, MessageSquare, BarChart3, FolderOpen, Settings,Briefcase,ShoppingCart, UsersIcon, Hospital, ClipboardList, Siren, FileText, Store, LifeBuoy, Info, Phone, Heart } from "lucide-react";
+import { Bell, User, ShoppingBag, Menu, LogOut, Home, MessageSquare, BarChart3, FolderOpen, Settings, UsersIcon, Hospital, ClipboardList, Siren, FileText, Store, LifeBuoy, Info, Phone, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { HeaderLogo } from "./header/HeaderLogo";
@@ -21,13 +20,6 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
 
 export const Header = () => {
   const {
@@ -96,8 +88,7 @@ export const Header = () => {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-80 p-0">
-               <div className="h-screen flex flex-col">
-              <div className="p-4 space-y-6 flex-1 overflow-y-auto">
+              <div className="p-4 space-y-6 overflow-y-auto h-full">
                 {/* Header section - different for authenticated/unauthenticated */}
                 {isAuthenticated ? <div className={`${userRole === "official" ? "bg-red-50 border-red-100" : userRole === "superadmin" ? "bg-purple-50 border-purple-100" : "bg-blue-50 border-blue-100"} p-4 rounded-lg border`}>
                     <div className="flex items-center gap-3 mb-2">
@@ -288,14 +279,6 @@ export const Header = () => {
                     name: "RBI Forms",
                     icon: ClipboardList,
                     href: "/official/rbi-forms"
-                  },{
-                    name: "Job Management",
-                    icon: Briefcase,
-                    href: "/official/jobs"
-                  },{
-                    name: "Product Management",
-                    icon: ShoppingCart,
-                    href: "/official/products"
                   }, {
                     name: "Emergency Response",
                     icon: Siren,
@@ -324,7 +307,6 @@ export const Header = () => {
                     </div>}
                 </div>
               </div>
-            </div>
             </SheetContent>
           </Sheet>
           
@@ -366,34 +348,11 @@ export const Header = () => {
               </Button>}
 
             {/* Profile/User Icon */}
-           {isAuthenticated && (
-  <DropdownMenu>
-    <DropdownMenuTrigger asChild>
-      <Button variant="ghost" size="icon" className="rounded-full w-8 h-8">
-        <User className="h-5 w-5" />
-      </Button>
-    </DropdownMenuTrigger>
-
-    <DropdownMenuContent align="end" className="w-44">
-      <DropdownMenuItem asChild>
-        <Link to="/resident-profile" className="flex items-center">
-          <User className="mr-2 h-4 w-4" />
-          Profile
-        </Link>
-      </DropdownMenuItem>
-
-      <DropdownMenuSeparator />
-
-      <DropdownMenuItem
-        onClick={handleLogout}
-        className="text-red-600 focus:text-red-600"
-      >
-        <LogOut className="mr-2 h-4 w-4" />
-        Logout
-      </DropdownMenuItem>
-    </DropdownMenuContent>
-  </DropdownMenu>
-)}
+            <Button asChild variant="ghost" size="icon" className="rounded-full w-8 h-8">
+              <Link to={isAuthenticated ? "/resident-profile" : "/login"}>
+                <User className="h-5 w-5" />
+              </Link>
+            </Button>
           </div>
         </div>
       </header>;
@@ -404,7 +363,7 @@ export const Header = () => {
       <div className="mx-auto max-w-7xl px-2 md:px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-1 md:gap-2">
           <HeaderLogo />
-          
+          <LocationDropdown />
         </div>
 
         {!isMobile && <DesktopNavItems />}

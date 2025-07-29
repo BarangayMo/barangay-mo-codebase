@@ -3,8 +3,6 @@ import { Layout } from "@/components/layout/Layout";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
-import OfficialRegistration from "@/pages/OfficialRegistration";
-import OfficialRegistrationSuccess from "@/pages/OfficialRegistrationSuccess";
 import RoleSelection from "@/pages/RoleSelection";
 import LocationSelection from "@/pages/LocationSelection";
 import OfficialsInfo from "@/pages/OfficialsInfo";
@@ -62,7 +60,6 @@ import ResidentsPage from "@/pages/users/ResidentsPage";
 import OfficialsPage from "@/pages/users/OfficialsPage";
 import UserProfilePage from "@/pages/users/UserProfilePage";
 import SettingsPage from "@/pages/admin/SettingsPage";
-import OfficialRegistrationsPage from "@/pages/admin/OfficialRegistrationsPage";
 
 // Import marketplace customer-facing pages
 import ProductDetail from "@/pages/marketplace/ProductDetail";
@@ -81,7 +78,6 @@ import UserManagementPage from "@/pages/users/UserManagementPage";
 import JobsAllPage from "@/pages/admin/JobsAllPage";
 import JobEditPage from "@/pages/admin/JobEditPage";
 import JobApplicationsPage from "@/pages/admin/JobApplicationsPage";
-import RbiFormsPage from "@/pages/admin/RbiFormsPage";
 
 // Import the new profile pages
 import PublicProfile from "@/pages/PublicProfile";
@@ -93,10 +89,6 @@ import OfficialServices from "@/pages/officials/OfficialServices";
 import OfficialRequests from "@/pages/officials/OfficialRequests";
 import PunongBarangayDashboard from "@/pages/officials/PunongBarangayDashboard";
 import EmergencyResponse from "@/pages/officials/EmergencyResponse";
-import OfficialsJobsPage from "@/pages/officials/OfficialsJobsPage";
-import OfficialProductPage from "@/pages/officials/OfficialProductPage";
-import OfficialProfileView from "@/pages/officials/OfficialProfileView";
-
 
 // Import the new EmailConfirmation component
 import EmailConfirmation from "@/pages/EmailConfirmation";
@@ -113,6 +105,7 @@ import Wishlist from "@/pages/Wishlist";
 // Import resident-specific pages
 import ResidentJobsPage from "@/pages/resident/ResidentJobsPage";
 import ResidentProductsPage from "@/pages/resident/ResidentProductsPage";
+import OfficialProfileView from "@/pages/resident/OfficialProfileView";
 
 // Import auth components
 import { EmailConfirmationHandler } from "@/components/auth/EmailConfirmationHandler";
@@ -127,8 +120,6 @@ export function AppRoutes() {
       <Route path="/login" element={<Login />} />
       {/* Registration flow routes */}
       <Route path="/register" element={<Register />} />
-      <Route path="/register/official" element={<OfficialRegistration />} />
-      <Route path="/register/official-success" element={<OfficialRegistrationSuccess />} />
       <Route path="/register/role" element={<RoleSelection />} />
       <Route path="/register/location" element={<LocationSelection />} />
       <Route path="/register/officials" element={<OfficialsInfo />} />
@@ -156,7 +147,7 @@ export function AppRoutes() {
       <Route path="/resident-home" element={<RbiProtectedRoute><ResidentHome /></RbiProtectedRoute>} />
       <Route path="/rbi-registration" element={<RbiProtectedRoute><RbiRegistration /></RbiProtectedRoute>} />
       <Route path="/resident-profile" element={<RbiProtectedRoute><ResidentProfile /></RbiProtectedRoute>} />
-      <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
+      <Route path="/community" element={<RbiProtectedRoute><Community /></RbiProtectedRoute>} />
       
       <Route path="/community/post/:postId" element={<RbiProtectedRoute><CommunityPostDetail /></RbiProtectedRoute>} />
       
@@ -169,10 +160,6 @@ export function AppRoutes() {
       <Route path="/official/punong-barangay" element={<ProtectedRoute><PunongBarangayDashboard /></ProtectedRoute>} />
       <Route path="/official/emergency-response" element={<ProtectedRoute><EmergencyResponse /></ProtectedRoute>} />
       <Route path="/official/rbi-forms" element={<ProtectedRoute><RbiForms /></ProtectedRoute>} />
-      <Route path="/official/jobs" element={<ProtectedRoute><OfficialsJobsPage /></ProtectedRoute>} />
-      <Route path="/official/products" element={<ProtectedRoute><OfficialProductPage /></ProtectedRoute>} />
-      <Route path="/officials/profile/:id" element={<OfficialProfileView />} />
-      
       
       <Route path="/official/qr-verification" element={<ProtectedRoute><QRScanner /></ProtectedRoute>} />
       
@@ -205,7 +192,6 @@ export function AppRoutes() {
       <Route path="/admin/users/:id" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
       
       <Route path="/admin/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-      <Route path="/admin/official-registrations" element={<ProtectedRoute><OfficialRegistrationsPage /></ProtectedRoute>} />
       
       <Route path="/notifications" element={<RbiProtectedRoute><Notifications /></RbiProtectedRoute>} />
       <Route path="/settings" element={<RbiProtectedRoute><Settings /></RbiProtectedRoute>} />
@@ -242,8 +228,6 @@ export function AppRoutes() {
       <Route path="/admin/jobs/all" element={<ProtectedRoute><JobsAllPage /></ProtectedRoute>} />
       <Route path="/admin/jobs/edit/:id" element={<ProtectedRoute><JobEditPage /></ProtectedRoute>} />
       <Route path="/admin/jobs/applications" element={<ProtectedRoute><JobApplicationsPage /></ProtectedRoute>} />
-      
-      <Route path="/admin/rbi-forms" element={<ProtectedRoute><RbiFormsPage /></ProtectedRoute>} />
       
       <Route path="/profile/public/:userId" element={<RbiProtectedRoute><PublicProfile /></RbiProtectedRoute>} />
       <Route path="/profile/private" element={<RbiProtectedRoute><PrivateProfile /></RbiProtectedRoute>} />

@@ -50,6 +50,18 @@ export default function Register() {
   // Check if we need to redirect to role selection
   const needsRedirect = !role || !region || !province || !municipality || !barangay;
 
+  // Handle redirect in useEffect to avoid render phase navigation
+  useEffect(() => {
+    if (needsRedirect) {
+      navigate('/register/role');
+    }
+  }, [needsRedirect, navigate]);
+
+  // Show loading or return null while redirecting
+  if (needsRedirect) {
+    return null;
+  }
+
   // Create locationState object with collected data
   const registrationData = {
     role,
@@ -60,21 +72,6 @@ export default function Register() {
     officials: locationState?.officials,
     logoUrl: locationState?.logoUrl
   };
-
-  // Handle redirect in useEffect to avoid render phase navigation
-  useEffect(() => {
-    if (needsRedirect) {
-      navigate('/register/role');
-    } else if (role === 'official') {
-      // Redirect officials to the new registration flow
-      navigate('/register/official', { state: registrationData });
-    }
-  }, [needsRedirect, role, navigate, registrationData]);
-
-  // Show loading or return null while redirecting
-  if (needsRedirect || role === 'official') {
-    return null;
-  }
 
   const [formData, setFormData] = useState({
     firstName: "",
