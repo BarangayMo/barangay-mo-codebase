@@ -27,13 +27,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate,Link } from "react-router-dom";
 import { format } from "date-fns";
 
-const { startConversation } = useStartConversation();
-const navigate = useNavigate();
 
 
 const OfficialResidents = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { user } = useAuth();
+  const { startConversation } = useStartConversation();
+const navigate = useNavigate();
+
 
   const { data: residents, isLoading } = useQuery({
     queryKey: ['official-residents', user?.id],
