@@ -611,7 +611,7 @@ export default function LocationSelection() {
 
   // Desktop version
   return <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
-      <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-hidden">
+      <div className="max-w-md w-full bg-white shadow-2xl rounded-2xl overflow-visible">
         {/* Progress Bar */}
         <div className="w-full bg-gray-200 h-1">
           <div className={`h-1 w-2/5 ${userRole === 'official' ? 'bg-red-600' : 'bg-blue-600'}`}></div>
