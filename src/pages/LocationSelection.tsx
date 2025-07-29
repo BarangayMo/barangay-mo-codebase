@@ -233,90 +233,67 @@ export default function LocationSelection() {
 
       console.log("Using table name:", regionTable)
 
-      // Enhanced query to get ALL provinces - removed unnecessary filters and added better error handling
-      const { data, error, count } = await (supabase as any)
-        .from(regionTable)
-        .select("PROVINCE", { count: "exact" })
-        .not("PROVINCE", "is", null)
-        .neq("PROVINCE", "")
-        .order("PROVINCE")
+      // Get ALL records without any filtering - let's see everything first
+      const { data, error } = await (supabase as any).from(regionTable).select("PROVINCE")
 
-      console.log("Raw query result:", { data, error, count, tableUsed: regionTable })
+      console.log("Raw query result:", { data, error, totalRecords: data?.length })
 
       if (error) {
-        console.error("Supabase error loading provinces:", error)
-        // Try alternative query approach if first one fails
-        console.log("Trying alternative query approach...")
-        const { data: altData, error: altError } = await (supabase as any).from(regionTable).select("*").limit(1000) // Get more records to ensure we don't miss any
-
-        console.log("Alternative query result:", { altData, altError })
-
-        if (altError) {
-          console.error("Alternative query also failed:", altError)
-          return
-        }
-
-        if (altData && altData.length > 0) {
-          // Process alternative data
-          const provinceList = altData
-            .map((item: any) => item.PROVINCE)
-            .filter((province: any) => province && typeof province === "string" && province.trim() !== "")
-
-          const uniqueProvinces = [...new Set(provinceList)] as string[]
-          const sortedProvinces = uniqueProvinces.sort()
-          console.log("Provinces from alternative query:", sortedProvinces)
-          setProvinces(sortedProvinces)
-        }
+        console.error("Error loading provinces:", error)
         return
       }
 
       if (data && data.length > 0) {
-        // Process the province data more thoroughly
-        const provinceList = data
-          .map((item: any) => {
-            // Handle different possible field names or structures
-            const province = item.PROVINCE || item.province || item.Province
-            return province
-          })
-          .filter((province: any) => {
-            // More robust filtering
-            return (
-              province &&
-              typeof province === "string" &&
-              province.trim() !== "" &&
-              province.toLowerCase() !== "null" &&
-              province.toLowerCase() !== "undefined"
-            )
-          })
+        // Log first few records to see the structure
+        console.log("First 5 records:", data.slice(0, 5))
 
-        const uniqueProvinces = [...new Set(provinceList)] as string[]
+        // Extract provinces with more detailed logging
+        const allProvinces = data.map((item: any) => {
+          const province = item.PROVINCE
+          console.log("Processing record:", item, "Province value:", province, "Type:", typeof province)
+          return province
+        })
+
+        console.log("All provinces before filtering:", allProvinces)
+
+        // Filter out null, undefined, empty strings, and non-strings
+        const validProvinces = allProvinces.filter((province: any) => {
+          const isValid =
+            province &&
+            typeof province === "string" &&
+            province.trim() !== "" &&
+            province.toLowerCase() !== "null" &&
+            province.toLowerCase() !== "undefined"
+          if (!isValid) {
+            console.log("Filtering out invalid province:", province)
+          }
+          return isValid
+        })
+
+        console.log("Valid provinces after filtering:", validProvinces)
+
+        // Get unique provinces
+        const uniqueProvinces = [...new Set(validProvinces)] as string[]
+        console.log("Unique provinces:", uniqueProvinces)
+
+        // Sort provinces
         const sortedProvinces = uniqueProvinces.sort()
+        console.log("Final sorted provinces:", sortedProvinces)
+        console.log("Total unique provinces found:", sortedProvinces.length)
 
-        console.log("Total records found:", data.length)
-        console.log("Unique provinces extracted:", sortedProvinces.length)
-        console.log("Final processed provinces:", sortedProvinces)
-
-        // Additional debugging for missing provinces
-        if (!sortedProvinces.includes("ZAMBALES") && !sortedProvinces.includes("Zambales")) {
-          console.warn("ZAMBALES not found in provinces list!")
-          console.log("Checking raw data for ZAMBALES...")
-          const zambalesData = data.filter(
-            (item: any) => item.PROVINCE && item.PROVINCE.toLowerCase().includes("zambales"),
-          )
-          console.log("ZAMBALES raw data:", zambalesData)
-        }
+        // Verify expected provinces are present
+        const expectedProvinces = ["AURORA", "BATAAN", "BULACAN", "NUEVA ECIJA", "PAMPANGA", "TARLAC", "ZAMBALES"]
+        expectedProvinces.forEach((expected) => {
+          if (!sortedProvinces.includes(expected)) {
+            console.warn(`Expected province ${expected} is MISSING from results!`)
+          } else {
+            console.log(`✓ Found expected province: ${expected}`)
+          }
+        })
 
         setProvinces(sortedProvinces)
       } else {
-        console.log("No province data found for region:", selectedRegion)
-        console.log("Attempting to fetch sample data to debug...")
-
-        // Debug query to see what's actually in the table
-        const { data: sampleData, error: sampleError } = await (supabase as any).from(regionTable).select("*").limit(5)
-
-        console.log("Sample data from table:", sampleData)
-        console.log("Sample error:", sampleError)
-
+        console.log("No data returned from query")
         setProvinces([])
       }
     } catch (error) {
