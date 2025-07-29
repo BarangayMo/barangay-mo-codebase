@@ -260,6 +260,54 @@ export default function LocationSelection() {
       }
       console.log("=== END TABLE VERIFICATION ===")
 
+      // Additional debugging - let's see what provinces actually exist
+      console.log("=== PROVINCE ANALYSIS ===")
+      try {
+        // Get all unique provinces directly
+        const { data: allProvinceData, error: allProvinceError } = await (supabase as any)
+          .from(regionTable)
+          .select("PROVINCE")
+          .not("PROVINCE", "is", null)
+          .neq("PROVINCE", "")
+
+        console.log(`Total province records (non-null/empty): ${allProvinceData?.length}`)
+        console.log(`Province query error:`, allProvinceError)
+
+        if (allProvinceData && allProvinceData.length > 0) {
+          // Get unique provinces
+          const uniqueProvincesFromDB = [...new Set(allProvinceData.map((item: any) => item.PROVINCE))]
+          console.log(`Unique provinces in database:`, uniqueProvincesFromDB.sort())
+          console.log(`Total unique provinces:`, uniqueProvincesFromDB.length)
+
+          // Check specifically for the expected Region 3 provinces
+          const expectedRegion3Provinces = [
+            "AURORA",
+            "BATAAN",
+            "BULACAN",
+            "NUEVA ECIJA",
+            "PAMPANGA",
+            "TARLAC",
+            "ZAMBALES",
+          ]
+          console.log("=== EXPECTED PROVINCE CHECK ===")
+          expectedRegion3Provinces.forEach((expected) => {
+            const found = uniqueProvincesFromDB.includes(expected)
+            console.log(`${expected}: ${found ? "✓ FOUND" : "✗ MISSING"}`)
+
+            if (!found) {
+              // Check for similar names
+              const similar = uniqueProvincesFromDB.filter((p) =>
+                p.toString().toUpperCase().includes(expected.substring(0, 3)),
+              )
+              console.log(`  Similar to ${expected}:`, similar)
+            }
+          })
+        }
+      } catch (error) {
+        console.error("Error in province analysis:", error)
+      }
+      console.log("=== END PROVINCE ANALYSIS ===")
+
       // Get ALL records without any filtering - let's see everything first
       const { data, error, count } = await (supabase as any).from(regionTable).select("PROVINCE", { count: "exact" })
 
