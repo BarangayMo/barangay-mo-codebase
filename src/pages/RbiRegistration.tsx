@@ -403,7 +403,7 @@ export default function RbiRegistration() {
           barangay_id: barangayId,
           submitted_at: new Date().toISOString()
         }])
-        .select('id, rbi_number, status')
+        .select()
         .single();
 
       if (error) throw error;
