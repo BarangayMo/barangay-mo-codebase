@@ -227,6 +227,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
           phone_number: formData.phone_number.trim(),
           landline_number: formData.landline_number?.trim() || null,
           email: formData.email.trim(),
+          barangay: formData.municipality, // Use municipality as barangay for now
           municipality: formData.municipality,
           province: formData.province,
           region: formData.region,
@@ -263,6 +264,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
         phone_number: formData.phone_number.trim(),
         landline_number: formData.landline_number?.trim() || null,
         email: formData.email.trim(),
+        barangay: formData.municipality, // Use municipality as barangay for now
         municipality: formData.municipality,
         province: formData.province,
         region: formData.region,
@@ -350,19 +352,19 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
       >
         <div className="w-full h-full bg-white flex flex-col animate-in slide-in-from-bottom duration-500">
           {/* Red Header */}
-          <div className="bg-red-600 text-white px-4 sm:px-6 py-4 flex items-center justify-between shrink-0">
-            <button onClick={onClose} className="text-white hover:text-gray-200 transition-colors">
+          <div className="bg-red-600 text-white px-4 sm:px-6 py-4 flex items-center justify-between shrink-0 safe-area-top">
+            <button onClick={onClose} className="text-white hover:text-gray-200 transition-colors p-1">
               <ChevronLeft className="h-6 w-6" />
             </button>
             <h1 className="text-center text-lg font-semibold">
               {official?.id ? "Edit Barangay Official" : "Add Barangay Official"}
             </h1>
-            <div className="w-6" />
+            <div className="w-8" />
           </div>
 
-          {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="p-6 space-y-6 max-w-md mx-auto pb-6">
+          {/* Scrollable Content with bottom padding for buttons */}
+          <div className="flex-1 overflow-y-auto pb-24">
+            <div className="p-6 space-y-6 max-w-md mx-auto">
               {/* Profile Picture Section */}
               <div className="flex flex-col items-center space-y-3">
                 <div className="relative">
@@ -580,38 +582,45 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
             </div>
           </div>
 
-          {/* Fixed Bottom Action Buttons - Improved mobile visibility */}
-          <div className="sticky bottom-0 left-0 right-0 p-4 sm:p-6 border-t bg-white z-10 min-h-[80px] flex items-center">
-            <div className="flex space-x-3 max-w-md mx-auto w-full">
-              <Button variant="outline" onClick={onClose} className="flex-1 border-gray-300 h-12 bg-white">
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSave}
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white h-12"
-                disabled={
-                  isLoading ||
-                  !formData.first_name.trim() ||
-                  !formData.last_name.trim() ||
-                  !formData.position ||
-                  !formData.phone_number.trim() ||
-                  !formData.email.trim() ||
-                  !formData.municipality.trim() ||
-                  !formData.province.trim() ||
-                  !formData.region.trim()
-                }
-              >
-                {isLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Creating...
-                  </>
-                ) : official?.id ? (
-                  "Update Official"
-                ) : (
-                  "Add Official"
-                )}
-              </Button>
+          {/* Fixed Bottom Action Buttons - Mobile Optimized */}
+          <div className="sticky bottom-0 left-0 right-0 bg-white border-t z-50">
+            {/* Extra padding and safe area for mobile devices */}
+            <div className="p-4 pb-6 safe-area-bottom">
+              <div className="flex space-x-3 max-w-md mx-auto w-full">
+                <Button 
+                  variant="outline" 
+                  onClick={onClose} 
+                  className="flex-1 h-12 text-base font-medium border-gray-300 bg-white hover:bg-gray-50"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSave}
+                  className="flex-1 h-12 text-base font-medium bg-red-600 hover:bg-red-700 text-white"
+                  disabled={
+                    isLoading ||
+                    !formData.first_name.trim() ||
+                    !formData.last_name.trim() ||
+                    !formData.position ||
+                    !formData.phone_number.trim() ||
+                    !formData.email.trim() ||
+                    !formData.municipality.trim() ||
+                    !formData.province.trim() ||
+                    !formData.region.trim()
+                  }
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      {official?.id ? "Updating..." : "Creating..."}
+                    </>
+                  ) : official?.id ? (
+                    "Update Official"
+                  ) : (
+                    "Add Official"
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
