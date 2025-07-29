@@ -26,7 +26,7 @@ export default function ResidentHome() {
   // Check RBI completion status
   const hasCompletedRbi = rbiForms && rbiForms.length > 0;
   const approvedRbi = rbiForms?.find(form => form.status === 'approved');
-  const officialId = approvedRbi?.reviewed_by;
+  const officialId = rbiForms?.reviewed_by;
   
   // Display RBI number if approved, otherwise show completion message
   const rbiNumber = approvedRbi?.rbi_number || "Complete RBI to get number";
@@ -64,7 +64,7 @@ export default function ResidentHome() {
   ];
 
   const handleQuickActionClick = (path: string, e: React.MouseEvent) => {
-    if (!hasRbiAccess && (path.includes('/marketplace') || path.includes('/jobs') || path.includes('/services'))) {
+    if (!hasRbiAccess && (path.includes('/marketplace') || path.includes('/jobs') || path.includes('/services') || path.includes('/community')|| path.includes('/officials') || path.includes('/services'))) {
       e.preventDefault();
       toast.dismiss(); // Dismiss any existing toasts first
       toast.error("Restricted Access", {
