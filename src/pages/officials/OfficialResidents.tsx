@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useStartConversation } from '@/hooks/useStartConversation';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Search, 
@@ -23,8 +24,12 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Link } from "react-router-dom";
+import { useNavigate,Link } from "react-router-dom";
 import { format } from "date-fns";
+
+const { startConversation } = useStartConversation();
+const navigate = useNavigate();
+
 
 const OfficialResidents = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -156,12 +161,22 @@ const OfficialResidents = () => {
                             View Profile
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link to={`/messages/${conversationId}`}>
-                            <MessageCircle className="h-4 w-4 mr-2" />
-                            Message Resident
-                          </Link>
-                        </DropdownMenuItem>
+                        <DropdownMenuItem
+  onClick={async () => {
+    try {
+      const conversation = await startConversation(resident.id);
+      if (conversation?.id) {
+        navigate(`/messages/${conversation.id}`);
+      }
+    } catch (error) {
+      console.error("Failed to start conversation:", error);
+    }
+  }}
+>
+  <MessageCircle className="h-4 w-4 mr-2" />
+  Message Resident
+</DropdownMenuItem>
+
                         <DropdownMenuItem>
                           <FileText className="h-4 w-4 mr-2" />
                           View RBI Form
