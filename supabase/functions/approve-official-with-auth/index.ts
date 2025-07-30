@@ -216,6 +216,11 @@ serve(async (req) => {
     } else {
       // Create auth user using Admin API
       console.log('Creating new Supabase Auth user');
+      console.log('User creation attempt details:', {
+        email: official.email,
+        passwordLength: official.original_password ? official.original_password.length : 0,
+        passwordPreview: official.original_password ? official.original_password.slice(0, 2) + '***' : null
+      });
       const { data: newAuthUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email: official.email,
         password: official.original_password, // Use the original password they provided
@@ -238,12 +243,40 @@ serve(async (req) => {
 
       if (authError) {
         console.error('Error creating auth user:', authError);
-        
+        if (authError instanceof Error) {
+          console.error('Auth error message:', authError.message);
+          console.error('Auth error stack:', authError.stack);
+        }
+        // Log the full attempted user object for debugging
+        console.error('Attempted user object:', {
+          email: official.email,
+          passwordLength: official.original_password ? official.original_password.length : 0,
+          passwordPreview: official.original_password ? official.original_password.slice(0, 2) + '***' : null,
+          user_metadata: {
+            first_name: official.first_name,
+            last_name: official.last_name,
+            middle_name: official.middle_name,
+            suffix: official.suffix,
+            phone_number: official.phone_number,
+            landline_number: official.landline_number,
+            barangay: official.barangay,
+            municipality: official.municipality,
+            province: official.province,
+            region: official.region,
+            role: 'official',
+            position: official.position
+          }
+        });
         return new Response(
           JSON.stringify({ 
             success: false,
             error: 'Failed to create user account',
-            details: authError.message
+            details: authError.message || authError,
+            attemptedUser: {
+              email: official.email,
+              passwordLength: official.original_password ? official.original_password.length : 0,
+              passwordPreview: official.original_password ? official.original_password.slice(0, 2) + '***' : null
+            }
           }),
           {
             status: 500,
