@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -131,9 +130,8 @@ export const useApproveOfficial = () => {
   return useMutation({
     mutationFn: async (officialId: string) => {
       console.log('Approving official:', officialId);
-       console.log("Sending official ID to function:", officialId);
       
-      // Use the updated edge function that creates auth user with proper role
+      // Use the new edge function that creates auth user with password
       const { data: result, error } = await supabase.functions.invoke(
         'approve-official-with-auth',
         {
@@ -146,19 +144,18 @@ export const useApproveOfficial = () => {
         throw new Error(error.message || 'Failed to approve official');
       }
 
-      if (result?.error || result?.success === false) {
+      if (result?.error) {
         console.error('Approval error from server:', result);
-        throw new Error(result.error || result.message || 'Approval failed');
+        throw new Error(result.error || 'Approval failed');
       }
 
       return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['official-registrations'] });
-      queryClient.invalidateQueries({ queryKey: ['officials'] });
       toast({
         title: "Official Approved",
-        description: "The official registration has been approved and an account has been created with proper official role. The official can now login with their original password.",
+        description: "The official registration has been approved and an account has been created. A password reset email has been sent to the official to set up their login credentials.",
       });
     },
     onError: (error: any) => {
@@ -171,6 +168,7 @@ export const useApproveOfficial = () => {
     },
   });
 };
+
 // Hook for Super-Admin to reject an official
 export const useRejectOfficial = () => {
   const { toast } = useToast();
