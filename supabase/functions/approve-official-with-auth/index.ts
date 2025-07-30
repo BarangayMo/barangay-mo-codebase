@@ -242,13 +242,20 @@ serve(async (req) => {
       });
 
       if (authError) {
+        // Enhanced error logging for debugging
         console.error('Error creating auth user:', authError);
+        let errorMessage = '';
+        let errorStack = '';
         if (authError instanceof Error) {
-          console.error('Auth error message:', authError.message);
-          console.error('Auth error stack:', authError.stack);
+          errorMessage = authError.message;
+          errorStack = authError.stack || '';
+        } else if (typeof authError === 'object' && authError !== null && 'message' in authError) {
+          errorMessage = authError.message;
+        } else {
+          errorMessage = String(authError);
         }
         // Log the full attempted user object for debugging
-        console.error('Attempted user object:', {
+        const attemptedUser = {
           email: official.email,
           passwordLength: official.original_password ? official.original_password.length : 0,
           passwordPreview: official.original_password ? official.original_password.slice(0, 2) + '***' : null,
@@ -266,17 +273,15 @@ serve(async (req) => {
             role: 'official',
             position: official.position
           }
-        });
+        };
+        console.error('Attempted user object:', attemptedUser);
         return new Response(
           JSON.stringify({ 
             success: false,
             error: 'Failed to create user account',
-            details: authError.message || authError,
-            attemptedUser: {
-              email: official.email,
-              passwordLength: official.original_password ? official.original_password.length : 0,
-              passwordPreview: official.original_password ? official.original_password.slice(0, 2) + '***' : null
-            }
+            details: errorMessage,
+            stack: errorStack,
+            attemptedUser
           }),
           {
             status: 500,
@@ -376,17 +381,30 @@ serve(async (req) => {
     );
 
   } catch (error) {
+    // Enhanced error logging for debugging
     console.error('Unexpected error in official approval:', error);
-    console.error('Error name:', error?.name);
-    console.error('Error message:', error?.message);
-    console.error('Error stack:', error?.stack);
-    // Return error details and stack trace in the response for debugging
+    let errorName = '';
+    let errorMessage = '';
+    let errorStack = '';
+    if (error instanceof Error) {
+      errorName = error.name;
+      errorMessage = error.message;
+      errorStack = error.stack || '';
+    } else if (typeof error === 'object' && error !== null && 'message' in error) {
+      errorMessage = error.message;
+    } else {
+      errorMessage = String(error);
+    }
+    console.error('Error name:', errorName);
+    console.error('Error message:', errorMessage);
+    console.error('Error stack:', errorStack);
     return new Response(
       JSON.stringify({ 
         success: false,
         error: 'Internal server error',
-        details: error?.message || error || 'Unknown error occurred',
-        stack: error?.stack || null
+        details: errorMessage,
+        stack: errorStack,
+        errorName
       }),
       {
         status: 500,
