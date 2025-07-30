@@ -215,28 +215,24 @@ serve(async (req) => {
     } else {
     // Create auth user using Admin API
       console.log('Creating new Supabase Auth user');
-      const userMetadata = {
-        first_name: official.first_name,
-        last_name: official.last_name,
-        middle_name: official.middle_name,
-        suffix: official.suffix,
-        phone_number: official.phone_number,
-        landline_number: official.landline_number,
-        barangay: official.barangay,
-        municipality: official.municipality,
-        province: official.province,
-        region: official.region,
-        role: 'official',
-        position: official.position
-      };
-      
-      console.log('DEBUG: Creating user with metadata:', JSON.stringify(userMetadata, null, 2));
-      
       const { data: newAuthUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email: official.email,
         password: official.original_password,
         email_confirm: true,
-        user_metadata: userMetadata,
+        user_metadata: {
+          first_name: official.first_name,
+          last_name: official.last_name,
+          middle_name: official.middle_name,
+          suffix: official.suffix,
+          phone_number: official.phone_number,
+          landline_number: official.landline_number,
+          barangay: official.barangay,
+          municipality: official.municipality,
+          province: official.province,
+          region: official.region,
+          role: 'official',
+          position: official.position
+        },
         app_metadata: {
           role: 'official'
         }
