@@ -39,16 +39,11 @@ serve(async (req) => {
 
     console.log('Processing official approval with auth user creation');
 
-    // Create Supabase admin client with service role and Authorization header
+    // Create Supabase admin client with service role
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       {
-        global: {
-          headers: {
-            Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''}`,
-          },
-        },
         auth: {
           autoRefreshToken: false,
           persistSession: false
@@ -216,11 +211,6 @@ serve(async (req) => {
     } else {
       // Create auth user using Admin API
       console.log('Creating new Supabase Auth user');
-      console.log('User creation attempt details:', {
-        email: official.email,
-        passwordLength: official.original_password ? official.original_password.length : 0,
-        passwordPreview: official.original_password ? official.original_password.slice(0, 2) + '***' : null
-      });
       const { data: newAuthUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email: official.email,
         password: official.original_password, // Use the original password they provided
@@ -242,46 +232,13 @@ serve(async (req) => {
       });
 
       if (authError) {
-        // Enhanced error logging for debugging
         console.error('Error creating auth user:', authError);
-        let errorMessage = '';
-        let errorStack = '';
-        if (authError instanceof Error) {
-          errorMessage = authError.message;
-          errorStack = authError.stack || '';
-        } else if (typeof authError === 'object' && authError !== null && 'message' in authError) {
-          errorMessage = authError.message;
-        } else {
-          errorMessage = String(authError);
-        }
-        // Log the full attempted user object for debugging
-        const attemptedUser = {
-          email: official.email,
-          passwordLength: official.original_password ? official.original_password.length : 0,
-          passwordPreview: official.original_password ? official.original_password.slice(0, 2) + '***' : null,
-          user_metadata: {
-            first_name: official.first_name,
-            last_name: official.last_name,
-            middle_name: official.middle_name,
-            suffix: official.suffix,
-            phone_number: official.phone_number,
-            landline_number: official.landline_number,
-            barangay: official.barangay,
-            municipality: official.municipality,
-            province: official.province,
-            region: official.region,
-            role: 'official',
-            position: official.position
-          }
-        };
-        console.error('Attempted user object:', attemptedUser);
+        
         return new Response(
           JSON.stringify({ 
             success: false,
             error: 'Failed to create user account',
-            details: errorMessage,
-            stack: errorStack,
-            attemptedUser
+            details: authError.message
           }),
           {
             status: 500,
@@ -381,30 +338,15 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    // Enhanced error logging for debugging
     console.error('Unexpected error in official approval:', error);
-    let errorName = '';
-    let errorMessage = '';
-    let errorStack = '';
-    if (error instanceof Error) {
-      errorName = error.name;
-      errorMessage = error.message;
-      errorStack = error.stack || '';
-    } else if (typeof error === 'object' && error !== null && 'message' in error) {
-      errorMessage = error.message;
-    } else {
-      errorMessage = String(error);
-    }
-    console.error('Error name:', errorName);
-    console.error('Error message:', errorMessage);
-    console.error('Error stack:', errorStack);
+    console.error('Error name:', error?.name);
+    console.error('Error message:', error?.message);
+    console.error('Error stack:', error?.stack);
     return new Response(
       JSON.stringify({ 
         success: false,
         error: 'Internal server error',
-        details: errorMessage,
-        stack: errorStack,
-        errorName
+        details: error?.message || 'Unknown error occurred'
       }),
       {
         status: 500,
