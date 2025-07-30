@@ -342,11 +342,13 @@ serve(async (req) => {
     console.error('Error name:', error?.name);
     console.error('Error message:', error?.message);
     console.error('Error stack:', error?.stack);
+    // Return error details and stack trace in the response for debugging
     return new Response(
       JSON.stringify({ 
         success: false,
         error: 'Internal server error',
-        details: error?.message || 'Unknown error occurred'
+        details: error?.message || error || 'Unknown error occurred',
+        stack: error?.stack || null
       }),
       {
         status: 500,
