@@ -551,14 +551,21 @@ export default function LocationSelection() {
           <div className={`h-1 w-2/5 ${userRole === "official" ? "bg-red-600" : "bg-blue-600"}`}></div>
         </div>
 
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b bg-white">
-          <button onClick={handleBack} className="text-red-600 hover:text-red-700">
-            <ChevronLeft className="h-6 w-6" />
-          </button>
-          <h1 className="text-lg font-semibold text-red-600">Location</h1>
-          <div className="w-6" />
-        </div>
+       {/* Header */}
+<div className="flex items-center justify-between px-4 py-3 border-b bg-white">
+  <button onClick={handleBack} className="text-red-600 hover:text-red-700">
+    <ChevronLeft className="h-6 w-6" />
+  </button>
+  <h1
+    className={`text-lg font-semibold ${
+      userRole === 'resident' ? 'text-blue-600' : 'text-red-600'
+    }`}
+  >
+    Location
+  </h1>
+  <div className="w-6" />
+</div>
+
 
         {/* Content */}
         <div className="flex-1 p-6 space-y-6 bg-gray-50">
@@ -864,12 +871,18 @@ export default function LocationSelection() {
         </div>
 
         <div className="p-8 bg-white">
-          <button
-            onClick={handleBack}
-            className="inline-flex items-center text-sm text-red-600 mb-6 hover:text-red-700"
-          >
-            <ChevronLeft className="w-4 h-4 mr-1" /> Back
-          </button>
+<button
+  onClick={handleBack}
+  className={`inline-flex items-center text-sm mb-6 hover:underline ${
+    userRole === 'resident'
+      ? 'text-blue-600 hover:text-blue-700'
+      : 'text-red-600 hover:text-red-700'
+  }`}
+>
+  <ChevronLeft className="w-4 h-4 mr-1" />
+  Back
+</button>
+
 
           <div className="space-y-6">
             {/* Region Searchable Dropdown */}
