@@ -256,7 +256,7 @@ const OfficialProductsPage = () => {
           </div>
           <Button
             onClick={handleAddProduct}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
+            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 w-full sm:w-auto"
           >
             <PlusCircle className="h-4 w-4" />
             <span className="sm:hidden">Add New Product</span>
@@ -268,7 +268,7 @@ const OfficialProductsPage = () => {
           <StatsCard 
             title="Total Products"
             value={products?.length.toString() || "0"}
-            icon={<ShoppingBag className="h-5 w-5 text-blue-500" />}
+            icon={<ShoppingBag className="h-5 w-5 text-red-500" />}
           />
           <StatsCard 
             title="Active"
@@ -336,7 +336,7 @@ const OfficialProductsPage = () => {
                   <ShoppingBag className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3 sm:mb-4" />
                   <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No products yet</h3>
                   <p className="text-sm sm:text-base text-gray-500 mb-4">Start by adding your first product</p>
-                  <Button onClick={handleAddProduct} className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
+                  <Button onClick={handleAddProduct} className="bg-red-600 hover:bg-red-700 w-full sm:w-auto">
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Add Product
                   </Button>
