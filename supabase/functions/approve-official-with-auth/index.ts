@@ -192,6 +192,9 @@ serve(async (req) => {
             region: official.region,
             role: 'official',
             position: official.position
+          },
+          app_metadata: {
+            role: 'official'
           }
         }
       );
@@ -210,7 +213,7 @@ serve(async (req) => {
         );
       }
     } else {
-      // Create auth user using Admin API
+    // Create auth user using Admin API
       console.log('Creating new Supabase Auth user');
       const { data: newAuthUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email: official.email,
@@ -229,6 +232,9 @@ serve(async (req) => {
           region: official.region,
           role: 'official',
           position: official.position
+        },
+        app_metadata: {
+          role: 'official'
         }
       });
 

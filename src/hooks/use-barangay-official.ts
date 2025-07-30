@@ -8,20 +8,21 @@ export function useBarangayOfficial() {
   const { user, userRole } = useAuth();
   const { rbiForms } = useRbiForms();
   
-  // Get barangay from approved RBI form
+  // Get barangay from approved RBI form and the reviewer
   const approvedRbi = rbiForms?.find(form => form.status === 'approved');
   const userBarangay = approvedRbi ? 
     (approvedRbi.form_data as any)?.address?.barangay || user?.barangay :
     user?.barangay;
 
   return useQuery({
-    queryKey: ['barangay-official', userBarangay],
+    queryKey: ['barangay-official', userBarangay, approvedRbi?.reviewed_by],
     queryFn: async () => {
       console.log('useBarangayOfficial - Query starting:', {
         userBarangay: userBarangay,
         userRole: userRole,
         userId: user?.id,
-        approvedRbiBarangay: approvedRbi ? (approvedRbi.form_data as any)?.address?.barangay : null
+        approvedRbiBarangay: approvedRbi ? (approvedRbi.form_data as any)?.address?.barangay : null,
+        reviewedBy: approvedRbi?.reviewed_by
       });
 
       if (!userBarangay || userRole !== 'resident') {
@@ -29,18 +30,28 @@ export function useBarangayOfficial() {
         return null;
       }
 
-      // First, let's check what officials exist for this barangay
-      const { data: officialCheck } = await supabase
-        .from('profiles')
-        .select('id, first_name, last_name, email, avatar_url, barangay, role, is_approved')
-        .eq('barangay', userBarangay)
-        .eq('role', 'official');
+      // If we have an approved RBI form with a reviewer, fetch that specific official
+      if (approvedRbi?.reviewed_by) {
+        console.log('useBarangayOfficial - Fetching specific reviewer:', approvedRbi.reviewed_by);
+        
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name, email, avatar_url, barangay, role, is_approved')
+          .eq('id', approvedRbi.reviewed_by)
+          .eq('role', 'official')
+          .single();
 
-      console.log('useBarangayOfficial - Available officials in barangay:', {
-        userBarangay: userBarangay,
-        officials: officialCheck
-      });
+        if (error) {
+          console.error('Error fetching specific reviewer:', error);
+          // Fall back to any official in the barangay
+        } else if (data) {
+          console.log('useBarangayOfficial - Found reviewer:', data);
+          return data;
+        }
+      }
 
+      // Fallback: Get any approved official in the barangay
+      console.log('useBarangayOfficial - Fetching fallback official in barangay');
       const { data, error } = await supabase
         .from('profiles')
         .select('id, first_name, last_name, email, avatar_url, barangay, role, is_approved')
@@ -51,7 +62,7 @@ export function useBarangayOfficial() {
         .limit(1)
         .maybeSingle();
 
-      console.log('useBarangayOfficial - Query result:', {
+      console.log('useBarangayOfficial - Fallback query result:', {
         data,
         error,
         userBarangay: userBarangay

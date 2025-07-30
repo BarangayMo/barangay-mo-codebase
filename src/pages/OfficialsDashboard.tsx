@@ -126,11 +126,11 @@ const OfficialsDashboard = () => {
         .filter((result): result is PromiseFulfilledResult<any[]> => result.status === "fulfilled")
         .flatMap((result) => result.value)
 
-      return officials
+      return officials as any[]
     },
     enabled: !!officialProfile?.barangay,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-    cacheTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   })
 
   // Get barangay residents count
@@ -516,7 +516,7 @@ const OfficialsDashboard = () => {
                 </div>
               </CardContent>
             </Card>
-          ) : barangayOfficials && barangayOfficials.length > 0 ? (
+          ) : barangayOfficials && Array.isArray(barangayOfficials) && barangayOfficials.length > 0 ? (
             <Card className="mt-6 bg-white shadow-sm border border-gray-100">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-4">
@@ -526,7 +526,7 @@ const OfficialsDashboard = () => {
                   </Link>
                 </div>
                 <div className="space-y-3">
-                  {barangayOfficials.slice(0, 3).map((official, index) => (
+                  {(barangayOfficials as any[]).slice(0, 3).map((official, index) => (
                     <div key={index} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
                       <Avatar className="w-10 h-10">
                         <AvatarFallback className="bg-red-100 text-red-600">
@@ -849,7 +849,7 @@ const OfficialsDashboard = () => {
                       ))}
                     </div>
                   </div>
-                ) : barangayOfficials && barangayOfficials.length > 0 ? (
+                ) : barangayOfficials && Array.isArray(barangayOfficials) && barangayOfficials.length > 0 ? (
                   <div className="mb-8">
                     <div className="flex items-center justify-between mb-6">
                       <h3 className="text-lg lg:text-xl font-semibold text-gray-900">Barangay Officials</h3>
@@ -861,7 +861,7 @@ const OfficialsDashboard = () => {
                       </Link>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4">
-                      {barangayOfficials.slice(0, 6).map((official, index) => (
+                      {(barangayOfficials as any[]).slice(0, 6).map((official, index) => (
                         <Card key={index} className="p-4 hover:shadow-md transition-shadow">
                           <div className="flex flex-col items-center text-center min-w-0">
                             <Avatar className="w-12 h-12 mb-3 flex-shrink-0">
@@ -1020,7 +1020,7 @@ const OfficialsDashboard = () => {
                 <div className="mt-8">
                   <h3 className="font-semibold text-gray-900 mb-4 truncate">Barangay Staff</h3>
                   <div className="space-y-3">
-                    {barangayOfficials?.slice(0, 3).map((official, index) => (
+                    {(barangayOfficials as any[])?.slice(0, 3).map((official, index) => (
                       <div key={index} className="flex items-center gap-3 min-w-0">
                         <Avatar className="w-8 h-8 flex-shrink-0">
                           <AvatarFallback className="text-xs">

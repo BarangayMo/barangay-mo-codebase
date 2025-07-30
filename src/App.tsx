@@ -10,6 +10,7 @@ import { Toaster as ShadcnToaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { SupabaseWarning } from "./components/ui/supabase-warning";
 import { ScrollToTop } from "./components/ScrollToTop";
+import { useRoleInitialization } from "@/hooks/use-role-initialization";
 
 // Create a client with aggressive cache settings to force fresh data
 const queryClient = new QueryClient({
@@ -40,6 +41,7 @@ queryClient.setQueryDefaults(['*'], {
 
 function App() {
   console.log('App component rendering...');
+  useRoleInitialization();
   
   return (
     <QueryClientProvider client={queryClient}>

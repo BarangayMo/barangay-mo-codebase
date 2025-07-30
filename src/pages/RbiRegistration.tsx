@@ -365,13 +365,14 @@ export default function RbiRegistration() {
 
     // Only include JSON-safe data in form_data
     const jsonSafeFormData = {
-      full_name: formData.full_name,
+      personalDetails: formData.personalDetails,
       address: formData.address,
-      birth_date: formData.birth_date,
-      occupation: formData.occupation,
-      landmark: formData.landmark,
-      location: formData.location, // assuming location is a simple { lat, lng }
-      // Add any more JSON-safe fields explicitly here
+      otherDetails: formData.otherDetails,
+      parentDetails: formData.parentDetails,
+      education: formData.education,
+      health: formData.health,
+      housing: formData.housing,
+      beneficiary: formData.beneficiary,
     };
 
     let submitData;

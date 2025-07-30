@@ -165,10 +165,8 @@ const navigate = useNavigate();
                         <DropdownMenuItem
   onClick={async () => {
     try {
-      const conversation = await startConversation(resident.id);
-      if (conversation?.id) {
-        navigate(`/messages/${conversation.id}`);
-      }
+      await startConversation(resident.id);
+      navigate(`/messages`);
     } catch (error) {
       console.error("Failed to start conversation:", error);
     }

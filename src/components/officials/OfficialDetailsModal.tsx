@@ -120,7 +120,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
 
       while (hasMore) {
         const { data, error } = await supabase
-          .from(regionTable)
+          .from(regionTable as any)
           .select("PROVINCE")
           .not("PROVINCE", "is", null)
           .neq("PROVINCE", "")
@@ -180,7 +180,7 @@ export function OfficialDetailsModal({ isOpen, onClose, official, onSave }: Offi
 
       while (hasMore) {
         const { data, error } = await supabase
-          .from(regionTable)
+          .from(regionTable as any)
           .select('"CITY/MUNICIPALITY"')
           .eq("PROVINCE", formData.province)
           .not('"CITY/MUNICIPALITY"', "is", null)
