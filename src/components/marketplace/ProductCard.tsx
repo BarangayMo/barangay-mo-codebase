@@ -118,13 +118,18 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
 
         <div className="flex flex-col gap-2">
           <Button
-            size="sm"
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm w-full"
-            onClick={handleAddToCart}
-          >
-            <ShoppingCart className="h-4 w-4 mr-1" />
-            Add to Cart
-          </Button>
+  size="sm"
+  className={`text-white text-sm w-full 
+    ${userRole === "official" 
+      ? "bg-red-600 hover:bg-red-700" 
+      : "bg-blue-600 hover:bg-blue-700"}
+  `}
+  onClick={handleAddToCart}
+>
+  <ShoppingCart className="h-4 w-4 mr-1" />
+  Add to Cart
+</Button>
+
 
          
         </div>
