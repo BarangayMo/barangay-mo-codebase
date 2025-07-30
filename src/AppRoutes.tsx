@@ -113,6 +113,7 @@ import Wishlist from "@/pages/Wishlist";
 // Import resident-specific pages
 import ResidentJobsPage from "@/pages/resident/ResidentJobsPage";
 import ResidentProductsPage from "@/pages/resident/ResidentProductsPage";
+import ResidentOfficialProfileView from "@/pages/resident/OfficialProfileView";
 
 // Import auth components
 import { EmailConfirmationHandler } from "@/components/auth/EmailConfirmationHandler";
@@ -223,7 +224,7 @@ export function AppRoutes() {
       <Route path="/resident/jobs" element={<RbiProtectedRoute><ResidentJobsPage /></RbiProtectedRoute>} />
       <Route path="/resident/products" element={<RbiProtectedRoute><ResidentProductsPage /></RbiProtectedRoute>} />
       <Route path="/resident/products/edit/:id" element={<RbiProtectedRoute><ProductEditPage /></RbiProtectedRoute>} />
-      <Route path="/resident/official" element={<RbiProtectedRoute><OfficialProfileView /></RbiProtectedRoute>} />
+      <Route path="/resident/official" element={<RbiProtectedRoute><ResidentOfficialProfileView /></RbiProtectedRoute>} />
       
       <Route path="/marketplace" element={<RbiProtectedRoute><Marketplace /></RbiProtectedRoute>} />
       <Route path="/marketplace/category/:categorySlug" element={<RbiProtectedRoute><CategoryPage /></RbiProtectedRoute>} />
