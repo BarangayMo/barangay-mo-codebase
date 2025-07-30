@@ -1,12 +1,13 @@
+// Complete fixed Edge Function code for your Lovable project
+// Copy this entire content to your Lovable supabase/functions/approve-official-with-auth/index.ts
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Content-Type': 'application/json',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 };
 
 interface ApprovalRequest {
@@ -213,7 +214,7 @@ serve(async (req) => {
         );
       }
     } else {
-    // Create auth user using Admin API
+      // Create auth user using Admin API
       console.log('Creating new Supabase Auth user');
       const userMetadata = {
         first_name: official.first_name,
@@ -263,6 +264,36 @@ serve(async (req) => {
 
     console.log('Auth user processed successfully:', authUser.user.id);
 
+    // CRITICAL FIX: Directly update the profile to ensure role is 'official'
+    // This bypasses any trigger issues and ensures correct role assignment
+    console.log('Directly updating profile role to official for user:', authUser.user.id);
+    const { error: profileUpdateError } = await supabaseAdmin
+      .from('profiles')
+      .upsert({ 
+        id: authUser.user.id,
+        email: official.email,
+        role: 'official', 
+        is_approved: true,
+        first_name: official.first_name,
+        last_name: official.last_name,
+        middle_name: official.middle_name,
+        suffix: official.suffix,
+        phone_number: official.phone_number,
+        landline_number: official.landline_number,
+        barangay: official.barangay,
+        municipality: official.municipality,
+        province: official.province,
+        region: official.region,
+        updated_at: new Date().toISOString()
+      });
+
+    if (profileUpdateError) {
+      console.error('Error updating profile role:', profileUpdateError);
+      // Continue anyway, but log the error
+    } else {
+      console.log('Profile role successfully updated to official');
+    }
+
     // Update official status to approved and link to auth user
     console.log('Updating official status to approved and clearing original password');
     const { error: updateError } = await supabaseAdmin
@@ -297,51 +328,13 @@ serve(async (req) => {
       );
     }
 
-    // Create or update profile with official role and data
-    console.log('Creating/updating profile with official role');
-    const { error: profileUpsertError } = await supabaseAdmin
-      .from('profiles')
-      .upsert({
-        id: authUser.user.id,
-        email: official.email,
-        first_name: official.first_name,
-        last_name: official.last_name,
-        middle_name: official.middle_name,
-        suffix: official.suffix,
-        phone_number: official.phone_number,
-        landline_number: official.landline_number,
-        barangay: official.barangay,
-        municipality: official.municipality,
-        province: official.province,
-        region: official.region,
-        role: 'official', // Explicitly set role as official
-        is_approved: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'id'
-      });
-
-    if (profileUpsertError) {
-      console.error('Error upserting profile:', profileUpsertError);
-      // Continue anyway as the main approval was successful
-    } else {
-      console.log('Profile created/updated successfully with official role');
-    }
-
-    console.log('Official approved successfully with auth user created and proper profile');
+    console.log('Official approved successfully with auth user created');
 
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: 'Official approved successfully. Auth user created with proper role and profile.',
-        data: {
-          official_id: requestData.official_id,
-          user_id: authUser.user.id,
-          email: official.email,
-          role: 'official',
-          note: 'The official can now login using their original password with official role.'
-        }
+        message: 'Official approved successfully',
+        user_id: authUser.user.id
       }),
       {
         status: 200,
@@ -350,15 +343,13 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Unexpected error in official approval:', error);
-    console.error('Error name:', error?.name);
-    console.error('Error message:', error?.message);
-    console.error('Error stack:', error?.stack);
+    console.error('Unexpected error in approval process:', error);
+    
     return new Response(
       JSON.stringify({ 
         success: false,
         error: 'Internal server error',
-        details: error?.message || 'Unknown error occurred'
+        details: error instanceof Error ? error.message : 'Unknown error'
       }),
       {
         status: 500,
