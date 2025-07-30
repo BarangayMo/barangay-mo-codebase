@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useCartActions } from "@/hooks/useCartActions";
 import { ShareButton } from "@/components/ui/share-button";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ProductCardProps {
   product: ProductCardType;
@@ -17,6 +18,7 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
   const navigate = useNavigate();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const { addToCart } = useCartActions();
+  const { userRole } = useAuth(); 
 
   const handleAddToCart = () => {
     addToCart({
