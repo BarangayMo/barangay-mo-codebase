@@ -284,15 +284,19 @@ export default function OfficialRegistrationsPage() {
                       
                       {registration.status === 'pending' && (
                         <>
-<Button
-  size="sm"
-  onClick={() => handleApprove(registration.id!)}
-  disabled={approveOfficial.isPending}
-  className="bg-green-600 hover:bg-green-700"
->
-  <CheckCircle className="h-4 w-4 mr-1" />
-  {approveOfficial.isPending ? 'Approving...' : 'Approve'}
-</Button>
+// Replace the handleApprove function with this version that includes better state management
+const handleApprove = async (officialId: string) => {
+  // Prevent multiple clicks by checking if already pending
+  if (approveOfficial.isPending) {
+    return;
+  }
+  
+  try {
+    await approveOfficial.mutateAsync(officialId);
+  } catch (error) {
+    console.error('Failed to approve official:', error);
+  }
+};
                           
                           <Button
                             variant="destructive"
