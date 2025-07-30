@@ -272,44 +272,40 @@ export default function OfficialRegistrationsPage() {
                       </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleView(registration)}
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        View
-                      </Button>
-                      
-                      {registration.status === 'pending' && (
-                        <>
-// Replace the handleApprove function with this version that includes better state management
-const handleApprove = async (officialId: string) => {
-  // Prevent multiple clicks by checking if already pending
-  if (approveOfficial.isPending) {
-    return;
-  }
-  
-  try {
-    await approveOfficial.mutateAsync(officialId);
-  } catch (error) {
-    console.error('Failed to approve official:', error);
-  }
-};
-                          
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleReject(registration)}
-                            disabled={rejectOfficial.isPending}
-                          >
-                            <XCircle className="h-4 w-4 mr-1" />
-                            Reject
-                          </Button>
-                        </>
-                      )}
-                    </div>
+                   <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+  <Button
+    variant="outline"
+    size="sm"
+    onClick={() => handleView(registration)}
+  >
+    <Eye className="h-4 w-4 mr-1" />
+    View
+  </Button>
+
+  {registration.status === 'pending' && (
+    <>
+      <Button
+        variant="default"
+        size="sm"
+        onClick={() => handleApprove(registration.id)}
+        disabled={approveOfficial.isPending}
+      >
+        Approve
+      </Button>
+
+      <Button
+        variant="destructive"
+        size="sm"
+        onClick={() => handleReject(registration)}
+        disabled={rejectOfficial.isPending}
+      >
+        <XCircle className="h-4 w-4 mr-1" />
+        Reject
+      </Button>
+    </>
+  )}
+</div>
+
                   </div>
                 </CardContent>
               </Card>
