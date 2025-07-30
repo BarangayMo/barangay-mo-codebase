@@ -553,9 +553,17 @@ export default function LocationSelection() {
 
        {/* Header */}
 <div className="flex items-center justify-between px-4 py-3 border-b bg-white">
-  <button onClick={handleBack} className="text-red-600 hover:text-red-700">
-    <ChevronLeft className="h-6 w-6" />
-  </button>
+<button
+  onClick={handleBack}
+  className={`${
+    userRole === 'resident'
+      ? 'text-blue-600 hover:text-blue-700'
+      : 'text-red-600 hover:text-red-700'
+  }`}
+>
+  <ChevronLeft className="h-6 w-6" />
+</button>
+
   <h1
     className={`text-lg font-semibold ${
       userRole === 'resident' ? 'text-blue-600' : 'text-red-600'
