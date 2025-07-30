@@ -187,9 +187,9 @@ export default function EmailVerification() {
   const getBackLink = () => {
     // Determine back link based on role and registration flow
     if (locationState?.role === "official") {
-      return "/register/details";
+      return "/register/role";
     }
-    return "/register/details";
+    return "/register/role";
   };
 
   if (isMobile) {

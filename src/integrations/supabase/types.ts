@@ -550,6 +550,7 @@ export type Database = {
           comments_count: number | null
           content: string
           created_at: string
+          created_by: string | null
           id: string
           image_urls: string[] | null
           likes_count: number | null
@@ -561,6 +562,7 @@ export type Database = {
           comments_count?: number | null
           content: string
           created_at?: string
+          created_by?: string | null
           id?: string
           image_urls?: string[] | null
           likes_count?: number | null
@@ -572,13 +574,22 @@ export type Database = {
           comments_count?: number | null
           content?: string
           created_at?: string
+          created_by?: string | null
           id?: string
           image_urls?: string[] | null
           likes_count?: number | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "community_posts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       complaints_requests: {
         Row: {
@@ -962,9 +973,11 @@ export type Database = {
           category: string
           created_at: string
           id: string
+          link_url: string | null
           message: string
           metadata: Json | null
           priority: string
+          read: boolean
           read_at: string | null
           recipient_id: string
           sender_id: string | null
@@ -976,23 +989,27 @@ export type Database = {
           category?: string
           created_at?: string
           id?: string
+          link_url?: string | null
           message: string
           metadata?: Json | null
           priority?: string
+          read?: boolean
           read_at?: string | null
           recipient_id: string
           sender_id?: string | null
           status?: string
-          title: string
+          title?: string
           updated_at?: string
         }
         Update: {
           category?: string
           created_at?: string
           id?: string
+          link_url?: string | null
           message?: string
           metadata?: Json | null
           priority?: string
+          read?: boolean
           read_at?: string | null
           recipient_id?: string
           sender_id?: string | null
@@ -1000,7 +1017,22 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_notifications_recipient"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       official_documents: {
         Row: {
@@ -1043,6 +1075,7 @@ export type Database = {
       }
       officials: {
         Row: {
+          achievements: string[] | null
           approved_at: string | null
           approved_by: string | null
           barangay: string
@@ -1067,8 +1100,10 @@ export type Database = {
           suffix: string | null
           updated_at: string
           user_id: string | null
+          years_of_service: number | null
         }
         Insert: {
+          achievements?: string[] | null
           approved_at?: string | null
           approved_by?: string | null
           barangay: string
@@ -1093,8 +1128,10 @@ export type Database = {
           suffix?: string | null
           updated_at?: string
           user_id?: string | null
+          years_of_service?: number | null
         }
         Update: {
+          achievements?: string[] | null
           approved_at?: string | null
           approved_by?: string | null
           barangay?: string
@@ -1119,6 +1156,7 @@ export type Database = {
           suffix?: string | null
           updated_at?: string
           user_id?: string | null
+          years_of_service?: number | null
         }
         Relationships: []
       }
@@ -1202,6 +1240,7 @@ export type Database = {
           brand: string | null
           category_id: string | null
           created_at: string
+          created_by: string | null
           description: string | null
           dimensions_cm: Json | null
           gallery_image_urls: string[] | null
@@ -1222,6 +1261,7 @@ export type Database = {
           specifications: Json | null
           stock_quantity: number
           tags: string[] | null
+          title: string | null
           updated_at: string
           vendor_id: string
           weight_kg: number | null
@@ -1231,6 +1271,7 @@ export type Database = {
           brand?: string | null
           category_id?: string | null
           created_at?: string
+          created_by?: string | null
           description?: string | null
           dimensions_cm?: Json | null
           gallery_image_urls?: string[] | null
@@ -1251,6 +1292,7 @@ export type Database = {
           specifications?: Json | null
           stock_quantity?: number
           tags?: string[] | null
+          title?: string | null
           updated_at?: string
           vendor_id: string
           weight_kg?: number | null
@@ -1260,6 +1302,7 @@ export type Database = {
           brand?: string | null
           category_id?: string | null
           created_at?: string
+          created_by?: string | null
           description?: string | null
           dimensions_cm?: Json | null
           gallery_image_urls?: string[] | null
@@ -1280,6 +1323,7 @@ export type Database = {
           specifications?: Json | null
           stock_quantity?: number
           tags?: string[] | null
+          title?: string | null
           updated_at?: string
           vendor_id?: string
           weight_kg?: number | null
@@ -1290,6 +1334,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "product_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -1410,11 +1461,13 @@ export type Database = {
         Row: {
           admin_notes: string | null
           barangay_id: string | null
+          decision_precedence: number | null
           form_data: Json
           id: string
           rbi_number: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          reviewer_type: string | null
           status: Database["public"]["Enums"]["rbi_status"]
           submitted_at: string
           updated_at: string | null
@@ -1423,11 +1476,13 @@ export type Database = {
         Insert: {
           admin_notes?: string | null
           barangay_id?: string | null
+          decision_precedence?: number | null
           form_data: Json
           id?: string
           rbi_number?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          reviewer_type?: string | null
           status?: Database["public"]["Enums"]["rbi_status"]
           submitted_at?: string
           updated_at?: string | null
@@ -1436,11 +1491,13 @@ export type Database = {
         Update: {
           admin_notes?: string | null
           barangay_id?: string | null
+          decision_precedence?: number | null
           form_data?: Json
           id?: string
           rbi_number?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          reviewer_type?: string | null
           status?: Database["public"]["Enums"]["rbi_status"]
           submitted_at?: string
           updated_at?: string | null

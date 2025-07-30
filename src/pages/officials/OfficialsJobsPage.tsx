@@ -33,7 +33,7 @@ interface Job {
   logo_url?: string;
 }
 
-export default function ResidentJobsPage() {
+export default function OfficialJobsPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
@@ -137,7 +137,7 @@ export default function ResidentJobsPage() {
           <div className="flex items-center gap-4 mb-6">
             <Button
               variant="ghost"
-              onClick={() => navigate('/resident-home')}
+              onClick={() => navigate('/official-dashboard')}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -163,7 +163,7 @@ export default function ResidentJobsPage() {
         <div className="flex items-center gap-4 mb-6">
           <Button
             variant="ghost"
-            onClick={() => navigate('/resident-home')}
+            onClick={() => navigate('/official-dashboard')}
             className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -418,7 +418,7 @@ export default function ResidentJobsPage() {
                   </Button>
                 </div>
 
-               
+                
 
                 {/* Job Details Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6">
