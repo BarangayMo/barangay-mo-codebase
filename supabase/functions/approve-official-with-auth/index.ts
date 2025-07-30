@@ -39,11 +39,16 @@ serve(async (req) => {
 
     console.log('Processing official approval with auth user creation');
 
-    // Create Supabase admin client with service role
+    // Create Supabase admin client with service role and Authorization header
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       {
+        global: {
+          headers: {
+            Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''}`,
+          },
+        },
         auth: {
           autoRefreshToken: false,
           persistSession: false
