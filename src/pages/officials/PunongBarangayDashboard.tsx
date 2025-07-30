@@ -282,8 +282,8 @@ const PunongBarangayDashboard = () => {
                         <div className="text-xs text-gray-600">
                           {official.years_of_service} years of service • {official.status}
                         </div>
-                        {official.email && (
-                          <div className="text-xs text-gray-500 mt-1">{official.email}</div>
+                        {official.contact_email && (
+                          <div className="text-xs text-gray-500 mt-1">{official.contact_email}</div>
                         )}
                       </div>
                       <div className="flex items-center gap-2">

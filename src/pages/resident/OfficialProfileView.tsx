@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,22 +10,14 @@ import { useStartConversation } from "@/hooks/useStartConversation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { useRbiForms } from "@/hooks/use-rbi-forms";
 import { formatDistanceToNow } from "date-fns";
 
 export default function OfficialProfileView() {
   const { data: official, isLoading, error } = useBarangayOfficial();
   const { startConversation } = useStartConversation();
   const { user, userRole } = useAuth();
-  const { rbiForms } = useRbiForms();
   const { toast } = useToast();
   const navigate = useNavigate();
-
-  // Get barangay from approved RBI form
-  const approvedRbi = rbiForms?.find(form => form.status === 'approved');
-  const userBarangay = approvedRbi ? 
-    (approvedRbi.form_data as any)?.address?.barangay || user?.barangay :
-    user?.barangay;
 
   const handleMessageOfficial = async () => {
     if (!official?.id) {
@@ -86,7 +77,7 @@ export default function OfficialProfileView() {
     console.log('OfficialProfileView - Error or no official:', { 
       error, 
       official, 
-      userBarangay: userBarangay,
+      userBarangay: user?.barangay,
       userRole: userRole 
     });
     
@@ -111,7 +102,7 @@ export default function OfficialProfileView() {
               <p className="text-gray-600 mb-4">
                 {error ? 
                   'Unable to load official information due to a technical error.' : 
-                  `No approved officials for your barangay (${userBarangay}) yet. Please check back later or contact your local barangay office.`
+                  `No approved officials for your barangay (${user?.barangay}) yet. Please check back later or contact your local barangay office.`
                 }
               </p>
               {error && (
@@ -133,7 +124,7 @@ export default function OfficialProfileView() {
 
   console.log('OfficialProfileView - Rendering official profile:', {
     official,
-    userBarangay: userBarangay,
+    userBarangay: user?.barangay,
     officialBarangay: official.barangay
   });
 
@@ -177,11 +168,11 @@ export default function OfficialProfileView() {
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-600">
                   <div className="flex items-center gap-1">
                     <MapPin size={14} />
-                    <span>{userBarangay}</span>
+                    <span>{user?.barangay}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Building size={14} />
-                    <span>City of Olongapo, Zambales</span>
+                    <span>{user?.municipality}, {user?.province}</span>
                   </div>
                 </div>
               </div>

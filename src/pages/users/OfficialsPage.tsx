@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,14 +52,66 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileNavbar } from "@/components/layout/MobileNavbar";
 import { useNavigate } from "react-router-dom";
-import { useOfficials, useCreateOfficial, useUpdateOfficial, useDeleteOfficial } from "@/hooks/use-officials-data";
+import { useOfficials } from "@/hooks/use-officials-data";
 import { format } from "date-fns";
 import { OfficialDetailsModal } from "@/components/officials/OfficialDetailsModal";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
-import { Link } from "react-router-dom";
+
+// Fetch officials from the specific barangay
+const fetchBarangayOfficials = async (barangayName: string, region: string) => {
+  if (!barangayName || !region) {
+    return [];
+  }
+
+  console.log(`Fetching officials for barangay: ${barangayName}, region: ${region}`);
+  
+  try {
+    const { data, error } = await supabase
+      .from(region as any)
+      .select('*')
+      .eq('BARANGAY', barangayName);
+    
+    if (error) {
+      console.error(`Error fetching from ${region}:`, error);
+      return [];
+    }
+
+    if (!data || data.length === 0) {
+      console.log(`No officials found for barangay ${barangayName} in region ${region}`);
+      return [];
+    }
+
+    const transformedOfficials = data.map((official: any) => ({
+      id: `${region}-${official.FIRSTNAME}-${official.LASTNAME}-${official.POSITION}`,
+      user_id: null,
+      position: official.POSITION || 'Unknown Position',
+      barangay: official.BARANGAY || barangayName,
+      term_start: null,
+      term_end: null,
+      status: 'active' as const,
+      contact_phone: official['BARANGAY HALL TELNO'] || null,
+      contact_email: null,
+      years_of_service: 0,
+      achievements: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      firstName: official.FIRSTNAME,
+      lastName: official.LASTNAME,
+      middleName: official.MIDDLENAME,
+      suffix: official.SUFFIX,
+      region: region,
+      municipality: official['CITY/MUNICIPALITY'],
+      province: official.PROVINCE
+    }));
+    
+    console.log(`Found ${transformedOfficials.length} officials for ${barangayName}`);
+    return transformedOfficials;
+  } catch (error) {
+    console.error(`Error fetching from ${region}:`, error);
+    return [];
+  }
+};
 
 const OfficialsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -68,20 +121,18 @@ const OfficialsPage = () => {
   const [selectedOfficial, setSelectedOfficial] = useState<any>(null);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { user } = useAuth();
 
   // For now, we'll use hardcoded values - in a real app, this would come from context/state
   // You should replace these with actual selected barangay data
   const selectedBarangay = "Barangay 1"; // This should come from user selection
-
-  // Fetch officials data from the 'officials' table for the selected barangay
-  const { data: officials = [], isLoading, refetch } = useOfficials(selectedBarangay);
-
-  // Mutations for CRUD
-  const createOfficial = useCreateOfficial();
-  const updateOfficial = useUpdateOfficial();
-  const deleteOfficial = useDeleteOfficial();
+  const selectedRegion = "REGION 3"; // This should come from user selection
+  
+  // Fetch officials data for the selected barangay
+  const { data: officials = [], isLoading } = useQuery({
+    queryKey: ['barangay-officials', selectedBarangay, selectedRegion],
+    queryFn: () => fetchBarangayOfficials(selectedBarangay, selectedRegion),
+    enabled: !!selectedBarangay && !!selectedRegion,
+  });
 
   // Official roles with their corresponding icons and counts
   const officialRoles = [
@@ -146,8 +197,8 @@ const OfficialsPage = () => {
   const filteredOfficials = officials.filter((official) => {
     const matchesSearch = 
       official.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (official.first_name && official.first_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (official.last_name && official.last_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (official.firstName && official.firstName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (official.lastName && official.lastName.toLowerCase().includes(searchTerm.toLowerCase())) ||
       official.barangay.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === "all" || official.status === statusFilter;
@@ -158,9 +209,9 @@ const OfficialsPage = () => {
 
   const uniquePositions = [...new Set(officials.map(official => official.position))];
 
-  // Count active and inactive officials
-  const activeCount = officials.filter(o => o.status === 'active').length;
-  const inactiveCount = officials.filter(o => o.status === 'inactive').length;
+  // Count active and inactive officials - since all are active from region tables, we can count directly
+  const activeCount = officials.length; // All officials from region tables are active
+  const inactiveCount = 0; // No inactive officials from region tables
 
   const handleOfficialClick = (official: any) => {
     if (official.position === "Punong Barangay") {
@@ -177,85 +228,21 @@ const OfficialsPage = () => {
 
   const handleAddOfficial = () => {
     setSelectedOfficial({
-      id: null,
       position: "",
-      first_name: "",
-      middle_name: "",
-      last_name: "",
+      firstName: "",
+      middleName: "",
+      lastName: "",
       suffix: "",
-      isCompleted: false,
-      barangay: selectedBarangay,
-      status: 'active',
-      phone_number: null,
-      email: null,
-      years_of_service: 0,
-      achievements: null
+      isCompleted: false
     });
     setShowAddModal(true);
   };
 
-  const handleSaveOfficial = async (data: any) => {
-    // Ensure required fields are present
-    if (!data.email || !data.phone_number) {
-      alert('Email and phone number are required.');
-      return;
-    }
-    // Ensure status is valid
-    const validStatuses = ['pending', 'approved', 'rejected', 'active', 'inactive'];
-    let status = data.status;
-    if (!validStatuses.includes(status)) {
-      status = 'active';
-    }
-    const officialData = {
-      ...data,
-      barangay: selectedBarangay,
-      status,
-      years_of_service: 0,
-      achievements: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      user_id: data.user_id || user?.id // Set user_id if not present
-    };
-    console.log('Creating official with data:', officialData);
-    try {
-      if (selectedOfficial?.id) {
-        await updateOfficial.mutateAsync({
-          id: selectedOfficial.id,
-          ...officialData,
-        });
-      } else {
-        await createOfficial.mutateAsync(officialData);
-      }
-      // Only show success toast if no error is thrown
-      // (Toast is handled in the mutation's onSuccess, so no need to show here)
-    } catch (error) {
-      // Error handled by hooks
-    } finally {
-      setShowAddModal(false);
-      setSelectedOfficial(null);
-    }
-  };
-
-  const handleEditOfficial = (official: any) => {
-    setSelectedOfficial({
-      ...official,
-      isCompleted: true
-    });
-    setShowAddModal(true);
-  };
-
-  const handleDeleteOfficial = async (official: any) => {
-    const officialName = official.first_name && official.last_name 
-      ? `${official.first_name} ${official.last_name}` 
-      : official.position;
-    if (!confirm(`Are you sure you want to remove ${officialName} from the officials list?`)) {
-      return;
-    }
-    try {
-      await deleteOfficial.mutateAsync(official.id);
-    } catch (error) {
-      // Error handled by hook
-    }
+  const handleSaveOfficial = (data: any) => {
+    console.log('Saving new official:', data);
+    // Here you would typically save to the database
+    setShowAddModal(false);
+    setSelectedOfficial(null);
   };
 
   if (isLoading) {
@@ -301,7 +288,7 @@ const OfficialsPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Officials Management</h1>
-                <p className="text-gray-600 mt-1">Manage officials for {selectedBarangay}</p>
+                <p className="text-gray-600 mt-1">Manage officials for {selectedBarangay}, {selectedRegion}</p>
               </div>
               <Button 
                 className="bg-red-600 hover:bg-red-700 text-white"
@@ -490,8 +477,8 @@ const OfficialsPage = () => {
                             <div className="flex items-start gap-3">
                               <Avatar className="h-14 w-14 border-2 border-gray-200 flex-shrink-0">
                                 <AvatarFallback className="bg-red-600 text-white font-semibold text-sm">
-                                  {official.first_name ? official.first_name.substring(0, 1) : official.position.substring(0, 1)}
-                                  {official.last_name ? official.last_name.substring(0, 1) : official.position.substring(1, 2)}
+                                  {official.firstName ? official.firstName.substring(0, 1) : official.position.substring(0, 1)}
+                                  {official.lastName ? official.lastName.substring(0, 1) : official.position.substring(1, 2)}
                                 </AvatarFallback>
                               </Avatar>
                               
@@ -500,8 +487,8 @@ const OfficialsPage = () => {
                                 <div className="flex items-start justify-between mb-3">
                                   <div className="min-w-0 flex-1">
                                     <h3 className="font-semibold text-gray-900 text-base mb-1">
-                                      {official.first_name && official.last_name 
-                                        ? `${official.first_name} ${official.last_name}`
+                                      {official.firstName && official.lastName 
+                                        ? `${official.firstName} ${official.lastName}`
                                         : official.position
                                       }
                                     </h3>
@@ -521,21 +508,18 @@ const OfficialsPage = () => {
                                         </Button>
                                       </DropdownMenuTrigger>
                                       <DropdownMenuContent align="end">
-                                        <DropdownMenuItem asChild>
-                                          <Link to={`/officials/profile/${official.id}`}>
-                                            <Eye className="mr-2 h-4 w-4" /> View Profile
-                                          </Link>
+                                        <DropdownMenuItem>
+                                          <Eye className="h-4 w-4 mr-2" />
+                                          View Profile
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleEditOfficial(official)}>
+                                        <DropdownMenuItem>
                                           <PenLine className="h-4 w-4 mr-2" />
                                           Edit
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
-                                        <DropdownMenuItem 
-                                          className="text-red-600"
-                                          onClick={() => handleDeleteOfficial(official)}
-                                        >
-                                          <Trash2 className="mr-2 h-4 w-4" /> Remove
+                                        <DropdownMenuItem className="text-red-600">
+                                          <Trash2 className="h-4 w-4 mr-2" />
+                                          Remove
                                         </DropdownMenuItem>
                                       </DropdownMenuContent>
                                     </DropdownMenu>
@@ -548,10 +532,10 @@ const OfficialsPage = () => {
                                     <MapPin className="h-4 w-4 flex-shrink-0" />
                                     <span className="truncate">{official.barangay}</span>
                                   </div>
-                                  {official.phone_number && (
+                                  {official.contact_phone && (
                                     <div className="flex items-center gap-2 text-sm text-gray-600">
                                       <Phone className="h-4 w-4 flex-shrink-0" />
-                                      <span>{official.phone_number}</span>
+                                      <span>{official.contact_phone}</span>
                                     </div>
                                   )}
                                   <div className="flex items-center justify-between text-sm text-gray-600 pt-2 border-t border-gray-100">
@@ -601,14 +585,14 @@ const OfficialsPage = () => {
                               <div className="flex items-center gap-3">
                                 <Avatar className="h-12 w-12 border-2 border-gray-200">
                                   <AvatarFallback className="bg-red-600 text-white font-semibold">
-                                    {official.first_name ? official.first_name.substring(0, 1) : official.position.substring(0, 1)}
-                                    {official.last_name ? official.last_name.substring(0, 1) : official.position.substring(1, 2)}
+                                    {official.firstName ? official.firstName.substring(0, 1) : official.position.substring(0, 1)}
+                                    {official.lastName ? official.lastName.substring(0, 1) : official.position.substring(1, 2)}
                                   </AvatarFallback>
                                 </Avatar>
                                 <div className="space-y-1">
                                   <p className="font-semibold text-gray-900">
-                                    {official.first_name && official.last_name 
-                                      ? `${official.first_name} ${official.last_name}`
+                                    {official.firstName && official.lastName 
+                                      ? `${official.firstName} ${official.lastName}`
                                       : 'N/A'
                                     }
                                   </p>
@@ -627,13 +611,13 @@ const OfficialsPage = () => {
                             </TableCell>
                             <TableCell className="py-4">
                               <div className="space-y-1">
-                                {official.phone_number && (
+                                {official.contact_phone && (
                                   <div className="flex items-center gap-2 text-sm text-gray-600">
                                     <Phone className="h-3.5 w-3.5" />
-                                    <span>{official.phone_number}</span>
+                                    <span>{official.contact_phone}</span>
                                   </div>
                                 )}
-                                {!official.phone_number && (
+                                {!official.contact_phone && (
                                   <span className="text-sm text-gray-400">No contact info</span>
                                 )}
                               </div>
@@ -658,19 +642,19 @@ const OfficialsPage = () => {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                  <DropdownMenuItem asChild>
-                                    <Link to={`/officials/profile/${official.id}`}>
-                                      <Eye className="mr-2 h-4 w-4" /> View Profile
-                                    </Link>
+                                  <DropdownMenuItem>
+                                    <Eye className="mr-2 h-4 w-4" /> View Profile
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleEditOfficial(official)}>
+                                  <DropdownMenuItem>
                                     <PenLine className="mr-2 h-4 w-4" /> Edit Details
                                   </DropdownMenuItem>
+                                  {official.contact_phone && (
+                                    <DropdownMenuItem>
+                                      <Phone className="mr-2 h-4 w-4" /> Call
+                                    </DropdownMenuItem>
+                                  )}
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem 
-                                    className="text-red-600"
-                                    onClick={() => handleDeleteOfficial(official)}
-                                  >
+                                  <DropdownMenuItem className="text-red-600">
                                     <Trash2 className="mr-2 h-4 w-4" /> Remove
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -717,12 +701,11 @@ const OfficialsPage = () => {
         }}
         official={selectedOfficial || {
           position: "",
-          first_name: "",
-          middle_name: "",
-          last_name: "",
+          firstName: "",
+          middleName: "",
+          lastName: "",
           suffix: "",
-         isCompleted: false,
-         id: null
+          isCompleted: false
         }}
         onSave={handleSaveOfficial}
       />

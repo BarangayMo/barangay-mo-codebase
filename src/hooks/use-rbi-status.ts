@@ -17,9 +17,7 @@ export function useRbiStatus() {
     };
   }
 
-  // Find the form with the most recent decision with highest precedence
-  // Precedence: superadmin (2) > official (1)
-  const latestForm = rbiForms?.[0]; // Already sorted by submitted_at desc
+  const latestForm = rbiForms?.[0];
   
   if (!latestForm) {
     return {
@@ -30,8 +28,6 @@ export function useRbiStatus() {
     };
   }
 
-  // If the form has been reviewed, use the status of the highest precedence reviewer
-  // Otherwise, use the current status
   const status = latestForm.status as RbiStatus;
   const hasAccess = status === 'approved';
 

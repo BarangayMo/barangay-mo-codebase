@@ -16,9 +16,6 @@ import {
 import { InviteUsersModal } from "./InviteUsersModal";
 import { useUsers, useArchiveUser, User } from "@/hooks/use-users-data";
 import { formatDistanceToNow } from "date-fns";
-import { useNavigate } from 'react-router-dom';
-
-
 
 const filterOptions = [
   { value: "All", label: "All", icon: Users },
@@ -43,8 +40,6 @@ export const AllUsersTab = () => {
     const last = lastName || "";
     return `${first.charAt(0)}${last.charAt(0)}`.toUpperCase() || "U";
   };
-const navigate = useNavigate();
-
 
   const getRoleBadgeColor = (role: string) => {
     switch (role?.toLowerCase()) {
@@ -55,8 +50,6 @@ const navigate = useNavigate();
       default:
         return 'bg-gray-100 text-gray-800';
     }
-   
-
   };
 
   const getStatusBadge = (status: string | null, lastLogin: string | null) => {
@@ -76,28 +69,18 @@ const navigate = useNavigate();
   };
 
   const filteredUsers = users.filter(user => {
-  const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
-  const matchesSearch = fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        user.email.toLowerCase().includes(searchTerm.toLowerCase());
-
-  switch (selectedFilter) {
-    case "All":
-      return matchesSearch && user.status !== "archived";
-    case "Resident":
-      return matchesSearch && user.role === "resident" && user.status !== "archived";
-    case "Official":
-      return matchesSearch && user.role === "official" && user.status !== "archived";
-    case "Online":
-      return matchesSearch && user.status === "online";
-    case "Offline":
-      return matchesSearch && user.status === "offline";
-    case "Archived":
-      return matchesSearch && user.status === "archived";
-    default:
-      return matchesSearch;
-  }
-});
-
+    const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+    const matchesSearch = fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    if (selectedFilter === "All") return matchesSearch;
+    if (selectedFilter === "Resident") return matchesSearch && user.role === "resident";
+    if (selectedFilter === "Official") return matchesSearch && user.role === "official";
+    if (selectedFilter === "Online") return matchesSearch && user.status === "online";
+    if (selectedFilter === "Offline") return matchesSearch && user.status === "offline";
+    if (selectedFilter === "Archived") return matchesSearch && user.status === "archived";
+    return matchesSearch;
+  });
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -116,10 +99,8 @@ const navigate = useNavigate();
   };
 
   const handleArchiveUser = (userId: string) => {
-  console.log("Archiving user with ID:", userId);
-  archiveUserMutation.mutate(userId);
-};
-
+    archiveUserMutation.mutate(userId);
+  };
 
   if (isLoading) {
     return (
@@ -137,13 +118,18 @@ const navigate = useNavigate();
     );
   }
 
-
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-gray-900">Company users</h2>
-        
+        <Button 
+          onClick={() => setIsInviteModalOpen(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Invite users
+        </Button>
       </div>
 
       {/* Filters and Search */}
@@ -258,11 +244,8 @@ const navigate = useNavigate();
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                       
-          <DropdownMenuItem onClick={() => navigate(`/admin/users/${user.id}`)}>
-            View Profile
-          </DropdownMenuItem>
-                       
+                        <DropdownMenuItem>View Profile</DropdownMenuItem>
+                        <DropdownMenuItem>Edit User</DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem 
                           className="text-red-600"

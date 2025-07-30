@@ -144,9 +144,9 @@ export const useApproveOfficial = () => {
         throw new Error(error.message || 'Failed to approve official');
       }
 
-      if (result?.error) {
+      if (result?.error || result?.success === false) {
         console.error('Approval error from server:', result);
-        throw new Error(result.error || 'Approval failed');
+        throw new Error(result.error || result.message || 'Approval failed');
       }
 
       return result;
@@ -155,7 +155,7 @@ export const useApproveOfficial = () => {
       queryClient.invalidateQueries({ queryKey: ['official-registrations'] });
       toast({
         title: "Official Approved",
-        description: "The official registration has been approved and an account has been created. A password reset email has been sent to the official to set up their login credentials.",
+        description: "The official registration has been approved and an account has been created. The official can now login with their original password.",
       });
     },
     onError: (error: any) => {

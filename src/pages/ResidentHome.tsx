@@ -26,7 +26,6 @@ export default function ResidentHome() {
   // Check RBI completion status
   const hasCompletedRbi = rbiForms && rbiForms.length > 0;
   const approvedRbi = rbiForms?.find(form => form.status === 'approved');
-
   
   // Display RBI number if approved, otherwise show completion message
   const rbiNumber = approvedRbi?.rbi_number || "Complete RBI to get number";
@@ -36,7 +35,7 @@ export default function ResidentHome() {
     : `https://api.dicebear.com/7.x/initials/svg?seed=${profile?.first_name || ''} ${profile?.last_name || ''}` ||
       "/placeholder.svg";
   
-  // Use actual barangay data from profile (which now includes RBI data) when approved
+  // Use actual barangay data from profile when approved
   const barangayName = approvedRbi && profile?.barangay 
     ? profile.barangay 
     : "Complete RBI Registration";
@@ -52,8 +51,7 @@ export default function ResidentHome() {
     { icon: ShoppingCart, label: "Marketplace", path: "/marketplace" },
     { icon: Briefcase, label: "Jobs", path: "/jobs" },
     { icon: Users, label: "Community", path: "/community" },
-   { icon: User, label: "Barangay Official", path: "/resident/official" },
-
+    { icon: User, label: "Barangay Official", path: "/resident/official" },
   ];
 
   // Management Actions for Residents
@@ -63,7 +61,7 @@ export default function ResidentHome() {
   ];
 
   const handleQuickActionClick = (path: string, e: React.MouseEvent) => {
-    if (!hasRbiAccess && (path.includes('/marketplace') || path.includes('/jobs') || path.includes('/services') || path.includes('/community')|| path.includes('/officials') || path.includes('/services'))) {
+    if (!hasRbiAccess && (path.includes('/marketplace') || path.includes('/jobs') || path.includes('/services'))) {
       e.preventDefault();
       toast.dismiss(); // Dismiss any existing toasts first
       toast.error("Restricted Access", {
@@ -74,7 +72,6 @@ export default function ResidentHome() {
     }
     return true;
   };
-console.log("✅ Reviewed by ID:", approvedRbi?.reviewed_by);
 
   return (
     <Layout>

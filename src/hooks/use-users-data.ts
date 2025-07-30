@@ -164,17 +164,16 @@ export const useArchiveUser = () => {
 
   return useMutation({
     mutationFn: async (userId: string) => {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .update({ status: 'archived' })
         .eq('id', userId)
         .select()
-        .single(); // ✅ Fix: expect single row
+        .single();
 
       if (error) throw error;
-      return { success: true };
+      return data;
     },
-
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       toast({
@@ -182,7 +181,6 @@ export const useArchiveUser = () => {
         description: "User has been archived successfully.",
       });
     },
-
     onError: (error) => {
       toast({
         title: "Error",
