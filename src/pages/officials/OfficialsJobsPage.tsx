@@ -82,7 +82,7 @@ export default function OfficialJobsPage() {
 
   const getCategoryColor = (category: string) => {
     const colors = {
-      'Technology': 'bg-blue-100 text-blue-800 border-blue-200',
+      'Technology': 'bg-red-100 text-red-800 border-red-200',
       'Healthcare': 'bg-red-100 text-red-800 border-red-200',
       'Education': 'bg-purple-100 text-purple-800 border-purple-200',
       'Finance': 'bg-green-100 text-green-800 border-green-200',
@@ -95,7 +95,7 @@ export default function OfficialJobsPage() {
 
   const getWorkApproachColor = (workApproach: string) => {
     const colors = {
-      'Remote': 'bg-blue-100 text-blue-800 border-blue-200',
+      'Remote': 'bg-red-100 text-red-800 border-red-200',
       'On-site': 'bg-orange-100 text-orange-800 border-orange-200',
       'Hybrid': 'bg-purple-100 text-purple-800 border-purple-200'
     };
@@ -181,7 +181,7 @@ export default function OfficialJobsPage() {
           </div>
           <Button
             onClick={() => navigate('/admin/jobs/edit/new')}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
+            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 w-full sm:w-auto"
           >
             <Plus className="h-4 w-4" />
             <span className="sm:hidden">Add New Job</span>
@@ -254,7 +254,7 @@ export default function OfficialJobsPage() {
                         <Briefcase className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400" />
                         <h3 className="mt-4 text-base sm:text-lg font-medium text-gray-900">No jobs posted yet</h3>
                         <p className="mt-2 text-sm sm:text-base text-gray-500 mb-4">Start by posting your first job</p>
-                        <Button onClick={() => navigate('/admin/jobs/edit/new')} className="bg-blue-600 hover:bg-blue-700">
+                        <Button onClick={() => navigate('/admin/jobs/edit/new')} className="bg-red-600 hover:bg-red-700">
                           <Plus className="mr-2 h-4 w-4" />
                           Post a Job
                         </Button>
@@ -266,11 +266,11 @@ export default function OfficialJobsPage() {
                           {getTabJobs().map(job => (
                             <div 
                               key={job.id} 
-                              className={`p-4 border rounded-lg cursor-pointer hover:bg-gray-50 ${selectedJob?.id === job.id ? 'bg-blue-50 border-blue-500' : ''}`}
+                              className={`p-4 border rounded-lg cursor-pointer hover:bg-gray-50 ${selectedJob?.id === job.id ? 'bg-red-50 border-red-500' : ''}`}
                               onClick={() => handleJobSelect(job)}
                             >
                               <div className="flex items-start gap-3">
-                                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center flex-shrink-0">
                                   {job.logo_url ? (
                                     <img src={job.logo_url} alt="Company logo" className="w-full h-full object-cover rounded-lg" />
                                   ) : (
@@ -311,11 +311,11 @@ export default function OfficialJobsPage() {
                               {getTabJobs().map(job => (
                                 <TableRow 
                                   key={job.id} 
-                                  className={`cursor-pointer hover:bg-gray-50 ${selectedJob?.id === job.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''}`}
+                                  className={`cursor-pointer hover:bg-gray-50 ${selectedJob?.id === job.id ? 'bg-red-50 border-l-4 border-red-500' : ''}`}
                                   onClick={() => handleJobSelect(job)}
                                 >
                                   <TableCell className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center flex-shrink-0">
                                       {job.logo_url ? (
                                         <img src={job.logo_url} alt="Company logo" className="w-full h-full object-cover rounded-lg" />
                                       ) : (
@@ -369,7 +369,7 @@ export default function OfficialJobsPage() {
                 {/* Job Header with Edit Button */}
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
                   <div className="flex items-start gap-4 flex-1">
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
                       {selectedJob.logo_url ? (
                         <img src={selectedJob.logo_url} alt="Company logo" className="w-full h-full object-cover rounded-lg" />
                       ) : (
@@ -411,7 +411,7 @@ export default function OfficialJobsPage() {
                   {/* Edit Button */}
                   <Button 
                     onClick={() => handleEditJob(selectedJob.id)} 
-                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto"
+                    className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto"
                   >
                     <Edit className="h-4 w-4" />
                     Edit
@@ -430,7 +430,7 @@ export default function OfficialJobsPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
-                    <Users className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                    <Users className="h-5 w-5 text-red-600 flex-shrink-0" />
                     <div className="min-w-0">
                       <h4 className="text-sm font-medium text-gray-500">Experience</h4>
                       <p className="text-base sm:text-lg font-semibold truncate">{selectedJob.experience}</p>
@@ -467,7 +467,7 @@ export default function OfficialJobsPage() {
                     <ul className="space-y-2">
                       {selectedJob.responsibilities.map((responsibility, index) => (
                         <li key={index} className="flex items-start gap-2 text-sm text-gray-700">
-                          <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
+                          <span className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></span>
                           <span className="break-words">{responsibility}</span>
                         </li>
                       ))}
@@ -496,7 +496,7 @@ export default function OfficialJobsPage() {
                     <h3 className="text-lg font-semibold mb-3">Required Skills</h3>
                     <div className="flex flex-wrap gap-2">
                       {selectedJob.skills.map((skill, index) => (
-                        <Badge key={index} variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                        <Badge key={index} variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200">
                           {skill}
                         </Badge>
                       ))}
