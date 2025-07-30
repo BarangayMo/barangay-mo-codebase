@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { HeaderLogo } from "./header/HeaderLogo";
 import { LocationDropdown } from "./header/LocationDropdown";
-import { DesktopNavItems } from "./header/DesktopNavItems";
+import { DesktopNavItems } from "./header/DesktopNavItems"; 
 import { ProfileMenu } from "./ProfileMenu";
 import { LanguageSelector } from "./LanguageSelector";
 import { useCartSummary } from "@/hooks/useCartSummary";
@@ -142,33 +142,47 @@ export const Header = () => {
                   <div className="space-y-2">
                     {(() => {
                     if (isAuthenticated) {
-                      if (userRole === "official") {
-                        return [{
-                          name: "Dashboard",
-                          icon: Home,
-                          href: "/official-dashboard",
-                          active: location.pathname === "/official-dashboard"
-                        }, {
-                          name: "Requests & Complaints",
-                          icon: FileText,
-                          href: "/official/requests"
-                        }, {
-                          name: "Messages",
-                          icon: MessageSquare,
-                          href: "/messages"
-                        }, {
-                          name: "Reports",
-                          icon: BarChart3,
-                          href: "/official/reports"
-                        }, {
-                          name: "Documents",
-                          icon: FolderOpen,
-                          href: "/official/documents"
-                        }, {
-                          name: "Settings",
-                          icon: Settings,
-                          href: "/settings"
-                        }];
+                     if (userRole === "official") {
+  return [
+    {
+      name: "Dashboard",
+      icon: Home,
+      href: "/official-dashboard",
+      active: location.pathname === "/official-dashboard",
+      className: "text-red-600 hover:text-red-700"
+    },
+    {
+      name: "Requests & Complaints",
+      icon: FileText,
+      href: "/official/requests",
+      className: "text-red-600 hover:text-red-700"
+    },
+    {
+      name: "Messages",
+      icon: MessageSquare,
+      href: "/messages",
+      className: "text-red-600 hover:text-red-700"
+    },
+    {
+      name: "Reports",
+      icon: BarChart3,
+      href: "/official/reports",
+      className: "text-red-600 hover:text-red-700"
+    },
+    {
+      name: "Documents",
+      icon: FolderOpen,
+      href: "/official/documents",
+      className: "text-red-600 hover:text-red-700"
+    },
+    {
+      name: "Settings",
+      icon: Settings,
+      href: "/settings",
+      className: "text-red-600 hover:text-red-700"
+    }
+  ];
+
                       } else if (userRole === "superadmin") {
                         return [{
                           name: "Dashboard",
