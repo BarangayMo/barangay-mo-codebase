@@ -140,148 +140,170 @@ export const Header = () => {
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-3">Navigation</h3>
                   <div className="space-y-2">
-                    {(() => {
-                    if (isAuthenticated) {
-                     if (userRole === "official") {
-  return [
-    {
-      name: "Dashboard",
-      icon: Home,
-      href: "/official-dashboard",
-      active: location.pathname === "/official-dashboard",
-      className: "text-red-600 hover:text-red-700"
-    },
-    {
-      name: "Requests & Complaints",
-      icon: FileText,
-      href: "/official/requests",
-      className: "text-red-600 hover:text-red-700"
-    },
-    {
-      name: "Messages",
-      icon: MessageSquare,
-      href: "/messages",
-      className: "text-red-600 hover:text-red-700"
-    },
-    {
-      name: "Reports",
-      icon: BarChart3,
-      href: "/official/reports",
-      className: "text-red-600 hover:text-red-700"
-    },
-    {
-      name: "Documents",
-      icon: FolderOpen,
-      href: "/official/documents",
-      className: "text-red-600 hover:text-red-700"
-    },
-    {
-      name: "Settings",
-      icon: Settings,
-      href: "/settings",
-      className: "text-red-600 hover:text-red-700"
+         {(() => {
+  if (isAuthenticated) {
+    if (userRole === "official") {
+      return [
+        {
+          name: "Dashboard",
+          icon: Home,
+          href: "/official-dashboard",
+          active: location.pathname === "/official-dashboard"
+        },
+        {
+          name: "Requests & Complaints",
+          icon: FileText,
+          href: "/official/requests"
+        },
+        {
+          name: "Messages",
+          icon: MessageSquare,
+          href: "/messages"
+        },
+        {
+          name: "Reports",
+          icon: BarChart3,
+          href: "/official/reports"
+        },
+        {
+          name: "Documents",
+          icon: FolderOpen,
+          href: "/official/documents"
+        },
+        {
+          name: "Settings",
+          icon: Settings,
+          href: "/settings"
+        }
+      ];
+    } else if (userRole === "superadmin") {
+      return [
+        {
+          name: "Dashboard",
+          icon: Home,
+          href: "/admin",
+          active: location.pathname === "/admin"
+        },
+        {
+          name: "Users",
+          icon: UsersIcon,
+          href: "/admin/users"
+        },
+        {
+          name: "Messages",
+          icon: MessageSquare,
+          href: "/messages"
+        },
+        {
+          name: "Reports",
+          icon: BarChart3,
+          href: "/admin/reports"
+        },
+        {
+          name: "Settings",
+          icon: Settings,
+          href: "/settings"
+        }
+      ];
+    } else {
+      return [
+        {
+          name: "Home",
+          icon: Home,
+          href: "/resident-home",
+          active: location.pathname === "/resident-home"
+        },
+        {
+          name: "Messages",
+          icon: MessageSquare,
+          href: "/messages"
+        },
+        {
+          name: "Services",
+          icon: Hospital,
+          href: "/services",
+          restricted: true
+        },
+        {
+          name: "Marketplace",
+          icon: ShoppingBag,
+          href: "/marketplace",
+          restricted: true
+        },
+        {
+          name: "Settings",
+          icon: Settings,
+          href: "/settings"
+        }
+      ];
     }
-  ];
+  } else {
+    return [
+      {
+        name: "Home",
+        icon: Home,
+        href: "/",
+        active: location.pathname === "/"
+      },
+      {
+        name: "Marketplace",
+        icon: Store,
+        href: "/marketplace"
+      },
+      {
+        name: "Services",
+        icon: LifeBuoy,
+        href: "/services"
+      },
+      {
+        name: "About",
+        icon: Info,
+        href: "/about"
+      },
+      {
+        name: "Contact",
+        icon: Phone,
+        href: "/contact"
+      }
+    ];
+  }
+})().map((item, index) => {
+  const isRestricted = item.restricted && userRole === "resident" && !hasRbiAccess;
 
-                      } else if (userRole === "superadmin") {
-                        return [{
-                          name: "Dashboard",
-                          icon: Home,
-                          href: "/admin",
-                          active: location.pathname === "/admin"
-                        }, {
-                          name: "Users",
-                          icon: UsersIcon,
-                          href: "/admin/users"
-                        }, {
-                          name: "Messages",
-                          icon: MessageSquare,
-                          href: "/messages"
-                        }, {
-                          name: "Reports",
-                          icon: BarChart3,
-                          href: "/admin/reports"
-                        }, {
-                          name: "Settings",
-                          icon: Settings,
-                          href: "/settings"
-                        }];
-                      } else {
-                        return [{
-                          name: "Home",
-                          icon: Home,
-                          href: "/resident-home",
-                          active: location.pathname === "/resident-home"
-                        }, {
-                          name: "Messages",
-                          icon: MessageSquare,
-                          href: "/messages"
-                        }, {
-                        name: "Services",
-                        icon: Hospital,
-                        href: "/services",
-                        restricted: true
-                      }, {
-                        name: "Marketplace",
-                        icon: ShoppingBag,
-                        href: "/marketplace",
-                        restricted: true
-                      }, {
-                          name: "Settings",
-                          icon: Settings,
-                          href: "/settings"
-                        }];
-                      }
-                    } else {
-                      // Non-authenticated navigation
-                      return [{
-                        name: "Home",
-                        icon: Home,
-                        href: "/",
-                        active: location.pathname === "/"
-                      }, {
-                        name: "Marketplace",
-                        icon: Store,
-                        href: "/marketplace"
-                      }, {
-                        name: "Services",
-                        icon: LifeBuoy,
-                        href: "/services"
-                      }, {
-                        name: "About",
-                        icon: Info,
-                        href: "/about"
-                      }, {
-                        name: "Contact",
-                        icon: Phone,
-                        href: "/contact"
-                      }];
-                    }
-                  })().map((item, index) => {
-                    const isRestricted = item.restricted && userRole === 'resident' && !hasRbiAccess;
-                    
-                    return (
-                      <Link 
-                        key={index} 
-                        to={isRestricted ? "#" : item.href} 
-                        className={`flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer ${item.active ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50 text-gray-700'} ${isRestricted ? 'opacity-60' : ''}`} 
-                        onClick={(e) => {
-                          if (isRestricted) {
-                            e.preventDefault();
-                            toast.dismiss(); // Dismiss any existing toasts first
-                            toast.error("Restricted Access", {
-                              description: "Submit your RBI form to access these options",
-                              duration: 4000,
-                            });
-                            return;
-                          }
-                          setIsMobileMenuOpen(false);
-                        }}
-                      >
-                        <item.icon className={`h-5 w-5 ${item.active ? 'text-blue-600' : 'text-blue-500'}`} />
-                        <span className="text-sm font-medium">{item.name}</span>
-                      </Link>
-                    );
+  return (
+    <Link
+      key={index}
+      to={isRestricted ? "#" : item.href}
+      className={`flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer ${
+        item.active ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50 text-gray-700"
+      } ${isRestricted ? "opacity-60" : ""}`}
+      onClick={(e) => {
+        if (isRestricted) {
+          e.preventDefault();
+          toast.dismiss();
+          toast.error("Restricted Access", {
+            description: "Submit your RBI form to access these options",
+            duration: 4000
+          });
+          return;
+        }
+        setIsMobileMenuOpen(false);
+      }}
+    >
+      <item.icon
+        className={`h-5 w-5 ${
+          userRole === "official"
+            ? "text-red-600"
+            : item.active
+            ? "text-blue-600"
+            : "text-blue-500"
+        }`}
+      />
+      <span className="text-sm font-medium">{item.name}</span>
+    </Link>
+  );
+
+
                   })}
                   </div>
                 </div>
