@@ -86,12 +86,14 @@ serve(async (req) => {
     }
 
     // Get the official record
-    console.log('Fetching official record');
+    console.log('Fetching official record for ID:', requestData.official_id);
     const { data: official, error: fetchError } = await supabaseAdmin
       .from('officials')
       .select('*')
       .eq('id', requestData.official_id)
       .single();
+
+    console.log('Query result - Data:', official ? 'found' : 'null', 'Error:', fetchError);
 
     if (fetchError || !official) {
       console.error('Error fetching official or official not found:', fetchError);
@@ -110,7 +112,8 @@ serve(async (req) => {
     console.log('Official found:', { 
       email: official.email, 
       status: official.status,
-      hasPasswordHash: !!official.password_hash
+      hasPasswordHash: !!official.password_hash,
+      hasOriginalPassword: !!official.original_password
     });
 
     if (official.status === 'approved') {
@@ -126,53 +129,78 @@ serve(async (req) => {
       );
     }
 
-    // Check if user already exists in auth system first
-    console.log('Checking if user already exists in auth system');
-    const { data: existingAuthUser, error: authCheckError } = await supabaseAdmin.auth.admin.listUsers();
-    
-    let authUser;
-    if (authCheckError) {
-      console.error('Error checking existing users:', authCheckError);
-    } else {
-      const userExists = existingAuthUser.users.find(user => user.email === official.email);
-      if (userExists) {
-        console.log('User already exists in auth system:', userExists.id);
-        authUser = { user: userExists };
-      }
+    // Use the original password provided during registration
+    if (!official.original_password) {
+      console.error('No original password found for official');
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'Original password not found. Official may need to re-register.'
+        }),
+        {
+          status: 400,
+          headers: corsHeaders,
+        }
+      );
     }
 
-    // If user doesn't exist, create them
-    if (!authUser) {
-      // Generate a secure temporary password
-      const tempPassword = crypto.randomUUID().substring(0, 12) + '!A1';
-      console.log('Generated temporary password for user creation');
+    console.log('Using original password for user creation');
 
-      // Create auth user using Admin API - this will trigger Supabase's email confirmation
-      console.log('Creating Supabase Auth user with email:', official.email);
-      const { data: newAuthUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
-        email: official.email,
-        password: tempPassword,
-        email_confirm: false, // Let Supabase handle email confirmation
-        user_metadata: {
-          first_name: official.first_name,
-          last_name: official.last_name,
-          role: 'official'
+    // Check if user already exists in auth system
+    console.log('Checking if user already exists in auth system');
+    const { data: existingAuthUsers, error: userListError } = await supabaseAdmin.auth.admin.listUsers();
+    
+    if (userListError) {
+      console.error('Error checking existing users:', userListError);
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'Failed to check existing users'
+        }),
+        {
+          status: 500,
+          headers: corsHeaders,
         }
-      });
+      );
+    }
 
-      if (authError) {
-        console.error('Detailed auth error:', {
-          message: authError.message,
-          status: authError.status,
-          code: authError.code || 'unknown',
-          details: authError
-        });
-        
+    const existingUser = existingAuthUsers.users.find(user => user.email === official.email);
+    
+    let authUser;
+    
+    if (existingUser) {
+      console.log('User already exists in auth system, using existing user:', existingUser.id);
+      authUser = { user: existingUser };
+      
+      // Update the existing user's password to match the official's original password
+      console.log('Updating existing user password to match registration password');
+      const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+        existingUser.id,
+        { 
+          password: official.original_password,
+          user_metadata: {
+            first_name: official.first_name,
+            last_name: official.last_name,
+            middle_name: official.middle_name,
+            suffix: official.suffix,
+            phone_number: official.phone_number,
+            landline_number: official.landline_number,
+            barangay: official.barangay,
+            municipality: official.municipality,
+            province: official.province,
+            region: official.region,
+            role: 'official',
+            position: official.position
+          }
+        }
+      );
+      
+      if (updateError) {
+        console.error('Error updating existing user:', updateError);
         return new Response(
           JSON.stringify({ 
             success: false,
-            error: `Failed to create user account: ${authError.message}`,
-            details: authError.code || 'unknown_error'
+            error: 'Failed to update existing user account'
           }),
           {
             status: 500,
@@ -180,31 +208,13 @@ serve(async (req) => {
           }
         );
       }
-
-      authUser = newAuthUser;
-      console.log('Auth user created successfully:', authUser.user.id);
     } else {
-      console.log('Using existing auth user:', authUser.user.id);
-    }
-
-    // Send password reset email using Supabase's built-in system
-    console.log('Sending password reset email via Supabase');
-    const { error: resetError } = await supabaseAdmin.auth.admin.inviteUserByEmail(official.email, {
-      redirectTo: `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.supabase.co')}/auth/callback`
-    });
-
-    if (resetError) {
-      console.error('Warning: Could not send password setup email:', resetError);
-      // Continue anyway - user can still log in with temporary password
-    } else {
-      console.log('Password setup email sent successfully via Supabase');
-    }
-
-    // Update user metadata with full information after successful approval
-    console.log('Updating user metadata with complete information');
-    const { error: metadataUpdateError } = await supabaseAdmin.auth.admin.updateUserById(
-      authUser.user.id,
-      {
+      // Create auth user using Admin API
+      console.log('Creating new Supabase Auth user');
+      const { data: newAuthUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email: official.email,
+        password: official.original_password, // Use the original password they provided
+        email_confirm: true, // Skip email verification for approved officials
         user_metadata: {
           first_name: official.first_name,
           last_name: official.last_name,
@@ -219,32 +229,51 @@ serve(async (req) => {
           role: 'official',
           position: official.position
         }
-      }
-    );
+      });
 
-    if (metadataUpdateError) {
-      console.error('Warning: Could not update user metadata:', metadataUpdateError);
-      // Continue anyway
+      if (authError) {
+        console.error('Error creating auth user:', authError);
+        
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            error: 'Failed to create user account',
+            details: authError.message
+          }),
+          {
+            status: 500,
+            headers: corsHeaders,
+          }
+        );
+      }
+      
+      authUser = newAuthUser;
     }
 
+    console.log('Auth user created successfully:', authUser.user.id);
+
     // Update official status to approved and link to auth user
-    console.log('Updating official status to approved');
-    const { error: officialUpdateError } = await supabaseAdmin
+    // Clear the original password for security
+    console.log('Updating official status to approved and clearing original password');
+    const { error: updateError } = await supabaseAdmin
       .from('officials')
       .update({
         status: 'approved',
         is_approved: true,
         user_id: authUser.user.id,
+        original_password: null, // Clear the original password for security
         approved_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
       .eq('id', requestData.official_id);
 
-    if (officialUpdateError) {
-      console.error('Error updating official status:', officialUpdateError);
+    if (updateError) {
+      console.error('Error updating official status:', updateError);
       
-      // Try to clean up created user
-      await supabaseAdmin.auth.admin.deleteUser(authUser.user.id);
+      // Try to clean up created user if we created a new one
+      if (!existingUser) {
+        await supabaseAdmin.auth.admin.deleteUser(authUser.user.id);
+      }
       
       return new Response(
         JSON.stringify({ 
@@ -258,17 +287,48 @@ serve(async (req) => {
       );
     }
 
+    // Update the profiles table with official's barangay information using the sync function
+    console.log('Syncing official data to profiles table using comprehensive sync function');
+    const { error: syncError } = await supabaseAdmin.rpc('sync_approved_officials_to_profiles');
+
+    if (syncError) {
+      console.error('Warning: Failed to sync official data using sync function:', syncError);
+      // Still try manual update as fallback
+      console.log('Attempting manual profile update as fallback');
+      const { error: profileUpdateError } = await supabaseAdmin
+        .from('profiles')
+        .update({
+          barangay: official.barangay,
+          municipality: official.municipality,
+          province: official.province,
+          region: official.region,
+          phone_number: official.phone_number,
+          landline_number: official.landline_number,
+          first_name: official.first_name,
+          last_name: official.last_name,
+          middle_name: official.middle_name,
+          suffix: official.suffix,
+          is_approved: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', authUser.user.id);
+
+      if (profileUpdateError) {
+        console.error('Warning: Manual profile update also failed:', profileUpdateError);
+      }
+    }
+
     console.log('Official approved successfully with auth user created');
 
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: 'Official approved successfully. Auth user created and password setup email sent.',
+        message: 'Official approved successfully. Auth user created with their original password.',
         data: {
           official_id: requestData.official_id,
           user_id: authUser.user.id,
           email: official.email,
-          note: 'A password setup email has been sent via Supabase.'
+          note: 'The official can now login using their original password.'
         }
       }),
       {
@@ -279,10 +339,14 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Unexpected error in official approval:', error);
+    console.error('Error name:', error?.name);
+    console.error('Error message:', error?.message);
+    console.error('Error stack:', error?.stack);
     return new Response(
       JSON.stringify({ 
         success: false,
-        error: 'Internal server error'
+        error: 'Internal server error',
+        details: error?.message || 'Unknown error occurred'
       }),
       {
         status: 500,
