@@ -131,6 +131,7 @@ export const useApproveOfficial = () => {
   return useMutation({
     mutationFn: async (officialId: string) => {
       console.log('Approving official:', officialId);
+       console.log("Sending official ID to function:", officialId);
       
       // Use the updated edge function that creates auth user with proper role
       const { data: result, error } = await supabase.functions.invoke(
