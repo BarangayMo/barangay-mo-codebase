@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
 
@@ -172,8 +173,8 @@ serve(async (req) => {
       console.log('User already exists in auth system, using existing user:', existingUser.id);
       authUser = { user: existingUser };
       
-      // Update the existing user's password to match the official's original password
-      console.log('Updating existing user password to match registration password');
+      // Update the existing user's password and metadata
+      console.log('Updating existing user password and metadata');
       const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
         existingUser.id,
         { 
@@ -213,8 +214,8 @@ serve(async (req) => {
       console.log('Creating new Supabase Auth user');
       const { data: newAuthUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email: official.email,
-        password: official.original_password, // Use the original password they provided
-        email_confirm: true, // Skip email verification for approved officials
+        password: official.original_password,
+        email_confirm: true,
         user_metadata: {
           first_name: official.first_name,
           last_name: official.last_name,
@@ -250,10 +251,9 @@ serve(async (req) => {
       authUser = newAuthUser;
     }
 
-    console.log('Auth user created successfully:', authUser.user.id);
+    console.log('Auth user processed successfully:', authUser.user.id);
 
     // Update official status to approved and link to auth user
-    // Clear the original password for security
     console.log('Updating official status to approved and clearing original password');
     const { error: updateError } = await supabaseAdmin
       .from('officials')
@@ -287,48 +287,50 @@ serve(async (req) => {
       );
     }
 
-    // Update the profiles table with official's barangay information using the sync function
-    console.log('Syncing official data to profiles table using comprehensive sync function');
-    const { error: syncError } = await supabaseAdmin.rpc('sync_approved_officials_to_profiles');
+    // Create or update profile with official role and data
+    console.log('Creating/updating profile with official role');
+    const { error: profileUpsertError } = await supabaseAdmin
+      .from('profiles')
+      .upsert({
+        id: authUser.user.id,
+        email: official.email,
+        first_name: official.first_name,
+        last_name: official.last_name,
+        middle_name: official.middle_name,
+        suffix: official.suffix,
+        phone_number: official.phone_number,
+        landline_number: official.landline_number,
+        barangay: official.barangay,
+        municipality: official.municipality,
+        province: official.province,
+        region: official.region,
+        role: 'official', // Explicitly set role as official
+        is_approved: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'id'
+      });
 
-    if (syncError) {
-      console.error('Warning: Failed to sync official data using sync function:', syncError);
-      // Still try manual update as fallback
-      console.log('Attempting manual profile update as fallback');
-      const { error: profileUpdateError } = await supabaseAdmin
-        .from('profiles')
-        .update({
-          barangay: official.barangay,
-          municipality: official.municipality,
-          province: official.province,
-          region: official.region,
-          phone_number: official.phone_number,
-          landline_number: official.landline_number,
-          first_name: official.first_name,
-          last_name: official.last_name,
-          middle_name: official.middle_name,
-          suffix: official.suffix,
-          is_approved: true,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', authUser.user.id);
-
-      if (profileUpdateError) {
-        console.error('Warning: Manual profile update also failed:', profileUpdateError);
-      }
+    if (profileUpsertError) {
+      console.error('Error upserting profile:', profileUpsertError);
+      // Continue anyway as the main approval was successful
+    } else {
+      console.log('Profile created/updated successfully with official role');
     }
 
-    console.log('Official approved successfully with auth user created');
+    console.log('Official approved successfully with auth user created and proper profile');
 
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: 'Official approved successfully. Auth user created with their original password.',
+        message: 'Official approved successfully. Auth user created with proper role and profile.',
         data: {
           official_id: requestData.official_id,
           user_id: authUser.user.id,
           email: official.email,
-          note: 'The official can now login using their original password.'
+          role: 'official',
+          note: 'The official can now login using their original password with official role.'
         }
       }),
       {

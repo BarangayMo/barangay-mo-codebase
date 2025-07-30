@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -131,7 +132,7 @@ export const useApproveOfficial = () => {
     mutationFn: async (officialId: string) => {
       console.log('Approving official:', officialId);
       
-      // Use the new edge function that creates auth user with password
+      // Use the updated edge function that creates auth user with proper role
       const { data: result, error } = await supabase.functions.invoke(
         'approve-official-with-auth',
         {
@@ -153,9 +154,10 @@ export const useApproveOfficial = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['official-registrations'] });
+      queryClient.invalidateQueries({ queryKey: ['officials'] });
       toast({
         title: "Official Approved",
-        description: "The official registration has been approved and an account has been created. The official can now login with their original password.",
+        description: "The official registration has been approved and an account has been created with proper official role. The official can now login with their original password.",
       });
     },
     onError: (error: any) => {
