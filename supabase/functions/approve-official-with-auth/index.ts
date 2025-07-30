@@ -6,6 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 };
+console.log("Edge function called");
+console.log("Request body:", req.body);
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
