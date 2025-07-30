@@ -397,22 +397,27 @@ export default function JobEditPage() {
 
           {/* Submit Button */}
           <div className="flex justify-center pt-4">
-            <Button 
-              type="submit" 
-              disabled={submitting} 
-              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 px-8 py-3"
-            >
-              {submitting ? (
-                <>
-                  <span className="animate-spin mr-2">⏳</span>
-                  {isEditing ? 'Updating...' : 'Creating...'}
-                </>
-              ) : (
-                <>
-                  {isEditing ? 'Update Job' : 'Create Job'}
-                </>
-              )}
-            </Button>
+           <Button 
+  type="submit" 
+  disabled={submitting}
+  className={`w-full sm:w-auto px-8 py-3 
+    ${userRole === "official" 
+      ? "bg-red-600 hover:bg-red-700" 
+      : "bg-blue-600 hover:bg-blue-700"}
+    `}
+>
+  {submitting ? (
+    <>
+      <span className="animate-spin mr-2">⏳</span>
+      {isEditing ? 'Updating...' : 'Creating...'}
+    </>
+  ) : (
+    <>
+      {isEditing ? 'Update Job' : 'Create Job'}
+    </>
+  )}
+</Button>
+
           </div>
         </form>
       </div>
