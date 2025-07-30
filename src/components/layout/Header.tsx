@@ -140,7 +140,7 @@ export const Header = () => {
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-3">Navigation</h3>
                   <div className="space-y-2">
-         {(() => {
+        {(() => {
   if (isAuthenticated) {
     if (userRole === "official") {
       return [
@@ -270,13 +270,24 @@ export const Header = () => {
 })().map((item, index) => {
   const isRestricted = item.restricted && userRole === "resident" && !hasRbiAccess;
 
+  const baseColor = userRole === "official"
+    ? "red"
+    : userRole === "resident"
+    ? "blue"
+    : "gray";
+
   return (
     <Link
       key={index}
       to={isRestricted ? "#" : item.href}
-      className={`flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer ${
-        item.active ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50 text-gray-700"
-      } ${isRestricted ? "opacity-60" : ""}`}
+      className={`flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer
+        ${
+          item.active
+            ? `bg-${baseColor}-50 text-${baseColor}-600`
+            : `hover:bg-gray-50 text-gray-700`
+        }
+        ${isRestricted ? "opacity-60" : ""}
+        hover:text-${baseColor}-700`}
       onClick={(e) => {
         if (isRestricted) {
           e.preventDefault();
@@ -294,17 +305,30 @@ export const Header = () => {
         className={`h-5 w-5 ${
           userRole === "official"
             ? "text-red-600"
+            : userRole === "resident"
+            ? item.active
+              ? "text-blue-600"
+              : "text-blue-500"
             : item.active
-            ? "text-blue-600"
-            : "text-blue-500"
+            ? "text-gray-600"
+            : "text-gray-500"
         }`}
       />
-      <span className="text-sm font-medium">{item.name}</span>
+      <span
+        className={`text-sm font-medium ${
+          userRole === "official"
+            ? "text-red-600"
+            : userRole === "resident" && item.active
+            ? "text-blue-600"
+            : "text-gray-700"
+        }`}
+      >
+        {item.name}
+      </span>
     </Link>
   );
+})}
 
-
-                  })}
                   </div>
                 </div>
 
