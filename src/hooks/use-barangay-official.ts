@@ -1,20 +1,30 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRbiForms } from "@/hooks/use-rbi-forms";
 
 export function useBarangayOfficial() {
   const { user, userRole } = useAuth();
+  const { rbiForms } = useRbiForms();
+  
+  // Get barangay from approved RBI form
+  const approvedRbi = rbiForms?.find(form => form.status === 'approved');
+  const userBarangay = approvedRbi ? 
+    (approvedRbi.form_data as any)?.address?.barangay || user?.barangay :
+    user?.barangay;
 
   return useQuery({
-    queryKey: ['barangay-official', user?.barangay],
+    queryKey: ['barangay-official', userBarangay],
     queryFn: async () => {
       console.log('useBarangayOfficial - Query starting:', {
-        userBarangay: user?.barangay,
+        userBarangay: userBarangay,
         userRole: userRole,
-        userId: user?.id
+        userId: user?.id,
+        approvedRbiBarangay: approvedRbi ? (approvedRbi.form_data as any)?.address?.barangay : null
       });
 
-      if (!user?.barangay || userRole !== 'resident') {
+      if (!userBarangay || userRole !== 'resident') {
         console.log('useBarangayOfficial - Skipping query: no barangay or not resident');
         return null;
       }
@@ -23,21 +33,20 @@ export function useBarangayOfficial() {
       const { data: officialCheck } = await supabase
         .from('profiles')
         .select('id, first_name, last_name, email, avatar_url, barangay, role, is_approved')
-        .eq('barangay', user.barangay)
+        .eq('barangay', userBarangay)
         .eq('role', 'official');
 
       console.log('useBarangayOfficial - Available officials in barangay:', {
-        userBarangay: user.barangay,
+        userBarangay: userBarangay,
         officials: officialCheck
       });
 
       const { data, error } = await supabase
         .from('profiles')
         .select('id, first_name, last_name, email, avatar_url, barangay, role, is_approved')
-        .eq('barangay', user.barangay)
+        .eq('barangay', userBarangay)
         .eq('role', 'official')
-        // Temporarily remove is_approved filter to test
-        // .eq('is_approved', true)
+        .eq('is_approved', true)
         .order('created_at', { ascending: true })
         .limit(1)
         .maybeSingle();
@@ -45,7 +54,7 @@ export function useBarangayOfficial() {
       console.log('useBarangayOfficial - Query result:', {
         data,
         error,
-        userBarangay: user.barangay
+        userBarangay: userBarangay
       });
 
       if (error) {
@@ -55,6 +64,6 @@ export function useBarangayOfficial() {
 
       return data;
     },
-    enabled: !!user?.barangay && userRole === 'resident',
+    enabled: !!userBarangay && userRole === 'resident',
   });
 }

@@ -36,7 +36,7 @@ export default function ResidentHome() {
     : `https://api.dicebear.com/7.x/initials/svg?seed=${profile?.first_name || ''} ${profile?.last_name || ''}` ||
       "/placeholder.svg";
   
-  // Use actual barangay data from profile when approved
+  // Use actual barangay data from profile (which now includes RBI data) when approved
   const barangayName = approvedRbi && profile?.barangay 
     ? profile.barangay 
     : "Complete RBI Registration";
