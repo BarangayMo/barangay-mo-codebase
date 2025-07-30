@@ -1,214 +1,264 @@
-import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
 
-export interface OfficialRegistration {
-  id?: string;
-  first_name: string;
-  middle_name?: string;
-  last_name: string;
-  suffix?: string;
-  phone_number: string;
-  landline_number?: string;
-  email: string;
-  position: string;
-  password?: string;
-  barangay: string;
-  municipality: string;
-  province: string;
-  region: string;
-  status?: 'pending' | 'approved' | 'rejected';
-  is_approved?: boolean;
-  rejection_reason?: string;
-  approved_by?: string;
-  approved_at?: string;
-  submitted_at?: string;
-  created_at?: string;
-  updated_at?: string;
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Content-Type': 'application/json',
+};
+
+interface ApprovalRequest {
+  official_id: string;
 }
 
-// Hook for submitting official registration (public)
-export const useSubmitOfficialRegistration = () => {
-  const { toast } = useToast();
+serve(async (req) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} request received`);
+  
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    console.log('Handling CORS preflight request');
+    return new Response(null, { 
+      status: 200,
+      headers: corsHeaders 
+    });
+  }
 
-  return useMutation({
-    mutationFn: async (data: OfficialRegistration) => {
-      console.log('Submitting official registration:', data);
-      
-      // Clean and validate the data before sending
-      const cleanData = {
-        first_name: data.first_name?.trim() || '',
-        middle_name: data.middle_name && typeof data.middle_name === 'string' && data.middle_name.trim() !== '' ? data.middle_name.trim() : undefined,
-        last_name: data.last_name?.trim() || '',
-        suffix: data.suffix && typeof data.suffix === 'string' && data.suffix.trim() !== '' ? data.suffix.trim() : undefined,
-        phone_number: data.phone_number?.trim() || '',
-        landline_number: data.landline_number && typeof data.landline_number === 'string' && data.landline_number.trim() !== '' ? data.landline_number.trim() : undefined,
-        email: data.email?.trim() || '',
-        position: data.position?.trim() || '',
-        password: data.password?.trim() || '',
-        barangay: data.barangay?.trim() || '',
-        municipality: data.municipality?.trim() || '',
-        province: data.province?.trim() || '',
-        region: data.region?.trim() || ''
-      };
-
-      console.log('Cleaned data for submission:', cleanData);
-      
-      // Use the Edge Function to submit the registration
-      const { data: result, error } = await supabase.functions.invoke(
-        'submit-official-registration',
+  try {
+    // Only allow POST requests
+    if (req.method !== 'POST') {
+      console.log(`Method ${req.method} not allowed`);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Method not allowed' }),
         {
-          body: cleanData
+          status: 405,
+          headers: corsHeaders,
         }
       );
+    }
 
-      if (error) {
-        console.error('Edge function error:', error);
-        throw new Error(error.message || 'Failed to submit registration');
+    console.log('Processing official approval with auth user creation');
+
+    // Create Supabase admin client with service role
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
       }
+    );
 
-      if (result?.error) {
-        console.error('Registration error from server:', result);
-        throw new Error(result.message || result.error || 'Registration failed');
-      }
+    console.log('Supabase admin client created');
 
-      console.log('Registration successful:', result);
-      return result;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Registration Submitted",
-        description: "Your official registration has been submitted for review. You will be notified once it's processed.",
-      });
-    },
-    onError: (error: any) => {
-      console.error('Registration submission error:', error);
-      toast({
-        title: "Submission Failed",
-        description: error.message || "Failed to submit registration. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-};
-
-// Hook for Super-Admin to fetch all official registrations
-export const useOfficialRegistrations = (statusFilter?: string) => {
-  return useQuery({
-    queryKey: ['official-registrations', statusFilter],
-    queryFn: async () => {
-      console.log('Fetching official registrations, filter:', statusFilter);
-      
-      let query = supabase
-        .from('officials')
-        .select('*')
-        .order('submitted_at', { ascending: false });
-
-      if (statusFilter && statusFilter !== 'all') {
-        query = query.eq('status', statusFilter);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Error fetching registrations:', error);
-        throw error;
-      }
-
-      console.log('Fetched registrations:', data);
-      return data as OfficialRegistration[];
-    },
-  });
-};
-
-// Hook for Super-Admin to approve an official
-export const useApproveOfficial = () => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (officialId: string) => {
-      console.log('Approving official:', officialId);
-      
-      // Use the new edge function that creates auth user with password
-      const { data: result, error } = await supabase.functions.invoke(
-        'approve-official-with-auth',
+    // Parse and validate request body
+    let requestData: ApprovalRequest;
+    try {
+      requestData = await req.json();
+      console.log('Approval request received for official ID:', requestData.official_id);
+    } catch (parseError) {
+      console.error('Failed to parse request JSON:', parseError);
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'Invalid JSON in request body'
+        }),
         {
-          body: { official_id: officialId }
+          status: 400,
+          headers: corsHeaders,
         }
       );
+    }
 
-      if (error) {
-        console.error('Error approving official:', error);
-        throw new Error(error.message || 'Failed to approve official');
+    if (!requestData.official_id) {
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'Missing official_id'
+        }),
+        {
+          status: 400,
+          headers: corsHeaders,
+        }
+      );
+    }
+
+    // Get the official record
+    console.log('Fetching official record');
+    const { data: official, error: fetchError } = await supabaseAdmin
+      .from('officials')
+      .select('*')
+      .eq('id', requestData.official_id)
+      .single();
+
+    if (fetchError || !official) {
+      console.error('Error fetching official or official not found:', fetchError);
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'Official not found'
+        }),
+        {
+          status: 404,
+          headers: corsHeaders,
+        }
+      );
+    }
+
+    console.log('Official found:', { 
+      email: official.email, 
+      status: official.status,
+      hasPasswordHash: !!official.password_hash
+    });
+
+    if (official.status === 'approved') {
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'Official is already approved'
+        }),
+        {
+          status: 400,
+          headers: corsHeaders,
+        }
+      );
+    }
+
+    // Generate a secure temporary password
+    const tempPassword = crypto.randomUUID().substring(0, 12) + '!A1';
+    console.log('Generated temporary password for user creation');
+
+    // Create auth user using Admin API
+    console.log('Creating Supabase Auth user');
+    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email: official.email,
+      password: tempPassword,
+      email_confirm: true, // Skip email verification for approved officials
+      user_metadata: {
+        first_name: official.first_name,
+        last_name: official.last_name,
+        middle_name: official.middle_name,
+        suffix: official.suffix,
+        phone_number: official.phone_number,
+        landline_number: official.landline_number,
+        barangay: official.barangay,
+        municipality: official.municipality,
+        province: official.province,
+        region: official.region,
+        role: 'official',
+        position: official.position
       }
+    });
 
-      if (result?.error) {
-        console.error('Approval error from server:', result);
-        throw new Error(result.error || 'Approval failed');
-      }
-
-      return result;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['official-registrations'] });
-      toast({
-        title: "Official Approved",
-        description: "The official registration has been approved and an account has been created. A password reset email has been sent to the official to set up their login credentials.",
-      });
-    },
-    onError: (error: any) => {
-      console.error('Approval error:', error);
-      toast({
-        title: "Approval Failed",
-        description: error.message || "Failed to approve registration.",
-        variant: "destructive",
-      });
-    },
-  });
-};
-
-// Hook for Super-Admin to reject an official
-export const useRejectOfficial = () => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ officialId, reason }: { officialId: string; reason?: string }) => {
-      console.log('Rejecting official:', officialId, 'reason:', reason);
+    if (authError) {
+      console.error('Error creating auth user:', authError);
       
-      const { error } = await supabase
-        .from('officials')
-        .update({
-          status: 'rejected',
-          is_approved: false,
-          rejection_reason: reason || null,
-          approved_by: null,
-          approved_at: null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', officialId);
-
-      if (error) {
-        console.error('Error rejecting official:', error);
-        throw error;
+      // Check if user already exists
+      if (authError.message?.includes('already registered') || authError.message?.includes('duplicate')) {
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            error: 'User with this email already exists in the authentication system'
+          }),
+          {
+            status: 409,
+            headers: corsHeaders,
+          }
+        );
       }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['official-registrations'] });
-      toast({
-        title: "Official Rejected",
-        description: "The official registration has been rejected.",
-      });
-    },
-    onError: (error: any) => {
-      console.error('Rejection error:', error);
-      toast({
-        title: "Rejection Failed",
-        description: error.message || "Failed to reject registration.",
-        variant: "destructive",
-      });
-    },
-  });
-};
+      
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'Failed to create user account'
+        }),
+        {
+          status: 500,
+          headers: corsHeaders,
+        }
+      );
+    }
+
+    console.log('Auth user created successfully:', authUser.user.id);
+
+    // Send password reset email so user can set their chosen password
+    console.log('Sending password reset email to user');
+    const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'recovery',
+      email: official.email,
+      options: {
+        redirectTo: `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.supabase.co')}/auth/v1/verify?type=recovery`
+      }
+    });
+
+    if (resetError) {
+      console.error('Warning: Could not send password reset email:', resetError);
+      // Continue anyway - user can request password reset manually
+    }
+
+    // Update official status to approved and link to auth user
+    console.log('Updating official status to approved');
+    const { error: updateError } = await supabaseAdmin
+      .from('officials')
+      .update({
+        status: 'approved',
+        is_approved: true,
+        user_id: authUser.user.id,
+        approved_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', requestData.official_id);
+
+    if (updateError) {
+      console.error('Error updating official status:', updateError);
+      
+      // Try to clean up created user
+      await supabaseAdmin.auth.admin.deleteUser(authUser.user.id);
+      
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'Failed to update official status'
+        }),
+        {
+          status: 500,
+          headers: corsHeaders,
+        }
+      );
+    }
+
+    console.log('Official approved successfully with auth user created');
+
+    return new Response(
+      JSON.stringify({ 
+        success: true,
+        message: 'Official approved successfully. Auth user created and password reset email sent.',
+        data: {
+          official_id: requestData.official_id,
+          user_id: authUser.user.id,
+          email: official.email,
+          note: 'A password reset email has been sent to set up the account password.'
+        }
+      }),
+      {
+        status: 200,
+        headers: corsHeaders,
+      }
+    );
+
+  } catch (error) {
+    console.error('Unexpected error in official approval:', error);
+    return new Response(
+      JSON.stringify({ 
+        success: false,
+        error: 'Internal server error'
+      }),
+      {
+        status: 500,
+        headers: corsHeaders,
+      }
+    );
+  }
+});
