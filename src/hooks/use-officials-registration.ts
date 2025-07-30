@@ -170,7 +170,6 @@ export const useApproveOfficial = () => {
     },
   });
 };
-
 // Hook for Super-Admin to reject an official
 export const useRejectOfficial = () => {
   const { toast } = useToast();
