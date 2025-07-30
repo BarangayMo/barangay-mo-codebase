@@ -284,15 +284,15 @@ export default function OfficialRegistrationsPage() {
                       
                       {registration.status === 'pending' && (
                         <>
-                          <Button
-                            size="sm"
-                            onClick={() => handleApprove(registration.id!)}
-                            disabled={approveOfficial.isPending}
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            {approveOfficial.isPending ? 'Approving...' : 'Approve'}
-                          </Button>
+<Button
+  size="sm"
+  onClick={() => handleApprove(registration.id!)}
+  disabled={approveOfficial.isPending}
+  className="bg-green-600 hover:bg-green-700"
+>
+  <CheckCircle className="h-4 w-4 mr-1" />
+  {approveOfficial.isPending ? 'Approving...' : 'Approve'}
+</Button>
                           
                           <Button
                             variant="destructive"
