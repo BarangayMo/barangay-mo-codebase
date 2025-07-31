@@ -51,7 +51,7 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileNavbar } from "@/components/layout/MobileNavbar";
 import { useNavigate } from "react-router-dom";
-import { useOfficials, useCreateOfficial, useUpdateOfficial, useDeleteOfficial } from "@/hooks/use-officials-data";
+import { useCouncilMembers, useCreateCouncilMember, useUpdateCouncilMember, useDeleteCouncilMember } from "@/hooks/use-council-members";
 import { format } from "date-fns";
 import { OfficialDetailsModal } from "@/components/officials/OfficialDetailsModal";
 import { useQuery } from "@tanstack/react-query";
@@ -71,61 +71,72 @@ const OfficialsPage = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // For now, we'll use hardcoded values - in a real app, this would come from context/state
-  // You should replace these with actual selected barangay data
-  const selectedBarangay = "Barangay 1"; // This should come from user selection
+  // Get user's barangay from their profile
+  const { data: userProfile } = useQuery({
+    queryKey: ['user-profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('barangay, municipality, province, region')
+        .eq('id', user.id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id
+  });
 
-  // Fetch officials data from the 'officials' table for the selected barangay
-  const { data: officials = [], isLoading, refetch } = useOfficials(selectedBarangay);
+  const selectedBarangay = userProfile?.barangay || "Unknown Barangay";
 
-  // Mutations for CRUD
-  const createOfficial = useCreateOfficial();
-  const updateOfficial = useUpdateOfficial();
-  const deleteOfficial = useDeleteOfficial();
+  // Fetch council members data from the 'council_members' table for the selected barangay
+  const { data: councilMembers = [], isLoading, refetch } = useCouncilMembers(selectedBarangay);
 
-  // Official roles with their corresponding icons and counts
+  // Mutations for CRUD operations on council members
+  const createCouncilMember = useCreateCouncilMember();
+  const updateCouncilMember = useUpdateCouncilMember();
+  const deleteCouncilMember = useDeleteCouncilMember();
+
+  // Official roles with their corresponding icons and counts - now using council members
   const officialRoles = [
     {
       title: "Punong Barangay",
       icon: ShieldCheck,
-      count: officials.filter(o => o.position === "Punong Barangay").length,
+      count: councilMembers.filter(o => o.position === "Punong Barangay").length,
       color: "bg-red-50 text-red-600 border-red-100",
       route: "/official/punong-barangay"
     },
     {
       title: "SK Chairman", 
       icon: Settings,
-      count: officials.filter(o => o.position === "SK Chairman").length,
+      count: councilMembers.filter(o => o.position === "SK Chairman").length,
       color: "bg-blue-50 text-blue-600 border-blue-100"
     },
     {
       title: "Barangay Councilor",
       icon: Users,
-      count: officials.filter(o => o.position?.includes("Sangguniang Barangay")).length,
+      count: councilMembers.filter(o => o.position?.includes("Sangguniang Barangay") || o.position?.includes("Councilor")).length,
       color: "bg-green-50 text-green-600 border-green-100"
     },
     {
       title: "Barangay Secretary",
       icon: PenLine,
-      count: officials.filter(o => o.position === "Barangay Secretary").length,
+      count: councilMembers.filter(o => o.position === "Barangay Secretary").length,
       color: "bg-orange-50 text-orange-600 border-orange-100"
     },
     {
       title: "Barangay Treasurer",
       icon: Award,
-      count: officials.filter(o => o.position === "Barangay Treasurer").length,
+      count: councilMembers.filter(o => o.position === "Barangay Treasurer").length,
       color: "bg-indigo-50 text-indigo-600 border-indigo-100"
     },
   ];
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "active":
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Active</Badge>;
-      case "inactive":
-        return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Inactive</Badge>;
-      default:
-        return <Badge variant="secondary">Unknown</Badge>;
+  const getStatusBadge = (is_active: boolean) => {
+    if (is_active) {
+      return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Active</Badge>;
+    } else {
+      return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Inactive</Badge>;
     }
   };
 
@@ -143,24 +154,29 @@ const OfficialsPage = () => {
     }
   };
 
-  const filteredOfficials = officials.filter((official) => {
+  const filteredCouncilMembers = councilMembers.filter((member) => {
     const matchesSearch = 
-      official.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (official.first_name && official.first_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (official.last_name && official.last_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      official.barangay.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === "all" || official.status === statusFilter;
-    const matchesPosition = positionFilter === "all" || official.position === positionFilter;
-    
+      member.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (member.first_name && member.first_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (member.last_name && member.last_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (member.email && member.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (member.phone_number && member.phone_number.includes(searchTerm));
+
+    const matchesStatus = statusFilter === "all" || 
+      (statusFilter === "active" && member.is_active) ||
+      (statusFilter === "inactive" && !member.is_active);
+
+    const matchesPosition = positionFilter === "all" || 
+      member.position === positionFilter;
+
     return matchesSearch && matchesStatus && matchesPosition;
   });
 
-  const uniquePositions = [...new Set(officials.map(official => official.position))];
+  const uniquePositions = [...new Set(councilMembers.map(member => member.position))];
 
-  // Count active and inactive officials
-  const activeCount = officials.filter(o => o.status === 'active').length;
-  const inactiveCount = officials.filter(o => o.status === 'inactive').length;
+  // Count active and inactive council members
+  const activeCount = councilMembers.filter(m => m.is_active).length;
+  const inactiveCount = councilMembers.filter(m => !m.is_active).length;
 
   const handleOfficialClick = (official: any) => {
     if (official.position === "Punong Barangay") {
@@ -183,51 +199,49 @@ const OfficialsPage = () => {
       middle_name: "",
       last_name: "",
       suffix: "",
-      isCompleted: false,
       barangay: selectedBarangay,
-      status: 'active',
-      phone_number: null,
-      email: null,
-      years_of_service: 0,
-      achievements: null
+      municipality: userProfile?.municipality || "",
+      province: userProfile?.province || "",
+      region: userProfile?.region || "",
+      is_active: true,
+      phone_number: "",
+      email: ""
     });
     setShowAddModal(true);
   };
 
   const handleSaveOfficial = async (data: any) => {
     // Ensure required fields are present
-    if (!data.email || !data.phone_number) {
-      alert('Email and phone number are required.');
+    if (!data.first_name || !data.last_name || !data.position) {
+      alert('First name, last name, and position are required.');
       return;
     }
-    // Ensure status is valid
-    const validStatuses = ['pending', 'approved', 'rejected', 'active', 'inactive'];
-    let status = data.status;
-    if (!validStatuses.includes(status)) {
-      status = 'active';
-    }
-    const officialData = {
-      ...data,
+
+    const memberData = {
+      first_name: data.first_name,
+      middle_name: data.middle_name || null,
+      last_name: data.last_name,
+      suffix: data.suffix || null,
+      position: data.position,
+      email: data.email || null,
+      phone_number: data.phone_number || null,
+      landline_number: data.landline_number || null,
       barangay: selectedBarangay,
-      status,
-      years_of_service: 0,
-      achievements: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      user_id: data.user_id || user?.id // Set user_id if not present
+      municipality: userProfile?.municipality || "",
+      province: userProfile?.province || "",
+      region: userProfile?.region || "",
+      is_active: data.is_active !== false // Default to true if not specified
     };
-    console.log('Creating official with data:', officialData);
+
     try {
       if (selectedOfficial?.id) {
-        await updateOfficial.mutateAsync({
+        await updateCouncilMember.mutateAsync({
           id: selectedOfficial.id,
-          ...officialData,
+          data: memberData
         });
       } else {
-        await createOfficial.mutateAsync(officialData);
+        await createCouncilMember.mutateAsync(memberData);
       }
-      // Only show success toast if no error is thrown
-      // (Toast is handled in the mutation's onSuccess, so no need to show here)
     } catch (error) {
       // Error handled by hooks
     } finally {
@@ -236,23 +250,23 @@ const OfficialsPage = () => {
     }
   };
 
-  const handleEditOfficial = (official: any) => {
+  const handleEditOfficial = (member: any) => {
     setSelectedOfficial({
-      ...official,
+      ...member,
       isCompleted: true
     });
     setShowAddModal(true);
   };
 
-  const handleDeleteOfficial = async (official: any) => {
-    const officialName = official.first_name && official.last_name 
-      ? `${official.first_name} ${official.last_name}` 
-      : official.position;
-    if (!confirm(`Are you sure you want to remove ${officialName} from the officials list?`)) {
+  const handleDeleteOfficial = async (member: any) => {
+    const memberName = member.first_name && member.last_name 
+      ? `${member.first_name} ${member.last_name}` 
+      : member.position;
+    if (!confirm(`Are you sure you want to remove ${memberName} from the council members list?`)) {
       return;
     }
     try {
-      await deleteOfficial.mutateAsync(official.id);
+      await deleteCouncilMember.mutateAsync(member.id);
     } catch (error) {
       // Error handled by hook
     }
@@ -322,7 +336,7 @@ const OfficialsPage = () => {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className={`font-bold text-gray-900 ${isMobile ? 'text-lg' : 'text-2xl'}`}>{officials.length}</p>
+                    <p className={`font-bold text-gray-900 ${isMobile ? 'text-lg' : 'text-2xl'}`}>{councilMembers.length}</p>
                     <p className={`text-gray-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>Total Officials</p>
                   </div>
                   <div className={`bg-red-100 rounded-full flex items-center justify-center ${isMobile ? 'w-8 h-8' : 'w-12 h-12'}`}>
@@ -352,10 +366,10 @@ const OfficialsPage = () => {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className={`font-bold text-gray-900 ${isMobile ? 'text-lg' : 'text-2xl'}`}>
-                      {officials.length > 0 ? Math.round(officials.reduce((acc, o) => acc + o.years_of_service, 0) / officials.length) : 0}
-                    </p>
-                    <p className={`text-gray-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>Avg Years</p>
+                     <p className={`font-bold text-gray-900 ${isMobile ? 'text-lg' : 'text-2xl'}`}>
+                       {councilMembers.length > 0 ? Math.round(councilMembers.length / officialRoles.length) : 0}
+                     </p>
+                    <p className={`text-gray-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>Avg per Role</p>
                   </div>
                   <div className={`bg-yellow-100 rounded-full flex items-center justify-center ${isMobile ? 'w-8 h-8' : 'w-12 h-12'}`}>
                     <Award className={`text-yellow-600 ${isMobile ? 'h-4 w-4' : 'h-6 w-6'}`} />
@@ -473,14 +487,14 @@ const OfficialsPage = () => {
                 {isMobile ? (
                   // Mobile Card Layout
                   <div className="space-y-3 p-4">
-                    {filteredOfficials.length === 0 ? (
-                      <div className="text-center py-8">
-                        <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-500">No officials found for {selectedBarangay}</p>
-                        <p className="text-sm text-gray-400 mt-2">Try adjusting your search or filters</p>
-                      </div>
-                    ) : (
-                      filteredOfficials.map((official) => (
+                     {filteredCouncilMembers.length === 0 ? (
+                       <div className="text-center py-8">
+                         <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                         <p className="text-gray-500">No officials found for {selectedBarangay}</p>
+                         <p className="text-sm text-gray-400 mt-2">Try adjusting your search or filters</p>
+                       </div>
+                     ) : (
+                       filteredCouncilMembers.map((official) => (
                         <Card 
                           key={official.id} 
                           className="border border-gray-200 cursor-pointer hover:shadow-md transition-shadow"
@@ -512,7 +526,7 @@ const OfficialsPage = () => {
                                   </div>
                                   
                                   <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                                    {getStatusBadge(official.status)}
+                                     {getStatusBadge(official.is_active)}
                                     
                                     <DropdownMenu>
                                       <DropdownMenuTrigger asChild>
@@ -559,10 +573,10 @@ const OfficialsPage = () => {
                                       <Calendar className="h-4 w-4" />
                                       <span>{official.region}</span>
                                     </div>
-                                    <div className="flex items-center gap-1">
-                                      <Award className="h-4 w-4 text-yellow-500" />
-                                      <span>{official.years_of_service} years</span>
-                                    </div>
+                                     <div className="flex items-center gap-1">
+                                       <Award className="h-4 w-4 text-blue-500" />
+                                       <span>{official.position}</span>
+                                     </div>
                                   </div>
                                 </div>
                               </div>
@@ -586,16 +600,16 @@ const OfficialsPage = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredOfficials.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8">
-                            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                            <p className="text-gray-500">No officials found for {selectedBarangay}</p>
-                            <p className="text-sm text-gray-400 mt-2">Try adjusting your search or filters</p>
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        filteredOfficials.map((official) => (
+                       {filteredCouncilMembers.length === 0 ? (
+                         <TableRow>
+                           <TableCell colSpan={6} className="text-center py-8">
+                             <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                             <p className="text-gray-500">No officials found for {selectedBarangay}</p>
+                             <p className="text-sm text-gray-400 mt-2">Try adjusting your search or filters</p>
+                           </TableCell>
+                         </TableRow>
+                       ) : (
+                         filteredCouncilMembers.map((official) => (
                           <TableRow key={official.id} className="hover:bg-gray-50">
                             <TableCell className="py-4">
                               <div className="flex items-center gap-3">
@@ -649,7 +663,7 @@ const OfficialsPage = () => {
                                 )}
                               </div>
                             </TableCell>
-                            <TableCell className="py-4">{getStatusBadge(official.status)}</TableCell>
+                            <TableCell className="py-4">{getStatusBadge(official.is_active)}</TableCell>
                             <TableCell className="py-4 text-right">
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -688,7 +702,7 @@ const OfficialsPage = () => {
               <div className="p-4 border-t bg-gray-50">
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-gray-600">
-                    Showing {filteredOfficials.length} of {officials.length} officials
+                    Showing {filteredCouncilMembers.length} of {councilMembers.length} officials
                   </div>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" disabled>

@@ -680,6 +680,66 @@ export type Database = {
           },
         ]
       }
+      council_members: {
+        Row: {
+          barangay: string
+          created_at: string
+          created_by: string | null
+          email: string | null
+          first_name: string
+          id: string
+          is_active: boolean | null
+          landline_number: string | null
+          last_name: string
+          middle_name: string | null
+          municipality: string
+          phone_number: string | null
+          position: string
+          province: string
+          region: string
+          suffix: string | null
+          updated_at: string
+        }
+        Insert: {
+          barangay: string
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          first_name: string
+          id?: string
+          is_active?: boolean | null
+          landline_number?: string | null
+          last_name: string
+          middle_name?: string | null
+          municipality: string
+          phone_number?: string | null
+          position: string
+          province: string
+          region: string
+          suffix?: string | null
+          updated_at?: string
+        }
+        Update: {
+          barangay?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          first_name?: string
+          id?: string
+          is_active?: boolean | null
+          landline_number?: string | null
+          last_name?: string
+          middle_name?: string | null
+          municipality?: string
+          phone_number?: string | null
+          position?: string
+          province?: string
+          region?: string
+          suffix?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       job_applications: {
         Row: {
           age: number | null
@@ -2484,6 +2544,10 @@ export type Database = {
         Args: { official_id: string }
         Returns: undefined
       }
+      fix_official_profiles: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       generate_job_code: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -2503,6 +2567,10 @@ export type Database = {
       hash_password: {
         Args: { password_text: string }
         Returns: string
+      }
+      insert_profile: {
+        Args: { id: string; email: string }
+        Returns: undefined
       }
       is_approved_official: {
         Args: { user_id: string }
