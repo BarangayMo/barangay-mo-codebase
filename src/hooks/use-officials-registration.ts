@@ -131,25 +131,18 @@ export const useApproveOfficial = () => {
     mutationFn: async (officialId: string) => {
       console.log('Approving official:', officialId);
 
-      // Simply update the official status - the trigger will handle the rest
-      const { error: updateError } = await supabase
-        .from('officials')
-        .update({
-          status: 'approved',
-          is_approved: true,
-          approved_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', officialId);
+      // Use the direct function that handles everything
+      const { data: result, error: functionError } = await supabase
+        .rpc('approve_official_direct' as any, { official_id: officialId });
 
-      if (updateError) {
-        console.error('Error approving official:', updateError);
-        throw new Error(updateError.message || 'Failed to approve official');
+      if (functionError) {
+        console.error('Error approving official:', functionError);
+        throw new Error(functionError.message || 'Failed to approve official');
       }
 
-      console.log('Official status updated successfully - trigger should handle profile creation');
+      console.log('Approval result:', result);
 
-      // Create auth user via edge function (this will also update the user_id)
+      // Create auth user via edge function (this will update the user_id)
       const { data: authResult, error: authError } = await supabase.functions.invoke(
         'create-auth-user',
         {
