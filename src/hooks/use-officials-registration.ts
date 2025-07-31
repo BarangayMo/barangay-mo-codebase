@@ -158,17 +158,15 @@ export const useApproveOfficial = () => {
         // Try to get more details from the error response
         let errorMessage = error.message || 'Failed to approve official';
         
-        // If it's a 400 error, try to get the response body
-        if (error.status === 400) {
-          try {
-            const errorResponse = await error.response?.json();
-            if (errorResponse) {
-              errorMessage = errorResponse.error || errorResponse.reason || errorMessage;
-              console.error('❌ Detailed error response:', errorResponse);
-            }
-          } catch (parseError) {
-            console.error('❌ Could not parse error response:', parseError);
+        // Try to get the response body for any error status
+        try {
+          const errorResponse = await error.response?.json();
+          if (errorResponse) {
+            errorMessage = errorResponse.error || errorResponse.reason || errorResponse.message || errorMessage;
+            console.error('❌ Detailed error response:', errorResponse);
           }
+        } catch (parseError) {
+          console.error('❌ Could not parse error response:', parseError);
         }
         
         throw new Error(errorMessage);
