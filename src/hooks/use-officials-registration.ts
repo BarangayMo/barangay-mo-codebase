@@ -131,7 +131,7 @@ export const useApproveOfficial = () => {
     mutationFn: async (officialId: string) => {
       console.log('Approving official:', officialId);
 
-      // First, update the official status in the database
+      // Simply update the official status - the trigger will handle the rest
       const { error: updateError } = await supabase
         .from('officials')
         .update({
@@ -147,9 +147,9 @@ export const useApproveOfficial = () => {
         throw new Error(updateError.message || 'Failed to approve official');
       }
 
-      console.log('Official status updated successfully');
+      console.log('Official status updated successfully - trigger should handle profile creation');
 
-      // Then, create the auth user via edge function
+      // Create auth user via edge function (this will also update the user_id)
       const { data: authResult, error: authError } = await supabase.functions.invoke(
         'create-auth-user',
         {
@@ -168,70 +168,6 @@ export const useApproveOfficial = () => {
         // Don't throw error here as the official is already approved
         // Just log it for debugging
       }
-
-      // If auth user was created successfully, update the official with user_id
-      if (authResult?.user_id) {
-        const { error: userUpdateError } = await supabase
-          .from('officials')
-          .update({ user_id: authResult.user_id })
-          .eq('id', officialId);
-
-        if (userUpdateError) {
-          console.error('Error updating official with user_id:', userUpdateError);
-        } else {
-          console.log('Official updated with user_id:', authResult.user_id);
-        }
-      }
-
-      // Finally, create the profile if it doesn't exist
-      setTimeout(async () => {
-        try {
-          const { data: official, error: fetchError } = await supabase
-            .from('officials')
-            .select('*')
-            .eq('id', officialId)
-            .single();
-
-          if (!fetchError && official) {
-            // Check if profile already exists
-            const { data: existingProfile } = await supabase
-              .from('profiles')
-              .select('id')
-              .eq('email', official.email)
-              .single();
-
-            if (!existingProfile) {
-              // Create profile
-              const { error: profileError } = await supabase
-                .from('profiles')
-                .insert({
-                  id: official.user_id || crypto.randomUUID(),
-                  first_name: official.first_name,
-                  last_name: official.last_name,
-                  middle_name: official.middle_name || '',
-                  suffix: official.suffix || '',
-                  email: official.email,
-                  phone_number: official.phone_number,
-                  landline_number: official.landline_number || '',
-                  barangay: official.barangay,
-                  municipality: official.municipality,
-                  province: official.province,
-                  region: official.region,
-                  role: 'official',
-                  is_approved: true
-                });
-
-              if (profileError) {
-                console.error('Profile creation error:', profileError);
-              } else {
-                console.log('Profile created successfully');
-              }
-            }
-          }
-        } catch (error) {
-          console.error('Error in profile creation:', error);
-        }
-      }, 1000);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['official-registrations'] });
