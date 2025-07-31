@@ -9,8 +9,8 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { RegistrationProgress } from "@/components/ui/registration-progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useSubmitOfficialRegistration } from "@/hooks/use-officials-registration";
 import { useToast } from "@/hooks/use-toast";
+import { createClient } from '@supabase/supabase-js';
 
 interface LocationState {
   role: string;
@@ -39,12 +39,16 @@ const OFFICIAL_POSITIONS = [
   "SK Chairperson"
 ];
 
+// Initialize Supabase client
+const supabaseUrl = 'https://YOUR_PROJECT.supabase.co'; // <-- Replace with your Supabase URL
+const supabaseAnonKey = 'YOUR_PUBLIC_ANON_KEY'; // <-- Replace with your anon key
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
 export default function OfficialRegistration() {
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const locationState = location.state as LocationState;
-  const submitRegistration = useSubmitOfficialRegistration();
   const { toast } = useToast();
 
   // Get registration data from localStorage or location state
@@ -95,6 +99,7 @@ export default function OfficialRegistration() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -141,39 +146,36 @@ export default function OfficialRegistration() {
       return;
     }
 
-    const registrationData = {
-      first_name: formData.firstName,
-      middle_name: formData.middleName || undefined,
-      last_name: formData.lastName,
-      suffix: formData.suffix || undefined,
-      email: formData.email,
-      phone_number: formData.phoneNumber,
-      landline_number: formData.landlineNumber || undefined,
-      position: formData.position,
-      password: formData.password,
-      barangay: barangay!,
-      municipality: municipality!,
-      province: province!,
-      region: region!
-    };
-
+    setIsSubmitting(true);
     try {
-      const result = await submitRegistration.mutateAsync(registrationData);
-      
-      // Show success toast
+      const registrationData = {
+        first_name: formData.firstName,
+        middle_name: formData.middleName || undefined,
+        last_name: formData.lastName,
+        suffix: formData.suffix || undefined,
+        email: formData.email,
+        phone_number: formData.phoneNumber,
+        landline_number: formData.landlineNumber || undefined,
+        position: formData.position,
+        password: formData.password,
+        barangay: barangay!,
+        municipality: municipality!,
+        province: province!,
+        region: region!
+      };
+      const { data, error } = await supabase
+        .from('officials')
+        .insert([registrationData]);
+      if (error) throw error;
       toast({
         title: "Registration Submitted!",
         description: "Your official registration has been submitted successfully and is now pending review.",
       });
-      
-      // Clear localStorage after successful submission
       localStorage.removeItem('registration_role');
       localStorage.removeItem('registration_region');
       localStorage.removeItem('registration_province');
       localStorage.removeItem('registration_municipality');
       localStorage.removeItem('registration_barangay');
-      
-      // Navigate to success page
       navigate("/register/official-success", {
         state: {
           email: formData.email,
@@ -182,29 +184,25 @@ export default function OfficialRegistration() {
       });
     } catch (error: any) {
       console.error('Registration submission failed:', error);
-      
-      // Handle different types of errors
       let errorMessage = "Failed to submit registration. Please try again.";
-      
       if (error?.message) {
-        // Check if it's a user-friendly error message
-        if (error.message.includes('already exists') || 
+        if (error.message.includes('already exists') ||
             error.message.includes('Missing required fields') ||
             error.message.includes('Invalid email') ||
             error.message.includes('Registration already exists')) {
           errorMessage = error.message;
-        } else if (error.message.includes('Failed to fetch') || 
+        } else if (error.message.includes('Failed to fetch') ||
                    error.message.includes('network')) {
           errorMessage = "Network error. Please check your connection and try again.";
         }
       }
-      
-      // Show error toast
       toast({
         title: "Registration Failed",
         description: errorMessage,
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -429,10 +427,10 @@ export default function OfficialRegistration() {
 
               <Button 
                 type="submit" 
-                disabled={submitRegistration.isPending} 
+                disabled={isSubmitting} 
                 className="w-full bg-red-600 hover:bg-red-700 text-white py-3 h-12 text-base font-medium"
               >
-                {submitRegistration.isPending ? "Submitting Form..." : "Submit Form"}
+                {isSubmitting ? "Submitting Form..." : "Submit Form"}
               </Button>
             </form>
           </div>
@@ -658,10 +656,10 @@ export default function OfficialRegistration() {
 
           <Button 
             type="submit" 
-            disabled={submitRegistration.isPending} 
+            disabled={isSubmitting} 
             className="w-full bg-red-600 hover:bg-red-700 text-white py-3 h-12 text-base font-medium"
           >
-            {submitRegistration.isPending ? "Submitting Form..." : "Submit Form"}
+            {isSubmitting ? "Submitting Form..." : "Submit Form"}
           </Button>
         </form>
       </div>
