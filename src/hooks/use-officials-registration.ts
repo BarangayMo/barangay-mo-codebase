@@ -123,6 +123,7 @@ export const useOfficialRegistrations = (statusFilter?: string) => {
 };
 
 // Hook for Super-Admin to approve an official
+// Update the useApproveOfficial function in src/hooks/use-officials-registration.ts
 export const useApproveOfficial = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -131,18 +132,18 @@ export const useApproveOfficial = () => {
     mutationFn: async (officialId: string) => {
       console.log('Approving official:', officialId);
 
-      // Use the direct function that handles everything
-      const { data: result, error: functionError } = await supabase
-        .rpc('approve_official_direct' as any, { official_id: officialId });
+      // Step 1: Simple approval
+      const { data: approvalResult, error: approvalError } = await supabase
+        .rpc('approve_official_simple' as any, { official_id: officialId });
 
-      if (functionError) {
-        console.error('Error approving official:', functionError);
-        throw new Error(functionError.message || 'Failed to approve official');
+      if (approvalError) {
+        console.error('Approval error:', approvalError);
+        throw new Error(approvalError.message || 'Failed to approve official');
       }
 
-      console.log('Approval result:', result);
+      console.log('Approval result:', approvalResult);
 
-      // Create auth user via edge function (this will update the user_id)
+      // Step 2: Create auth user
       const { data: authResult, error: authError } = await supabase.functions.invoke(
         'create-auth-user',
         {
@@ -151,18 +152,21 @@ export const useApproveOfficial = () => {
       );
 
       if (authError) {
-        console.error('Error creating auth user:', authError);
-        // Don't throw error here as the official is already approved
-        // Just log it for debugging
+        console.error('Auth user creation error:', authError);
+        // Don't throw error, just log it
       }
 
       if (authResult?.error) {
         console.error('Auth user creation error:', authResult.error);
-        // Don't throw error here as the official is already approved
-        // Just log it for debugging
+        // Don't throw error, just log it
       }
+
+      console.log('Auth result:', authResult);
+
+      return { approvalResult, authResult };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Full approval result:', data);
       queryClient.invalidateQueries({ queryKey: ['official-registrations'] });
       toast({
         title: "Official Approved",
@@ -179,7 +183,6 @@ export const useApproveOfficial = () => {
     },
   });
 };
-
 // Hook for Super-Admin to reject an official
 export const useRejectOfficial = () => {
   const { toast } = useToast();
