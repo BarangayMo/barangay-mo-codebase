@@ -132,65 +132,52 @@ export const useApproveOfficial = () => {
       console.log('=== STARTING APPROVAL PROCESS ===');
       console.log('Official ID:', officialId);
 
-      // Step 1: Approve the official
-      console.log('Step 1: Approving official...');
-      const { data: approvalResult, error: approvalError } = await supabase
-        .rpc('approve_official_complete' as any, { official_id: officialId });
-
-      if (approvalError) {
-        console.error('❌ Approval error:', approvalError);
-        throw new Error(approvalError.message || 'Failed to approve official');
-      }
-
-      console.log('✅ Approval result:', approvalResult);
-
-      // Step 2: Create auth user via Edge Function
-      console.log('Step 2: Creating auth user via Edge Function...');
-      console.log('Calling Edge Function with official_id:', officialId);
+      // Use the existing approve-official Edge Function
+      console.log('Calling approve-official Edge Function...');
       
-      const { data: authResult, error: authError } = await supabase.functions.invoke(
-        'create-auth-user',
+      const { data: result, error } = await supabase.functions.invoke(
+        'approve-official',
         {
           body: { official_id: officialId }
         }
       );
 
       console.log('🔍 Edge Function Response:');
-      console.log('  - Data:', authResult);
-      console.log('  - Error:', authError);
+      console.log('  - Data:', result);
+      console.log('  - Error:', error);
 
-      if (authError) {
-        console.error('❌ Auth user creation error:', authError);
-        // Don't throw error, just log it
+      if (error) {
+        console.error('❌ Approval error:', error);
+        throw new Error(error.message || 'Failed to approve official');
       }
 
-      if (authResult?.error) {
-        console.error('❌ Auth user creation error:', authResult.error);
-        // Don't throw error, just log it
+      if (result?.error) {
+        console.error('❌ Approval error:', result.error);
+        throw new Error(result.error || 'Failed to approve official');
       }
 
-      if (authResult?.success) {
-        console.log('✅ Auth user created successfully:', authResult);
+      if (result?.success) {
+        console.log('✅ Official approved successfully:', result);
       }
 
       console.log('=== APPROVAL PROCESS COMPLETE ===');
-      return { approvalResult, authResult };
+      return result;
     },
     onSuccess: (data) => {
       console.log('🎉 Full approval result:', data);
       
-      // Only show success if auth user was actually created
-      if (data.authResult?.success) {
+      // Show success if the approval was successful
+      if (data.success) {
         queryClient.invalidateQueries({ queryKey: ['official-registrations'] });
         toast({
           title: "Official Approved",
-          description: "The official registration has been approved and their account has been created automatically.",
+          description: data.message || "The official registration has been approved and their account has been created successfully.",
         });
       } else {
-        // Show warning if auth user creation failed
+        // Show error if approval failed
         toast({
-          title: "Partial Success",
-          description: "Official was approved but auth user creation failed. Please check logs.",
+          title: "Approval Failed",
+          description: data.error || "Failed to approve the official registration.",
           variant: "destructive",
         });
       }
@@ -208,15 +195,15 @@ export const useApproveOfficial = () => {
 
 // Test function to call Edge Function directly
 export const testEdgeFunction = async (officialId: string) => {
-  console.log('Testing Edge Function with official_id:', officialId);
-  
+  console.log('Testing approve-official Edge Function with official_id:', officialId);
+
   const { data, error } = await supabase.functions.invoke(
-    'create-auth-user',
+    'approve-official',
     {
       body: { official_id: officialId }
     }
   );
-  
+
   console.log('Edge Function test result:', { data, error });
   return { data, error };
 };
