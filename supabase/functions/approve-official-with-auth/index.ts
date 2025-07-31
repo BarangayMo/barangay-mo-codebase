@@ -40,16 +40,10 @@ serve(async (req) => {
     console.log('Processing official approval with auth user creation');
 
     // Create Supabase admin client with service role
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    );
+    const supabaseUrl = 'https://lsygeaoqahfryyfvpxrk.supabase.co'; // <-- Replace with your Supabase URL
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxzeWdlYW9xYWhmcnl5ZnZweHJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyMjcxODEsImV4cCI6MjA2MDgwMzE4MX0.G1OJ6IjdvIujheeEH8MeBqOaEvO2AMvS1XapMzEUpI4'; // <-- Replace with your anon key
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
 
     console.log('Supabase admin client created');
 
