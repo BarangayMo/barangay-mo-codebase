@@ -149,59 +149,6 @@ export const useApproveOfficial = () => {
 
       console.log('Official status updated successfully');
 
-      // Manually create profile after approval
-      setTimeout(async () => {
-        try {
-          // Get the official data
-          const { data: official, error: fetchError } = await supabase
-            .from('officials')
-            .select('*')
-            .eq('id', officialId)
-            .single();
-
-          if (!fetchError && official) {
-            // Generate UUID if not exists
-            const userId = official.user_id || crypto.randomUUID();
-            
-            // Update official with user_id if not exists
-            if (!official.user_id) {
-              await supabase
-                .from('officials')
-                .update({ user_id: userId })
-                .eq('id', officialId);
-            }
-
-            // Insert into profiles
-            const { error: profileError } = await supabase
-              .from('profiles')
-              .insert({
-                id: userId,
-                first_name: official.first_name,
-                last_name: official.last_name,
-                middle_name: official.middle_name || '',
-                suffix: official.suffix || '',
-                email: official.email,
-                phone_number: official.phone_number,
-                landline_number: official.landline_number || '',
-                barangay: official.barangay,
-                municipality: official.municipality,
-                province: official.province,
-                region: official.region,
-                role: 'official',
-                is_approved: true
-              });
-
-            if (profileError) {
-              console.error('Profile creation error:', profileError);
-            } else {
-              console.log('Profile created successfully');
-            }
-          }
-        } catch (error) {
-          console.error('Error in manual profile creation:', error);
-        }
-      }, 1000);
-
       // Then, create the auth user via edge function
       const { data: authResult, error: authError } = await supabase.functions.invoke(
         'create-auth-user',
@@ -221,6 +168,70 @@ export const useApproveOfficial = () => {
         // Don't throw error here as the official is already approved
         // Just log it for debugging
       }
+
+      // If auth user was created successfully, update the official with user_id
+      if (authResult?.user_id) {
+        const { error: userUpdateError } = await supabase
+          .from('officials')
+          .update({ user_id: authResult.user_id })
+          .eq('id', officialId);
+
+        if (userUpdateError) {
+          console.error('Error updating official with user_id:', userUpdateError);
+        } else {
+          console.log('Official updated with user_id:', authResult.user_id);
+        }
+      }
+
+      // Finally, create the profile if it doesn't exist
+      setTimeout(async () => {
+        try {
+          const { data: official, error: fetchError } = await supabase
+            .from('officials')
+            .select('*')
+            .eq('id', officialId)
+            .single();
+
+          if (!fetchError && official) {
+            // Check if profile already exists
+            const { data: existingProfile } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('email', official.email)
+              .single();
+
+            if (!existingProfile) {
+              // Create profile
+              const { error: profileError } = await supabase
+                .from('profiles')
+                .insert({
+                  id: official.user_id || crypto.randomUUID(),
+                  first_name: official.first_name,
+                  last_name: official.last_name,
+                  middle_name: official.middle_name || '',
+                  suffix: official.suffix || '',
+                  email: official.email,
+                  phone_number: official.phone_number,
+                  landline_number: official.landline_number || '',
+                  barangay: official.barangay,
+                  municipality: official.municipality,
+                  province: official.province,
+                  region: official.region,
+                  role: 'official',
+                  is_approved: true
+                });
+
+              if (profileError) {
+                console.error('Profile creation error:', profileError);
+              } else {
+                console.log('Profile created successfully');
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error in profile creation:', error);
+        }
+      }, 1000);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['official-registrations'] });
