@@ -139,7 +139,7 @@ serve(async (req) => {
     // Create auth user with proper metadata
     const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: official.email,
-      password: official.original_password || 'temporary123', // Use original password or generate one
+      password: official.original_password || 'temporary123',
       email_confirm: true,
       user_metadata: {
         first_name: official.first_name,
@@ -187,21 +187,43 @@ serve(async (req) => {
 
     if (updateError) {
       console.error('Error updating official with user_id:', updateError);
-      // Don't fail the entire operation, just log the error
     }
 
-    // Also update the profile with the auth user ID if it exists
-    const { error: profileUpdateError } = await supabaseAdmin
+    // Update the profile to link it with the auth user ID
+    // We need to delete the old profile and create a new one with the auth user ID
+    const { error: profileDeleteError } = await supabaseAdmin
       .from('profiles')
-      .update({ 
-        id: authUser.user.id,
-        updated_at: new Date().toISOString()
-      })
+      .delete()
       .eq('email', official.email);
 
-    if (profileUpdateError) {
-      console.error('Error updating profile with user_id:', profileUpdateError);
-      // Don't fail the entire operation, just log the error
+    if (profileDeleteError) {
+      console.error('Error deleting old profile:', profileDeleteError);
+    }
+
+    // Create new profile with auth user ID
+    const { error: profileCreateError } = await supabaseAdmin
+      .from('profiles')
+      .insert({
+        id: authUser.user.id,
+        first_name: official.first_name,
+        last_name: official.last_name,
+        middle_name: official.middle_name || '',
+        suffix: official.suffix || '',
+        email: official.email,
+        phone_number: official.phone_number,
+        landline_number: official.landline_number || '',
+        barangay: official.barangay,
+        municipality: official.municipality,
+        province: official.province,
+        region: official.region,
+        role: 'official',
+        is_approved: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+
+    if (profileCreateError) {
+      console.error('Error creating new profile:', profileCreateError);
     }
 
     console.log('Successfully created auth user:', authUser.user.id);
@@ -233,4 +255,4 @@ serve(async (req) => {
       }
     );
   }
-}); 
+});
