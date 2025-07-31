@@ -103,15 +103,31 @@ serve(async (req) => {
     }
 
     // Check if auth user already exists
-    const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers();
+    const { data: existingUser, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+    
+    if (listError) {
+      console.error('Error listing users:', listError);
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'Failed to check existing users'
+        }),
+        {
+          status: 500,
+          headers: corsHeaders,
+        }
+      );
+    }
+
     const userExists = existingUser.users.some(user => user.email === official.email);
 
     if (userExists) {
+      console.log('Auth user already exists for email:', official.email);
       return new Response(
         JSON.stringify({ 
           success: true,
           message: 'Auth user already exists',
-          user_id: official.user_id
+          user_id: official.user_id || 'existing_user'
         }),
         {
           status: 200,
@@ -120,7 +136,7 @@ serve(async (req) => {
       );
     }
 
-    // Create auth user
+    // Create auth user with proper metadata
     const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: official.email,
       password: official.original_password || 'temporary123', // Use original password or generate one
@@ -137,11 +153,16 @@ serve(async (req) => {
         province: official.province,
         region: official.region,
         role: 'official',
-        position: official.position
+        position: official.position,
+        is_approved: true
+      },
+      app_metadata: {
+        role: 'official'
       }
     });
 
     if (authError) {
+      console.error('Error creating auth user:', authError);
       return new Response(
         JSON.stringify({ 
           success: false,
@@ -158,18 +179,39 @@ serve(async (req) => {
     // Update the official record with the auth user ID
     const { error: updateError } = await supabaseAdmin
       .from('officials')
-      .update({ user_id: authUser.user.id })
+      .update({ 
+        user_id: authUser.user.id,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', requestData.official_id);
 
     if (updateError) {
       console.error('Error updating official with user_id:', updateError);
+      // Don't fail the entire operation, just log the error
     }
+
+    // Also update the profile with the auth user ID if it exists
+    const { error: profileUpdateError } = await supabaseAdmin
+      .from('profiles')
+      .update({ 
+        id: authUser.user.id,
+        updated_at: new Date().toISOString()
+      })
+      .eq('email', official.email);
+
+    if (profileUpdateError) {
+      console.error('Error updating profile with user_id:', profileUpdateError);
+      // Don't fail the entire operation, just log the error
+    }
+
+    console.log('Successfully created auth user:', authUser.user.id);
 
     return new Response(
       JSON.stringify({ 
         success: true,
         message: 'Auth user created successfully',
-        user_id: authUser.user.id
+        user_id: authUser.user.id,
+        email: official.email
       }),
       {
         status: 200,
@@ -182,7 +224,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: false,
-        error: 'Internal server error'
+        error: 'Internal server error',
+        details: error.message
       }),
       {
         status: 500,
