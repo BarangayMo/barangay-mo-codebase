@@ -123,7 +123,7 @@ export const useOfficialRegistrations = (statusFilter?: string) => {
 };
 
 // Hook for Super-Admin to approve an official
-// Update the useApproveOfficial function in src/hooks/use-officials-registration.ts
+// Update the useApproveOfficial function
 export const useApproveOfficial = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -132,9 +132,9 @@ export const useApproveOfficial = () => {
     mutationFn: async (officialId: string) => {
       console.log('Approving official:', officialId);
 
-      // Step 1: Simple approval
+      // Step 1: Approve the official
       const { data: approvalResult, error: approvalError } = await supabase
-        .rpc('approve_official_simple' as any, { official_id: officialId });
+        .rpc('approve_official_complete' as any, { official_id: officialId });
 
       if (approvalError) {
         console.error('Approval error:', approvalError);
@@ -143,7 +143,7 @@ export const useApproveOfficial = () => {
 
       console.log('Approval result:', approvalResult);
 
-      // Step 2: Create auth user
+      // Step 2: Create auth user via Edge Function
       const { data: authResult, error: authError } = await supabase.functions.invoke(
         'create-auth-user',
         {
