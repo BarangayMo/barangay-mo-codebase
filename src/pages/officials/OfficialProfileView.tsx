@@ -16,19 +16,35 @@ export default function OfficialProfileView() {
     async function fetchOfficial() {
       setLoading(true);
       setError(null);
-      const { data, error } = await supabase
-        .from('officials')
-        .select('*')
-        .eq('id', id)
+
+      // Try fetching from 'officials' table
+      let { data, error } = await supabase
+        .from("officials")
+        .select("*")
+        .eq("id", id)
         .single();
-      if (error) {
-        setError('Official not found.');
-        setOfficial(null);
+
+      // If not found in officials, try council_members
+      if (error || !data) {
+        const councilRes = await supabase
+          .from("council_members")
+          .select("*")
+          .eq("id", id)
+          .single();
+
+        if (councilRes.error || !councilRes.data) {
+          setError("Official not found.");
+          setOfficial(null);
+        } else {
+          setOfficial(councilRes.data);
+        }
       } else {
         setOfficial(data);
       }
+
       setLoading(false);
     }
+
     if (id) fetchOfficial();
   }, [id]);
 
@@ -61,11 +77,11 @@ export default function OfficialProfileView() {
               <div><strong>Municipality:</strong> {official.municipality}</div>
               <div><strong>Province:</strong> {official.province}</div>
               <div><strong>Region:</strong> {official.region}</div>
-              <div><strong>Status:</strong> {official.status}</div>
+              {official.status && <div><strong>Status:</strong> {official.status}</div>}
             </div>
           </CardContent>
         </Card>
       </div>
     </Layout>
   );
-} 
+}
