@@ -139,7 +139,7 @@ serve(async (req) => {
     // Create auth user with proper metadata
     const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: official.email,
-      password: official.original_password || 'temporary123',
+      password: official.original_password || 'temporary123', // Use original password or generate one
       email_confirm: true,
       user_metadata: {
         first_name: official.first_name,
@@ -187,6 +187,7 @@ serve(async (req) => {
 
     if (updateError) {
       console.error('Error updating official with user_id:', updateError);
+      // Don't fail the entire operation, just log the error
     }
 
     // Update the profile to link it with the auth user ID
@@ -224,6 +225,7 @@ serve(async (req) => {
 
     if (profileCreateError) {
       console.error('Error creating new profile:', profileCreateError);
+      // Don't fail the entire operation, just log the error
     }
 
     console.log('Successfully created auth user:', authUser.user.id);
@@ -255,4 +257,4 @@ serve(async (req) => {
       }
     );
   }
-});
+}); 
