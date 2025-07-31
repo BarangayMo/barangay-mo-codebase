@@ -132,6 +132,13 @@ export const useApproveOfficial = () => {
       console.log('=== STARTING APPROVAL PROCESS ===');
       console.log('Official ID:', officialId);
 
+      // Debug: Check official record before approval
+      console.log('🔍 Debugging official record before approval...');
+      const officialRecord = await debugOfficialRecord(officialId);
+      if (!officialRecord) {
+        throw new Error('Official record not found');
+      }
+
       // Use the existing approve-official Edge Function
       console.log('Calling approve-official Edge Function...');
       
@@ -148,7 +155,23 @@ export const useApproveOfficial = () => {
 
       if (error) {
         console.error('❌ Approval error:', error);
-        throw new Error(error.message || 'Failed to approve official');
+        // Try to get more details from the error response
+        let errorMessage = error.message || 'Failed to approve official';
+        
+        // If it's a 400 error, try to get the response body
+        if (error.status === 400) {
+          try {
+            const errorResponse = await error.response?.json();
+            if (errorResponse) {
+              errorMessage = errorResponse.error || errorResponse.reason || errorMessage;
+              console.error('❌ Detailed error response:', errorResponse);
+            }
+          } catch (parseError) {
+            console.error('❌ Could not parse error response:', parseError);
+          }
+        }
+        
+        throw new Error(errorMessage);
       }
 
       if (result?.error) {
@@ -206,6 +229,36 @@ export const testEdgeFunction = async (officialId: string) => {
 
   console.log('Edge Function test result:', { data, error });
   return { data, error };
+};
+
+// Debug function to check official record before approval
+export const debugOfficialRecord = async (officialId: string) => {
+  console.log('🔍 Debugging official record:', officialId);
+  
+  const { data: official, error } = await supabase
+    .from('officials')
+    .select('*')
+    .eq('id', officialId)
+    .single();
+    
+  if (error) {
+    console.error('❌ Error fetching official:', error);
+    return null;
+  }
+  
+  console.log('✅ Official record found:', {
+    id: official.id,
+    email: official.email,
+    status: official.status,
+    is_approved: official.is_approved,
+    user_id: official.user_id,
+    password_hash: official.password_hash ? 'present' : 'missing',
+    original_password: official.original_password ? 'present' : 'missing',
+    created_at: official.created_at,
+    updated_at: official.updated_at
+  });
+  
+  return official;
 };
 
 // Hook for Super-Admin to reject an official
