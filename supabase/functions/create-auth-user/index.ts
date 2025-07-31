@@ -35,8 +35,8 @@ serve(async (req) => {
     }
 
     // Create Supabase admin client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseUrl = "https://lsygeaoqahfryyfvpxrk.supabase.co";
+    const supabaseServiceKey ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxzeWdlYW9xYWhmcnl5ZnZweHJrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NTIyNzE4MSwiZXhwIjoyMDYwODAzMTgxfQ.lmAjNOMmobNPhxY4-qPTRBiW2ZlvqjMFVTF2CsrdILQ";
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // Parse request body
