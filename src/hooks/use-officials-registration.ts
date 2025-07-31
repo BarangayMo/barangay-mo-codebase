@@ -147,6 +147,8 @@ export const useApproveOfficial = () => {
         throw new Error(updateError.message || 'Failed to approve official');
       }
 
+      console.log('Official status updated successfully');
+
       // Then, create the auth user via edge function
       const { data: authResult, error: authError } = await supabase.functions.invoke(
         'create-auth-user',
