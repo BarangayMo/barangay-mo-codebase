@@ -131,16 +131,76 @@ export const useApproveOfficial = () => {
     mutationFn: async (officialId: string) => {
       console.log('Approving official:', officialId);
 
-      // Use the new function that handles everything
-      const { data: result, error: functionError } = await supabase
-        .rpc('approve_official_with_profile' as any, { official_id: officialId });
+      // First, update the official status in the database
+      const { error: updateError } = await supabase
+        .from('officials')
+        .update({
+          status: 'approved',
+          is_approved: true,
+          approved_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', officialId);
 
-      if (functionError) {
-        console.error('Error approving official:', functionError);
-        throw new Error(functionError.message || 'Failed to approve official');
+      if (updateError) {
+        console.error('Error approving official:', updateError);
+        throw new Error(updateError.message || 'Failed to approve official');
       }
 
-      console.log('Approval result:', result);
+      console.log('Official status updated successfully');
+
+      // Manually create profile after approval
+      setTimeout(async () => {
+        try {
+          // Get the official data
+          const { data: official, error: fetchError } = await supabase
+            .from('officials')
+            .select('*')
+            .eq('id', officialId)
+            .single();
+
+          if (!fetchError && official) {
+            // Generate UUID if not exists
+            const userId = official.user_id || crypto.randomUUID();
+            
+            // Update official with user_id if not exists
+            if (!official.user_id) {
+              await supabase
+                .from('officials')
+                .update({ user_id: userId })
+                .eq('id', officialId);
+            }
+
+            // Insert into profiles
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .insert({
+                id: userId,
+                first_name: official.first_name,
+                last_name: official.last_name,
+                middle_name: official.middle_name || '',
+                suffix: official.suffix || '',
+                email: official.email,
+                phone_number: official.phone_number,
+                landline_number: official.landline_number || '',
+                barangay: official.barangay,
+                municipality: official.municipality,
+                province: official.province,
+                region: official.region,
+                role: 'official',
+                is_approved: true
+              });
+
+            if (profileError) {
+              console.error('Profile creation error:', profileError);
+            } else {
+              console.log('Profile created successfully');
+            }
+          }
+        } catch (error) {
+          console.error('Error in manual profile creation:', error);
+        }
+      }, 1000);
 
       // Then, create the auth user via edge function
       const { data: authResult, error: authError } = await supabase.functions.invoke(
