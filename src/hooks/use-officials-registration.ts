@@ -131,7 +131,8 @@ export const useApproveOfficial = () => {
     mutationFn: async (officialId: string) => {
       console.log('Approving official:', officialId);
 
-      const { error } = await supabase
+      // First, update the official status in the database
+      const { error: updateError } = await supabase
         .from('officials')
         .update({
           status: 'approved',
@@ -141,9 +142,29 @@ export const useApproveOfficial = () => {
         })
         .eq('id', officialId);
 
-      if (error) {
-        console.error('Error approving official:', error);
-        throw new Error(error.message || 'Failed to approve official');
+      if (updateError) {
+        console.error('Error approving official:', updateError);
+        throw new Error(updateError.message || 'Failed to approve official');
+      }
+
+      // Then, create the auth user via edge function
+      const { data: authResult, error: authError } = await supabase.functions.invoke(
+        'create-auth-user',
+        {
+          body: { official_id: officialId }
+        }
+      );
+
+      if (authError) {
+        console.error('Error creating auth user:', authError);
+        // Don't throw error here as the official is already approved
+        // Just log it for debugging
+      }
+
+      if (authResult?.error) {
+        console.error('Auth user creation error:', authResult.error);
+        // Don't throw error here as the official is already approved
+        // Just log it for debugging
       }
     },
     onSuccess: () => {
