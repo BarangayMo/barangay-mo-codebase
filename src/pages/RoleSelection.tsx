@@ -119,7 +119,7 @@ export default function RoleSelection() {
                     </div>
                     <div className="flex-1">
                       <div className="font-semibold text-gray-900">Barangay</div>
-                      <div className="text-sm text-gray-500">Brgy. Secretaries Only.</div>
+                      <div className="text-sm text-gray-500">Brgy. Secretaries Only</div>
                     </div>
                     {selectedRole === "official" && (
                       <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
@@ -231,7 +231,7 @@ export default function RoleSelection() {
                 </div>
                 <div className="flex-1">
                   <div className="font-semibold text-gray-900">Barangay</div>
-                  <div className="text-sm text-gray-500">Brgy. Secretaries Only.</div>
+                  <div className="text-sm text-gray-500">Brgy. Secretaries Only</div>
                 </div>
                 {selectedRole === "official" && (
                   <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
