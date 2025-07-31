@@ -133,7 +133,7 @@ export const useApproveOfficial = () => {
 
       // Use the direct function that handles everything
       const { data: result, error: functionError } = await supabase
-        .rpc('approve_official_simple' as any, { official_id: officialId });
+        .rpc('approve_official_direct' as any, { official_id: officialId });
 
       if (functionError) {
         console.error('Error approving official:', functionError);
