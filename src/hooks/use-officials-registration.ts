@@ -123,27 +123,31 @@ export const useOfficialRegistrations = (statusFilter?: string) => {
 };
 
 // Hook for Super-Admin to approve an official
-// Update the useApproveOfficial function
 export const useApproveOfficial = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (officialId: string) => {
-      console.log('Approving official:', officialId);
+      console.log('=== STARTING APPROVAL PROCESS ===');
+      console.log('Official ID:', officialId);
 
       // Step 1: Approve the official
+      console.log('Step 1: Approving official...');
       const { data: approvalResult, error: approvalError } = await supabase
         .rpc('approve_official_complete' as any, { official_id: officialId });
 
       if (approvalError) {
-        console.error('Approval error:', approvalError);
+        console.error('❌ Approval error:', approvalError);
         throw new Error(approvalError.message || 'Failed to approve official');
       }
 
-      console.log('Approval result:', approvalResult);
+      console.log('✅ Approval result:', approvalResult);
 
       // Step 2: Create auth user via Edge Function
+      console.log('Step 2: Creating auth user via Edge Function...');
+      console.log('Calling Edge Function with official_id:', officialId);
+      
       const { data: authResult, error: authError } = await supabase.functions.invoke(
         'create-auth-user',
         {
@@ -151,22 +155,29 @@ export const useApproveOfficial = () => {
         }
       );
 
+      console.log('🔍 Edge Function Response:');
+      console.log('  - Data:', authResult);
+      console.log('  - Error:', authError);
+
       if (authError) {
-        console.error('Auth user creation error:', authError);
+        console.error('❌ Auth user creation error:', authError);
         // Don't throw error, just log it
       }
 
       if (authResult?.error) {
-        console.error('Auth user creation error:', authResult.error);
+        console.error('❌ Auth user creation error:', authResult.error);
         // Don't throw error, just log it
       }
 
-      console.log('Auth result:', authResult);
+      if (authResult?.success) {
+        console.log('✅ Auth user created successfully:', authResult);
+      }
 
+      console.log('=== APPROVAL PROCESS COMPLETE ===');
       return { approvalResult, authResult };
     },
     onSuccess: (data) => {
-      console.log('Full approval result:', data);
+      console.log('🎉 Full approval result:', data);
       queryClient.invalidateQueries({ queryKey: ['official-registrations'] });
       toast({
         title: "Official Approved",
@@ -174,7 +185,7 @@ export const useApproveOfficial = () => {
       });
     },
     onError: (error: any) => {
-      console.error('Approval error:', error);
+      console.error('❌ Approval error:', error);
       toast({
         title: "Approval Failed",
         description: error.message || "Failed to approve registration.",
@@ -183,6 +194,22 @@ export const useApproveOfficial = () => {
     },
   });
 };
+
+// Test function to call Edge Function directly
+export const testEdgeFunction = async (officialId: string) => {
+  console.log('Testing Edge Function with official_id:', officialId);
+  
+  const { data, error } = await supabase.functions.invoke(
+    'create-auth-user',
+    {
+      body: { official_id: officialId }
+    }
+  );
+  
+  console.log('Edge Function test result:', { data, error });
+  return { data, error };
+};
+
 // Hook for Super-Admin to reject an official
 export const useRejectOfficial = () => {
   const { toast } = useToast();
