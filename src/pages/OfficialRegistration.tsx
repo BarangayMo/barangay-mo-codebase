@@ -157,7 +157,7 @@ export default function OfficialRegistration() {
         phone_number: formData.phoneNumber,
         landline_number: formData.landlineNumber || undefined,
         position: formData.position,
-        password: formData.password,
+        original_password: formData.password,
         barangay: barangay!,
         municipality: municipality!,
         province: province!,
