@@ -40,8 +40,8 @@ const OFFICIAL_POSITIONS = [
 ];
 
 // Initialize Supabase client
-const supabaseUrl = 'https://YOUR_PROJECT.supabase.co'; // <-- Replace with your Supabase URL
-const supabaseAnonKey = 'YOUR_PUBLIC_ANON_KEY'; // <-- Replace with your anon key
+const supabaseUrl = 'https://lsygeaoqahfryyfvpxrk.supabase.co'; // <-- Replace with your Supabase URL
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxzeWdlYW9xYWhmcnl5ZnZweHJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyMjcxODEsImV4cCI6MjA2MDgwMzE4MX0.G1OJ6IjdvIujheeEH8MeBqOaEvO2AMvS1XapMzEUpI4'; // <-- Replace with your anon key
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default function OfficialRegistration() {
