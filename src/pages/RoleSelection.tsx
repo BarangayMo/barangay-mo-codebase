@@ -118,8 +118,8 @@ export default function RoleSelection() {
                       <Shield className="w-6 h-6" />
                     </div>
                     <div className="flex-1">
-                      <div className="font-semibold text-gray-900">Barangay Official</div>
-                      <div className="text-sm text-gray-500">Manage barangay services</div>
+                      <div className="font-semibold text-gray-900">Barangay</div>
+                      <div className="text-sm text-gray-500">Brgy. Secretaries Only.</div>
                     </div>
                     {selectedRole === "official" && (
                       <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
