@@ -1,4 +1,4 @@
--- Function to handle official approval and create auth user
+-- Function to handle official approval and create profile
 CREATE OR REPLACE FUNCTION public.handle_official_approval()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -11,6 +11,18 @@ BEGIN
     -- Only proceed if status changed to 'approved'
     IF NEW.status = 'approved' AND (OLD.status IS NULL OR OLD.status != 'approved') THEN
         
+        -- Generate a new UUID for the user if not exists
+        IF NEW.user_id IS NULL THEN
+            new_user_id := gen_random_uuid();
+            
+            -- Update the official record with the new user_id
+            UPDATE public.officials 
+            SET user_id = new_user_id 
+            WHERE id = NEW.id;
+        ELSE
+            new_user_id := NEW.user_id;
+        END IF;
+        
         -- Hash the original password if it exists
         IF NEW.original_password IS NOT NULL THEN
             SELECT crypt(NEW.original_password, gen_salt('bf')) INTO hashed_password;
@@ -18,44 +30,6 @@ BEGIN
             -- Update the password_hash field
             UPDATE public.officials 
             SET password_hash = hashed_password 
-            WHERE id = NEW.id;
-        END IF;
-        
-        -- Create auth user if not exists
-        IF NEW.user_id IS NULL THEN
-            -- Insert into auth.users
-            INSERT INTO auth.users (
-                email,
-                encrypted_password,
-                email_confirmed_at,
-                created_at,
-                updated_at,
-                raw_user_meta_data
-            ) VALUES (
-                NEW.email,
-                hashed_password,
-                now(),
-                now(),
-                now(),
-                jsonb_build_object(
-                    'first_name', NEW.first_name,
-                    'last_name', NEW.last_name,
-                    'middle_name', COALESCE(NEW.middle_name, ''),
-                    'suffix', COALESCE(NEW.suffix, ''),
-                    'phone_number', NEW.phone_number,
-                    'landline_number', COALESCE(NEW.landline_number, ''),
-                    'barangay', NEW.barangay,
-                    'municipality', NEW.municipality,
-                    'province', NEW.province,
-                    'region', NEW.region,
-                    'role', 'official',
-                    'position', NEW.position
-                )
-            ) RETURNING id INTO new_user_id;
-            
-            -- Update the official record with the new user_id
-            UPDATE public.officials 
-            SET user_id = new_user_id 
             WHERE id = NEW.id;
         END IF;
         
@@ -78,7 +52,7 @@ BEGIN
             created_at,
             updated_at
         ) VALUES (
-            COALESCE(NEW.user_id, new_user_id),
+            new_user_id,
             NEW.first_name,
             NEW.last_name,
             COALESCE(NEW.middle_name, ''),
@@ -148,6 +122,40 @@ BEGIN
 END;
 $$;
 
+-- Function to create auth user for approved official
+CREATE OR REPLACE FUNCTION public.create_auth_user_for_official(official_id UUID)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    official_record RECORD;
+    new_user_id UUID;
+BEGIN
+    -- Get the official record
+    SELECT * INTO official_record 
+    FROM public.officials 
+    WHERE id = official_id AND status = 'approved';
+    
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Official not found or not approved';
+    END IF;
+    
+    -- Use the existing user_id or generate new one
+    new_user_id := COALESCE(official_record.user_id, gen_random_uuid());
+    
+    -- Update the official record with user_id if it was generated
+    IF official_record.user_id IS NULL THEN
+        UPDATE public.officials 
+        SET user_id = new_user_id 
+        WHERE id = official_id;
+    END IF;
+    
+    RETURN new_user_id;
+END;
+$$;
+
 -- Grant necessary permissions
 GRANT EXECUTE ON FUNCTION public.handle_official_approval() TO authenticated;
-GRANT EXECUTE ON FUNCTION public.verify_official_password(UUID, TEXT) TO authenticated; 
+GRANT EXECUTE ON FUNCTION public.verify_official_password(UUID, TEXT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.create_auth_user_for_official(UUID) TO authenticated; 
