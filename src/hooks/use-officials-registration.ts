@@ -178,11 +178,22 @@ export const useApproveOfficial = () => {
     },
     onSuccess: (data) => {
       console.log('🎉 Full approval result:', data);
-      queryClient.invalidateQueries({ queryKey: ['official-registrations'] });
-      toast({
-        title: "Official Approved",
-        description: "The official registration has been approved and their account has been created automatically.",
-      });
+      
+      // Only show success if auth user was actually created
+      if (data.authResult?.success) {
+        queryClient.invalidateQueries({ queryKey: ['official-registrations'] });
+        toast({
+          title: "Official Approved",
+          description: "The official registration has been approved and their account has been created automatically.",
+        });
+      } else {
+        // Show warning if auth user creation failed
+        toast({
+          title: "Partial Success",
+          description: "Official was approved but auth user creation failed. Please check logs.",
+          variant: "destructive",
+        });
+      }
     },
     onError: (error: any) => {
       console.error('❌ Approval error:', error);
