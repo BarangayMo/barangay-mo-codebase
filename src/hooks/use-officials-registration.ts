@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { FunctionsHttpError } from '@supabase/supabase-js';
 
 export interface OfficialRegistration {
   id?: string;
@@ -155,18 +156,32 @@ export const useApproveOfficial = () => {
 
       if (error) {
         console.error('❌ Approval error:', error);
-        // Try to get more details from the error response
+        
         let errorMessage = error.message || 'Failed to approve official';
         
-        // Try to get the response body for any error status
-        try {
-          const errorResponse = await error.response?.json();
-          if (errorResponse) {
-            errorMessage = errorResponse.error || errorResponse.reason || errorResponse.message || errorMessage;
-            console.error('❌ Detailed error response:', errorResponse);
+        // Handle FunctionsHttpError specifically
+        if (error instanceof FunctionsHttpError) {
+          try {
+            const errorResponse = await error.context.json();
+            console.error('❌ Edge Function error response:', errorResponse);
+            
+            if (errorResponse) {
+              errorMessage = errorResponse.error || errorResponse.reason || errorResponse.message || errorMessage;
+            }
+          } catch (parseError) {
+            console.error('❌ Could not parse FunctionsHttpError response:', parseError);
           }
-        } catch (parseError) {
-          console.error('❌ Could not parse error response:', parseError);
+        } else {
+          // Try to get the response body for any error status
+          try {
+            const errorResponse = await error.response?.json();
+            if (errorResponse) {
+              errorMessage = errorResponse.error || errorResponse.reason || errorResponse.message || errorMessage;
+              console.error('❌ Detailed error response:', errorResponse);
+            }
+          } catch (parseError) {
+            console.error('❌ Could not parse error response:', parseError);
+          }
         }
         
         throw new Error(errorMessage);
