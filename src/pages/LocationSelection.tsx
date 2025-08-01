@@ -1024,4 +1024,167 @@ export default function LocationSelection() {
               )}
             </div>
 
-            
+            {/* Municipality Dropdown */}
+            <div className="relative" ref={municipalityRef}>
+              <Label className="text-sm font-medium text-gray-700 mb-3 block">Select City/Municipality</Label>
+              <div className="relative">
+                <Input
+                  placeholder="Search and select city/municipality..."
+                  value={municipalitySearch}
+                  onChange={(e) => setMunicipalitySearch(e.target.value)}
+                  onFocus={handleMunicipalityFocus}
+                  onBlur={handleMunicipalityBlur}
+                  disabled={!selectedProvince}
+                  className={`h-12 pr-20 ${!selectedProvince ? "opacity-50 cursor-not-allowed" : ""}`}
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                  {municipalitySearch && (
+                    <button
+                      onClick={() => {
+                        setMunicipalitySearch("")
+                        setSelectedMunicipality("")
+                      }}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                  <ChevronDown
+                    className={`h-4 w-4 text-gray-400 transition-transform ${showMunicipalityDropdown ? "rotate-180" : ""}`}
+                  />
+                </div>
+              </div>
+              {showMunicipalityDropdown && selectedProvince && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  {isLoading ? (
+                    <div className="p-4 text-center text-gray-500">Loading municipalities...</div>
+                  ) : (
+                    <>
+                      {selectedMunicipality && (
+                        <button
+                          onClick={() => handleMunicipalitySelect(selectedMunicipality)}
+                          className="w-full text-left py-3 px-4 bg-blue-50 border-b border-gray-100 flex items-center gap-2"
+                        >
+                          <Check className="h-4 w-4 text-blue-600" />
+                          {toTitleCase(selectedMunicipality)}
+                        </button>
+                      )}
+                      {filteredMunicipalities.filter((m) => m !== selectedMunicipality).length === 0 &&
+                      municipalities.length === 0 ? (
+                        <div className="p-4 text-center text-gray-500">No municipalities found for this province</div>
+                      ) : filteredMunicipalities.filter((m) => m !== selectedMunicipality).length === 0 ? (
+                        <div className="p-4 text-center text-gray-500">No municipalities match your search</div>
+                      ) : (
+                        filteredMunicipalities
+                          .filter((m) => m !== selectedMunicipality)
+                          .map((municipality, index) => (
+                            <button
+                              key={index}
+                              onClick={() => handleMunicipalitySelect(municipality)}
+                              className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                            >
+                              {toTitleCase(municipality)}
+                            </button>
+                          ))
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Barangay Dropdown */}
+            <div className="relative" ref={barangayRef}>
+              <Label className="text-sm font-medium text-gray-700 mb-3 block">Select Barangay</Label>
+              <div className="relative">
+                <Input
+                  placeholder="Search and select barangay..."
+                  value={barangaySearch}
+                  onChange={(e) => setBarangaySearch(e.target.value)}
+                  onFocus={handleBarangayFocus}
+                  onBlur={handleBarangayBlur}
+                  disabled={!selectedMunicipality}
+                  className={`h-12 pr-20 ${!selectedMunicipality ? "opacity-50 cursor-not-allowed" : ""}`}
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                  {barangaySearch && (
+                    <button
+                      onClick={() => {
+                        setBarangaySearch("")
+                        setSelectedBarangay("")
+                      }}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                  <ChevronDown
+                    className={`h-4 w-4 text-gray-400 transition-transform ${showBarangayDropdown ? "rotate-180" : ""}`}
+                  />
+                </div>
+              </div>
+              {showBarangayDropdown && selectedMunicipality && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  {isLoading ? (
+                    <div className="p-4 text-center text-gray-500">Loading barangays...</div>
+                  ) : (
+                    <>
+                      {selectedBarangay && (
+                        <button
+                          onClick={() => handleBarangaySelect(selectedBarangay)}
+                          className="w-full text-left py-3 px-4 bg-blue-50 border-b border-gray-100 flex items-center gap-2"
+                        >
+                          <Check className="h-4 w-4 text-blue-600" />
+                          {toTitleCase(selectedBarangay)}
+                        </button>
+                      )}
+                      {filteredBarangays.filter((b) => b !== selectedBarangay).length === 0 &&
+                      barangays.length === 0 ? (
+                        <div className="p-4 text-center text-gray-500">No barangays found for this municipality</div>
+                      ) : filteredBarangays.filter((b) => b !== selectedBarangay).length === 0 ? (
+                        <div className="p-4 text-center text-gray-500">No barangays match your search</div>
+                      ) : (
+                        filteredBarangays
+                          .filter((b) => b !== selectedBarangay)
+                          .map((barangay, index) => (
+                            <button
+                              key={index}
+                              onClick={() => handleBarangaySelect(barangay)}
+                              className="w-full text-left py-3 px-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                            >
+                              <div className="font-medium text-gray-900">{toTitleCase(barangay)}</div>
+                            </button>
+                          ))
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Selected Barangay Display */}
+            {selectedBarangay && (
+              <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
+                <div className="text-center">
+                  <div className="font-semibold text-green-900 text-lg">{toTitleCase(selectedBarangay)}</div>
+                  <div className="text-sm text-green-600">Barangay Selected</div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Next Button */}
+          <div className="mt-8">
+            <Button
+              onClick={handleNext}
+              disabled={!isFormValid}
+              className={`w-full text-white py-4 h-12 text-base font-medium rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed ${userRole === "official" ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"}`}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
