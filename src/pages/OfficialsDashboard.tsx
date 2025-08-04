@@ -497,42 +497,21 @@ const OfficialsDashboard = () => {
             </CardContent>
           </Card>
 
-          {officialsLoading ? (
+
+          {/* Barangay Officials Section */}
+          {barangayOfficials && barangayOfficials.length > 0 && (
             <Card className="mt-6 bg-white shadow-sm border border-gray-100">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base font-semibold text-gray-900">Barangay Officials</h3>
-                  <div className="w-16 h-4 bg-gray-200 rounded animate-pulse"></div>
+                  <Link to="/users/officials" className="text-red-500 text-sm font-medium">View All</Link>
                 </div>
                 <div className="space-y-3">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                      <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
-                      <div className="flex-1 space-y-2">
-                        <div className="w-24 h-3 bg-gray-200 rounded animate-pulse"></div>
-                        <div className="w-16 h-2 bg-gray-200 rounded animate-pulse"></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ) : barangayOfficials && Array.isArray(barangayOfficials) && barangayOfficials.length > 0 ? (
-            <Card className="mt-6 bg-white shadow-sm border border-gray-100">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base font-semibold text-gray-900">Barangay Officials</h3>
-                  <Link to="/official/officials" className="text-red-500 text-sm font-medium">
-                    View All
-                  </Link>
-                </div>
-                <div className="space-y-3">
-                  {(barangayOfficials as any[]).slice(0, 3).map((official, index) => (
+                  {barangayOfficials.slice(0, 3).map((official, index) => (
                     <div key={index} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
                       <Avatar className="w-10 h-10">
                         <AvatarFallback className="bg-red-100 text-red-600">
-                          {official.FIRSTNAME?.[0]}
-                          {official.LASTNAME?.[0]}
+                          {official.FIRSTNAME?.[0]}{official.LASTNAME?.[0]}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1">
@@ -546,7 +525,7 @@ const OfficialsDashboard = () => {
                 </div>
               </CardContent>
             </Card>
-          ) : null}
+          )}
 
           {/* Community Slider */}
           <CommunitySlider />
