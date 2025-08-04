@@ -36,6 +36,7 @@ import { format } from "date-fns"
 import { Layout } from "@/components/layout/Layout"
 import { QuickAccessPanel } from "@/components/officials/QuickAccessPanel"
 import { CommunitySlider } from "@/components/community/CommunitySlider"
+import { CouncilMembersSection } from "@/components/officials/CouncilMembersSection"
 import { Helmet } from "react-helmet"
 import { Link } from "react-router-dom"
 import { useMemo } from "react"
@@ -887,6 +888,9 @@ const OfficialsDashboard = () => {
                     </div>
                   </div>
                 ) : null}
+
+                {/* Council Members Section */}
+                <CouncilMembersSection className="mb-8" />
 
                 {/* Community Posts Section */}
                 <div className="mb-8">
