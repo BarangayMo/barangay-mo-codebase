@@ -1,12 +1,33 @@
 
-import { Link, useLocation } from "react-router-dom";
-import { Home, MessageSquare, Store, Menu, LifeBuoy, User, Briefcase, Bell, ShoppingCart, Settings } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Home, MessageSquare, Store, Briefcase, LifeBuoy, User, Bell, ShoppingCart, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRbiAccess } from "@/hooks/use-rbi-access";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+
+interface NavItem {
+  icon: any;
+  path: string;
+  label: string;
+  key: string;
+  requiresRbi?: boolean;
+  isMenuTrigger?: boolean;
+}
 
 export const MobileNavbar = () => {
   const { pathname } = useLocation();
-  const { userRole, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const { userRole, isAuthenticated, logout } = useAuth();
+  const { checkAccess } = useRbiAccess();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const getHomeRoute = () => {
     if (!isAuthenticated) {
@@ -31,7 +52,7 @@ export const MobileNavbar = () => {
   const isMarketplacePage = pathname.startsWith('/marketplace');
 
   // Different nav items based on user role
-  const getNavItems = () => {
+  const getNavItems = (): NavItem[] => {
     if (userRole === "official") {
       return [
         {
@@ -59,16 +80,17 @@ export const MobileNavbar = () => {
           key: "services"
         },
         {
-          icon: Menu,
-          path: "/menu",
-          label: "Menu",
-          key: "menu"
+          icon: Briefcase,
+          path: "/jobs",
+          label: "Jobs",
+          key: "jobs",
+          requiresRbi: true
         }
       ];
     }
 
     // Default nav items for residents
-    const baseItems = [
+    const baseItems: NavItem[] = [
       {
         icon: Home,
         path: getHomeRoute(),
@@ -79,13 +101,15 @@ export const MobileNavbar = () => {
         icon: MessageSquare,
         path: getMessagesRoute(),
         label: "Messages",
-        key: "messages"
+        key: "messages",
+        requiresRbi: true
       },
       {
         icon: Store,
         path: "/marketplace",
         label: "Market",
-        key: "marketplace"
+        key: "marketplace",
+        requiresRbi: true
       }
     ];
 
@@ -106,28 +130,109 @@ export const MobileNavbar = () => {
       });
     }
 
-    // Always add menu as the last item
+    // Always add jobs as the last item
     baseItems.push({
-      icon: Menu,
-      path: "/menu",
-      label: "Menu",
-      key: "menu"
+      icon: Briefcase,
+      path: "/jobs",
+      label: "Jobs",
+      key: "jobs",
+      requiresRbi: true
     });
 
     return baseItems;
   };
 
+  const handleNavigation = (path: string, requiresRbi?: boolean, isMenuTrigger?: boolean) => {
+    if (isMenuTrigger) {
+      setIsMenuOpen(true);
+      return;
+    }
+
+    if (requiresRbi && userRole === 'resident') {
+      checkAccess(() => {
+        navigate(path);
+      });
+    } else {
+      navigate(path);
+    }
+  };
+
+  const handleMenuNavigation = (path: string, requiresRbi?: boolean) => {
+    setIsMenuOpen(false);
+    if (requiresRbi && userRole === 'resident') {
+      checkAccess(() => {
+        navigate(path);
+      });
+    } else {
+      navigate(path);
+    }
+  };
+
+  const handleLogout = () => {
+    setIsMenuOpen(false);
+    logout();
+    navigate("/login");
+  };
+
   const navItems = getNavItems();
 
+  // Menu items for the sliding panel - Jobs link prominently placed near the top
+  const menuItems = [
+    {
+      icon: Home,
+      path: getHomeRoute(),
+      label: "Home",
+      key: "home"
+    },
+    {
+      icon: Briefcase,
+      path: "/jobs",
+      label: "Jobs",
+      key: "jobs",
+      requiresRbi: true
+    },
+    {
+      icon: MessageSquare,
+      path: "/messages",
+      label: "Messages",
+      key: "messages",
+      requiresRbi: true
+    },
+    {
+      icon: Settings,
+      path: "/services",
+      label: "Services",
+      key: "services",
+      requiresRbi: true
+    },
+    {
+      icon: Store,
+      path: "/marketplace",
+      label: "Marketplace",
+      key: "marketplace",
+      requiresRbi: true
+    },
+    {
+      icon: Settings,
+      path: "/settings",
+      label: "Settings",
+      key: "settings"
+    }
+  ];
+
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md bg-white/90 border-t border-white/20 shadow-lg rounded-t-xl pb-2">
-      <div className="flex items-center justify-center px-4 py-1 max-w-md mx-auto">
-        <div className="flex items-center justify-between w-full max-w-sm">
-          {navItems.map(({ icon: Icon, path, label, key }) => {
-            return (
-              <Link key={key} to={path} className="flex flex-col items-center justify-center p-2 min-w-0">
+    <>
+      <nav className="fixed bottom-0 left-0 right-0 z-[100] backdrop-blur-md bg-white/95 border-t border-white/20 shadow-lg rounded-t-xl pb-safe">
+        <div className="flex items-center justify-center px-2 py-1 max-w-md mx-auto">
+          <div className="flex items-center justify-between w-full max-w-sm">
+            {navItems.map(({ icon: Icon, path, label, key, requiresRbi, isMenuTrigger }) => (
+              <button
+                key={key}
+                onClick={() => handleNavigation(path, requiresRbi, isMenuTrigger)}
+                className="flex flex-col items-center justify-center p-1.5 min-w-0 flex-1 relative z-10 bg-transparent border-none cursor-pointer"
+              >
                 <Icon className={cn(
-                  "h-6 w-6 transition-colors mb-0.5",
+                  "h-5 w-5 sm:h-6 sm:w-6 transition-colors mb-0.5",
                   pathname === path 
                     ? userRole === "official" 
                       ? "text-red-600" 
@@ -137,7 +242,7 @@ export const MobileNavbar = () => {
                     : "text-black"
                 )} />
                 <span className={cn(
-                  "text-sm text-center leading-tight",
+                  "text-xs sm:text-sm text-center leading-tight",
                   pathname === path 
                     ? userRole === "official" 
                       ? "text-red-600 font-medium" 
@@ -148,11 +253,56 @@ export const MobileNavbar = () => {
                 )}>
                   {label}
                 </span>
-              </Link>
-            );
-          })}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+
+      <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+        <SheetContent side="right" className="w-80 sm:w-96">
+          <SheetHeader>
+            <SheetTitle>Navigation</SheetTitle>
+          </SheetHeader>
+          <div className="mt-6">
+            <div className="space-y-2">
+              {menuItems.map(({ icon: Icon, path, label, key, requiresRbi }) => (
+                <button
+                  key={key}
+                  onClick={() => handleMenuNavigation(path, requiresRbi)}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-3 py-2 text-left rounded-lg transition-colors",
+                    pathname === path
+                      ? "bg-resident/10 text-resident font-medium"
+                      : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                  )}
+                >
+                  <Icon className={cn(
+                    "h-5 w-5",
+                    pathname === path
+                      ? "text-resident"
+                      : "text-gray-600 dark:text-gray-400"
+                  )} />
+                  <span className={cn(
+                    pathname === path
+                      ? "text-resident"
+                      : "text-gray-900 dark:text-gray-100"
+                  )}>{label}</span>
+                </button>
+              ))}
+              <div className="border-t pt-2 mt-4">
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors text-red-600 dark:text-red-400"
+                >
+                  <LifeBuoy className="h-5 w-5" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 };

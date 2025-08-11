@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
@@ -53,18 +52,20 @@ export default function Welcome() {
             <Link to="/about" className="text-gray-600 hover:text-red-600 transition-colors">About</Link>
             <Link to="/contact" className="text-gray-600 hover:text-red-600 transition-colors">Contact</Link>
           </nav>
-          <div className="flex items-center gap-3">
-            <Link to="/mpin">
-              <Button variant="outline" className="border-red-600 text-red-600 hover:bg-red-50">
-                Login
-              </Button>
-            </Link>
-            <Link to="/register">
-              <Button className="bg-red-600 hover:bg-red-700 text-white">
-                Register
-              </Button>
-            </Link>
-          </div>
+          {!isAuthenticated && (
+            <div className="flex items-center gap-3">
+              <Link to="/mpin">
+                <Button variant="outline" className="border-red-600 text-red-600 hover:bg-red-50">
+                  Login
+                </Button>
+              </Link>
+              <Link to="/register">
+                <Button className="bg-red-600 hover:bg-red-700 text-white">
+                  Register
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -84,18 +85,20 @@ export default function Welcome() {
             <Link to="/about" className="text-gray-600 hover:text-red-600 transition-colors">About</Link>
             <Link to="/contact" className="text-gray-600 hover:text-red-600 transition-colors">Contact</Link>
           </nav>
-          <div className="flex flex-col gap-3">
-            <Link to="/mpin">
-              <Button variant="outline" className="w-full border-red-600 text-red-600 hover:bg-red-50">
-                Login
-              </Button>
-            </Link>
-            <Link to="/register">
-              <Button className="w-full bg-red-600 hover:bg-red-700 text-white">
-                Register
-              </Button>
-            </Link>
-          </div>
+          {!isAuthenticated && (
+            <div className="flex flex-col gap-3">
+              <Link to="/mpin">
+                <Button variant="outline" className="w-full border-red-600 text-red-600 hover:bg-red-50">
+                  Login
+                </Button>
+              </Link>
+              <Link to="/register">
+                <Button className="w-full bg-red-600 hover:bg-red-700 text-white">
+                  Register
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       )}
 
@@ -112,14 +115,16 @@ export default function Welcome() {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-            <Link to="/register">
-              <Button 
-                size="lg" 
-                className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 text-lg"
-              >
-                Get Started Today
-              </Button>
-            </Link>
+            {!isAuthenticated && (
+              <Link to="/register">
+                <Button 
+                  size="lg" 
+                  className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 text-lg"
+                >
+                  Get Started Today
+                </Button>
+              </Link>
+            )}
             <Button 
               variant="outline" 
               size="lg" 

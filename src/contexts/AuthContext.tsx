@@ -140,15 +140,32 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   // Handle auth state changes
   useEffect(() => {
-    console.log("Setting up auth state change listener");
+    console.log("🔧 Setting up auth state change listener");
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log("Auth state changed:", event, session?.user?.email);
+        console.log("🔑 Auth State Changed:", event, {
+          user: session?.user ? {
+            id: session.user.id,
+            email: session.user.email,
+            email_confirmed_at: session.user.email_confirmed_at,
+            emailVerified: !!session.user.email_confirmed_at
+          } : null,
+          session: !!session
+        });
         
         setSession(session);
         setIsAuthenticated(!!session);
         setIsEmailVerified(!!session?.user?.email_confirmed_at);
+        
+        // Enhanced logging for email verification status
+        if (session?.user) {
+          console.log("📧 Email verification status:", {
+            email: session.user.email,
+            confirmed_at: session.user.email_confirmed_at,
+            isVerified: !!session.user.email_confirmed_at
+          });
+        }
         
         if (session?.user) {
           // Use setTimeout to prevent blocking other queries
@@ -189,21 +206,28 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               
               // Handle redirects after successful login or signup
               if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && !redirectInProgress.current && isInitialized) {
-                // Check if email is verified
+                // Check if email is verified - ENFORCE EMAIL VERIFICATION
                 const emailVerified = !!session?.user?.email_confirmed_at;
+                
+                console.log("🔄 Checking redirect logic:", {
+                  event,
+                  currentPath,
+                  emailVerified,
+                  userRole: role
+                });
                 
                 if (currentPath === '/login' || currentPath === '/register' || currentPath === '/email-confirmation' || currentPath === '/mpin') {
                   if (emailVerified) {
-                    console.log("Redirecting to:", redirectPath, "after", event);
+                    console.log("✅ Email verified, redirecting to:", redirectPath, "after", event);
                     redirectInProgress.current = true;
                     navigate(redirectPath, { replace: true });
                     setTimeout(() => { redirectInProgress.current = false; }, 1000);
                   } else {
-                    // Redirect to email verification if not verified
-                    console.log("Email not verified, redirecting to email verification");
+                    // FORCE email verification if not verified
+                    console.log("🚫 Email NOT verified, redirecting to email verification");
                     redirectInProgress.current = true;
                     navigate('/email-verification', { 
-                      state: { email: session?.user?.email },
+                      state: { email: session?.user?.email, role },
                       replace: true 
                     });
                     setTimeout(() => { redirectInProgress.current = false; }, 1000);
@@ -221,7 +245,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           setIsEmailVerified(false);
           
           if (event === 'SIGNED_OUT' && !redirectInProgress.current && isInitialized) {
-            console.log("Redirecting to login after sign out");
+            console.log("👋 User signed out, redirecting to login");
             redirectInProgress.current = true;
             navigate('/login', { replace: true });
             setTimeout(() => { redirectInProgress.current = false; }, 1000);
@@ -233,10 +257,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // Check for existing session on mount
     supabase.auth.getSession().then(async ({ data: { session }, error }) => {
       if (error) {
-        console.warn("Session check error (continuing anyway):", error);
+        console.warn("⚠️ Session check error (continuing anyway):", error);
       }
       
-      console.log("Initial session check:", session?.user?.email);
+      console.log("🚀 Initial session check:", {
+        userEmail: session?.user?.email,
+        emailVerified: !!session?.user?.email_confirmed_at,
+        hasSession: !!session
+      });
       
       setSession(session);
       setIsAuthenticated(!!session);
@@ -281,17 +309,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             if ((currentPath === '/login' || currentPath === '/register' || currentPath === '/email-confirmation' || currentPath === '/email-verification') && !redirectInProgress.current) {
               const emailVerified = !!session?.user?.email_confirmed_at;
               
+              console.log("🔄 Initial redirect check:", {
+                currentPath,
+                emailVerified,
+                userRole: role
+              });
+              
               if (emailVerified) {
-                console.log("Redirecting existing session from login/register to:", redirectPath);
+                console.log("✅ Email verified on initial load, redirecting to:", redirectPath);
                 redirectInProgress.current = true;
                 navigate(redirectPath, { replace: true });
                 setTimeout(() => { redirectInProgress.current = false; }, 1000);
               } else if (currentPath !== '/email-verification') {
-                // Redirect to email verification if not verified
-                console.log("Email not verified, redirecting to email verification");
+                // FORCE email verification if not verified
+                console.log("🚫 Email NOT verified on initial load, redirecting to verification");
                 redirectInProgress.current = true;
                 navigate('/email-verification', { 
-                  state: { email: session?.user?.email },
+                  state: { email: session?.user?.email, role },
                   replace: true 
                 });
                 setTimeout(() => { redirectInProgress.current = false; }, 1000);
@@ -304,14 +338,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
       
       setIsInitialized(true);
-      console.log('Auth initialization completed');
+      console.log('🎯 Auth initialization completed');
     });
 
     return () => subscription.unsubscribe();
   }, [navigate, currentPath, isInitialized]);
 
   const login = async (email: string, password: string) => {
-    console.log("Login attempt:", email);
+    console.log("🔐 Login attempt for:", email);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -319,14 +353,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       });
       
       if (error) {
-        console.error("Login error:", error.message);
+        console.error("❌ Login error:", error.message);
         return { error };
       } else {
-        console.log("Login successful");
+        console.log("✅ Login successful for:", email);
+        console.log("📧 Email verified status:", !!data.user?.email_confirmed_at);
         return { error: null };
       }
     } catch (error) {
-      console.error("Unexpected login error:", error);
+      console.error("💥 Unexpected login error:", error);
       return { error: error as Error };
     }
   };
@@ -354,22 +389,26 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       console.log("Clean metadata being sent:", metaData);
 
-      // Sign up the user with email confirmation redirect
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: metaData,
-          emailRedirectTo: `${window.location.origin}/email-confirmation`
-        }
-      });
+        // Sign up the user with email confirmation redirect
+        const emailRedirectUrl = `${window.location.origin}/auth/callback`;
+        console.log("📧 Using email redirect URL:", emailRedirectUrl);
+        
+        const { data: authData, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: metaData,
+            emailRedirectTo: emailRedirectUrl
+          }
+        });
 
       if (signUpError) {
-        console.error("Signup error:", signUpError);
+        console.error("❌ Signup error:", signUpError);
         return { error: signUpError };
       }
 
-      console.log("User registration successful, profile will be created by trigger");
+      console.log("✅ User registration successful - Check your inbox to verify your email!");
+      console.log("📧 Verification email sent to:", email);
       return { error: null };
     } catch (error) {
       console.error("Unexpected registration error:", error);
@@ -419,7 +458,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
+    console.error("❌ useAuth called outside AuthProvider!");
     throw new Error("useAuth must be used within an AuthProvider");
   }
+  console.log("✅ useAuth context accessed:", {
+    isAuthenticated: context.isAuthenticated,
+    isEmailVerified: context.isEmailVerified,
+    userRole: context.userRole
+  });
   return context;
 };

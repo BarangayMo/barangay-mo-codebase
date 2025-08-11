@@ -108,16 +108,19 @@ const RbiForms = () => {
   const stats = {
     total: rbiForms.length,
     submitted: rbiForms.filter(f => f.status === 'submitted').length,
-    reviewed: rbiForms.filter(f => f.status === 'reviewed').length,
+    under_review: rbiForms.filter(f => f.status === 'under_review').length,
     approved: rbiForms.filter(f => f.status === 'approved').length,
+    rejected: rbiForms.filter(f => f.status === 'rejected').length,
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'submitted': return 'bg-blue-100 text-blue-700';
-      case 'reviewed': return 'bg-yellow-100 text-yellow-700';
+      case 'under_review': return 'bg-yellow-100 text-yellow-700';
       case 'approved': return 'bg-green-100 text-green-700';
       case 'rejected': return 'bg-red-100 text-red-700';
+      case 'pending_documents': return 'bg-orange-100 text-orange-700';
+      case 'draft': return 'bg-gray-100 text-gray-700';
       default: return 'bg-gray-100 text-gray-700';
     }
   };
@@ -125,9 +128,11 @@ const RbiForms = () => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'submitted': return <Clock className="h-4 w-4" />;
-      case 'reviewed': return <AlertCircle className="h-4 w-4" />;
+      case 'under_review': return <AlertCircle className="h-4 w-4" />;
       case 'approved': return <CheckCircle className="h-4 w-4" />;
       case 'rejected': return <AlertCircle className="h-4 w-4" />;
+      case 'pending_documents': return <FileText className="h-4 w-4" />;
+      case 'draft': return <FileText className="h-4 w-4" />;
       default: return <FileText className="h-4 w-4" />;
     }
   };
@@ -191,7 +196,7 @@ const RbiForms = () => {
               <div className="flex items-center gap-2">
                 <AlertCircle className="h-5 w-5 text-yellow-600" />
                 <div>
-                  <p className="text-2xl font-bold text-yellow-600">{stats.reviewed}</p>
+                  <p className="text-2xl font-bold text-yellow-600">{stats.under_review}</p>
                   <p className="text-sm text-gray-600">Under Review</p>
                 </div>
               </div>
@@ -243,12 +248,12 @@ const RbiForms = () => {
                   Submitted
                 </Button>
                 <Button
-                  variant={statusFilter === "reviewed" ? "default" : "outline"}
+                  variant={statusFilter === "under_review" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setStatusFilter("reviewed")}
-                  className={statusFilter === "reviewed" ? "bg-red-600 hover:bg-red-700" : ""}
+                  onClick={() => setStatusFilter("under_review")}
+                  className={statusFilter === "under_review" ? "bg-red-600 hover:bg-red-700" : ""}
                 >
-                  Reviewed
+                  Under Review
                 </Button>
                 <Button
                   variant={statusFilter === "approved" ? "default" : "outline"}

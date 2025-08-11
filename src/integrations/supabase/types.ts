@@ -550,6 +550,7 @@ export type Database = {
           comments_count: number | null
           content: string
           created_at: string
+          created_by: string | null
           id: string
           image_urls: string[] | null
           likes_count: number | null
@@ -561,6 +562,7 @@ export type Database = {
           comments_count?: number | null
           content: string
           created_at?: string
+          created_by?: string | null
           id?: string
           image_urls?: string[] | null
           likes_count?: number | null
@@ -572,13 +574,22 @@ export type Database = {
           comments_count?: number | null
           content?: string
           created_at?: string
+          created_by?: string | null
           id?: string
           image_urls?: string[] | null
           likes_count?: number | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "community_posts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       complaints_requests: {
         Row: {
@@ -625,6 +636,107 @@ export type Database = {
           type?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      conversations: {
+        Row: {
+          created_at: string
+          id: string
+          is_archived: boolean | null
+          last_message_at: string | null
+          last_message_id: string | null
+          participant_one_id: string
+          participant_two_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_archived?: boolean | null
+          last_message_at?: string | null
+          last_message_id?: string | null
+          participant_one_id: string
+          participant_two_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_archived?: boolean | null
+          last_message_at?: string | null
+          last_message_id?: string | null
+          participant_one_id?: string
+          participant_two_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_conversations_last_message"
+            columns: ["last_message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      council_members: {
+        Row: {
+          barangay: string
+          created_at: string
+          created_by: string | null
+          email: string | null
+          first_name: string
+          id: string
+          is_active: boolean | null
+          landline_number: string | null
+          last_name: string
+          middle_name: string | null
+          municipality: string
+          phone_number: string | null
+          position: string
+          province: string
+          region: string
+          suffix: string | null
+          updated_at: string
+        }
+        Insert: {
+          barangay: string
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          first_name: string
+          id?: string
+          is_active?: boolean | null
+          landline_number?: string | null
+          last_name: string
+          middle_name?: string | null
+          municipality: string
+          phone_number?: string | null
+          position: string
+          province: string
+          region: string
+          suffix?: string | null
+          updated_at?: string
+        }
+        Update: {
+          barangay?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          first_name?: string
+          id?: string
+          is_active?: boolean | null
+          landline_number?: string | null
+          last_name?: string
+          middle_name?: string | null
+          municipality?: string
+          phone_number?: string | null
+          position?: string
+          province?: string
+          region?: string
+          suffix?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -716,6 +828,7 @@ export type Database = {
           category: string
           company: string
           created_at: string | null
+          created_by: string | null
           description: string
           education: string | null
           experience: string
@@ -742,6 +855,7 @@ export type Database = {
           category: string
           company: string
           created_at?: string | null
+          created_by?: string | null
           description: string
           education?: string | null
           experience: string
@@ -768,6 +882,7 @@ export type Database = {
           category?: string
           company?: string
           created_at?: string | null
+          created_by?: string | null
           description?: string
           education?: string | null
           experience?: string
@@ -829,6 +944,48 @@ export type Database = {
         }
         Relationships: []
       }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          is_read: boolean
+          message_type: string
+          metadata: Json | null
+          read_at: string | null
+          recipient_id: string
+          sender_id: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message_type?: string
+          metadata?: Json | null
+          read_at?: string | null
+          recipient_id: string
+          sender_id: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message_type?: string
+          metadata?: Json | null
+          read_at?: string | null
+          recipient_id?: string
+          sender_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       NCR: {
         Row: {
           BARANGAY: string | null
@@ -876,9 +1033,11 @@ export type Database = {
           category: string
           created_at: string
           id: string
+          link_url: string | null
           message: string
           metadata: Json | null
           priority: string
+          read: boolean
           read_at: string | null
           recipient_id: string
           sender_id: string | null
@@ -890,23 +1049,27 @@ export type Database = {
           category?: string
           created_at?: string
           id?: string
+          link_url?: string | null
           message: string
           metadata?: Json | null
           priority?: string
+          read?: boolean
           read_at?: string | null
           recipient_id: string
           sender_id?: string | null
           status?: string
-          title: string
+          title?: string
           updated_at?: string
         }
         Update: {
           category?: string
           created_at?: string
           id?: string
+          link_url?: string | null
           message?: string
           metadata?: Json | null
           priority?: string
+          read?: boolean
           read_at?: string | null
           recipient_id?: string
           sender_id?: string | null
@@ -914,7 +1077,22 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_notifications_recipient"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       official_documents: {
         Row: {
@@ -952,6 +1130,93 @@ export type Database = {
           tags?: string[] | null
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      officials: {
+        Row: {
+          achievements: string[] | null
+          approved_at: string | null
+          approved_by: string | null
+          barangay: string
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          is_approved: boolean
+          landline_number: string | null
+          last_name: string
+          middle_name: string | null
+          municipality: string
+          original_password: string | null
+          password_hash: string | null
+          phone_number: string
+          position: string
+          province: string
+          region: string
+          rejection_reason: string | null
+          status: string
+          submitted_at: string
+          suffix: string | null
+          updated_at: string
+          user_id: string | null
+          years_of_service: number | null
+        }
+        Insert: {
+          achievements?: string[] | null
+          approved_at?: string | null
+          approved_by?: string | null
+          barangay: string
+          created_at?: string
+          email: string
+          first_name: string
+          id?: string
+          is_approved?: boolean
+          landline_number?: string | null
+          last_name: string
+          middle_name?: string | null
+          municipality: string
+          original_password?: string | null
+          password_hash?: string | null
+          phone_number: string
+          position: string
+          province: string
+          region: string
+          rejection_reason?: string | null
+          status?: string
+          submitted_at?: string
+          suffix?: string | null
+          updated_at?: string
+          user_id?: string | null
+          years_of_service?: number | null
+        }
+        Update: {
+          achievements?: string[] | null
+          approved_at?: string | null
+          approved_by?: string | null
+          barangay?: string
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          is_approved?: boolean
+          landline_number?: string | null
+          last_name?: string
+          middle_name?: string | null
+          municipality?: string
+          original_password?: string | null
+          password_hash?: string | null
+          phone_number?: string
+          position?: string
+          province?: string
+          region?: string
+          rejection_reason?: string | null
+          status?: string
+          submitted_at?: string
+          suffix?: string | null
+          updated_at?: string
+          user_id?: string | null
+          years_of_service?: number | null
         }
         Relationships: []
       }
@@ -1035,6 +1300,7 @@ export type Database = {
           brand: string | null
           category_id: string | null
           created_at: string
+          created_by: string | null
           description: string | null
           dimensions_cm: Json | null
           gallery_image_urls: string[] | null
@@ -1050,11 +1316,12 @@ export type Database = {
           seo_description: string | null
           seo_title: string | null
           shipping_info: string | null
-          sku: string | null
+          sku: string
           sold_count: number | null
           specifications: Json | null
           stock_quantity: number
           tags: string[] | null
+          title: string | null
           updated_at: string
           vendor_id: string
           weight_kg: number | null
@@ -1064,6 +1331,7 @@ export type Database = {
           brand?: string | null
           category_id?: string | null
           created_at?: string
+          created_by?: string | null
           description?: string | null
           dimensions_cm?: Json | null
           gallery_image_urls?: string[] | null
@@ -1079,11 +1347,12 @@ export type Database = {
           seo_description?: string | null
           seo_title?: string | null
           shipping_info?: string | null
-          sku?: string | null
+          sku?: string
           sold_count?: number | null
           specifications?: Json | null
           stock_quantity?: number
           tags?: string[] | null
+          title?: string | null
           updated_at?: string
           vendor_id: string
           weight_kg?: number | null
@@ -1093,6 +1362,7 @@ export type Database = {
           brand?: string | null
           category_id?: string | null
           created_at?: string
+          created_by?: string | null
           description?: string | null
           dimensions_cm?: Json | null
           gallery_image_urls?: string[] | null
@@ -1108,11 +1378,12 @@ export type Database = {
           seo_description?: string | null
           seo_title?: string | null
           shipping_info?: string | null
-          sku?: string | null
+          sku?: string
           sold_count?: number | null
           specifications?: Json | null
           stock_quantity?: number
           tags?: string[] | null
+          title?: string | null
           updated_at?: string
           vendor_id?: string
           weight_kg?: number | null
@@ -1123,6 +1394,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "product_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -1241,36 +1519,48 @@ export type Database = {
       }
       rbi_forms: {
         Row: {
+          admin_notes: string | null
           barangay_id: string | null
+          decision_precedence: number | null
           form_data: Json
           id: string
           rbi_number: string | null
           reviewed_at: string | null
           reviewed_by: string | null
-          status: string
+          reviewer_type: string | null
+          status: Database["public"]["Enums"]["rbi_status"]
           submitted_at: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
+          admin_notes?: string | null
           barangay_id?: string | null
+          decision_precedence?: number | null
           form_data: Json
           id?: string
           rbi_number?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
-          status?: string
+          reviewer_type?: string | null
+          status?: Database["public"]["Enums"]["rbi_status"]
           submitted_at?: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
+          admin_notes?: string | null
           barangay_id?: string | null
+          decision_precedence?: number | null
           form_data?: Json
           id?: string
           rbi_number?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
-          status?: string
+          reviewer_type?: string | null
+          status?: Database["public"]["Enums"]["rbi_status"]
           submitted_at?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -2224,12 +2514,45 @@ export type Database = {
           },
         ]
       }
+      wishlists: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      approve_official: {
+        Args: { official_id: string }
+        Returns: undefined
+      }
+      fix_official_profiles: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       generate_job_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_product_sku: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
@@ -2241,6 +2564,22 @@ export type Database = {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
       }
+      hash_password: {
+        Args: { password_text: string }
+        Returns: string
+      }
+      insert_profile: {
+        Args: { id: string; email: string }
+        Returns: undefined
+      }
+      is_approved_official: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      sync_approved_officials_to_profiles: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       update_role_user_counts: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -2249,8 +2588,23 @@ export type Database = {
         Args: { user_id: string }
         Returns: undefined
       }
+      verify_official_password: {
+        Args: { official_id: string; password_text: string }
+        Returns: boolean
+      }
+      verify_password: {
+        Args: { password_text: string; password_hash: string }
+        Returns: boolean
+      }
     }
     Enums: {
+      rbi_status:
+        | "draft"
+        | "submitted"
+        | "under_review"
+        | "approved"
+        | "rejected"
+        | "pending_documents"
       user_role: "resident" | "official" | "superadmin"
     }
     CompositeTypes: {
@@ -2379,6 +2733,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      rbi_status: [
+        "draft",
+        "submitted",
+        "under_review",
+        "approved",
+        "rejected",
+        "pending_documents",
+      ],
       user_role: ["resident", "official", "superadmin"],
     },
   },

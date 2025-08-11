@@ -1,6 +1,6 @@
 import React from 'react';
 import { MapPin } from 'lucide-react';
-import { MapboxMap } from './mapbox-map';
+import { GoogleMap } from './google-map';
 
 interface JobMapProps {
   location: string;
@@ -22,12 +22,12 @@ export const JobMap = ({ location, className }: JobMapProps) => {
   }
 
   return (
-    <MapboxMap 
+    <GoogleMap 
       location={location}
       className={className}
       height="256px"
       zoom={14}
-      showPopup={true}
+      showInfoWindow={true}
     />
   );
 };

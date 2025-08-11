@@ -1,15 +1,18 @@
+//my-changes
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, User, ShoppingBag, Menu, LogOut, Home, MessageSquare, BarChart3, FolderOpen, Settings, UsersIcon, Hospital, ClipboardList, Siren, FileText, Store, LifeBuoy, Info, Phone } from "lucide-react";
+import { Bell, User, ShoppingBag, Menu, LogOut, Home, MessageSquare, BarChart3, FolderOpen, Settings,Briefcase,ShoppingCart, UsersIcon, Hospital, ClipboardList, Siren, FileText, Store, LifeBuoy, Info, Phone, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { HeaderLogo } from "./header/HeaderLogo";
 import { LocationDropdown } from "./header/LocationDropdown";
-import { DesktopNavItems } from "./header/DesktopNavItems";
+import { DesktopNavItems } from "./header/DesktopNavItems"; 
 import { ProfileMenu } from "./ProfileMenu";
 import { LanguageSelector } from "./LanguageSelector";
 import { useCartSummary } from "@/hooks/useCartSummary";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useRbiAccess } from "@/hooks/use-rbi-access";
+import { useWishlist } from "@/hooks/useWishlist";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { CartDrawerContent } from "@/components/cart/CartDrawerContent";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -17,6 +20,14 @@ import { NotificationDropdown } from "@/components/notifications/NotificationDro
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 
 export const Header = () => {
   const {
@@ -33,6 +44,8 @@ export const Header = () => {
   const {
     unreadCount
   } = useNotifications();
+  const { hasRbiAccess } = useRbiAccess();
+  const { wishlistItems } = useWishlist();
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -69,7 +82,7 @@ export const Header = () => {
     logout();
     setIsMobileMenuOpen(false);
   };
-  const showCartIcon = location.pathname.startsWith('/marketplace') || location.pathname.startsWith('/resident-home');
+  const showCartIcon = (location.pathname.startsWith('/marketplace') || location.pathname.startsWith('/resident-home')) && (userRole !== 'resident' || hasRbiAccess);
 
   // Consistent mobile header for all users
   if (isMobile) {
@@ -83,7 +96,8 @@ export const Header = () => {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-80 p-0">
-              <div className="p-4 space-y-6 overflow-y-auto h-full">
+               <div className="h-screen flex flex-col">
+              <div className="p-4 space-y-6 flex-1 overflow-y-auto">
                 {/* Header section - different for authenticated/unauthenticated */}
                 {isAuthenticated ? <div className={`${userRole === "official" ? "bg-red-50 border-red-100" : userRole === "superadmin" ? "bg-purple-50 border-purple-100" : "bg-blue-50 border-blue-100"} p-4 rounded-lg border`}>
                     <div className="flex items-center gap-3 mb-2">
@@ -126,111 +140,195 @@ export const Header = () => {
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-3">Navigation</h3>
                   <div className="space-y-2">
-                    {(() => {
-                    if (isAuthenticated) {
-                      if (userRole === "official") {
-                        return [{
-                          name: "Dashboard",
-                          icon: Home,
-                          href: "/official-dashboard",
-                          active: location.pathname === "/official-dashboard"
-                        }, {
-                          name: "Requests & Complaints",
-                          icon: FileText,
-                          href: "/official/requests"
-                        }, {
-                          name: "Messages",
-                          icon: MessageSquare,
-                          href: "/messages"
-                        }, {
-                          name: "Reports",
-                          icon: BarChart3,
-                          href: "/official/reports"
-                        }, {
-                          name: "Documents",
-                          icon: FolderOpen,
-                          href: "/official/documents"
-                        }, {
-                          name: "Settings",
-                          icon: Settings,
-                          href: "/settings"
-                        }];
-                      } else if (userRole === "superadmin") {
-                        return [{
-                          name: "Dashboard",
-                          icon: Home,
-                          href: "/admin",
-                          active: location.pathname === "/admin"
-                        }, {
-                          name: "Users",
-                          icon: UsersIcon,
-                          href: "/admin/users"
-                        }, {
-                          name: "Messages",
-                          icon: MessageSquare,
-                          href: "/messages"
-                        }, {
-                          name: "Reports",
-                          icon: BarChart3,
-                          href: "/admin/reports"
-                        }, {
-                          name: "Settings",
-                          icon: Settings,
-                          href: "/settings"
-                        }];
-                      } else {
-                        return [{
-                          name: "Home",
-                          icon: Home,
-                          href: "/resident-home",
-                          active: location.pathname === "/resident-home"
-                        }, {
-                          name: "Messages",
-                          icon: MessageSquare,
-                          href: "/messages"
-                        }, {
-                          name: "Services",
-                          icon: Hospital,
-                          href: "/services"
-                        }, {
-                          name: "Marketplace",
-                          icon: ShoppingBag,
-                          href: "/marketplace"
-                        }, {
-                          name: "Settings",
-                          icon: Settings,
-                          href: "/settings"
-                        }];
-                      }
-                    } else {
-                      // Non-authenticated navigation
-                      return [{
-                        name: "Home",
-                        icon: Home,
-                        href: "/",
-                        active: location.pathname === "/"
-                      }, {
-                        name: "Marketplace",
-                        icon: Store,
-                        href: "/marketplace"
-                      }, {
-                        name: "Services",
-                        icon: LifeBuoy,
-                        href: "/services"
-                      }, {
-                        name: "About",
-                        icon: Info,
-                        href: "/about"
-                      }, {
-                        name: "Contact",
-                        icon: Phone,
-                        href: "/contact"
-                      }];
-                    }
-                  })().map((item, index) => <Link key={index} to={item.href} className={`flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer ${item.active ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50 text-gray-700'}`} onClick={() => setIsMobileMenuOpen(false)}>
-                        <item.icon className={`h-5 w-5 ${item.active ? 'text-blue-600' : 'text-blue-500'}`} />
-                        <span className="text-sm font-medium">{item.name}</span>
-                      </Link>)}
+        {(() => {
+  if (isAuthenticated) {
+    if (userRole === "official") {
+      return [
+        {
+          name: "Dashboard",
+          icon: Home,
+          href: "/official-dashboard",
+          active: location.pathname === "/official-dashboard"
+        },
+        {
+          name: "Requests & Complaints",
+          icon: FileText,
+          href: "/official/requests"
+        },
+        {
+          name: "Messages",
+          icon: MessageSquare,
+          href: "/messages"
+        },
+        {
+          name: "Reports",
+          icon: BarChart3,
+          href: "/official/reports"
+        },
+        {
+          name: "Documents",
+          icon: FolderOpen,
+          href: "/official/documents"
+        },
+        {
+          name: "Settings",
+          icon: Settings,
+          href: "/settings"
+        }
+      ];
+    } else if (userRole === "superadmin") {
+      return [
+        {
+          name: "Dashboard",
+          icon: Home,
+          href: "/admin",
+          active: location.pathname === "/admin"
+        },
+        {
+          name: "Users",
+          icon: UsersIcon,
+          href: "/admin/users"
+        },
+        {
+          name: "Messages",
+          icon: MessageSquare,
+          href: "/messages"
+        },
+        {
+          name: "Reports",
+          icon: BarChart3,
+          href: "/admin/reports"
+        },
+        {
+          name: "Settings",
+          icon: Settings,
+          href: "/settings"
+        }
+      ];
+    } else {
+      return [
+        {
+          name: "Home",
+          icon: Home,
+          href: "/resident-home",
+          active: location.pathname === "/resident-home"
+        },
+        {
+          name: "Messages",
+          icon: MessageSquare,
+          href: "/messages"
+        },
+        {
+          name: "Services",
+          icon: Hospital,
+          href: "/services",
+          restricted: true
+        },
+        {
+          name: "Marketplace",
+          icon: ShoppingBag,
+          href: "/marketplace",
+          restricted: true
+        },
+        {
+          name: "Settings",
+          icon: Settings,
+          href: "/settings"
+        }
+      ];
+    }
+  } else {
+    return [
+      {
+        name: "Home",
+        icon: Home,
+        href: "/",
+        active: location.pathname === "/"
+      },
+      {
+        name: "Marketplace",
+        icon: Store,
+        href: "/marketplace"
+      },
+      {
+        name: "Services",
+        icon: LifeBuoy,
+        href: "/services"
+      },
+      {
+        name: "About",
+        icon: Info,
+        href: "/about"
+      },
+      {
+        name: "Contact",
+        icon: Phone,
+        href: "/contact"
+      }
+    ];
+  }
+})().map((item, index) => {
+  const isRestricted = item.restricted && userRole === "resident" && !hasRbiAccess;
+
+  const baseColor = userRole === "official"
+    ? "red"
+    : userRole === "resident"
+    ? "blue"
+    : "gray";
+
+  return (
+    <Link
+      key={index}
+      to={isRestricted ? "#" : item.href}
+      className={`flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer
+        ${
+          item.active
+            ? `bg-${baseColor}-50 text-${baseColor}-600`
+            : `hover:bg-gray-50 text-gray-700`
+        }
+        ${isRestricted ? "opacity-60" : ""}
+        hover:text-${baseColor}-700`}
+      onClick={(e) => {
+        if (isRestricted) {
+          e.preventDefault();
+          toast.dismiss();
+          toast.error("Restricted Access", {
+            description: "Submit your RBI form to access these options",
+            duration: 4000
+          });
+          return;
+        }
+        setIsMobileMenuOpen(false);
+      }}
+    >
+      <item.icon
+        className={`h-5 w-5 ${
+          userRole === "official"
+            ? "text-red-600"
+            : userRole === "resident"
+            ? item.active
+              ? "text-blue-600"
+              : "text-blue-500"
+            : item.active
+            ? "text-gray-600"
+            : "text-gray-500"
+        }`}
+      />
+      <span
+        className={`text-sm font-medium ${
+          userRole === "official"
+            ? "text-red-600"
+            : userRole === "resident" && item.active
+            ? "text-blue-600"
+            : "text-gray-700"
+        }`}
+      >
+        {item.name}
+      </span>
+    </Link>
+  );
+})}
+
                   </div>
                 </div>
 
@@ -250,6 +348,14 @@ export const Header = () => {
                     name: "RBI Forms",
                     icon: ClipboardList,
                     href: "/official/rbi-forms"
+                  },{
+                    name: "Job Management",
+                    icon: Briefcase,
+                    href: "/official/jobs"
+                  },{
+                    name: "Product Management",
+                    icon: ShoppingCart,
+                    href: "/official/products"
                   }, {
                     name: "Emergency Response",
                     icon: Siren,
@@ -278,6 +384,7 @@ export const Header = () => {
                     </div>}
                 </div>
               </div>
+            </div>
             </SheetContent>
           </Sheet>
           
@@ -288,6 +395,16 @@ export const Header = () => {
 
           {/* Right side icons */}
           <div className="flex items-center gap-1">
+            {/* Wishlist Icon - show for marketplace or home */}
+            {showCartIcon && <Button asChild variant="ghost" size="icon" className="relative w-8 h-8">
+                <Link to="/marketplace/wishlist">
+                  <Heart className="h-5 w-5" />
+                  {wishlistItems.length > 0 && <span className="absolute -top-0.5 -right-0.5 text-white text-[10px] rounded-full w-3.5 h-3.5 flex items-center justify-center bg-red-500">
+                      {wishlistItems.length}
+                    </span>}
+                </Link>
+              </Button>}
+            
             {/* Cart Icon - show for marketplace or home */}
             {showCartIcon && <Button asChild variant="ghost" size="icon" className="relative w-8 h-8">
                 <Link to="/marketplace/cart">
@@ -309,11 +426,34 @@ export const Header = () => {
               </Button>}
 
             {/* Profile/User Icon */}
-            <Button asChild variant="ghost" size="icon" className="rounded-full w-8 h-8">
-              <Link to={isAuthenticated ? "/resident-profile" : "/login"}>
-                <User className="h-5 w-5" />
-              </Link>
-            </Button>
+           {isAuthenticated && (
+  <DropdownMenu>
+    <DropdownMenuTrigger asChild>
+      <Button variant="ghost" size="icon" className="rounded-full w-8 h-8">
+        <User className="h-5 w-5" />
+      </Button>
+    </DropdownMenuTrigger>
+
+    <DropdownMenuContent align="end" className="w-44">
+      <DropdownMenuItem asChild>
+        <Link to="/resident-profile" className="flex items-center">
+          <User className="mr-2 h-4 w-4" />
+          Profile
+        </Link>
+      </DropdownMenuItem>
+
+      <DropdownMenuSeparator />
+
+      <DropdownMenuItem
+        onClick={handleLogout}
+        className="text-red-600 focus:text-red-600"
+      >
+        <LogOut className="mr-2 h-4 w-4" />
+        Logout
+      </DropdownMenuItem>
+    </DropdownMenuContent>
+  </DropdownMenu>
+)}
           </div>
         </div>
       </header>;
@@ -324,7 +464,7 @@ export const Header = () => {
       <div className="mx-auto max-w-7xl px-2 md:px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-1 md:gap-2">
           <HeaderLogo />
-          <LocationDropdown />
+          
         </div>
 
         {!isMobile && <DesktopNavItems />}
@@ -338,6 +478,16 @@ export const Header = () => {
                   <LanguageSelector />
                 </>}
               <div className="flex items-center gap-0 md:gap-1">
+                {/* Wishlist Icon - show for marketplace or home */}
+                {showCartIcon && <Button asChild variant="ghost" size="icon" className="relative w-8 h-8 md:w-9 md:h-9">
+                    <Link to="/marketplace/wishlist">
+                      <Heart className="h-4 w-4 md:h-5 md:w-5" />
+                      {wishlistItems.length > 0 && <span className="absolute -top-0.5 -right-0.5 text-white text-[10px] md:text-xs rounded-full w-3.5 h-3.5 md:w-4 md:h-4 flex items-center justify-center bg-red-500">
+                          {wishlistItems.length}
+                        </span>}
+                    </Link>
+                  </Button>}
+                
                 {showCartIcon && (isMobile ? <Button asChild variant="ghost" size="icon" className="relative w-8 h-8">
                       <Link to="/marketplace/cart">
                         <ShoppingBag className="h-4 w-4 md:h-5 md:w-5" />

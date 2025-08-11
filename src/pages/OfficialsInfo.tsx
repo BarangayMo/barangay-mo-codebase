@@ -4,10 +4,10 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, Edit2, Phone, User } from "lucide-react";
+import { ChevronLeft, Phone, User } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { RegistrationProgress } from "@/components/ui/registration-progress";
-import { OfficialDetailsModal } from "@/components/officials/OfficialDetailsModal";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -60,8 +60,6 @@ export default function OfficialsInfo() {
     ...YOUTH_POSITIONS.map(position => ({ position, isCompleted: false }))
   ]);
 
-  const [selectedOfficialIndex, setSelectedOfficialIndex] = useState<number | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   // Load officials from database when component mounts
@@ -174,33 +172,6 @@ export default function OfficialsInfo() {
     loadOfficials();
   }, [locationState]);
 
-  const handleOfficialClick = (index: number) => {
-    console.log('Official clicked:', index, officials[index]);
-    setSelectedOfficialIndex(index);
-    setIsModalOpen(true);
-  };
-
-  const handleOfficialSave = async (officialData: Partial<OfficialData>) => {
-    console.log('Saving official data:', officialData, 'at index:', selectedOfficialIndex);
-    
-    if (selectedOfficialIndex !== null) {
-      // Update local state
-      const updatedOfficials = [...officials];
-      updatedOfficials[selectedOfficialIndex] = {
-        ...updatedOfficials[selectedOfficialIndex],
-        ...officialData,
-        isCompleted: true
-      };
-      setOfficials(updatedOfficials);
-      console.log('Updated officials:', updatedOfficials);
-
-      // TODO: Save to Supabase database
-      // This would require creating/updating records in the region table
-    }
-    
-    setIsModalOpen(false);
-    setSelectedOfficialIndex(null);
-  };
 
   const handleNext = () => {
     navigate("/register/official-documents", { 
@@ -277,12 +248,11 @@ export default function OfficialsInfo() {
           return (
             <div 
               key={official.position} 
-              className={`rounded-lg p-4 flex items-center justify-between cursor-pointer transition-all duration-200 ${
+              className={`rounded-lg p-4 flex items-center justify-between transition-all duration-200 ${
                 hasData
-                  ? 'bg-white border border-red-200 shadow-sm hover:shadow-md hover:border-red-300' 
-                  : 'border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400'
+                  ? 'bg-white border border-red-200 shadow-sm' 
+                  : 'border-2 border-dashed border-gray-300 bg-gray-50'
               }`}
-              onClick={() => handleOfficialClick(actualIndex)}
             >
               <div className="flex items-center space-x-3 flex-1 min-w-0">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
@@ -306,7 +276,7 @@ export default function OfficialsInfo() {
                     <p className={`text-gray-400 mt-1 ${
                       isMobile ? 'text-xs' : 'text-xs'
                     }`}>
-                      Tap to add official details
+                      No details available
                     </p>
                   )}
                 </div>
@@ -315,7 +285,6 @@ export default function OfficialsInfo() {
                 {hasData && (
                   <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                 )}
-                <Edit2 className={`h-4 w-4 ${hasData ? 'text-gray-400' : 'text-gray-300'}`} />
               </div>
             </div>
           );
@@ -339,7 +308,7 @@ export default function OfficialsInfo() {
           <button onClick={handleBack} className="text-red-600 hover:text-red-700">
             <ChevronLeft className="h-6 w-6" />
           </button>
-          <h1 className="text-lg font-semibold text-red-600">Edit Barangay Official</h1>
+          <h1 className="text-lg font-semibold text-red-600">Barangay Official Information</h1>
           <div className="w-6" />
         </div>
 
@@ -380,19 +349,6 @@ export default function OfficialsInfo() {
           </Button>
         </div>
 
-        {/* Official Details Modal */}
-        {selectedOfficialIndex !== null && (
-          <OfficialDetailsModal
-            isOpen={isModalOpen}
-            onClose={() => {
-              console.log('Closing modal');
-              setIsModalOpen(false);
-              setSelectedOfficialIndex(null);
-            }}
-            official={officials[selectedOfficialIndex]}
-            onSave={handleOfficialSave}
-          />
-        )}
       </div>
     );
   }
@@ -415,8 +371,8 @@ export default function OfficialsInfo() {
           
           {/* Header */}
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-red-600 mb-2">Edit Barangay Official</h1>
-            <p className="text-gray-600">Update official information for your barangay</p>
+            <h1 className="text-2xl font-bold text-red-600 mb-2">Barangay Official Information</h1>
+            <p className="text-gray-600">Official information for your barangay</p>
           </div>
 
           {/* Content */}
@@ -452,20 +408,6 @@ export default function OfficialsInfo() {
             Next
           </Button>
         </div>
-
-        {/* Official Details Modal */}
-        {selectedOfficialIndex !== null && (
-          <OfficialDetailsModal
-            isOpen={isModalOpen}
-            onClose={() => {
-              console.log('Closing modal');
-              setIsModalOpen(false);
-              setSelectedOfficialIndex(null);
-            }}
-            official={officials[selectedOfficialIndex]}
-            onSave={handleOfficialSave}
-          />
-        )}
       </div>
     </div>
   );

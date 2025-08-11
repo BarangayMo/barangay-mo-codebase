@@ -1,18 +1,15 @@
-
 import { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, Phone, Upload, FileText, User, Send } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { MediaUpload } from "@/components/ui/media-upload";
-import { useToast } from "@/hooks/use-toast";
 
 interface LocationState {
   role: string;
   region: string;
-  province: string;  
+  province: string;
   municipality: string;
   barangay: string;
   officials: any[];
@@ -28,38 +25,13 @@ export default function OfficialDocuments() {
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 768px)");
-  const { toast } = useToast();
   const locationState = location.state as LocationState;
-
-  const [phoneNumber, setPhoneNumber] = useState("9171234567");
-  const [landlineNumber, setLandlineNumber] = useState("047-222-5173");
-  const [otpSent, setOtpSent] = useState(false);
-  const [otp, setOtp] = useState("");
-  const [isUploadingDocuments, setIsUploadingDocuments] = useState(false);
 
   const [documents, setDocuments] = useState<DocumentUploads>({
     secretariesAppointment: "",
     secretariesGovId: "",
     brgyaptainGovId: ""
   });
-
-  const handleSendOTP = async () => {
-    if (!phoneNumber || phoneNumber.length < 10) {
-      toast({
-        title: "Invalid Phone Number",
-        description: "Please enter a valid phone number",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // TODO: Implement OTP sending logic
-    setOtpSent(true);
-    toast({
-      title: "OTP Sent",
-      description: "Verification code has been sent to your phone",
-    });
-  };
 
   const handleDocumentUpload = (field: keyof DocumentUploads, url: string) => {
     setDocuments(prev => ({ ...prev, [field]: url }));
@@ -73,10 +45,7 @@ export default function OfficialDocuments() {
     navigate("/register/logo", { 
       state: { 
         ...locationState,
-        phoneNumber,
-        landlineNumber,
-        documents,
-        otpVerified: otpSent && otp.length === 6
+        documents
       } 
     });
   };
@@ -126,71 +95,6 @@ export default function OfficialDocuments() {
               <div className="text-sm font-medium text-gray-900">{locationState?.barangay}</div>
               <div className="text-xs text-gray-500">
                 {locationState?.municipality}, {locationState?.province}
-              </div>
-            </div>
-
-            {/* Contact Information */}
-            <div className="space-y-4">
-              <div className="text-left">
-                <div className="text-xs text-gray-600 mb-1">Contact Information</div>
-                <div className="text-sm font-medium text-gray-900">Verify/Confirm your official barangay number</div>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
-                  <img 
-                    src="/lovable-uploads/d61c25bf-51d4-4bc8-a8ff-69e0b901ee3a.png" 
-                    alt="Philippines Flag" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <span className="text-sm text-gray-600">+63</span>
-                <Input 
-                  placeholder="9171234567" 
-                  className="flex-1"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                />
-              </div>
-              
-              <Button
-                onClick={handleSendOTP}
-                variant="outline"
-                className="w-full text-red-600 border-red-600 hover:bg-red-50"
-                disabled={otpSent}
-              >
-                <Send className="h-4 w-4 mr-2" />
-                {otpSent ? "OTP Sent" : "SEND OTP"}
-              </Button>
-
-              {otpSent && (
-                <div className="space-y-2">
-                  <Label htmlFor="otp" className="text-sm font-medium text-gray-700">
-                    Enter OTP
-                  </Label>
-                  <Input
-                    id="otp"
-                    type="text"
-                    maxLength={6}
-                    placeholder="Enter 6-digit OTP"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    className="text-center text-lg tracking-wider"
-                  />
-                </div>
-              )}
-
-              <div className="flex items-center space-x-2 mt-4">
-                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                  <Phone className="h-4 w-4 text-white" />
-                </div>
-                <span className="text-sm text-gray-600">02</span>
-                <Input 
-                  placeholder="047-222-5173" 
-                  className="flex-1"
-                  value={landlineNumber}
-                  onChange={(e) => setLandlineNumber(e.target.value)}
-                />
               </div>
             </div>
 
@@ -276,7 +180,7 @@ export default function OfficialDocuments() {
           {/* Header */}
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold text-red-600 mb-2">Official Documents</h1>
-            <p className="text-gray-600">Upload required documents and verify contact information</p>
+            <p className="text-gray-600">Upload required documents and verify information</p>
           </div>
 
           {/* Content */}
@@ -287,71 +191,6 @@ export default function OfficialDocuments() {
               <div className="text-sm font-medium text-gray-900">{locationState?.barangay}</div>
               <div className="text-xs text-gray-500">
                 {locationState?.municipality}, {locationState?.province}
-              </div>
-            </div>
-
-            {/* Contact Information */}
-            <div className="space-y-4">
-              <div className="text-left">
-                <div className="text-xs text-gray-600 mb-1">Contact Information</div>
-                <div className="text-sm font-medium text-gray-900">Verify/Confirm your official barangay number</div>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
-                  <img 
-                    src="/lovable-uploads/d61c25bf-51d4-4bc8-a8ff-69e0b901ee3a.png" 
-                    alt="Philippines Flag" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <span className="text-sm text-gray-600">+63</span>
-                <Input 
-                  placeholder="9171234567" 
-                  className="flex-1"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                />
-              </div>
-              
-              <Button
-                onClick={handleSendOTP}
-                variant="outline"
-                className="w-full text-red-600 border-red-600 hover:bg-red-50"
-                disabled={otpSent}
-              >
-                <Send className="h-4 w-4 mr-2" />
-                {otpSent ? "OTP Sent" : "SEND OTP"}
-              </Button>
-
-              {otpSent && (
-                <div className="space-y-2">
-                  <Label htmlFor="otp" className="text-sm font-medium text-gray-700">
-                    Enter OTP
-                  </Label>
-                  <Input
-                    id="otp"
-                    type="text"
-                    maxLength={6}
-                    placeholder="Enter 6-digit OTP"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    className="text-center text-lg tracking-wider"
-                  />
-                </div>
-              )}
-
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                  <Phone className="h-4 w-4 text-white" />
-                </div>
-                <span className="text-sm text-gray-600">02</span>
-                <Input 
-                  placeholder="047-222-5173" 
-                  className="flex-1"
-                  value={landlineNumber}
-                  onChange={(e) => setLandlineNumber(e.target.value)}
-                />
               </div>
             </div>
 

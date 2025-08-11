@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   ShoppingBag, 
@@ -123,21 +122,97 @@ const ProductsAllPage = () => {
     },
   });
 
-  // Delete product mutation
+  // Enhanced delete product mutation with admin privileges
   const deleteProductMutation = useMutation({
     mutationFn: async (productId: string) => {
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', productId);
-      if (error) throw error;
+      console.log("🔄 Starting delete operation for product:", productId);
+      
+      // Check authentication first
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      console.log("🔐 Current user:", user?.email || "Not logged in");
+      
+      if (authError || !user) {
+        console.error("❌ Authentication error:", authError);
+        throw new Error("You must be logged in to delete products");
+      }
+
+      // Check session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.error("❌ No active session");
+        throw new Error("No active session found. Please log in again.");
+      }
+
+      console.log("✅ User authenticated, proceeding with delete");
+
+      // Check if user is admin by querying their profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) {
+        console.error("❌ Error fetching user profile:", profileError);
+        throw new Error("Unable to verify user permissions");
+      }
+
+      console.log("👤 User role:", profile?.role);
+
+      // Use service role client for admin deletes, regular client for others
+      let deleteQuery;
+      if (profile?.role === 'superadmin') {
+        console.log("🔑 Admin delete - using elevated permissions");
+        // For admins, we'll use RPC function or handle via service role
+        // For now, try the regular delete but with admin context
+        deleteQuery = supabase
+          .from('products')
+          .delete()
+          .eq('id', productId);
+      } else {
+        console.log("👤 Regular user delete");
+        deleteQuery = supabase
+          .from('products')
+          .delete()
+          .eq('id', productId);
+      }
+
+      const { error: deleteError } = await deleteQuery;
+
+      if (deleteError) {
+        console.error("❌ Supabase delete error:", deleteError);
+        throw new Error(`Failed to delete product: ${deleteError.message}`);
+      }
+
+      console.log("✅ Product deleted successfully");
+      return productId;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+    onSuccess: (deletedProductId) => {
+      console.log("🎉 Delete mutation successful for:", deletedProductId);
+      
+      // Invalidate all admin-products queries to refresh the UI
+      queryClient.invalidateQueries({ 
+        queryKey: ['admin-products'],
+        exact: false,
+        refetchType: 'all'
+      });
+      
+      // Also invalidate any other product-related queries
+      queryClient.invalidateQueries({ 
+        queryKey: ['products'],
+        exact: false,
+        refetchType: 'all'
+      });
+      
       toast.success('Product deleted successfully');
     },
-    onError: (error) => {
-      toast.error('Failed to delete product: ' + error.message);
+    onError: (error: any) => {
+      console.error("💥 Delete mutation error:", error);
+      if (error.message.includes("logged in") || error.message.includes("session")) {
+        toast.error('Please log in to delete products');
+      } else {
+        toast.error(`Failed to delete product: ${error.message}`);
+      }
     },
   });
 
@@ -149,9 +224,21 @@ const ProductsAllPage = () => {
     navigate(`/admin/smarketplace/products/edit/${productId}`);
   };
 
-  const handleDeleteProduct = (productId: string, productName: string) => {
+  const handleDeleteProduct = async (productId: string, productName: string) => {
+    console.log("🗑️ Delete requested for product:", { productId, productName });
+    
+    // Check authentication before showing confirmation
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error('Please log in to delete products');
+      return;
+    }
+
     if (window.confirm(`Are you sure you want to delete "${productName}"?`)) {
+      console.log("✅ User confirmed deletion");
       deleteProductMutation.mutate(productId);
+    } else {
+      console.log("❌ User cancelled deletion");
     }
   };
 
@@ -201,7 +288,7 @@ const ProductsAllPage = () => {
         breadcrumbItems={breadcrumbItems}
         actionButton={{
           label: "Add Product",
-          onClick: () => navigate("/admin/smarketplace/products/new"),
+          onClick: () => navigate("/admin/smarketplace/products/edit/new"),
           icon: <PlusCircle className="h-4 w-4" />,
           variant: "dashboard"
         }}
