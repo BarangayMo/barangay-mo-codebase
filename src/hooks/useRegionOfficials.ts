@@ -10,8 +10,8 @@ export function useRegionOfficials(barangay: string | undefined, region: string 
       if (!barangay || !region) return [];
       const table = getRegionTable(region);
       if (!table) return [];
-      const { data, error } = await supabase
-        .from(table)
+      const { data, error } = await (supabase as any)
+        .from(table as any)
         .select("*")
         .eq("BARANGAY", barangay);
       if (error || !data) return [];
@@ -45,7 +45,7 @@ export function useAddRegionOfficial(region: string | undefined) {
     mutationFn: async (data: OfficialData) => {
       const table = getRegionTable(region || "");
       if (!table) throw new Error("Region not found");
-      const { error } = await supabase.from(table).insert([data]);
+      const { error } = await (supabase as any).from(table as any).insert([data]);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -61,7 +61,7 @@ export function useUpdateRegionOfficial(region: string | undefined) {
     mutationFn: async ({ id, data }: { id: any; data: OfficialData }) => {
       const table = getRegionTable(region || "");
       if (!table) throw new Error("Region not found");
-      const { error } = await supabase.from(table).update(data).eq("id", id);
+      const { error } = await (supabase as any).from(table as any).update(data).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -77,7 +77,7 @@ export function useDeleteRegionOfficial(region: string | undefined) {
     mutationFn: async (id: any) => {
       const table = getRegionTable(region || "");
       if (!table) throw new Error("Region not found");
-      const { error } = await supabase.from(table).delete().eq("id", id);
+      const { error } = await (supabase as any).from(table as any).delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {

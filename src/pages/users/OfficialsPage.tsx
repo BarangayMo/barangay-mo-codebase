@@ -51,7 +51,7 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileNavbar } from "@/components/layout/MobileNavbar";
 import { useNavigate } from "react-router-dom";
-import { useRegionOfficials, useAddRegionOfficial, useUpdateRegionOfficial, useDeleteRegionOfficial } from "@/hooks/useRegionOfficials";
+import { useCouncilMembers, useCreateCouncilMember, useUpdateCouncilMember, useDeleteCouncilMember } from "@/hooks/use-council-members";
 import { format } from "date-fns";
 import { OfficialDetailsModal } from "@/components/officials/OfficialDetailsModal";
 import { useQuery } from "@tanstack/react-query";
@@ -90,13 +90,12 @@ const OfficialsPage = () => {
   const selectedBarangay = userProfile?.barangay || "Unknown Barangay";
 
 
-  // Fetch officials from the correct region table for the selected barangay
-  const { data: councilMembers = [], isLoading, refetch } = useRegionOfficials(selectedBarangay, userProfile?.region);
+  const { data: councilMembers = [], isLoading } = useCouncilMembers(selectedBarangay);
 
-  // Mutations for CRUD operations on region officials
-  const createCouncilMember = useAddRegionOfficial(userProfile?.region);
-  const updateCouncilMember = useUpdateRegionOfficial(userProfile?.region);
-  const deleteCouncilMember = useDeleteRegionOfficial(userProfile?.region);
+  // Mutations for CRUD operations on council members
+  const createCouncilMember = useCreateCouncilMember();
+  const updateCouncilMember = useUpdateCouncilMember();
+  const deleteCouncilMember = useDeleteCouncilMember();
 
   // Official roles with their corresponding icons and counts - now using council members
   const officialRoles = [
