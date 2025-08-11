@@ -160,7 +160,7 @@ export default function JobEditPage() {
           slug: job.slug,
           seo_title: job.seo_title,
           seo_description: job.seo_description,
-          assigned_to: job.assigned_to,
+           assigned_to: job.assigned_to || null,
           updated_at: new Date().toISOString()
         })
         .eq('id', id);
@@ -194,7 +194,7 @@ export default function JobEditPage() {
             slug: job.slug,
             seo_title: job.seo_title,
             seo_description: job.seo_description,
-            assigned_to: job.assigned_to,
+            assigned_to: job.assigned_to || null,
             updated_at: new Date().toISOString()
           })
           .eq('id', id);

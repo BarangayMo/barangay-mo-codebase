@@ -232,6 +232,7 @@ export const RichTextEditor = ({ value, onChange, placeholder, className }: Rich
         <div className="min-h-[120px] p-3">
           <div
             contentEditable
+            dir="ltr"
             className="min-h-[96px] outline-none"
             dangerouslySetInnerHTML={{ __html: value }}
             onInput={(e) => onChange(e.currentTarget.innerHTML)}
