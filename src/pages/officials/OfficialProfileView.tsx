@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { getRegionTable } from "@/utils/getRegionTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -17,35 +18,95 @@ export default function OfficialProfileView() {
       setLoading(true);
       setError(null);
 
-      // Try fetching from 'officials' table
-      let { data, error } = await supabase
-        .from("officials")
-        .select("*")
-        .eq("id", id)
-        .single();
+      try {
+        if (!id) {
+          setError("Invalid profile id.");
+          setOfficial(null);
+          setLoading(false);
+          return;
+        }
 
-      // If not found in officials, try council_members
-      if (error || !data) {
-        const councilRes = await supabase
+        // Try REGION tables first using composite id: BARANGAY-POSITION-LASTNAME
+        const parts = id.split("-");
+        if (parts.length >= 3) {
+          const lastName = parts.pop() as string;
+          const position = parts.pop() as string;
+          const barangay = parts.join("-");
+
+          // Lookup region from Barangays table
+          const { data: brgyInfo } = await supabase
+            .from("Barangays")
+            .select('REGION, "CITY/MUNICIPALITY", PROVINCE')
+            .eq("BARANGAY", barangay)
+            .maybeSingle();
+
+          const regionStr = brgyInfo?.REGION || "";
+          const regionTable = getRegionTable(regionStr || "");
+
+          if (regionTable) {
+            const { data: regionRow } = await (supabase as any)
+              .from(regionTable)
+              .select("*")
+              .eq("BARANGAY", barangay)
+              .eq("POSITION", position)
+              .eq("LASTNAME", lastName)
+              .maybeSingle();
+
+            if (regionRow) {
+              setOfficial({
+                first_name: regionRow["FIRSTNAME"] || "",
+                middle_name: regionRow["MIDDLENAME"] || "",
+                last_name: regionRow["LASTNAME"] || "",
+                suffix: regionRow["SUFFIX"] || "",
+                position: regionRow["POSITION"] || "",
+                barangay: regionRow["BARANGAY"] || "",
+                municipality: regionRow["CITY/MUNICIPALITY"] || brgyInfo?.["CITY/MUNICIPALITY"] || "",
+                province: regionRow["PROVINCE"] || brgyInfo?.PROVINCE || "",
+                region: regionRow["REGION"] || brgyInfo?.REGION || "",
+                phone_number: regionRow["BARANGAY HALL TELNO"] || "",
+                email: "",
+                status: "active",
+              });
+              setLoading(false);
+              return;
+            }
+          }
+        }
+
+        // Fallback to existing tables
+        const { data: officialsRow } = await supabase
+          .from("officials")
+          .select("*")
+          .eq("id", id)
+          .maybeSingle();
+
+        if (officialsRow) {
+          setOfficial(officialsRow);
+          setLoading(false);
+          return;
+        }
+
+        const { data: councilRow } = await supabase
           .from("council_members")
           .select("*")
           .eq("id", id)
-          .single();
+          .maybeSingle();
 
-        if (councilRes.error || !councilRes.data) {
+        if (councilRow) {
+          setOfficial(councilRow);
+        } else {
           setError("Official not found.");
           setOfficial(null);
-        } else {
-          setOfficial(councilRes.data);
         }
-      } else {
-        setOfficial(data);
+      } catch (e: any) {
+        setError("Official not found.");
+        setOfficial(null);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     }
 
-    if (id) fetchOfficial();
+    fetchOfficial();
   }, [id]);
 
   if (loading) return <Layout><div className="p-8 text-center">Loading...</div></Layout>;

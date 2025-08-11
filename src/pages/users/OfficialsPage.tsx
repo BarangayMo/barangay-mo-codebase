@@ -173,7 +173,7 @@ const OfficialsPage = () => {
     return matchesSearch && matchesStatus && matchesPosition;
   });
 
-  const uniquePositions = [...new Set(councilMembers.map(member => member.position))];
+  const uniquePositions = [...new Set((councilMembers as any[]).map((member: any) => String(member.position || '')))] as string[];
 
   // Count active and inactive council members
   const activeCount = councilMembers.filter(m => m.is_active).length;
