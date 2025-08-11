@@ -26,80 +26,126 @@ export default function OfficialProfileView() {
           return;
         }
 
-        // Try REGION tables first using composite id: BARANGAY-POSITION-LASTNAME
-        const parts = id.split("-");
-        if (parts.length >= 3) {
-          const lastName = parts.pop() as string;
-          const position = parts.pop() as string;
-          const barangay = parts.join("-");
+        const decodedId = decodeURIComponent(id).replace(/\+/g, ' ');
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(decodedId);
 
-          // Lookup region from Barangays table
-          const { data: brgyInfo } = await supabase
-            .from("Barangays")
-            .select('REGION, "CITY/MUNICIPALITY", PROVINCE')
-            .eq("BARANGAY", barangay)
-            .maybeSingle();
+        // Try REGION tables first if composite id
+        if (!isUuid && decodedId.includes('-')) {
+          const parts = decodedId.split('-');
+          if (parts.length >= 3) {
+            const lastName = parts.pop() as string;
+            const position = parts.pop() as string;
+            const barangay = parts.join('-');
 
-          const regionStr = brgyInfo?.REGION || "";
-          const regionTable = getRegionTable(regionStr || "");
-
-          if (regionTable) {
-            const { data: regionRow } = await (supabase as any)
-              .from(regionTable)
-              .select("*")
-              .eq("BARANGAY", barangay)
-              .eq("POSITION", position)
-              .eq("LASTNAME", lastName)
+            // 1) Lookup region from Barangays table (case-insensitive)
+            const { data: brgyInfo } = await supabase
+              .from('Barangays')
+              .select('REGION, "CITY/MUNICIPALITY", PROVINCE')
+              .ilike('BARANGAY', barangay)
               .maybeSingle();
 
-            if (regionRow) {
-              setOfficial({
-                first_name: regionRow["FIRSTNAME"] || "",
-                middle_name: regionRow["MIDDLENAME"] || "",
-                last_name: regionRow["LASTNAME"] || "",
-                suffix: regionRow["SUFFIX"] || "",
-                position: regionRow["POSITION"] || "",
-                barangay: regionRow["BARANGAY"] || "",
-                municipality: regionRow["CITY/MUNICIPALITY"] || brgyInfo?.["CITY/MUNICIPALITY"] || "",
-                province: regionRow["PROVINCE"] || brgyInfo?.PROVINCE || "",
-                region: regionRow["REGION"] || brgyInfo?.REGION || "",
-                phone_number: regionRow["BARANGAY HALL TELNO"] || "",
-                email: "",
-                status: "active",
-              });
-              setLoading(false);
-              return;
+            let regionTable: string | null = null;
+            if (brgyInfo?.REGION) {
+              regionTable = getRegionTable(brgyInfo.REGION || '');
+            }
+
+            // 2) If region known, try that table (case-insensitive filters)
+            if (regionTable) {
+              const { data: regionRow } = await (supabase as any)
+                .from(regionTable)
+                .select('*')
+                .ilike('BARANGAY', barangay)
+                .ilike('POSITION', position)
+                .ilike('LASTNAME', lastName)
+                .maybeSingle();
+
+              if (regionRow) {
+                setOfficial({
+                  first_name: regionRow['FIRSTNAME'] || '',
+                  middle_name: regionRow['MIDDLENAME'] || '',
+                  last_name: regionRow['LASTNAME'] || '',
+                  suffix: regionRow['SUFFIX'] || '',
+                  position: regionRow['POSITION'] || '',
+                  barangay: regionRow['BARANGAY'] || '',
+                  municipality: regionRow['CITY/MUNICIPALITY'] || brgyInfo?.['CITY/MUNICIPALITY'] || '',
+                  province: regionRow['PROVINCE'] || brgyInfo?.PROVINCE || '',
+                  region: regionRow['REGION'] || brgyInfo?.REGION || '',
+                  phone_number: regionRow['BARANGAY HALL TELNO'] || '',
+                  email: '',
+                  status: 'active',
+                });
+                setLoading(false);
+                return;
+              }
+            }
+
+            // 3) As a fallback, scan common REGION tables if barangay lookup failed
+            const regionTables = [
+              'NCR','REGION 1','REGION 2','REGION 3','REGION 4A','REGION 4B','REGION 5','REGION 6','REGION 7','REGION 8','REGION 9','REGION 10','REGION 11','REGION 12','REGION 13','CAR','BARMM'
+            ];
+
+            for (const tbl of regionTables) {
+              const { data: regionRow } = await (supabase as any)
+                .from(tbl)
+                .select('*')
+                .ilike('BARANGAY', barangay)
+                .ilike('POSITION', position)
+                .ilike('LASTNAME', lastName)
+                .maybeSingle();
+
+              if (regionRow) {
+                setOfficial({
+                  first_name: regionRow['FIRSTNAME'] || '',
+                  middle_name: regionRow['MIDDLENAME'] || '',
+                  last_name: regionRow['LASTNAME'] || '',
+                  suffix: regionRow['SUFFIX'] || '',
+                  position: regionRow['POSITION'] || '',
+                  barangay: regionRow['BARANGAY'] || '',
+                  municipality: regionRow['CITY/MUNICIPALITY'] || '',
+                  province: regionRow['PROVINCE'] || '',
+                  region: regionRow['REGION'] || '',
+                  phone_number: regionRow['BARANGAY HALL TELNO'] || '',
+                  email: '',
+                  status: 'active',
+                });
+                setLoading(false);
+                return;
+              }
             }
           }
         }
 
-        // Fallback to existing tables
-        const { data: officialsRow } = await supabase
-          .from("officials")
-          .select("*")
-          .eq("id", id)
-          .maybeSingle();
+        // Only try UUID-based tables if id is a UUID
+        if (isUuid) {
+          const { data: officialsRow } = await supabase
+            .from('officials')
+            .select('*')
+            .eq('id', decodedId)
+            .maybeSingle();
 
-        if (officialsRow) {
-          setOfficial(officialsRow);
-          setLoading(false);
-          return;
+          if (officialsRow) {
+            setOfficial(officialsRow);
+            setLoading(false);
+            return;
+          }
+
+          const { data: councilRow } = await supabase
+            .from('council_members')
+            .select('*')
+            .eq('id', decodedId)
+            .maybeSingle();
+
+          if (councilRow) {
+            setOfficial(councilRow);
+            setLoading(false);
+            return;
+          }
         }
 
-        const { data: councilRow } = await supabase
-          .from("council_members")
-          .select("*")
-          .eq("id", id)
-          .maybeSingle();
-
-        if (councilRow) {
-          setOfficial(councilRow);
-        } else {
-          setError("Official not found.");
-          setOfficial(null);
-        }
+        setError('Official not found.');
+        setOfficial(null);
       } catch (e: any) {
-        setError("Official not found.");
+        setError('Official not found.');
         setOfficial(null);
       } finally {
         setLoading(false);
