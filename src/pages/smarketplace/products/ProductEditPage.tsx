@@ -600,7 +600,7 @@ const ProductEditPage = () => {
                           </Button>
                         </div>
                       ))}
-                      <div className="flex items-center justify-center h-20 md:h-24 border-2 border-dashed border-gray-300 rounded-md hover:border-gray-400">
+                      <div className="flex items-center justify-center h-20 md:h-24 border-2 border-dashed border-gray-300 rounded-md hover:border-gray-400 lg:h-30 lg:w-50">
                         <Input
                           type="file"
                           accept="image/*"
