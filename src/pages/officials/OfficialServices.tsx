@@ -19,15 +19,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { ServiceFormDialog } from "@/components/services/ServiceFormDialog";
-import { DeleteServiceDialog } from "@/components/services/DeleteServiceDialog";
 
 const OfficialServices = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [selectedService, setSelectedService] = useState<any>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -57,92 +51,6 @@ const OfficialServices = () => {
     enabled: !!user?.id
   });
 
-  const createServiceMutation = useMutation({
-    mutationFn: async (serviceData: any) => {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('barangay')
-        .eq('id', user?.id)
-        .single();
-
-      if (!profile?.barangay) throw new Error("No barangay associated with user");
-
-      const { error } = await supabase
-        .from('services')
-        .insert({
-          ...serviceData,
-          created_by: user?.id,
-          barangay_id: profile.barangay
-        });
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['official-services'] });
-      toast({
-        title: "Success",
-        description: "Service created successfully.",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create service.",
-        variant: "destructive",
-      });
-    }
-  });
-
-  const updateServiceMutation = useMutation({
-    mutationFn: async ({ serviceId, serviceData }: { serviceId: string; serviceData: any }) => {
-      const { error } = await supabase
-        .from('services')
-        .update(serviceData)
-        .eq('id', serviceId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['official-services'] });
-      toast({
-        title: "Success",
-        description: "Service updated successfully.",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update service.",
-        variant: "destructive",
-      });
-    }
-  });
-
-  const deleteServiceMutation = useMutation({
-    mutationFn: async (serviceId: string) => {
-      const { error } = await supabase
-        .from('services')
-        .delete()
-        .eq('id', serviceId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['official-services'] });
-      toast({
-        title: "Success",
-        description: "Service deleted successfully.",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete service.",
-        variant: "destructive",
-      });
-    }
-  });
-
   const toggleServiceMutation = useMutation({
     mutationFn: async ({ serviceId, isActive }: { serviceId: string; isActive: boolean }) => {
       const { error } = await supabase
@@ -167,24 +75,6 @@ const OfficialServices = () => {
       });
     }
   });
-
-  const handleEdit = (service: any) => {
-    setSelectedService(service);
-    setShowEditDialog(true);
-  };
-
-  const handleDelete = (service: any) => {
-    setSelectedService(service);
-    setShowDeleteDialog(true);
-  };
-
-  const handleConfirmDelete = () => {
-    if (selectedService) {
-      deleteServiceMutation.mutate(selectedService.id);
-      setShowDeleteDialog(false);
-      setSelectedService(null);
-    }
-  };
 
   const filteredServices = services?.filter(service => 
     service.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -213,10 +103,7 @@ const OfficialServices = () => {
             <h1 className="text-2xl font-bold text-official mb-2">Community Services</h1>
             <p className="text-gray-600">Manage services for your barangay residents</p>
           </div>
-          <Button 
-            className="bg-official hover:bg-official-dark"
-            onClick={() => setShowCreateDialog(true)}
-          >
+          <Button className="bg-official hover:bg-official-dark">
             <Plus className="h-4 w-4 mr-2" />
             Add Service
           </Button>
@@ -276,20 +163,11 @@ const OfficialServices = () => {
                       />
                     </div>
                     
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => handleEdit(service)}
-                    >
+                    <Button variant="ghost" size="sm">
                       <Edit className="h-4 w-4" />
                     </Button>
                     
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-red-600 hover:text-red-700"
-                      onClick={() => handleDelete(service)}
-                    >
+                    <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -302,10 +180,7 @@ const OfficialServices = () => {
             <Card>
               <CardContent className="p-8 text-center">
                 <p className="text-gray-500">No services found</p>
-                <Button 
-                  className="mt-4 bg-official hover:bg-official-dark"
-                  onClick={() => setShowCreateDialog(true)}
-                >
+                <Button className="mt-4 bg-official hover:bg-official-dark">
                   <Plus className="h-4 w-4 mr-2" />
                   Create your first service
                 </Button>
@@ -313,35 +188,6 @@ const OfficialServices = () => {
             </Card>
           )}
         </div>
-
-        {/* Dialogs */}
-        <ServiceFormDialog
-          open={showCreateDialog}
-          onOpenChange={setShowCreateDialog}
-          onSubmit={createServiceMutation.mutateAsync}
-          isLoading={createServiceMutation.isPending}
-          mode="create"
-        />
-
-        <ServiceFormDialog
-          open={showEditDialog}
-          onOpenChange={setShowEditDialog}
-          onSubmit={(data) => updateServiceMutation.mutateAsync({ 
-            serviceId: selectedService?.id, 
-            serviceData: data 
-          })}
-          initialData={selectedService}
-          isLoading={updateServiceMutation.isPending}
-          mode="edit"
-        />
-
-        <DeleteServiceDialog
-          open={showDeleteDialog}
-          onOpenChange={setShowDeleteDialog}
-          onConfirm={handleConfirmDelete}
-          serviceName={selectedService?.title || ""}
-          isLoading={deleteServiceMutation.isPending}
-        />
       </div>
     </Layout>
   );

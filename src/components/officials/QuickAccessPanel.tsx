@@ -10,7 +10,6 @@ import {
   BarChart3,
   ChevronRight
 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
 
 const quickAccessItems = [
   {
@@ -23,74 +22,40 @@ const quickAccessItems = [
     title: "QR ID",
     icon: Scan,
     href: "/official/qr-verification", 
-    color: "bg-red-50 text-red-600"
+    color: "bg-blue-50 text-blue-600"
   },
   {
     title: "RBI",
     icon: FileText,
     href: "/official/rbi-forms",
-    color: "bg-red-50 text-red-600"
+    color: "bg-green-50 text-green-600"
   },
   {
     title: "Police",
     icon: Phone,
     href: "/official/police-contact",
-    color: "bg-red-50 text-red-600"
+    color: "bg-purple-50 text-purple-600"
   },
   {
     title: "Barangay Clearance",
     icon: CreditCard,
     href: "/official/clearance",
-    color: "bg-red-50 text-red-600"
+    color: "bg-orange-50 text-orange-600"
   },
   {
     title: "Reports",
     icon: BarChart3,
     href: "/official/reports",
-    color: "bg-red-50 text-red-600"
+    color: "bg-indigo-50 text-indigo-600"
   }
 ];
 
 export const QuickAccessPanel = () => {
-  const { user } = useAuth();
-  
-  // Get actual location data from user profile
-  const getLocationText = () => {
-    if (user?.municipality && user?.province) {
-      return `${user.municipality}, ${user.province}`;
-    }
-    if (user?.barangay) {
-      return user.barangay;
-    }
-    return "Location";
-  };
-
-  // Get Punong Barangay name from officials data
-  const getPunongBarangayName = () => {
-    if (user?.officials_data && Array.isArray(user.officials_data)) {
-      const punongBarangay = user.officials_data.find(
-        (official: any) => official.position === "Punong Barangay"
-      );
-      if (punongBarangay) {
-        const firstName = punongBarangay.firstName || punongBarangay.FIRSTNAME;
-        const lastName = punongBarangay.lastName || punongBarangay.LASTNAME;
-        if (firstName && lastName) {
-          return `${firstName} ${lastName}`;
-        }
-      }
-    }
-    return "Punong Barangay";
-  };
-
   return (
     <Card className="bg-white shadow-sm border border-gray-100 rounded-lg">
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-base font-semibold text-gray-900 font-outfit">Serbilis Services</h3>
-            <p className="text-sm text-gray-600 mt-1">{getLocationText()}</p>
-            <p className="text-xs text-gray-500">{getPunongBarangayName()}</p>
-          </div>
+          <h3 className="text-base font-semibold text-gray-900 font-outfit">Serbilis Services</h3>
           <Link 
             to="/official/services" 
             className="text-red-500 text-sm font-medium flex items-center gap-1 hover:text-red-600 transition-colors"

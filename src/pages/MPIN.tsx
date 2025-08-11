@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
@@ -65,24 +66,17 @@ export default function MPIN() {
   };
 
   const handleSkip = () => {
-    // Skip should go to login, not directly to dashboard pages
-    // Only authenticated users should access dashboard pages
-    if (isAuthenticated) {
-      switch(userRole) {
-        case "official":
-          navigate("/official-dashboard");
-          break;
-        case "superadmin":
-          navigate("/admin");
-          break;
-        case "resident":
-        default:
-          navigate("/resident-home");
-          break;
-      }
-    } else {
-      // Not authenticated, go to login
-      navigate("/login");
+    switch(userRole) {
+      case "official":
+        navigate("/official-dashboard");
+        break;
+      case "superadmin":
+        navigate("/admin");
+        break;
+      case "resident":
+      default:
+        navigate("/resident-home");
+        break;
     }
   };
 

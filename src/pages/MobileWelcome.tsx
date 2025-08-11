@@ -56,7 +56,7 @@ export default function Welcome() {
             </Button>
           </Link>
           <div className="text-center">
-            <Link to="/register/role" className="text-white hover:underline">
+            <Link to="/register" className="text-white hover:underline">
               Don't have an account yet? Register
             </Link>
           </div>

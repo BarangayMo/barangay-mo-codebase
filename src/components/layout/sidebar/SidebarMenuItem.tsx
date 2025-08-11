@@ -12,7 +12,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 
 interface MenuItemProps {
   item: any;
@@ -34,38 +33,18 @@ export function SidebarMenuItem({
   setActiveSection
 }: MenuItemProps) {
   const { pathname } = useLocation();
-  const { userRole } = useAuth();
   const hasSubmenu = item.submenu && item.submenu.length > 0;
   const isOpen = openSections[item.path] || false;
+  // const isActive = pathname === item.path || pathname.startsWith(`${item.path}/`);
   const isActive =
   item.path === "/admin"
     ? pathname === "/admin"
     : pathname === item.path || pathname.startsWith(`${item.path}/`);
 
-  // Enhanced colors with higher specificity for officials
-  const getActiveColors = () => {
-    if (userRole === "official") {
-      return "!bg-red-50 !text-red-600 !font-medium border-l-2 !border-red-500";
-    }
-    return "bg-blue-50 text-blue-600 font-medium";
-  };
-
-  const getOpenColors = () => {
-    if (userRole === "official") {
-      return "!bg-red-50 !text-red-600 !font-medium";
-    }
-    return "bg-gray-100 font-medium";
-  };
-
-  const getHoverColors = () => {
-    if (userRole === "official") {
-      return "hover:!bg-red-50 hover:!text-red-600 transition-all duration-200";
-    }
-    return "hover:bg-gray-100";
-  };
   
   useEffect(() => {
     if (isActive && hasSubmenu && !isOpen) {
+      // Call onToggle without an event object when auto-opening
       onToggle(item.path);
     }
   }, [pathname]);
@@ -84,10 +63,9 @@ export function SidebarMenuItem({
               setActiveSection(item.path);
             }}
             className={cn(
-              "flex w-full items-center justify-between px-3 py-1.5 text-sm rounded-lg transition-all duration-300 ease-in-out",
-              isActive && !isOpen && getActiveColors(),
-              isOpen && getOpenColors(),
-              !isActive && !isOpen && getHoverColors(),
+              "flex w-full items-center justify-between px-3 py-1.5 text-sm hover:bg-gray-100 rounded-lg transition-all duration-300 ease-in-out",
+              isActive && !isOpen && "bg-blue-50 text-blue-600 font-medium",
+              isOpen && "bg-gray-100 font-medium",
               isCollapsed && "px-0 justify-center"
             )}
           >
@@ -134,13 +112,14 @@ export function SidebarMenuItem({
           </SidebarMenuButton>
         </CollapsibleTrigger>
         {!isCollapsed && (
-          <CollapsibleContent className={cn(
-            "overflow-hidden transition-[max-height] duration-300 ease-in-out",
-            isOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
-          )}>
+          /*<CollapsibleContent className="animate-accordion-down transition-all duration-300 ease-in-out">*/
+        <CollapsibleContent className={cn(
+  "overflow-hidden transition-[max-height] duration-300 ease-in-out",
+  isOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+)}>
+
             <div className={cn(
-              "pl-4 relative ml-5 mt-1 space-y-0.5",
-              userRole === "official" ? "border-l border-red-200" : "border-l border-gray-200",
+              "pl-4 relative border-l border-gray-200 ml-5 mt-1 space-y-0.5",
               level > 0 && "ml-4"
             )}>
               <SidebarMenu>
@@ -172,8 +151,8 @@ export function SidebarMenuItem({
       className={cn(
         "flex items-center gap-3 px-3 py-1.5 text-sm rounded-lg transition-all duration-200",
         isActive
-          ? getActiveColors()
-          : getHoverColors(),
+          ? "bg-blue-50 text-blue-600 font-medium"
+          : "hover:bg-gray-100",
         isCollapsed && "justify-center px-0",
         level > 0 && "relative"
       )}

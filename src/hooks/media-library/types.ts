@@ -1,47 +1,63 @@
-import type { Database as SupabaseDatabase } from "@/integrations/supabase/types";
 
-export type Json = 
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[];
-
-export type MediaFile = SupabaseDatabase['public']['Tables']['media_files']['Row'] & {
-  bucket_name?: string;
-  signedUrl?: string;
-  references?: number;
-};
+import { User } from "@supabase/supabase-js";
 
 export interface MediaBucket {
   id: string;
   name: string;
-  public: boolean;
-  file_size_limit?: number;
-  allowed_mime_types?: string[];
   created_at: string;
   updated_at: string;
+  public: boolean;
+}
+
+export interface MediaFile {
+  id: string;
+  user_id?: string;
+  name?: string;
+  filename: string;
+  alt_text?: string;
+  uploaded_at: string;
+  file_size: number;
+  size?: number;
+  content_type: string;
+  bucket_name: string;
+  file_url: string;
+  references?: number;
+  signedUrl?: string;
+  category?: string;
+  // Upload-related properties
+  isUploading?: boolean;
+  progress?: number;
 }
 
 export interface MediaLibraryFilters {
-  category?: string;
-  content_type?: string;
-  user_id?: string;
-  user?: string;
-  search?: string;
-  bucket?: string;
-  startDate?: string | Date;
-  endDate?: string | Date;
-  sort_by?: 'uploaded_at' | 'filename' | 'file_size';
-  sort_order?: 'asc' | 'desc';
+  user: string | null;
+  category: string | null;
+  startDate: Date | null;
+  endDate: Date | null;
 }
 
-export interface MediaFileWithProfile extends Omit<MediaFile, 'bucket_name'> {
-  bucket_name?: string;
-  profiles?: {
+export interface FileOperation {
+  success: boolean;
+  message?: string;
+  file?: MediaFile;
+}
+
+// Profile interface for the filters
+export interface UserProfile {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  role: string;
+}
+
+// Alias for backward compatibility
+export type MediaLibraryFiltersType = MediaLibraryFilters;
+
+// Type definition for MediaFile with Profile data
+export interface MediaFileWithProfile extends MediaFile {
+  profile?: {
     first_name?: string;
     last_name?: string;
-    email?: string;
+    avatar_url?: string;
   };
 }

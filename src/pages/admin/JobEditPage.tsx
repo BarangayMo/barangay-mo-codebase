@@ -1,426 +1,701 @@
-
 import { useState, useEffect } from "react";
-import { Layout } from "@/components/layout/Layout";
+import { useParams, useNavigate } from "react-router-dom";
+import { AdminLayout } from "@/components/layout/AdminLayout";
+import { DashboardPageHeader } from "@/components/dashboard/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate, useParams } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { DraggableArrayInput } from "@/components/ui/draggable-array-input";
+import { Save, ArrowLeft, Calendar, User, Building2, MapPin, DollarSign, Clock, Tag, Briefcase, Target, Users, Sparkles, Globe, Search, Eye, ChevronDown } from "lucide-react";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { MediaUpload } from "@/components/ui/media-upload";
-
-interface Job {
-  id: string;
-  title: string;
-  company: string;
-  location: string;
-  category: string;
-  salary: string;
-  experience: string;
-  work_approach: string;
-  description: string;
-  responsibilities: string[];
-  qualifications: string[];
-  skills: string[];
-  is_open: boolean;
-  created_at: string;
-  updated_at: string;
-  job_code: string;
-  logo_url?: string;
-}
-
-interface FormData {
-  title: string;
-  company: string;
-  location: string;
-  category: string;
-  salary: string;
-  experience: string;
-  work_approach: string;
-  description: string;
-  responsibilities: string[];
-  qualifications: string[];
-  skills: string[];
-  is_open: boolean;
-  job_code: string;
-  logo_url?: string;
-  education: string;
-  license: string;
-  availability: string;
-}
+import { DraggableArrayInput } from "@/components/ui/draggable-array-input";
+import { CharacterLimitedInput } from "@/components/ui/character-limited-input";
+import { JobMap } from "@/components/ui/job-map";
+import { AssigneeDialog } from "@/components/ui/assignee-dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 export default function JobEditPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, userRole } = useAuth();
-
-  const [formData, setFormData] = useState<FormData>({
-    title: '',
-    company: '',
-    location: '',
-    category: '',
-    salary: '',
-    experience: '',
-    work_approach: '',
-    description: '',
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [assignedUser, setAssignedUser] = useState<any>(null);
+  const [seoOpen, setSeoOpen] = useState(false);
+  const [job, setJob] = useState({
+    title: "",
+    description: "",
+    company: "",
+    location: "",
+    category: "",
+    salary: "",
+    experience: "",
+    work_approach: "",
     responsibilities: [],
     qualifications: [],
     skills: [],
     is_open: true,
-    job_code: '',
-    logo_url: '',
-    education: '',
-    license: '',
-    availability: '',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    job_code: "",
+    logo_url: "",
+    slug: "",
+    seo_title: "",
+    seo_description: "",
+    assigned_to: ""
   });
-  const [loading, setLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-
-  const isEditing = id !== 'new';
-
-  const fetchJob = async (jobId: string) => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('jobs')
-        .select('*')
-        .eq('id', jobId)
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      if (data) {
-        setFormData({
-          title: data.title,
-          company: data.company,
-          location: data.location,
-          category: data.category,
-          salary: data.salary,
-          experience: data.experience,
-          work_approach: data.work_approach,
-          description: data.description,
-          responsibilities: data.responsibilities || [],
-          qualifications: data.qualifications || [],
-          skills: data.skills || [],
-          is_open: data.is_open,
-          job_code: data.job_code,
-          logo_url: data.logo_url || '',
-          education: data.education || '',
-          license: data.license || '',
-          availability: data.availability || '',
-        });
-      }
-    } catch (error: any) {
-      console.error('Error fetching job:', error);
-      toast({
-        title: "Failed to fetch job",
-        description: error.message,
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
-    if (isEditing && id) {
-      fetchJob(id);
-    }
-  }, [id, isEditing]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-
-    try {
-      const payload = {
-        ...formData,
-        responsibilities: formData.responsibilities || [],
-        qualifications: formData.qualifications || [],
-        skills: formData.skills || [],
-        created_by: user?.id,
-      };
-
-      if (isEditing) {
+    const fetchJob = async () => {
+      if (!id) return;
+      
+      try {
         const { data, error } = await supabase
           .from('jobs')
-          .update(payload)
+          .select('*')
           .eq('id', id)
-          .select()
           .single();
-
-        if (error) {
-          throw error;
+          
+        if (error) throw error;
+        
+        if (data) {
+          setJob({
+            ...data,
+            responsibilities: data.responsibilities || [],
+            qualifications: data.qualifications || [],
+            skills: data.skills || [],
+            slug: data.slug || '',
+            seo_title: data.seo_title || '',
+            seo_description: data.seo_description || '',
+            assigned_to: data.assigned_to || ''
+          });
+          
+          // Fetch assigned user if there's an assigned_to value
+          if (data.assigned_to) {
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', data.assigned_to)
+              .single();
+            
+            if (profileData) {
+              setAssignedUser({
+                id: profileData.id,
+                first_name: profileData.first_name,
+                last_name: profileData.last_name,
+                email: 'user@example.com', // You might want to get this from auth.users
+                avatar_url: profileData.avatar_url || `https://ui-avatars.com/api/?name=${profileData.first_name} ${profileData.last_name}&background=random`,
+                role: profileData.role
+              });
+            }
+          }
         }
-      } else {
-        const { data, error } = await supabase
-          .from('jobs')
-          .insert([payload])
-          .select()
-          .single();
+      } catch (error) {
+        console.error('Error fetching job:', error);
+        toast({
+          title: "Failed to fetch job",
+          description: "Please try again",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchJob();
+  }, [id, toast]);
 
-        if (error) {
-          throw error;
+  // Auto-save as draft functionality
+  useEffect(() => {
+    const autoSaveInterval = setInterval(async () => {
+      if (autoSaveStatus === 'unsaved') {
+        setAutoSaveStatus('saving');
+        try {
+          await handleSaveDraft();
+          setAutoSaveStatus('saved');
+          setLastSavedAt(new Date());
+        } catch (error) {
+          setAutoSaveStatus('unsaved');
         }
       }
+    }, 30000); // Auto-save every 30 seconds
 
+    return () => clearInterval(autoSaveInterval);
+  }, [autoSaveStatus]);
+
+  const handleSaveDraft = async () => {
+    try {
+      const { error } = await supabase
+        .from('jobs')
+        .update({
+          title: job.title,
+          description: job.description,
+          company: job.company,
+          location: job.location,
+          category: job.category,
+          salary: job.salary,
+          experience: job.experience,
+          work_approach: job.work_approach,
+          responsibilities: job.responsibilities,
+          qualifications: job.qualifications,
+          skills: job.skills,
+          logo_url: job.logo_url,
+          slug: job.slug,
+          seo_title: job.seo_title,
+          seo_description: job.seo_description,
+          assigned_to: job.assigned_to,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+        
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving draft:', error);
+      throw error;
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('jobs')
+        .update({
+          title: job.title,
+          description: job.description,
+          company: job.company,
+          location: job.location,
+          category: job.category,
+          salary: job.salary,
+          experience: job.experience,
+          work_approach: job.work_approach,
+          responsibilities: job.responsibilities,
+          qualifications: job.qualifications,
+          skills: job.skills,
+          is_open: job.is_open,
+          logo_url: job.logo_url,
+          slug: job.slug,
+          seo_title: job.seo_title,
+          seo_description: job.seo_description,
+          assigned_to: job.assigned_to,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+        
+      if (error) throw error;
+      
       toast({
-        title: isEditing ? "Job updated successfully!" : "Job created successfully!",
+        title: "Job updated successfully",
+        description: "The job posting has been saved and published",
       });
-
-      if (userRole === 'resident') {
-        navigate('/resident/jobs');
-      } 
-      else if (userRole === 'official') {
-        navigate('/official/jobs');
-      }
-         else {
-        navigate('/admin/jobs');
-      }
-    } catch (error: any) {
-      console.error('Error saving job:', error);
+      
+      navigate('/admin/jobs/all');
+    } catch (error) {
+      console.error('Error updating job:', error);
       toast({
-        title: "Failed to save job",
-        description: error.message,
+        title: "Failed to update job",
+        description: "Please try again",
         variant: "destructive"
       });
     } finally {
-      setSubmitting(false);
+      setSaving(false);
     }
   };
 
-  const handleBackNavigation = () => {
-    if (userRole === 'resident') {
-      navigate('/resident/jobs');
-    } 
-    else if (userRole === 'official') {
-      navigate('/official/jobs');
-    }
-    else {
-      navigate('/admin/jobs');
-    }
+  const handleInputChange = (field: string, value: any) => {
+    setJob(prev => ({ ...prev, [field]: value }));
+    setAutoSaveStatus('unsaved');
   };
 
-  const getPageTitle = () => {
-    if (userRole === 'resident') {
-      return isEditing ? 'Edit Job Posting' : 'Create Job Posting';
-    }
-    return isEditing ? 'Edit Job' : 'Create Job';
+  const handleAssigneeChange = (userId: string, user: any) => {
+    setAssignedUser(user);
+    handleInputChange('assigned_to', userId);
   };
 
-  const getBackButtonText = () => {
-    if (userRole === 'resident') {
-      return 'Back to Job Management';
+  const generateSlug = (title: string) => {
+    return title.toLowerCase()
+      .replace(/[^a-z0-9 -]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+  };
+
+  const handleTitleChange = (title: string) => {
+    handleInputChange('title', title);
+    if (!job.slug) {
+      handleInputChange('slug', generateSlug(title));
     }
-    return 'Back to Jobs';
+    if (!job.seo_title) {
+      handleInputChange('seo_title', title);
+    }
   };
 
   if (loading) {
     return (
-      <Layout>
-        <div className="max-w-4xl mx-auto px-4 py-8">
+      <AdminLayout title="Edit Job">
+        <div className="p-6">
           <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-            <div className="h-64 bg-gray-200 rounded mb-4"></div>
+            <div className="h-8 bg-gray-200 rounded mb-6"></div>
+            <div className="grid grid-cols-3 gap-6">
+              <div className="col-span-2 space-y-4">
+                <div className="h-32 bg-gray-200 rounded"></div>
+                <div className="h-48 bg-gray-200 rounded"></div>
+              </div>
+              <div className="space-y-4">
+                <div className="h-24 bg-gray-200 rounded"></div>
+                <div className="h-32 bg-gray-200 rounded"></div>
+              </div>
+            </div>
           </div>
         </div>
-      </Layout>
+      </AdminLayout>
     );
   }
 
   return (
-    <Layout>
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Simple back button */}
-        <div className="flex items-center gap-4 mb-6">
+    <AdminLayout title="Edit Job">
+      <div className="p-6 max-w-7xl mx-auto">
+        <DashboardPageHeader
+          title="Edit Job"
+          description={`${job.job_code} • ${job.title}`}
+          breadcrumbItems={[
+            { label: "Jobs", href: "/admin/jobs" },
+            { label: "All Jobs", href: "/admin/jobs/all" },
+            { label: "Edit Job" }
+          ]}
+          actionButton={{
+            label: saving ? "Publishing..." : "Save & Publish",
+            onClick: () => handleSave(),
+            icon: <Save className="h-4 w-4" />,
+            variant: "default",
+            disabled: saving
+          }}
+          secondaryActions={[
+            {
+              label: "Back to List",
+              onClick: () => navigate('/admin/jobs/all'),
+              icon: <ArrowLeft className="h-4 w-4" />,
+              variant: "ghost"
+            }
+          ]}
+        />
+
+        {/* Auto-save status */}
+        <div className="mb-4 flex justify-between items-center">
+          <span className="text-xs text-muted-foreground">
+            {autoSaveStatus === 'saved' && lastSavedAt && `Draft saved at ${lastSavedAt.toLocaleTimeString()}`}
+            {autoSaveStatus === 'saving' && "Saving draft..."}
+            {autoSaveStatus === 'unsaved' && "Unsaved changes"}
+          </span>
           <Button
-            variant="ghost"
-            onClick={handleBackNavigation}
-            className="flex items-center gap-2"
+            variant="outline"
+            size="sm"
+            onClick={handleSaveDraft}
+            disabled={autoSaveStatus === 'saving'}
           >
-            <ArrowLeft className="h-4 w-4" />
-            {getBackButtonText()}
+            Save Draft
           </Button>
         </div>
 
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold">{getPageTitle()}</h1>
-          <p className="text-gray-500 mt-2">
-            {isEditing ? 'Update job details and requirements' : 'Fill in the details to create a new job posting'}
-          </p>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Main Content */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Basic Information */}
+            <Card className="shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-blue-700">
+                  <Building2 className="h-5 w-5" />
+                  Basic Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="title" className="text-sm font-medium">Job Title</Label>
+                  <CharacterLimitedInput
+                    id="title"
+                    value={job.title}
+                    onChange={(e) => handleTitleChange(e.target.value)}
+                    placeholder="Enter job title"
+                    maxLength={100}
+                    className="text-lg font-medium"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="description" className="text-sm font-medium">Job Description</Label>
+                  <RichTextEditor
+                    value={job.description}
+                    onChange={(value) => handleInputChange('description', value)}
+                    placeholder="Describe the job role, requirements, and expectations..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="company" className="text-sm font-medium">Company</Label>
+                    <Input
+                      id="company"
+                      value={job.company}
+                      onChange={(e) => handleInputChange('company', e.target.value)}
+                      placeholder="Company name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="location" className="text-sm font-medium">Location</Label>
+                    <Input
+                      id="location"
+                      value={job.location}
+                      onChange={(e) => handleInputChange('location', e.target.value)}
+                      placeholder="Job location"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Job Details */}
+            <Card className="shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-green-700">
+                  <Tag className="h-5 w-5" />
+                  Job Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="category" className="text-sm font-medium">Category</Label>
+                    <Select value={job.category} onValueChange={(value) => handleInputChange('category', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="technology">Technology</SelectItem>
+                        <SelectItem value="healthcare">Healthcare</SelectItem>
+                        <SelectItem value="finance">Finance</SelectItem>
+                        <SelectItem value="education">Education</SelectItem>
+                        <SelectItem value="retail">Retail</SelectItem>
+                        <SelectItem value="hospitality">Hospitality</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="experience" className="text-sm font-medium">Required Experience</Label>
+                    <Select value={job.experience} onValueChange={(value) => handleInputChange('experience', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select experience level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0-1 years">0-1 years</SelectItem>
+                        <SelectItem value="1-3 years">1-3 years</SelectItem>
+                        <SelectItem value="3-5 years">3-5 years</SelectItem>
+                        <SelectItem value="5+ years">5+ years</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="salary" className="text-sm font-medium">Salary Range</Label>
+                    <Input
+                      id="salary"
+                      value={job.salary}
+                      onChange={(e) => handleInputChange('salary', e.target.value)}
+                      placeholder="e.g., THB 30,000 - 50,000"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="work_approach" className="text-sm font-medium">Work Approach</Label>
+                    <Select value={job.work_approach} onValueChange={(value) => handleInputChange('work_approach', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select work approach" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="full-time">Full-time</SelectItem>
+                        <SelectItem value="part-time">Part-time</SelectItem>
+                        <SelectItem value="contract">Contract</SelectItem>
+                        <SelectItem value="freelance">Freelance</SelectItem>
+                        <SelectItem value="remote">Remote</SelectItem>
+                        <SelectItem value="hybrid">Hybrid</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Responsibilities */}
+            <Card className="shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-orange-700">
+                  <Target className="h-5 w-5" />
+                  Key Responsibilities
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DraggableArrayInput
+                  values={job.responsibilities}
+                  onChange={(values) => handleInputChange('responsibilities', values)}
+                  placeholder="Enter a key responsibility"
+                  addButtonText="Add Responsibility"
+                />
+              </CardContent>
+            </Card>
+
+            {/* Qualifications */}
+            <Card className="shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-indigo-700">
+                  <Briefcase className="h-5 w-5" />
+                  Required Qualifications
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DraggableArrayInput
+                  values={job.qualifications}
+                  onChange={(values) => handleInputChange('qualifications', values)}
+                  placeholder="Enter a required qualification"
+                  addButtonText="Add Qualification"
+                />
+              </CardContent>
+            </Card>
+
+            {/* Skills */}
+            <Card className="shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-pink-700">
+                  <Sparkles className="h-5 w-5" />
+                  Required Skills
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DraggableArrayInput
+                  values={job.skills}
+                  onChange={(values) => handleInputChange('skills', values)}
+                  placeholder="Enter a required skill"
+                  addButtonText="Add Skill"
+                />
+              </CardContent>
+            </Card>
+
+            {/* SEO Settings - Collapsible */}
+            <Card className="shadow-sm">
+              <Collapsible open={seoOpen} onOpenChange={setSeoOpen}>
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                    <CardTitle className="flex items-center justify-between text-purple-700">
+                      <div className="flex items-center gap-2">
+                        <Search className="h-5 w-5" />
+                        SEO Settings
+                      </div>
+                      <ChevronDown className={`h-4 w-4 transition-transform ${seoOpen ? 'rotate-180' : ''}`} />
+                    </CardTitle>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="space-y-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="slug" className="text-sm font-medium">URL Slug</Label>
+                      <Input
+                        id="slug"
+                        value={job.slug}
+                        onChange={(e) => handleInputChange('slug', e.target.value)}
+                        placeholder="job-title-slug"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        URL: /jobs/{job.slug || 'job-title-slug'}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="seo_title" className="text-sm font-medium">SEO Title</Label>
+                      <CharacterLimitedInput
+                        id="seo_title"
+                        value={job.seo_title}
+                        onChange={(e) => handleInputChange('seo_title', e.target.value)}
+                        placeholder="SEO optimized title"
+                        maxLength={60}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="seo_description" className="text-sm font-medium">SEO Description</Label>
+                      <Textarea
+                        id="seo_description"
+                        value={job.seo_description}
+                        onChange={(e) => handleInputChange('seo_description', e.target.value)}
+                        placeholder="Brief description for search engines"
+                        rows={3}
+                        maxLength={160}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {job.seo_description.length}/160 characters
+                      </p>
+                    </div>
+                  </CardContent>
+                </CollapsibleContent>
+              </Collapsible>
+            </Card>
+          </div>
+
+          {/* Right Column - Settings & Meta */}
+          <div className="space-y-6">
+            {/* Publish Status */}
+            <Card className="shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-emerald-700">
+                  <Calendar className="h-5 w-5" />
+                  Status & Publication
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="status" className="text-sm font-medium">Status</Label>
+                  <Select value={job.is_open ? "open" : "closed"} onValueChange={(value) => handleInputChange('is_open', value === "open")}>
+                    <SelectTrigger className="w-24">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="open">Open</SelectItem>
+                      <SelectItem value="closed">Closed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Separator />
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Job Code</span>
+                  <Badge variant="secondary">{job.job_code}</Badge>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Visibility</span>
+                  <Badge variant="secondary">Public</Badge>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Created</span>
+                  <span className="text-sm">{new Date(job.created_at).toLocaleDateString()}</span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Updated</span>
+                  <span className="text-sm">{new Date(job.updated_at).toLocaleDateString()}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Job Thumbnail */}
+            <Card className="shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-cyan-700">
+                  <Building2 className="h-5 w-5" />
+                  Company Logo
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <MediaUpload
+                  value={job.logo_url}
+                  onChange={(url) => handleInputChange('logo_url', url)}
+                  onRemove={() => handleInputChange('logo_url', '')}
+                  accept="image/*"
+                />
+              </CardContent>
+            </Card>
+
+            {/* Assigned To */}
+            <Card className="shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-violet-700">
+                  <Users className="h-5 w-5" />
+                  Assigned To
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {assignedUser && (
+                  <div className="flex items-center gap-3">
+                    <Avatar>
+                      <AvatarImage src={assignedUser.avatar_url} />
+                      <AvatarFallback>{assignedUser.first_name?.[0]}{assignedUser.last_name?.[0]}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm font-medium">{assignedUser.first_name} {assignedUser.last_name}</p>
+                      <p className="text-xs text-muted-foreground">{assignedUser.email}</p>
+                    </div>
+                  </div>
+                )}
+                <AssigneeDialog
+                  currentAssigneeId={job.assigned_to}
+                  onAssigneeChange={handleAssigneeChange}
+                >
+                  <Button variant="outline" className="w-full">
+                    <Users className="h-4 w-4 mr-2" />
+                    Change Assignee
+                  </Button>
+                </AssigneeDialog>
+              </CardContent>
+            </Card>
+
+            {/* Location Map */}
+            {job.location && (
+              <Card className="shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-red-700">
+                    <MapPin className="h-5 w-5" />
+                    Location
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <JobMap location={job.location} />
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Job Summary */}
+            <Card className="shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-gray-700">
+                  <Eye className="h-5 w-5" />
+                  Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                    <span>{job.company || "Not specified"}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span>{job.location || "Not specified"}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    <span>{job.salary || "Not specified"}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <span>{job.work_approach || "Not specified"}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Job Title and Company */}
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="title">Job Title</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                required
-                placeholder="e.g., Software Developer"
-              />
-            </div>
-            <div>
-              <Label htmlFor="company">Company</Label>
-              <Input
-                id="company"
-                value={formData.company}
-                onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                required
-                placeholder="Company name"
-              />
-            </div>
-          </div>
-
-          {/* Location and Category */}
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="location">Location</Label>
-              <Input
-                id="location"
-                value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                required
-                placeholder="e.g., Manila, Philippines"
-              />
-            </div>
-            <div>
-              <Label htmlFor="category">Category</Label>
-              <Select
-                value={formData.category}
-                onValueChange={(value) => setFormData({ ...formData, category: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Technology">Technology</SelectItem>
-                  <SelectItem value="Healthcare">Healthcare</SelectItem>
-                  <SelectItem value="Education">Education</SelectItem>
-                  <SelectItem value="Finance">Finance</SelectItem>
-                  <SelectItem value="Marketing">Marketing</SelectItem>
-                  <SelectItem value="Customer Service">Customer Service</SelectItem>
-                  <SelectItem value="Creative">Creative</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Salary and Experience */}
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="salary">Salary Range (Optional)</Label>
-              <Input
-                id="salary"
-                value={formData.salary}
-                onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
-                placeholder="e.g., ₱25,000 - ₱35,000"
-              />
-            </div>
-            <div>
-              <Label htmlFor="experience">Experience Level</Label>
-              <Select
-                value={formData.experience}
-                onValueChange={(value) => setFormData({ ...formData, experience: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select experience level" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Entry Level">Entry Level</SelectItem>
-                  <SelectItem value="Mid Level">Mid Level</SelectItem>
-                  <SelectItem value="Senior Level">Senior Level</SelectItem>
-                  <SelectItem value="Executive">Executive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Work Approach */}
-          <div>
-            <Label htmlFor="work_approach">Work Approach (Optional)</Label>
-            <Select
-              value={formData.work_approach}
-              onValueChange={(value) => setFormData({ ...formData, work_approach: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select work approach" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Remote">Remote</SelectItem>
-                <SelectItem value="On-site">On-site</SelectItem>
-                <SelectItem value="Hybrid">Hybrid</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Job Description */}
-          <div>
-            <Label htmlFor="description">Job Description</Label>
-            <RichTextEditor
-              value={formData.description}
-              onChange={(value) => setFormData({ ...formData, description: value })}
-              placeholder="Describe the job role, requirements, and what makes this position unique..."
-            />
-          </div>
-
-          {/* Responsibilities */}
-          <div>
-            <Label>Key Responsibilities</Label>
-            <DraggableArrayInput
-              values={formData.responsibilities}
-              onChange={(value) => setFormData({ ...formData, responsibilities: value })}
-              placeholder="Add a key responsibility..."
-            />
-          </div>
-
-          {/* Skills */}
-          <div>
-            <Label>Required Skills (Optional)</Label>
-            <DraggableArrayInput
-              values={formData.skills}
-              onChange={(value) => setFormData({ ...formData, skills: value })}
-              placeholder="Add a required skill..."
-            />
-          </div>
-
-          {/* Submit Button */}
-          <div className="flex justify-center pt-4">
-           <Button 
-  type="submit" 
-  disabled={submitting}
-  className={`w-full sm:w-auto px-8 py-3 
-    ${userRole === "official" 
-      ? "bg-red-600 hover:bg-red-700" 
-      : "bg-blue-600 hover:bg-blue-700"}
-    `}
->
-  {submitting ? (
-    <>
-      <span className="animate-spin mr-2">⏳</span>
-      {isEditing ? 'Updating...' : 'Creating...'}
-    </>
-  ) : (
-    <>
-      {isEditing ? 'Update Job' : 'Create Job'}
-    </>
-  )}
-</Button>
-
-          </div>
-        </form>
       </div>
-    </Layout>
+    </AdminLayout>
   );
 }

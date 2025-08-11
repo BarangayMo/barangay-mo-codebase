@@ -25,7 +25,7 @@ export default function Phone() {
   };
 
   const handleSkip = () => {
-    navigate("/resident-home");
+    navigate("/rbi-registration");
   };
 
   return (

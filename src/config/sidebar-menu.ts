@@ -1,5 +1,5 @@
 
-import { Home, ShoppingBag, Package, User, Users, FileText, Settings, BarChart, Store, MessageSquare, Image, Library, Briefcase, Bell, UserCheck } from "lucide-react";
+import { Home, ShoppingBag, Package, User, Users, FileText, Settings, BarChart, Store, MessageSquare, Image, Library, Briefcase, Bell } from "lucide-react";
 
 export const sidebarMenuItems = [
   {
@@ -70,7 +70,11 @@ export const sidebarMenuItems = [
   {
     groupLabel: "Communication",
     items: [
-      
+      {
+        title: "Messaging",
+        icon: MessageSquare,
+        path: "/admin/messages",
+      },
       {
         title: "Notifications",
         icon: Bell,
@@ -96,9 +100,8 @@ export const sidebarMenuItems = [
         path: "/admin/users",
         submenu: [
           { title: "All Users", path: "/admin/users/all" },
-          
+          { title: "User Roles", path: "/admin/users/roles" },
           { title: "Settings", path: "/admin/users/settings" },
-          { title: "Official Registrations", path: "/admin/official-registrations" },
         ]
       },
       {

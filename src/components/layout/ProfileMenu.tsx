@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
-import { User, Settings, LogOut, MapPin } from "lucide-react";
+import { User, Settings, LogOut } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -16,7 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useResidentProfile } from "@/hooks/use-resident-profile";
 
 export function ProfileMenu() {
-  const { logout, user, session } = useAuth();
+  const { logout, user } = useAuth();
   const { profile } = useResidentProfile();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -35,14 +35,6 @@ export function ProfileMenu() {
     setIsLoggingOut(false);
   };
 
-  // Determine profile route based on user role
-  const getProfileRoute = () => {
-    if (user?.role === 'official' || user?.role === 'superadmin') {
-      return '/official-profile';
-    }
-    return '/resident-profile';
-  };
-
   return (
     <>
       {isLoggingOut && <LoadingScreen />}
@@ -57,22 +49,9 @@ export function ProfileMenu() {
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-72 sm:w-80">
-          <div className="px-3 py-2">
-            <p className="text-sm font-medium truncate">{firstName} {lastName}</p>
-            <p className="text-xs text-gray-500 truncate mt-0.5">{user?.email}</p>
-            {profile?.barangay && (
-              <div className="flex items-start gap-2 mt-2">
-                <MapPin className="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" />
-                <span className="text-xs text-gray-500 break-words leading-relaxed">
-                  {profile.barangay}
-                </span>
-              </div>
-            )}
-          </div>
-          <DropdownMenuSeparator />
+        <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuItem asChild>
-            <Link to={getProfileRoute()} className="flex items-center">
+            <Link to="/resident-profile" className="flex items-center">
               <User className="mr-2 h-4 w-4" />
               Profile
             </Link>

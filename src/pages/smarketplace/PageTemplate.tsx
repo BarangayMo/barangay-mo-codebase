@@ -15,9 +15,8 @@ interface PageTemplateProps {
   actionButton?: {
     label: string;
     onClick: () => void;
-    variant?: "default" | "dashboard" | "destructive" | "outline" | "secondary" | "ghost";
+    variant?: "default" | "outline" | "secondary" | "destructive" | "ghost" | "dashboard";
     icon?: ReactNode;
-    disabled?: boolean;
   };
   breadcrumbItems?: {
     label: string;

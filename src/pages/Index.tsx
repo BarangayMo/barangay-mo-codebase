@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
@@ -6,13 +7,11 @@ import { Layout } from "@/components/layout/Layout";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
 
 export default function Index() {
   const currentYear = new Date().getFullYear();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
   
   // Redirect mobile users to welcome page
   useEffect(() => {
@@ -58,14 +57,12 @@ export default function Index() {
                   </p>
                   
                   <div className="flex flex-col md:flex-row gap-4 justify-center md:justify-start mb-10 md:mb-8 px-4 md:px-0">
-                    {!isAuthenticated && (
-                      <Button size="lg" className="bg-white text-blue-600 hover:bg-white/90 font-medium shadow-lg h-14 text-lg rounded-xl">
-                        <Link to="/register" className="flex items-center gap-2">
-                          Join Your Community
-                          <ArrowRight className="w-5 h-5" />
-                        </Link>
-                      </Button>
-                    )}
+                    <Button size="lg" className="bg-white text-blue-600 hover:bg-white/90 font-medium shadow-lg h-14 text-lg rounded-xl">
+                      <Link to="/register" className="flex items-center gap-2">
+                        Join Your Community
+                        <ArrowRight className="w-5 h-5" />
+                      </Link>
+                    </Button>
                     
                     <Button size="lg" variant="outline" className="bg-transparent backdrop-blur-sm border-white text-white hover:bg-white/10 h-14 text-lg rounded-xl">
                       <Link to="/about">Learn More</Link>
@@ -169,20 +166,17 @@ export default function Index() {
           </div>
         </section>
         
-        {/* Call to action section - only show if not authenticated */}
-        {!isAuthenticated && (
-          <section className="py-12 md:py-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-3xl md:rounded-[40px] mx-4 mb-8 md:mb-0">
-            <div className="container mx-auto px-6 md:px-4 text-center">
-              <h2 className="text-2xl md:text-3xl font-bold mb-6 font-outfit">Tara na! Ready to join your barangay?</h2>
-              <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto leading-relaxed">
-                Get connected with your community, access local services, and stay updated with important announcements.
-              </p>
-              <Button asChild size="lg" variant="secondary" className="mb-4 font-medium h-14 text-lg rounded-xl shadow-lg">
-                <Link to="/register" className="flex items-center gap-2">Register Now <ArrowRight className="ml-2 h-5 w-5" /></Link>
-              </Button>
-            </div>
-          </section>
-        )}
+        <section className="py-12 md:py-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-3xl md:rounded-[40px] mx-4 mb-8 md:mb-0">
+          <div className="container mx-auto px-6 md:px-4 text-center">
+            <h2 className="text-2xl md:text-3xl font-bold mb-6 font-outfit">Tara na! Ready to join your barangay?</h2>
+            <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto leading-relaxed">
+              Get connected with your community, access local services, and stay updated with important announcements.
+            </p>
+            <Button asChild size="lg" variant="secondary" className="mb-4 font-medium h-14 text-lg rounded-xl shadow-lg">
+              <Link to="/register" className="flex items-center gap-2">Register Now <ArrowRight className="ml-2 h-5 w-5" /></Link>
+            </Button>
+          </div>
+        </section>
 
         {/* Desktop footer - hidden on mobile */}
         <footer className="py-8 text-center text-sm text-gray-500 hidden md:block">

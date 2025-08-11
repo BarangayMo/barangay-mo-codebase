@@ -43,7 +43,7 @@ export const TopProducts = ({ products }: TopProductsProps) => {
       id: 'price',
       header: 'Price',
       // Ensure parseFloat is used correctly and provide a currency
-      cell: (product) => formatCurrency(parseFloat(product.price.replace(/[^\d.-]/g, '')), 'PHP'),
+      cell: (product) => formatCurrency(parseFloat(product.price.replace(/[^\d.-]/g, '')), 'NGN'),
       align: 'right' as const,
     },
   ];
