@@ -17,7 +17,7 @@ interface MediaFile {
   uploaded_at: string;
   file_size: number;
   content_type: string;
-  bucket_name: string;
+  bucket_name?: string;
   file_url: string;
   references?: number;
   signedUrl?: string;
@@ -109,7 +109,7 @@ export function MediaDetailsDialog({
             {/* Actions */}
             <div className="flex flex-wrap gap-2">
               <Button
-                onClick={() => onDownload(file.bucket_name, file.file_url, file.filename, file.signedUrl)}
+                onClick={() => onDownload(file.bucket_name || 'user_uploads', file.file_url, file.filename, file.signedUrl)}
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 <Download className="h-4 w-4 mr-2" />
@@ -117,7 +117,7 @@ export function MediaDetailsDialog({
               </Button>
               <Button
                 variant="outline"
-                onClick={() => onCopyUrl(file.signedUrl, file.bucket_name, file.file_url)}
+                onClick={() => onCopyUrl(file.signedUrl, file.bucket_name || 'user_uploads', file.file_url)}
                 className="border-blue-300 text-blue-700 hover:bg-blue-50"
               >
                 <ExternalLink className="h-4 w-4 mr-2" />

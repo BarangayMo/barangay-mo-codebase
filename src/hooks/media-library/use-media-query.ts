@@ -72,12 +72,18 @@ export function useMediaQuery(
         }
         
         if (filters.startDate) {
-          query = query.gte('uploaded_at', filters.startDate.toISOString());
+          const startISO = typeof filters.startDate === 'string'
+            ? filters.startDate
+            : filters.startDate.toISOString();
+          query = query.gte('uploaded_at', startISO);
           console.log(`Applied start date filter: ${filters.startDate}`);
         }
         
         if (filters.endDate) {
-          query = query.lte('uploaded_at', filters.endDate.toISOString());
+          const endISO = typeof filters.endDate === 'string'
+            ? filters.endDate
+            : filters.endDate.toISOString();
+          query = query.lte('uploaded_at', endISO);
           console.log(`Applied end date filter: ${filters.endDate}`);
         }
 
@@ -122,8 +128,10 @@ export function useMediaQuery(
               uploaded_at: file.uploaded_at,
               user_id: file.user_id,
               category: file.category,
+              alt_text: file.alt_text,
+              deleted_at: file.deleted_at,
               signedUrl: signedUrlError ? null : signedUrlData?.signedUrl
-            };
+            } as MediaFile;
 
             if (signedUrlError) {
               console.warn(`Could not create signed URL for ${file.filename}:`, signedUrlError.message);
@@ -145,8 +153,10 @@ export function useMediaQuery(
               uploaded_at: file.uploaded_at,
               user_id: file.user_id,
               category: file.category,
+              alt_text: file.alt_text,
+              deleted_at: file.deleted_at,
               signedUrl: null
-            });
+            } as MediaFile);
           }
         }
         
