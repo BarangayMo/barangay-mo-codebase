@@ -16,9 +16,9 @@ export function RoleButton({ className, variant = "default", ...props }: RoleBut
     
     switch(userRole) {
       case "official":
-        return "bg-red-600 hover:bg-red-700 text-white";
+        return "bg-official hover:bg-official-dark text-official-foreground";
       case "resident":
-        return "bg-blue-600 hover:bg-blue-700 text-white";
+        return "bg-resident hover:bg-resident-dark text-resident-foreground";
       default:
         return "";
     }
