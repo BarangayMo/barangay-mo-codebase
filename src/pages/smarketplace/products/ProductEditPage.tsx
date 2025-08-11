@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Save, X, Upload, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,8 +14,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Layout } from "@/components/layout/Layout";
-import { AdminLayout } from "@/components/layout/AdminLayout";
-import { DashboardPageHeader } from "@/components/dashboard/PageHeader";
 
 interface ProductFormData {
   name: string;
@@ -48,8 +46,6 @@ const ProductEditPage = () => {
   });
 
   const [vendorCreationError, setVendorCreationError] = useState<string | null>(null);
-
-  const formRef = useRef<HTMLFormElement>(null);
 
   // Handle image upload
   const handleImageUpload = async (file: File, isMainImage = false) => {
@@ -393,258 +389,7 @@ const ProductEditPage = () => {
 
   const currentVendor = vendor || createVendorMutation.data;
 
-  return userRole === 'superadmin' ? (
-    <AdminLayout title={isEditing ? 'Edit Product' : 'Add Product'}>
-      <div className="p-6 max-w-7xl mx-auto">
-        <DashboardPageHeader
-          title={isEditing ? 'Edit Product' : 'Create Product'}
-          description={isEditing ? 'Update your product information' : 'Fill in product details'}
-          breadcrumbItems={[
-            { label: 'S-Marketplace', href: '/admin/smarketplace' },
-            { label: 'Products', href: '/admin/smarketplace/products' },
-            { label: isEditing ? 'Edit Product' : 'Create Product' }
-          ]}
-          actionButton={{
-            label: saveProductMutation.isPending ? (isEditing ? 'Saving...' : 'Creating...') : (isEditing ? 'Save & Publish' : 'Create'),
-            onClick: () => formRef.current?.requestSubmit(),
-            icon: <Save className="h-4 w-4" />,
-            variant: 'default',
-            disabled: saveProductMutation.isPending
-          }}
-          secondaryActions={[{
-            label: 'Back to List',
-            onClick: handleBackToProducts,
-            icon: <ArrowLeft className="h-4 w-4" />,
-            variant: 'ghost'
-          }]}
-        />
-
-        <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left Column - Main Content */}
-            <div className="lg:col-span-2 space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Product Information</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Product Name *</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => handleInputChange('name', e.target.value)}
-                      placeholder="Enter product name"
-                      required
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      SKU will be automatically generated when the product is created
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) => handleInputChange('description', e.target.value)}
-                      placeholder="Enter product description"
-                      rows={3}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="price">Price *</Label>
-                      <Input
-                        id="price"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={formData.price}
-                        onChange={(e) => handleInputChange('price', e.target.value)}
-                        placeholder="0.00"
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="stock_quantity">Stock Quantity *</Label>
-                      <Input
-                        id="stock_quantity"
-                        type="number"
-                        min="0"
-                        value={formData.stock_quantity}
-                        onChange={(e) => handleInputChange('stock_quantity', e.target.value)}
-                        placeholder="0"
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="category_id">Category</Label>
-                      <Select value={formData.category_id} onValueChange={(value) => handleInputChange('category_id', value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories?.map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Right Column - Sidebar */}
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Status</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="is_active"
-                      checked={formData.is_active}
-                      onCheckedChange={(checked) => handleInputChange('is_active', checked)}
-                    />
-                    <Label htmlFor="is_active">Active Product</Label>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Product Images</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Main Image */}
-                  <div className="space-y-2">
-                    <Label>Main Product Image</Label>
-                    <div className="flex items-center gap-4">
-                      {formData.main_image_url && (
-                        <div className="relative">
-                          <img 
-                            src={formData.main_image_url} 
-                            alt="Main product" 
-                            className="w-20 h-20 object-cover rounded-md border"
-                          />
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
-                            onClick={() => handleInputChange('main_image_url', '')}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      )}
-                      <div className="flex-1">
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handleImageUpload(file, true);
-                          }}
-                          className="hidden"
-                          id="main-image-upload"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => document.getElementById('main-image-upload')?.click()}
-                          className="flex items-center gap-2"
-                        >
-                          <Upload className="h-4 w-4" />
-                          {formData.main_image_url ? 'Change Main Image' : 'Upload Main Image'}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Additional Images */}
-                  <div className="space-y-2">
-                    <Label>Additional Images</Label>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {formData.additional_images?.map((imageUrl, index) => (
-                        <div key={index} className="relative">
-                          <img 
-                            src={imageUrl} 
-                            alt={`Additional ${index + 1}`} 
-                            className="w-full h-20 object-cover rounded-md border"
-                          />
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
-                            onClick={() => removeAdditionalImage(index)}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      ))}
-                      <div className="flex items-center justify-center h-20 border-2 border-dashed border-gray-300 rounded-md hover:border-gray-400">
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handleImageUpload(file, false);
-                          }}
-                          className="hidden"
-                          id="additional-image-upload"
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          onClick={() => document.getElementById('additional-image-upload')?.click()}
-                          className="h-full w-full flex flex-col items-center gap-1 text-gray-500"
-                        >
-                          <Plus className="h-5 w-5" />
-                          <span className="text-xs">Add Image</span>
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-            <Button
-              type="submit"
-              disabled={saveProductMutation.isPending}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
-            >
-              <Save className="h-4 w-4" />
-              {saveProductMutation.isPending ? 'Saving...' : (isEditing ? 'Update Product' : 'Create Product')}
-            </Button>
-            
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
-              disabled={saveProductMutation.isPending}
-              className="flex items-center gap-2"
-            >
-              <X className="h-4 w-4" />
-              Cancel
-            </Button>
-          </div>
-        </form>
-      </div>
-    </AdminLayout>
-  ) : (
+  return (
     <Layout>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Header with Back Button */}
@@ -850,7 +595,7 @@ const ProductEditPage = () => {
                       type="button"
                       variant="ghost"
                       onClick={() => document.getElementById('additional-image-upload')?.click()}
-                      className="h-full w-full flex flex-col items-center gap-1 text-gray-500"
+                      className="h-full w-full flex flex-col items-center gap-1 text-gray-500 md:h-24 md:w-28"
                     >
                       <Plus className="h-5 w-5" />
                       <span className="text-xs">Add Image</span>
