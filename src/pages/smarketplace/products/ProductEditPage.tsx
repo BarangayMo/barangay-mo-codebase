@@ -592,7 +592,7 @@ const ProductEditPage = () => {
                           </Button>
                         </div>
                       ))}
-                      <div className="flex items-center justify-center h-20 border-2 border-dashed border-gray-300 rounded-md hover:border-gray-400">
+                      <div className="flex items-center justify-center h-20 md:h-24 border-2 border-dashed border-gray-300 rounded-md hover:border-gray-400">
                         <Input
                           type="file"
                           accept="image/*"
@@ -607,10 +607,10 @@ const ProductEditPage = () => {
                           type="button"
                           variant="ghost"
                           onClick={() => document.getElementById('additional-image-upload')?.click()}
-                          className="h-full w-full flex flex-col items-center gap-1 text-gray-500"
+                          className="h-full w-full flex flex-col items-center justify-center gap-1 md:gap-2 md:px-3 md:py-2 md:whitespace-nowrap text-gray-500"
                         >
                           <Plus className="h-5 w-5" />
-                          <span className="text-xs">Add Image</span>
+                          <span className="text-xs md:text-sm">Add Image</span>
                         </Button>
                       </div>
                     </div>
