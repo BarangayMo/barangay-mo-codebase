@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Save, X, Upload, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { RoleButton } from "@/components/ui/role-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -194,16 +195,23 @@ const ProductEditPage = () => {
     }
   }, [user?.id, vendor, isVendorLoading, vendorError, createVendorMutation]);
 
-  // Fetch existing product if editing
+  // Fetch existing product if editing (with user filtering)
   const { data: product } = useQuery({
     queryKey: ['product', id],
     queryFn: async () => {
       if (!isEditing || !id) return null;
-      const { data, error } = await supabase
+      
+      let query = supabase
         .from('products')
-        .select('*')
-        .eq('id', id)
-        .single();
+        .select('*, vendors!inner(*)')
+        .eq('id', id);
+      
+      // If not superadmin, filter by user's vendor
+      if (userRole !== 'superadmin' && user?.id) {
+        query = query.eq('vendors.user_id', user.id);
+      }
+      
+      const { data, error } = await query.single();
       if (error) throw error;
       return data;
     },
@@ -607,9 +615,10 @@ const ProductEditPage = () => {
                           type="button"
                           variant="ghost"
                           onClick={() => document.getElementById('additional-image-upload')?.click()}
-                          className="h-full w-full flex flex-col items-center gap-1 text-gray-500 md:h-24 md:w-28"                       >
-                          <Plus className="h-5 w-5" />
-                          <span className="text-xs md:text-sm">Add Image</span>
+                          className="h-full w-full flex flex-col items-center gap-1 text-gray-500 md:h-32 md:w-32 lg:h-36 lg:w-36"
+                        >
+                          <Plus className="h-5 w-5 md:h-6 md:w-6" />
+                          <span className="text-xs md:text-sm lg:text-base whitespace-nowrap">Add Image</span>
                         </Button>
                       </div>
                     </div>
@@ -620,14 +629,14 @@ const ProductEditPage = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-            <Button
+            <RoleButton
               type="submit"
               disabled={saveProductMutation.isPending}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+              className="flex items-center gap-2"
             >
               <Save className="h-4 w-4" />
               {saveProductMutation.isPending ? 'Saving...' : (isEditing ? 'Update Product' : 'Create Product')}
-            </Button>
+            </RoleButton>
             
             <Button
               type="button"
@@ -861,14 +870,14 @@ const ProductEditPage = () => {
           </Card>
 
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-            <Button
+            <RoleButton
               type="submit"
               disabled={saveProductMutation.isPending || !currentVendor}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+              className="flex items-center gap-2"
             >
               <Save className="h-4 w-4" />
               {saveProductMutation.isPending ? 'Saving...' : (isEditing ? 'Update Product' : 'Create Product')}
-            </Button>
+            </RoleButton>
             
             <Button
               type="button"

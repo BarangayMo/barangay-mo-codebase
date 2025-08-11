@@ -176,6 +176,8 @@ export function AppRoutes() {
       <Route path="/official/jobs/edit/new" element={<ProtectedRoute><OfficialJobEditPage /></ProtectedRoute>} />
       <Route path="/official/jobs/edit/:id" element={<ProtectedRoute><OfficialJobEditPage /></ProtectedRoute>} />
       <Route path="/official/products" element={<ProtectedRoute><OfficialProductPage /></ProtectedRoute>} />
+      <Route path="/official/products/edit/:id" element={<ProtectedRoute><ProductEditPage /></ProtectedRoute>} />
+      <Route path="/official/products/edit/new" element={<ProtectedRoute><ProductEditPage /></ProtectedRoute>} />
       <Route path="/officials/profile/:id" element={<OfficialProfileView />} />
       
       
@@ -187,6 +189,7 @@ export function AppRoutes() {
       <Route path="/admin/smarketplace/overview" element={<ProtectedRoute><SmarketplaceOverview /></ProtectedRoute>} />
       <Route path="/admin/smarketplace/products/all" element={<ProtectedRoute><ProductsAllPage /></ProtectedRoute>} />
       <Route path="/admin/smarketplace/products/edit/:id" element={<ProtectedRoute><ProductEditPage /></ProtectedRoute>} />
+      <Route path="/admin/smarketplace/products/edit/new" element={<ProtectedRoute><ProductEditPage /></ProtectedRoute>} />
       <Route path="/admin/smarketplace/products/categories" element={<ProtectedRoute><CategoriesPage /></ProtectedRoute>} />
       <Route path="/admin/smarketplace/products/inventory" element={<ProtectedRoute><ProductsAllPage /></ProtectedRoute>} />
       <Route path="/admin/smarketplace/orders/all" element={<ProtectedRoute><OrdersAllPage /></ProtectedRoute>} />
@@ -230,6 +233,7 @@ export function AppRoutes() {
       <Route path="/resident/jobs/edit/:id" element={<RbiProtectedRoute><ResidentJobEditPage /></RbiProtectedRoute>} />
       <Route path="/resident/products" element={<RbiProtectedRoute><ResidentProductsPage /></RbiProtectedRoute>} />
       <Route path="/resident/products/edit/:id" element={<RbiProtectedRoute><ProductEditPage /></RbiProtectedRoute>} />
+      <Route path="/resident/products/edit/new" element={<RbiProtectedRoute><ProductEditPage /></RbiProtectedRoute>} />
       <Route path="/resident/official" element={<RbiProtectedRoute><ResidentOfficialProfileView /></RbiProtectedRoute>} />
       
       <Route path="/marketplace" element={<RbiProtectedRoute><Marketplace /></RbiProtectedRoute>} />
