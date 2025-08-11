@@ -237,7 +237,7 @@ export const RichTextEditor = ({ value, onChange, placeholder, className }: Rich
             className="min-h-[96px] outline-none"
             dangerouslySetInnerHTML={{ __html: value }}
             onInput={(e) => onChange(e.currentTarget.innerHTML)}
-            style={{ whiteSpace: 'pre-wrap', direction: 'ltr', unicodeBidi: 'isolate' }}
+            style={{ whiteSpace: 'pre-wrap', direction: 'ltr' }}
           />
           {!value && (
             <div className="text-muted-foreground pointer-events-none">
