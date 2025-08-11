@@ -607,8 +607,7 @@ const ProductEditPage = () => {
                           type="button"
                           variant="ghost"
                           onClick={() => document.getElementById('additional-image-upload')?.click()}
-                          className="h-full w-full flex flex-col items-center justify-center gap-1 md:gap-2 md:px-3 md:py-2 md:whitespace-nowrap text-gray-500"
-                        >
+                          className="h-full w-full flex flex-col items-center gap-1 text-gray-500 md:h-24 md:w-28"                        >
                           <Plus className="h-5 w-5" />
                           <span className="text-xs md:text-sm">Add Image</span>
                         </Button>
