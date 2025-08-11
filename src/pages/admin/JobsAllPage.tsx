@@ -135,12 +135,16 @@ export default function JobsAllPage() {
   }
   return <AdminLayout title="Jobs Management">
       <div className="p-6">
-        <DashboardPageHeader title="Job Management" description={`${jobs.length} total jobs • ${openJobs.length} active • ${closedJobs.length} closed`} breadcrumbItems={[{
-        label: "Jobs",
-        href: "/admin/jobs"
-      }, {
-        label: "All Jobs"
-      }]} />
+        <DashboardPageHeader 
+          title="Job Management" 
+          description={`${jobs.length} total jobs • ${openJobs.length} active • ${closedJobs.length} closed`} 
+          breadcrumbItems={[{ label: "Jobs", href: "/admin/jobs" }, { label: "All Jobs" }]} 
+          actionButton={{
+            label: "Add Job",
+            onClick: () => navigate('/admin/jobs/edit/new'),
+            variant: "default"
+          }}
+        />
 
         <div className="flex gap-6 h-[calc(100vh-200px)]">
           {/* Left Panel - Jobs List */}

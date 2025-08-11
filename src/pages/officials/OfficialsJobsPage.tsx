@@ -107,7 +107,7 @@ export default function OfficialJobsPage() {
   };
 
   const handleEditJob = (jobId: string) => {
-    navigate(`/admin/jobs/edit/${jobId}`);
+    navigate(`/official/jobs/edit/${jobId}`);
   };
 
   const filteredJobs = jobs.filter(job => 
@@ -180,7 +180,7 @@ export default function OfficialJobsPage() {
             </p>
           </div>
           <Button
-            onClick={() => navigate('/admin/jobs/edit/new')}
+            onClick={() => navigate('/official/jobs/edit/new')}
             className="flex items-center gap-2 bg-red-600 hover:bg-red-700 w-full sm:w-auto"
           >
             <Plus className="h-4 w-4" />
@@ -254,7 +254,7 @@ export default function OfficialJobsPage() {
                         <Briefcase className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400" />
                         <h3 className="mt-4 text-base sm:text-lg font-medium text-gray-900">No jobs posted yet</h3>
                         <p className="mt-2 text-sm sm:text-base text-gray-500 mb-4">Start by posting your first job</p>
-                        <Button onClick={() => navigate('/admin/jobs/edit/new')} className="bg-red-600 hover:bg-red-700">
+                        <Button onClick={() => navigate('/official/jobs/edit/new')} className="bg-red-600 hover:bg-red-700">
                           <Plus className="mr-2 h-4 w-4" />
                           Post a Job
                         </Button>

@@ -96,6 +96,7 @@ import EmergencyResponse from "@/pages/officials/EmergencyResponse";
 import OfficialsJobsPage from "@/pages/officials/OfficialsJobsPage";
 import OfficialProductPage from "@/pages/officials/OfficialProductPage";
 import OfficialProfileView from "@/pages/officials/OfficialProfileView";
+import OfficialJobEditPage from "@/pages/officials/JobEdit";
 
 
 // Import the new EmailConfirmation component
@@ -114,6 +115,7 @@ import Wishlist from "@/pages/Wishlist";
 import ResidentJobsPage from "@/pages/resident/ResidentJobsPage";
 import ResidentProductsPage from "@/pages/resident/ResidentProductsPage";
 import ResidentOfficialProfileView from "@/pages/resident/OfficialProfileView";
+import ResidentJobEditPage from "@/pages/resident/JobEdit";
 
 // Import auth components
 import { EmailConfirmationHandler } from "@/components/auth/EmailConfirmationHandler";
@@ -171,6 +173,8 @@ export function AppRoutes() {
       <Route path="/official/emergency-response" element={<ProtectedRoute><EmergencyResponse /></ProtectedRoute>} />
       <Route path="/official/rbi-forms" element={<ProtectedRoute><RbiForms /></ProtectedRoute>} />
       <Route path="/official/jobs" element={<ProtectedRoute><OfficialsJobsPage /></ProtectedRoute>} />
+      <Route path="/official/jobs/edit/new" element={<ProtectedRoute><OfficialJobEditPage /></ProtectedRoute>} />
+      <Route path="/official/jobs/edit/:id" element={<ProtectedRoute><OfficialJobEditPage /></ProtectedRoute>} />
       <Route path="/official/products" element={<ProtectedRoute><OfficialProductPage /></ProtectedRoute>} />
       <Route path="/officials/profile/:id" element={<OfficialProfileView />} />
       
@@ -222,6 +226,8 @@ export function AppRoutes() {
       
       {/* Resident-specific job and product management routes */}
       <Route path="/resident/jobs" element={<RbiProtectedRoute><ResidentJobsPage /></RbiProtectedRoute>} />
+      <Route path="/resident/jobs/edit/new" element={<RbiProtectedRoute><ResidentJobEditPage /></RbiProtectedRoute>} />
+      <Route path="/resident/jobs/edit/:id" element={<RbiProtectedRoute><ResidentJobEditPage /></RbiProtectedRoute>} />
       <Route path="/resident/products" element={<RbiProtectedRoute><ResidentProductsPage /></RbiProtectedRoute>} />
       <Route path="/resident/products/edit/:id" element={<RbiProtectedRoute><ProductEditPage /></RbiProtectedRoute>} />
       <Route path="/resident/official" element={<RbiProtectedRoute><ResidentOfficialProfileView /></RbiProtectedRoute>} />
