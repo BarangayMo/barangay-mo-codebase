@@ -98,7 +98,7 @@ export function DashboardPageHeader({
         </BreadcrumbList>
       </Breadcrumb>
       
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
           <h1 className="text-3xl font-bold">{title}</h1>
           {description && <p className="mt-2 text-gray-500">{description}</p>}
@@ -110,7 +110,7 @@ export function DashboardPageHeader({
               onClick={action.onClick}
               disabled={action.disabled}
               className={cn(
-                "inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors",
+                "inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-medium transition-colors text-sm md:text-base",
                 action.variant === "dashboard"
                   ? "bg-blue-600 text-white hover:bg-blue-700"
                   : action.variant === "outline"
@@ -128,7 +128,7 @@ export function DashboardPageHeader({
               onClick={actionButton.onClick}
               disabled={actionButton.disabled}
               className={cn(
-                "inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors",
+                "inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-medium transition-colors text-sm md:text-base",
                 actionButton.variant === "dashboard"
                   ? "bg-blue-600 text-white hover:bg-blue-700"
                   : actionButton.variant === "outline"
