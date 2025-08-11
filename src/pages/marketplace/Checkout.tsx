@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
-import { Button } from "@/components/ui/button";
 import { RoleButton } from "@/components/ui/role-button";
 import { ShoppingBag } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -326,98 +325,69 @@ export default function Checkout() {
     <Layout hideFooter={true}>
       <div className="min-h-screen bg-gray-50 overflow-x-hidden">
         {/* Custom Header */}
-        <header className="py-3 sm:py-4 px-3 sm:px-6 lg:px-12 xl:px-24 bg-white border-b">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2 sm:gap-4">
-                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold tracking-tight text-gray-900">Checkout</h1>
-              </div>
-              <Link to="/marketplace/cart" className="relative">
-                <ShoppingBag className="h-5 w-5 sm:h-6 sm:w-6 text-gray-500 hover:text-gray-700" />
-                {cartItems.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs w-4 h-4 rounded-full flex items-center justify-center">
-                    {cartItems.length}
-                  </span>
-                )}
-              </Link>
-            </div>
+        <header className="py-4 px-4 sm:px-6 md:px-12 lg:px-24 bg-white border-b">
+          <div className="max-w-7xl mx-auto flex justify-between items-center">
+            <Link to="/marketplace" className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 mx-0 px-0">Checkout</Link>
+            <Link to="/marketplace/cart" className="relative">
+              <ShoppingBag className="h-6 w-6 text-gray-500 hover:text-gray-700" />
+              {cartItems.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs w-4 h-4 rounded-full flex items-center justify-center">
+                  {cartItems.length}
+                </span>
+              )}
+            </Link>
           </div>
         </header>
 
-        <main className="py-4 sm:py-6 lg:py-8 px-3 sm:px-6 lg:px-8 xl:px-12 pb-24 md:pb-8">
-          <div className="max-w-7xl mx-auto">
-            {/* Back Button - positioned closer to left edge */}
-            <div className="mb-4 sm:mb-6">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => navigate('/marketplace')}
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 -ml-2"
-              >
-                ← Back
-              </Button>
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 lg:gap-8 xl:gap-12">
-              {/* Left Column: Form */}
-              <div className="order-2 lg:order-1">
-                <form onSubmit={handleSubmit} className="space-y-6 lg:space-y-8">
-                  <CheckoutContactForm
-                    contactEmail={contactEmail}
-                    setContactEmail={setContactEmail}
-                    saveInfo={saveInfo}
-                    setSaveInfo={setSaveInfo}
-                    isEmailDisabled={useSavedAddress && !!savedShippingDetails?.contactEmail}
-                  />
-                  <CheckoutShippingForm
-                    shippingCountry={shippingCountry}
-                    shippingFirstName={shippingFirstName} setShippingFirstName={setShippingFirstName}
-                    shippingLastName={shippingLastName} setShippingLastName={setShippingLastName}
-                    shippingAddress={shippingAddress} setShippingAddress={setShippingAddress}
-                    shippingApartment={shippingApartment} setShippingApartment={setShippingApartment}
-                    shippingCity={shippingCity} setShippingCity={setShippingCity}
-                    shippingState={shippingState} setShippingState={setShippingState}
-                    shippingPostalCode={shippingPostalCode} setShippingPostalCode={setShippingPostalCode}
-                    deliveryNotes={deliveryNotes} setDeliveryNotes={setDeliveryNotes}
-                    useSavedAddress={useSavedAddress} handleUseSavedAddressChange={handleUseSavedAddressChange}
-                    isSavedAddressCheckboxDisabled={!savedShippingDetails && !user?.id}
-                    areAddressFieldsDisabled={useSavedAddress}
-                  />
-                  <CheckoutPaymentInfo />
-                  <CheckoutBillingAddress
-                    billingAddressOption={billingAddressOption}
-                    setBillingAddressOption={setBillingAddressOption}
-                  />
-                  <RoleButton 
-                    type="submit" 
-                    size="lg" 
-                    className="w-full mt-6" 
-                    disabled={isProcessing || cartItems.length === 0}
-                  >
-                    {isProcessing ? "Processing..." : "Pay now"}
-                  </RoleButton>
-                </form>
-              </div>
+        <main className="py-8 px-4 sm:px-6 md:px-8 lg:px-12 pb-24 md:pb-8">
+          <div className="max-w-7xl mx-auto grid md:grid-cols-[2fr_1fr] gap-8 lg:gap-12">
+            {/* Left Column: Form */}
+            <form onSubmit={handleSubmit} className="space-y-8">
+              <CheckoutContactForm
+                contactEmail={contactEmail}
+                setContactEmail={setContactEmail}
+                saveInfo={saveInfo}
+                setSaveInfo={setSaveInfo}
+                isEmailDisabled={useSavedAddress && !!savedShippingDetails?.contactEmail}
+              />
+              <CheckoutShippingForm
+                shippingCountry={shippingCountry}
+                shippingFirstName={shippingFirstName} setShippingFirstName={setShippingFirstName}
+                shippingLastName={shippingLastName} setShippingLastName={setShippingLastName}
+                shippingAddress={shippingAddress} setShippingAddress={setShippingAddress}
+                shippingApartment={shippingApartment} setShippingApartment={setShippingApartment}
+                shippingCity={shippingCity} setShippingCity={setShippingCity}
+                shippingState={shippingState} setShippingState={setShippingState}
+                shippingPostalCode={shippingPostalCode} setShippingPostalCode={setShippingPostalCode}
+                deliveryNotes={deliveryNotes} setDeliveryNotes={setDeliveryNotes}
+                useSavedAddress={useSavedAddress} handleUseSavedAddressChange={handleUseSavedAddressChange}
+                isSavedAddressCheckboxDisabled={!savedShippingDetails && !user?.id}
+                areAddressFieldsDisabled={useSavedAddress}
+              />
+              <CheckoutPaymentInfo />
+              <CheckoutBillingAddress
+                billingAddressOption={billingAddressOption}
+                setBillingAddressOption={setBillingAddressOption}
+              />
+              <RoleButton type="submit" size="lg" className="w-full mt-6" disabled={isProcessing || cartItems.length === 0}>
+                {isProcessing ? "Processing..." : "Pay now"}
+              </RoleButton>
+            </form>
 
-              {/* Right Column: Order Summary - sticky on larger screens */}
-              <div className="order-1 lg:order-2">
-                <div className="lg:sticky lg:top-4">
-                  <CheckoutOrderSummary
-                    cartItems={cartItems}
-                    subtotal={subtotalFromCart}
-                    shippingCost={shippingCost}
-                    estimatedTaxes={estimatedTaxes}
-                    finalTotal={finalTotal}
-                  />
-                </div>
-              </div>
-            </div>
+            {/* Right Column: Order Summary - md:sticky ensures it sticks on medium screens and up */}
+            <CheckoutOrderSummary
+              cartItems={cartItems}
+              subtotal={subtotalFromCart}
+              shippingCost={shippingCost}
+              estimatedTaxes={estimatedTaxes}
+              finalTotal={finalTotal}
+            />
           </div>
         </main>
 
-        {/* Custom Footer */}
-        <footer className="py-6 sm:py-8 px-3 sm:px-6 lg:px-12 xl:px-24 mt-8 sm:mt-12 border-t bg-gray-50">
-          <div className="max-w-7xl mx-auto flex flex-wrap gap-x-3 sm:gap-x-4 lg:gap-x-6 gap-y-2 justify-center text-xs text-gray-500">
+        {/* Custom Footer (original location, will be hidden by Layout prop) */}
+        <footer className="py-8 px-4 sm:px-6 md:px-12 lg:px-24 mt-12 border-t bg-gray-50">
+          <div className="max-w-7xl mx-auto flex flex-wrap gap-x-4 sm:gap-x-6 gap-y-2 justify-center text-xs text-gray-500">
             <Link to="#" className="hover:text-primary">Refund policy</Link>
             <Link to="#" className="hover:text-primary">Privacy policy</Link>
             <Link to="#" className="hover:text-primary">Terms of service</Link>

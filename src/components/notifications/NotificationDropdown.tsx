@@ -1,121 +1,92 @@
-"use client"
-
-import { useState } from "react"
-import { formatDistanceToNow } from "date-fns"
-import {
-  Bell,
-  Search,
-  CheckCircle,
-  AlertTriangle,
-  Info,
-  X,
-  MessageSquare,
-  FileText,
-  Users,
-  UserCheck,
-  Briefcase,
-  Settings,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useNotifications } from "@/hooks/useNotifications"
-import { useAuth } from "@/contexts/AuthContext"
-import { cn } from "@/lib/utils"
-import { Link } from "react-router-dom"
-import type { Notification } from "@/hooks/useNotifications"
+import { useState } from 'react';
+import { formatDistanceToNow } from 'date-fns';
+import { Bell, Search, CheckCircle, Clock, AlertTriangle, Info, X, MessageSquare, FileText, Users, UserCheck } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useNotifications } from '@/hooks/useNotifications';
+import { useAuth } from '@/contexts/AuthContext';
+import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
+import type { Notification } from '@/hooks/useNotifications';
 
 interface NotificationDropdownProps {
-  onClose: () => void
+  onClose: () => void;
 }
 
 const getCategoryIcon = (category: string) => {
   switch (category) {
-    case "system":
-    case "general":
-      return <Info className="h-4 w-4 text-blue-500" />
-    case "registration":
-      return <UserCheck className="h-4 w-4 text-green-500" />
-    case "message":
-    case "feedback":
-      return <MessageSquare className="h-4 w-4 text-purple-500" />
-    case "finance":
-    case "approval":
-      return <FileText className="h-4 w-4 text-orange-500" />
-    case "meeting":
-      return <Users className="h-4 w-4 text-blue-500" />
-    case "project":
-    case "milestone":
-      return <CheckCircle className="h-4 w-4 text-green-500" />
-    case "task":
-    case "deadline":
-      return <AlertTriangle className="h-4 w-4 text-orange-500" />
-    case "jobs":
-    case "job":
-    case "job_posting":
-      return <Briefcase className="h-4 w-4 text-blue-500" />
-    case "services":
-    case "service":
-      return <Settings className="h-4 w-4 text-green-500" />
-    case "product":
-    case "product_listing":
-      return <FileText className="h-4 w-4 text-green-500" />
-    case "community":
-    case "community_post":
-      return <Users className="h-4 w-4 text-purple-500" />
+    case 'system':
+    case 'general':
+      return <Info className="h-4 w-4 text-blue-500" />;
+    case 'registration':
+      return <UserCheck className="h-4 w-4 text-green-500" />;
+    case 'message':
+    case 'feedback':
+      return <MessageSquare className="h-4 w-4 text-purple-500" />;
+    case 'finance':
+    case 'approval':
+      return <FileText className="h-4 w-4 text-orange-500" />;
+    case 'meeting':
+      return <Users className="h-4 w-4 text-blue-500" />;
+    case 'project':
+    case 'milestone':
+      return <CheckCircle className="h-4 w-4 text-green-500" />;
+    case 'task':
+    case 'deadline':
+      return <AlertTriangle className="h-4 w-4 text-orange-500" />;
     default:
-      return <Bell className="h-4 w-4 text-gray-500" />
+      return <Bell className="h-4 w-4 text-gray-500" />;
   }
-}
+};
 
 const getPriorityColor = (priority: string) => {
   switch (priority) {
-    case "urgent":
-      return "text-red-600 bg-red-50 border-red-200"
-    case "high":
-      return "text-orange-600 bg-orange-50 border-orange-200"
-    case "normal":
-      return "text-blue-600 bg-blue-50 border-blue-200"
-    case "low":
-      return "text-gray-600 bg-gray-50 border-gray-200"
+    case 'urgent':
+      return 'text-red-600 bg-red-50 border-red-200';
+    case 'high':
+      return 'text-orange-600 bg-orange-50 border-orange-200';
+    case 'normal':
+      return 'text-blue-600 bg-blue-50 border-blue-200';
+    case 'low':
+      return 'text-gray-600 bg-gray-50 border-gray-200';
     default:
-      return "text-blue-600 bg-blue-50 border-blue-200"
+      return 'text-blue-600 bg-blue-50 border-blue-200';
   }
-}
+};
 
-const NotificationItem = ({
-  notification,
-  onMarkAsRead,
-}: { notification: Notification; onMarkAsRead: (id: string) => void }) => {
-  const isUnread = notification.status === "unread"
-
+const NotificationItem = ({ notification, onMarkAsRead }: { notification: Notification; onMarkAsRead: (id: string) => void }) => {
+  const isUnread = notification.status === 'unread';
+  
   return (
-    <div
-      className={cn(
-        "p-3 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer",
-        isUnread && "bg-blue-50/50",
-      )}
-    >
+    <div className={cn(
+      "p-3 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer",
+      isUnread && "bg-blue-50/50"
+    )}>
       <div className="flex items-start gap-3">
-        <div className="flex-shrink-0 mt-0.5">{getCategoryIcon(notification.category)}</div>
+        <div className="flex-shrink-0 mt-0.5">
+          {getCategoryIcon(notification.category)}
+        </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1">
-              <h4 className={cn("text-sm font-medium mb-1", isUnread ? "text-gray-900" : "text-gray-700")}>
+              <h4 className={cn(
+                "text-sm font-medium mb-1",
+                isUnread ? "text-gray-900" : "text-gray-700"
+              )}>
                 {notification.title}
               </h4>
-              <p className="text-xs text-gray-600 mb-2 line-clamp-2">{notification.message}</p>
+              <p className="text-xs text-gray-600 mb-2 line-clamp-2">
+                {notification.message}
+              </p>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-500">
                   {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
                 </span>
                 {isUnread && (
-                  <Badge
-                    variant="secondary"
-                    className={cn("text-xs px-1.5 py-0.5", getPriorityColor(notification.priority))}
-                  >
+                  <Badge variant="secondary" className={cn("text-xs px-1.5 py-0.5", getPriorityColor(notification.priority))}>
                     {notification.priority}
                   </Badge>
                 )}
@@ -126,8 +97,8 @@ const NotificationItem = ({
                 variant="ghost"
                 size="sm"
                 onClick={(e) => {
-                  e.stopPropagation()
-                  onMarkAsRead(notification.id)
+                  e.stopPropagation();
+                  onMarkAsRead(notification.id);
                 }}
                 className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-6 w-6 p-0"
               >
@@ -138,111 +109,67 @@ const NotificationItem = ({
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
 export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => {
-  const [searchTerm, setSearchTerm] = useState("")
-  const { userRole } = useAuth()
-  const { notifications, isLoading, unreadCount, markAsRead, markAllAsRead, isMarkingAllAsRead } = useNotifications()
+  const [searchTerm, setSearchTerm] = useState('');
+  const { userRole } = useAuth();
+  const {
+    notifications,
+    isLoading,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    isMarkingAllAsRead
+  } = useNotifications();
 
-  // Updated role-based filtering with the actual categories from your database
-  const roleBasedNotifications = notifications.filter((notification) => {
-    console.log("NotificationDropdown: Processing notification:", notification.id, "Category:", notification.category)
-
+  // Updated role-based filtering to match the main notifications page
+  const roleBasedNotifications = notifications.filter(notification => {
     // General notifications are visible to everyone
-    if (notification.category === "general" || notification.category === "system") {
-      return true
+    if (notification.category === 'general' || notification.category === 'system') {
+      return true;
     }
 
     switch (userRole) {
-      case "superadmin":
+      case 'superadmin':
         // Superadmins can see all notifications
-        return true
-      case "official":
-        // Officials can see work-related notifications including jobs and services
-        return [
-          "task",
-          "deadline",
-          "milestone",
-          "message",
-          "finance",
-          "meeting",
-          "project",
-          "feedback",
-          "jobs", // Your actual category
-          "services", // Your actual category
-          "job",
-          "service",
-          "product",
-          "community",
-          "job_posting",
-          "product_listing",
-          "community_post",
-          "work",
-          "announcement",
-        ].includes(notification.category)
-      case "resident":
-        // Residents can see personal notifications including jobs and services
-        return [
-          "approval",
-          "message",
-          "feedback",
-          "registration",
-          "jobs", // Your actual category
-          "services", // Your actual category
-          "job",
-          "service",
-          "product",
-          "community",
-          "job_posting",
-          "product_listing",
-          "community_post",
-          "personal",
-          "announcement",
-          "alert",
-          "reminder",
-        ].includes(notification.category)
+        return true;
+      case 'official':
+        // Officials can see work-related notifications
+        return ['task', 'deadline', 'milestone', 'message', 'finance', 'meeting', 'project', 'feedback'].includes(notification.category);
+      case 'resident':
+        // Residents can see personal and approval notifications
+        return ['approval', 'message', 'feedback', 'registration'].includes(notification.category);
       default:
-        // More permissive fallback - include jobs and services for any role
-        return ["general", "system", "jobs", "services", "job", "service", "announcement", "alert"].includes(
-          notification.category,
-        )
+        // Fallback: show general notifications for any unrecognized role
+        return ['general', 'system'].includes(notification.category);
     }
-  })
+  });
 
-  const filteredNotifications = roleBasedNotifications.filter(
-    (notification) =>
-      notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      notification.message.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  const filteredNotifications = roleBasedNotifications.filter(notification =>
+    notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    notification.message.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const unreadNotifications = filteredNotifications.filter((n) => n.status === "unread")
-  const urgentNotifications = filteredNotifications.filter((n) => n.priority === "urgent")
+  const unreadNotifications = filteredNotifications.filter(n => n.status === 'unread');
+  const urgentNotifications = filteredNotifications.filter(n => n.priority === 'urgent');
+  const normalNotifications = filteredNotifications.filter(n => n.priority === 'normal');
 
   // Group notifications by date for "All" tab
-  const today = new Date()
-  const yesterday = new Date(today)
-  yesterday.setDate(yesterday.getDate() - 1)
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
 
-  const todayNotifications = filteredNotifications.filter((n) => {
-    const notifDate = new Date(n.created_at)
-    return notifDate.toDateString() === today.toDateString()
-  })
+  const todayNotifications = filteredNotifications.filter(n => {
+    const notifDate = new Date(n.created_at);
+    return notifDate.toDateString() === today.toDateString();
+  });
 
-  const yesterdayNotifications = filteredNotifications.filter((n) => {
-    const notifDate = new Date(n.created_at)
-    return notifDate.toDateString() === yesterday.toDateString()
-  })
-
-  console.log("NotificationDropdown: Filtering results:", {
-    total: notifications.length,
-    roleFiltered: roleBasedNotifications.length,
-    searchFiltered: filteredNotifications.length,
-    unread: unreadNotifications.length,
-    userRole,
-    categories: [...new Set(notifications.map((n) => n.category))],
-  })
+  const yesterdayNotifications = filteredNotifications.filter(n => {
+    const notifDate = new Date(n.created_at);
+    return notifDate.toDateString() === yesterday.toDateString();
+  });
 
   return (
     <div className="w-80 bg-white rounded-lg shadow-lg border border-gray-200">
@@ -254,7 +181,7 @@ export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => 
             <X className="h-4 w-4" />
           </Button>
         </div>
-
+        
         {/* Search */}
         <div className="relative mb-3">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -285,22 +212,13 @@ export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => 
       {/* Filter Tabs */}
       <Tabs defaultValue="all" className="w-full">
         <TabsList className="w-full h-10 p-1 bg-gray-50 rounded-none border-b">
-          <TabsTrigger
-            value="all"
-            className="flex-1 text-xs h-8 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700"
-          >
+          <TabsTrigger value="all" className="flex-1 text-xs h-8 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700">
             All ({filteredNotifications.length})
           </TabsTrigger>
-          <TabsTrigger
-            value="unread"
-            className="flex-1 text-xs h-8 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700"
-          >
+          <TabsTrigger value="unread" className="flex-1 text-xs h-8 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700">
             Unread ({unreadNotifications.length})
           </TabsTrigger>
-          <TabsTrigger
-            value="urgent"
-            className="flex-1 text-xs h-8 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700"
-          >
+          <TabsTrigger value="urgent" className="flex-1 text-xs h-8 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700">
             Urgent ({urgentNotifications.length})
           </TabsTrigger>
         </TabsList>
@@ -315,7 +233,11 @@ export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => 
                     <span className="text-xs font-medium text-gray-700">Today</span>
                   </div>
                   {todayNotifications.slice(0, 3).map((notification) => (
-                    <NotificationItem key={notification.id} notification={notification} onMarkAsRead={markAsRead} />
+                    <NotificationItem
+                      key={notification.id}
+                      notification={notification}
+                      onMarkAsRead={markAsRead}
+                    />
                   ))}
                 </div>
               )}
@@ -327,7 +249,11 @@ export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => 
                     <span className="text-xs font-medium text-gray-700">Yesterday</span>
                   </div>
                   {yesterdayNotifications.slice(0, 3).map((notification) => (
-                    <NotificationItem key={notification.id} notification={notification} onMarkAsRead={markAsRead} />
+                    <NotificationItem
+                      key={notification.id}
+                      notification={notification}
+                      onMarkAsRead={markAsRead}
+                    />
                   ))}
                 </div>
               )}
@@ -342,7 +268,11 @@ export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => 
 
             <TabsContent value="unread" className="m-0">
               {unreadNotifications.slice(0, 5).map((notification) => (
-                <NotificationItem key={notification.id} notification={notification} onMarkAsRead={markAsRead} />
+                <NotificationItem
+                  key={notification.id}
+                  notification={notification}
+                  onMarkAsRead={markAsRead}
+                />
               ))}
               {unreadNotifications.length === 0 && (
                 <div className="p-8 text-center">
@@ -354,7 +284,11 @@ export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => 
 
             <TabsContent value="urgent" className="m-0">
               {urgentNotifications.slice(0, 5).map((notification) => (
-                <NotificationItem key={notification.id} notification={notification} onMarkAsRead={markAsRead} />
+                <NotificationItem
+                  key={notification.id}
+                  notification={notification}
+                  onMarkAsRead={markAsRead}
+                />
               ))}
               {urgentNotifications.length === 0 && (
                 <div className="p-8 text-center">
@@ -376,7 +310,5 @@ export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => 
         </div>
       </Tabs>
     </div>
-  )
-}
-
-export default NotificationDropdown
+  );
+};

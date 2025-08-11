@@ -80,7 +80,6 @@ const OtherDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiFormC
           <FloatingSelect 
             id="bloodType" 
             label="Blood Type"
-            placeholder="Please Select Blood Type"
             className="focus-visible:ring-blue-500"
             value={formData?.otherDetails?.bloodType || ""}
             onValueChange={(value) => handleChange("bloodType", value)}
@@ -109,7 +108,6 @@ const OtherDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiFormC
           <FloatingSelect 
             id="civilStatus" 
             label="Civil Status"
-            placeholder="Please Select Your Civil Status"
             className="focus-visible:ring-blue-500"
             value={formData?.otherDetails?.civilStatus || ""}
             onValueChange={(value) => handleChange("civilStatus", value)}

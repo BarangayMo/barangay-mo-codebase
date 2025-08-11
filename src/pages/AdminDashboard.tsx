@@ -10,7 +10,6 @@ import { LatestUsersTab } from "@/components/dashboard/tabs/LatestUsersTab";
 import { LatestProductsTab } from "@/components/dashboard/tabs/LatestProductsTab";
 import { MembershipRequestsTab } from "@/components/dashboard/tabs/MembershipRequestsTab";
 import { SupportTicketsTab } from "@/components/dashboard/tabs/SupportTicketsTab";
-import { RbiFormsTab } from "@/components/dashboard/tabs/RbiFormsTab";
 import { TabsContent } from "@/components/ui/tabs";
 import { useMediaLibrary } from "@/hooks";
 import { 
@@ -18,8 +17,7 @@ import {
   Users, 
   Package, 
   UserPlus, 
-  MessageSquare,
-  FileText
+  MessageSquare 
 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -56,7 +54,6 @@ const AdminDashboard = () => {
     { value: "overview", label: "Overview", icon: <BarChart className="h-4 w-4" /> },
     { value: "users", label: "Latest Users", icon: <Users className="h-4 w-4" /> },
     { value: "products", label: "Latest Products", icon: <Package className="h-4 w-4" /> },
-    { value: "rbi", label: "RBI Forms", icon: <FileText className="h-4 w-4" /> },
     { value: "membership", label: "Membership Requests", icon: <UserPlus className="h-4 w-4" /> },
     { value: "support", label: "Support Tickets", icon: <MessageSquare className="h-4 w-4" /> },
   ];
@@ -92,10 +89,6 @@ const AdminDashboard = () => {
           
           <TabsContent value="products">
             <LatestProductsTab />
-          </TabsContent>
-          
-          <TabsContent value="rbi">
-            <RbiFormsTab />
           </TabsContent>
           
           <TabsContent value="membership">

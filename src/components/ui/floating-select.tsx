@@ -32,8 +32,7 @@ export function FloatingSelect({
   disabled,
 }: FloatingSelectProps) {
   const [isFocused, setIsFocused] = useState(false);
-  const isActive = true; // Always keep label floating for better UX
-
+  const isActive = isFocused || value || defaultValue;
   
   return (
     <div className="relative">
@@ -52,7 +51,7 @@ export function FloatingSelect({
           <SelectTrigger
             id={id}
             className={cn(
-              "h-14 transition-all bg-background w-full border pt-6 pb-2",
+              "h-14 transition-all bg-background w-full border",
               icon && "pl-10",
               error ? "border-destructive" : "border-input",
               className
@@ -66,10 +65,10 @@ export function FloatingSelect({
         <Label
           htmlFor={id}
           className={cn(
-            "absolute left-0 pointer-events-none transition-all duration-200 z-20",
+            "absolute left-0 pointer-events-none transition-all duration-200",
             isActive
-              ? cn("text-xs top-2", icon ? "left-10" : "left-4", "bg-background px-1 -ml-1")
-              : cn("text-sm top-4", icon ? "left-10" : "left-4"),
+              ? cn("text-xs translate-y-1", icon ? "left-10" : "left-4")
+              : cn("text-base translate-y-1/2", icon ? "left-10" : "left-4"),
             error ? "text-destructive" : "text-muted-foreground",
             isFocused && !error && "text-primary"
           )}

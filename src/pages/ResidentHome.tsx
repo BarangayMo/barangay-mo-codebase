@@ -1,80 +1,48 @@
-
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Layout } from "@/components/layout/Layout";
-import { ShoppingCart, Briefcase, AlertCircle, CheckCircle } from "lucide-react";
+import { ShoppingCart, Briefcase, FileText, AlertCircle, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Helmet } from "react-helmet";
 import { useAuth } from "@/contexts/AuthContext";
 import { useResidentProfile } from "@/hooks/use-resident-profile";
 import { useRbiForms } from "@/hooks/use-rbi-forms";
-import { useRbiAccess } from "@/hooks/use-rbi-access";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
-import { User, Users } from "lucide-react";
 
 export default function ResidentHome() {
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const { profile, isLoading } = useResidentProfile();
   const { rbiForms, isLoading: rbiLoading } = useRbiForms();
-  const { hasRbiAccess } = useRbiAccess();
   
   const firstName = profile?.first_name || user?.firstName || "Resident";
-  
-  // Check RBI completion status
-  const hasCompletedRbi = rbiForms && rbiForms.length > 0;
-  const approvedRbi = rbiForms?.find(form => form.status === 'approved');
-
-  
-  // Display RBI number if approved, otherwise show completion message
-  const rbiNumber = approvedRbi?.rbi_number || "Complete RBI to get number";
-  
+  const rbiNumber = profile?.settings?.rbi_number || "Complete RBI to get number";
   const avatarUrl = profile?.settings?.avatar_url && typeof profile.settings.address === 'object'
     ? (profile.settings.address as any)?.avatar_url
     : `https://api.dicebear.com/7.x/initials/svg?seed=${profile?.first_name || ''} ${profile?.last_name || ''}` ||
       "/placeholder.svg";
   
-  // Use actual barangay data from profile (which now includes RBI data) when approved
-  const barangayName = approvedRbi && profile?.barangay 
+  // Check RBI completion status
+  const hasCompletedRbi = rbiForms && rbiForms.length > 0;
+  const approvedRbi = rbiForms?.find(form => form.status === 'approved');
+  
+  // Use actual barangay data from profile or show completion message
+  const barangayName = hasCompletedRbi && profile?.barangay 
     ? profile.barangay 
     : "Complete RBI Registration";
-  const barangayLocation = approvedRbi 
+  const barangayLocation = hasCompletedRbi 
     ? "City of Olongapo, Zambales" 
     : "Select your address to see barangay details";
-  const barangayPopulation = approvedRbi ? "35,000" : "—";
-  const barangayPuroks = approvedRbi ? "14" : "—";
-  const barangayAge = approvedRbi ? "45" : "—";
+  const barangayPopulation = hasCompletedRbi ? "35,000" : "—";
+  const barangayPuroks = hasCompletedRbi ? "14" : "—";
+  const barangayAge = hasCompletedRbi ? "45" : "—";
 
-  // Updated Quick Actions - removed Documents, renamed Market to Marketplace
   const quickActions = [
-    { icon: ShoppingCart, label: "Marketplace", path: "/marketplace" },
+    { icon: ShoppingCart, label: "Market", path: "/marketplace" },
     { icon: Briefcase, label: "Jobs", path: "/jobs" },
-    { icon: Users, label: "Community", path: "/community" },
-   { icon: User, label: "Barangay Official", path: "/resident/official" },
-
+    { icon: FileText, label: "Documents", path: "/services/documents" },
   ];
-
-  // Management Actions for Residents
-  const managementActions = [
-    { icon: Briefcase, label: "My Jobs", path: "/resident/jobs" },
-    { icon: ShoppingCart, label: "My Products", path: "/resident/products" },
-  ];
-
-  const handleQuickActionClick = (path: string, e: React.MouseEvent) => {
-    if (!hasRbiAccess && (path.includes('/marketplace') || path.includes('/jobs') || path.includes('/services') || path.includes('/community')|| path.includes('/officials') || path.includes('/services'))) {
-      e.preventDefault();
-      toast.dismiss(); // Dismiss any existing toasts first
-      toast.error("Restricted Access", {
-        description: "Submit your RBI form to access these options",
-        duration: 4000,
-      });
-      return false;
-    }
-    return true;
-  };
-console.log("✅ Reviewed by ID:", approvedRbi?.reviewed_by);
 
   return (
     <Layout>
@@ -102,9 +70,7 @@ console.log("✅ Reviewed by ID:", approvedRbi?.reviewed_by);
                 ) : (
                   <>
                     <div className="text-lg text-white font-semibold">Hi! {firstName}</div>
-                    <div className={`text-xs text-white/90 ${approvedRbi?.rbi_number ? 'font-bold' : ''}`}>
-                      {rbiNumber}
-                    </div>
+                    <div className="text-xs text-white/90">{rbiNumber}</div>
                   </>
                 )}
               </div>
@@ -208,13 +174,12 @@ console.log("✅ Reviewed by ID:", approvedRbi?.reviewed_by);
                 <Link to="/services">More Services →</Link>
               </Button>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3 max-w-4xl">
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-3 max-w-4xl">
               {quickActions.map((action, index) => (
                 <Link 
                   key={index}
                   to={action.path} 
                   className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/20 backdrop-blur-lg py-5 hover:bg-white/40 transition-all aspect-square"
-                  onClick={(e) => handleQuickActionClick(action.path, e)}
                 >
                   <action.icon className="text-white h-7 w-7" />
                   <span className="text-white text-sm font-medium text-center px-2">{action.label}</span>
@@ -222,25 +187,6 @@ console.log("✅ Reviewed by ID:", approvedRbi?.reviewed_by);
               ))}
             </div>
           </div>
-
-          {/* Management Actions */}
-          {hasRbiAccess && (
-            <div className="mb-4">
-              <div className="text-white font-semibold text-lg mb-3">Management</div>
-              <div className="grid grid-cols-2 gap-3 max-w-md">
-                {managementActions.map((action, index) => (
-                  <Link 
-                    key={index}
-                    to={action.path} 
-                    className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/20 backdrop-blur-lg py-5 hover:bg-white/40 transition-all aspect-square"
-                  >
-                    <action.icon className="text-white h-7 w-7" />
-                    <span className="text-white text-sm font-medium text-center px-2">{action.label}</span>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Announcements */}
           <div className="max-w-4xl pb-24">
@@ -251,10 +197,11 @@ console.log("✅ Reviewed by ID:", approvedRbi?.reviewed_by);
                 <span className="ml-2 text-xs bg-green-400 text-white px-2 py-0.5 rounded-full font-semibold">New</span>
               </div>
               <div className="text-white/90 text-sm mb-1">
-                Join us for the monthly clean-up drive on June 15th at the community center. This is a great opportunity for everyone to come together and help maintain the cleanliness and beauty of our barangay. We will provide all necessary cleaning equipment and refreshments will be served after the activity.
+                Join us for the monthly clean-up drive on June 15th at the community center.
               </div>
-              <div className="text-xs text-white/70">
+              <div className="text-xs text-white/70 flex items-center justify-between">
                 <span>June 10, 2025</span>
+                <span className="underline underline-offset-2">Read more</span>
               </div>
             </div>
           </div>

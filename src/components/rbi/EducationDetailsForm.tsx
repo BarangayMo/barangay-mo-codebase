@@ -61,7 +61,7 @@ const EducationDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiF
         <FloatingInput 
           id="skills" 
           label="Skills" 
-          placeholder=" " 
+          placeholder="Enter your skills (separated by commas)" 
           className="focus-visible:ring-blue-500"
           value={formData?.education?.skills || ""}
           onChange={(e) => handleChange("skills", e.target.value)}

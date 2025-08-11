@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { toastManager } from "@/lib/toast-manager";
 
 interface LocationState {
   role: string;
@@ -47,8 +46,11 @@ export default function Register() {
   const municipality = localStorage.getItem('registration_municipality') || locationState?.municipality;
   const barangay = localStorage.getItem('registration_barangay') || locationState?.barangay;
 
-  // Check if we need to redirect to role selection
-  const needsRedirect = !role || !region || !province || !municipality || !barangay;
+  // If no role or location data, redirect to role selection
+  if (!role || !region || !province || !municipality || !barangay) {
+    navigate('/register/role');
+    return null;
+  }
 
   // Create locationState object with collected data
   const registrationData = {
@@ -60,21 +62,6 @@ export default function Register() {
     officials: locationState?.officials,
     logoUrl: locationState?.logoUrl
   };
-
-  // Handle redirect in useEffect to avoid render phase navigation
-  useEffect(() => {
-    if (needsRedirect) {
-      navigate('/register/role');
-    } else if (role === 'official') {
-      // Redirect officials to the new registration flow
-      navigate('/register/official', { state: registrationData });
-    }
-  }, [needsRedirect, role, navigate, registrationData]);
-
-  // Show loading or return null while redirecting
-  if (needsRedirect || role === 'official') {
-    return null;
-  }
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -133,10 +120,8 @@ export default function Register() {
         // Provide more specific error messages based on the error type
         let errorMessage = "An error occurred during registration.";
         
-        if (error.message.includes('User already registered') || error.message.includes('user_already_exists')) {
-          errorMessage = "This email address is already registered. Please use a different email or try logging in instead.";
-        } else if (error.message.includes('email')) {
-          errorMessage = "This email address is invalid. Please check and try again.";
+        if (error.message.includes('email')) {
+          errorMessage = "This email address is already registered or invalid.";
         } else if (error.message.includes('password')) {
           errorMessage = "Password must be at least 6 characters long.";
         } else if (error.message.includes('foreign key')) {
@@ -145,13 +130,11 @@ export default function Register() {
           errorMessage = "This account already exists. Please try logging in instead.";
         }
         
-        toastManager.showToast(() => {
-          toast({
-            title: "Registration Failed",
-            description: errorMessage,
-            variant: "destructive"
-          });
-        }, "registration-error");
+        toast({
+          title: "Registration Failed",
+          description: errorMessage,
+          variant: "destructive"
+        });
       } else {
         // Clear localStorage after successful registration
         localStorage.removeItem('registration_role');
@@ -160,13 +143,11 @@ export default function Register() {
         localStorage.removeItem('registration_municipality');
         localStorage.removeItem('registration_barangay');
         
-        console.log('✅ Registration successful - Check your inbox to verify your email!');
-        toastManager.showToast(() => {
-          toast({
-            title: "Registration Successful! 📧",
-            description: "Check your inbox to verify your email and unlock access to all features."
-          });
-        }, "registration-success");
+        console.log('Registration successful');
+        toast({
+          title: "Registration Successful",
+          description: "Please check your email to verify your account."
+        });
         
         navigate("/email-verification", {
           state: {
@@ -177,13 +158,11 @@ export default function Register() {
       }
     } catch (error) {
       console.error('Unexpected registration error:', error);
-      toastManager.showToast(() => {
-        toast({
-          title: "Registration Failed",
-          description: "An unexpected error occurred. Please try again.",
-          variant: "destructive"
-        });
-      }, "registration-unexpected-error");
+      toast({
+        title: "Registration Failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }

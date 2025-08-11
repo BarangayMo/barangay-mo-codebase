@@ -47,33 +47,12 @@ export function useResidentProfile() {
         
       if (activitiesError) throw activitiesError;
       
-      // Fetch approved RBI form to get barangay information
-      const { data: rbiData, error: rbiError } = await supabase
-        .from('rbi_forms')
-        .select('form_data, rbi_number')
-        .eq('user_id', session.user.id)
-        .eq('status', 'approved')
-        .order('submitted_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-        
-      if (rbiError) {
-        console.error('Error fetching RBI data:', rbiError);
-      }
-      
-      // Extract barangay from RBI form if available
-      let barangayFromRbi = null;
-      if (rbiData?.form_data) {
-        const formData = rbiData.form_data as any;
-        barangayFromRbi = formData.address?.barangay || null;
-      }
-      
       setProfile({
         id: profileData.id,
         first_name: profileData.first_name || user?.firstName || '',
         last_name: profileData.last_name || user?.lastName || '',
         email: user?.email || '',
-        barangay: barangayFromRbi || profileData.barangay || '',
+        barangay: profileData.barangay || '',
         settings: settingsData || undefined,
         activities: activitiesData || []
       });

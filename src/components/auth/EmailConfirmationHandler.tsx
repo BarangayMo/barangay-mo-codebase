@@ -135,12 +135,9 @@ export const EmailConfirmationHandler = () => {
             setStatus('success');
             setMessage('Email confirmed successfully! Redirecting to your dashboard...');
             
-            // Force auth context refresh by triggering auth state change
-            setTimeout(async () => {
-              // Refresh the session to ensure auth context is updated
-              await supabase.auth.refreshSession();
+            setTimeout(() => {
               navigate(redirectPath, { replace: true });
-            }, 1500);
+            }, 2000);
           } else {
             setStatus('error');
             setMessage('Authentication failed. Please try registering again.');

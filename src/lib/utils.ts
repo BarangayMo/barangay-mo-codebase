@@ -5,12 +5,12 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// Updated formatCurrency to accept a currency code, defaults to PHP
-export const formatCurrency = (amount: number, currency: string = 'PHP'): string => {
-  return new Intl.NumberFormat('en-PH', { // Using 'en-PH' for Philippine locale
+// Updated formatCurrency to accept a currency code
+export const formatCurrency = (amount: number, currency: string): string => {
+  return new Intl.NumberFormat('en-US', { // Using 'en-US' for broad locale compatibility
     style: 'currency',
     currency: currency,
-    currencyDisplay: 'symbol' // Ensures the currency symbol (₱) is displayed
+    currencyDisplay: 'code' // Ensures the currency code (e.g., NGN, USD) is displayed
   }).format(amount);
 };
 

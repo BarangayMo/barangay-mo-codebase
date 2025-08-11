@@ -3,8 +3,6 @@ import { Layout } from "@/components/layout/Layout";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
-import OfficialRegistration from "@/pages/OfficialRegistration";
-import OfficialRegistrationSuccess from "@/pages/OfficialRegistrationSuccess";
 import RoleSelection from "@/pages/RoleSelection";
 import LocationSelection from "@/pages/LocationSelection";
 import OfficialsInfo from "@/pages/OfficialsInfo";
@@ -31,7 +29,6 @@ import Services from "@/pages/Services";
 import Marketplace from "@/pages/Marketplace";
 import Jobs from "@/pages/Jobs";
 import JobDetail from "@/pages/JobDetail";
-import JobPayment from "@/pages/marketplace/JobPayment";
 import Contact from "@/pages/Contact";
 import About from "@/pages/About";
 import Features from "@/pages/Features";
@@ -62,7 +59,6 @@ import ResidentsPage from "@/pages/users/ResidentsPage";
 import OfficialsPage from "@/pages/users/OfficialsPage";
 import UserProfilePage from "@/pages/users/UserProfilePage";
 import SettingsPage from "@/pages/admin/SettingsPage";
-import OfficialRegistrationsPage from "@/pages/admin/OfficialRegistrationsPage";
 
 // Import marketplace customer-facing pages
 import ProductDetail from "@/pages/marketplace/ProductDetail";
@@ -70,7 +66,6 @@ import Cart from "@/pages/marketplace/Cart";
 import Checkout from "@/pages/marketplace/Checkout";
 import OrderConfirmation from "@/pages/marketplace/OrderConfirmation";
 import MyOrders from "@/pages/marketplace/MyOrders";
-import CategoryPage from "@/pages/marketplace/CategoryPage";
 
 // Import the EditProfile component
 import EditProfile from "./pages/EditProfile";
@@ -81,7 +76,6 @@ import UserManagementPage from "@/pages/users/UserManagementPage";
 import JobsAllPage from "@/pages/admin/JobsAllPage";
 import JobEditPage from "@/pages/admin/JobEditPage";
 import JobApplicationsPage from "@/pages/admin/JobApplicationsPage";
-import RbiFormsPage from "@/pages/admin/RbiFormsPage";
 
 // Import the new profile pages
 import PublicProfile from "@/pages/PublicProfile";
@@ -93,10 +87,6 @@ import OfficialServices from "@/pages/officials/OfficialServices";
 import OfficialRequests from "@/pages/officials/OfficialRequests";
 import PunongBarangayDashboard from "@/pages/officials/PunongBarangayDashboard";
 import EmergencyResponse from "@/pages/officials/EmergencyResponse";
-import OfficialsJobsPage from "@/pages/officials/OfficialsJobsPage";
-import OfficialProductPage from "@/pages/officials/OfficialProductPage";
-import OfficialProfileView from "@/pages/officials/OfficialProfileView";
-
 
 // Import the new EmailConfirmation component
 import EmailConfirmation from "@/pages/EmailConfirmation";
@@ -107,19 +97,10 @@ import QRScanner from "@/pages/officials/QRScanner";
 // Import the new RBI Forms component
 import RbiForms from "@/pages/officials/RbiForms";
 
-// Import Wishlist component
-import Wishlist from "@/pages/Wishlist";
-
-// Import resident-specific pages
-import ResidentJobsPage from "@/pages/resident/ResidentJobsPage";
-import ResidentProductsPage from "@/pages/resident/ResidentProductsPage";
-import ResidentOfficialProfileView from "@/pages/resident/OfficialProfileView";
-
-// Import auth components
+// Import the EmailConfirmationHandler
 import { EmailConfirmationHandler } from "@/components/auth/EmailConfirmationHandler";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { RbiProtectedRoute } from "@/components/auth/RbiProtectedRoute";
-import AuthCallback from "@/pages/AuthCallback";
 
 export function AppRoutes() {
   return (
@@ -128,8 +109,6 @@ export function AppRoutes() {
       <Route path="/login" element={<Login />} />
       {/* Registration flow routes */}
       <Route path="/register" element={<Register />} />
-      <Route path="/register/official" element={<OfficialRegistration />} />
-      <Route path="/register/official-success" element={<OfficialRegistrationSuccess />} />
       <Route path="/register/role" element={<RoleSelection />} />
       <Route path="/register/location" element={<LocationSelection />} />
       <Route path="/register/officials" element={<OfficialsInfo />} />
@@ -138,7 +117,6 @@ export function AppRoutes() {
       <Route path="/email-verification" element={<EmailVerification />} />
       <Route path="/email-confirmation" element={<EmailConfirmationHandler />} />
       <Route path="/auth/confirm" element={<EmailConfirmationHandler />} />
-      <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/verify" element={<Verify />} />
       <Route path="/mpin" element={<MPIN />} />
       <Route path="/forgot-mpin" element={<ForgotMPIN />} />
@@ -157,7 +135,7 @@ export function AppRoutes() {
       <Route path="/resident-home" element={<RbiProtectedRoute><ResidentHome /></RbiProtectedRoute>} />
       <Route path="/rbi-registration" element={<RbiProtectedRoute><RbiRegistration /></RbiProtectedRoute>} />
       <Route path="/resident-profile" element={<RbiProtectedRoute><ResidentProfile /></RbiProtectedRoute>} />
-      <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
+      <Route path="/community" element={<RbiProtectedRoute><Community /></RbiProtectedRoute>} />
       
       <Route path="/community/post/:postId" element={<RbiProtectedRoute><CommunityPostDetail /></RbiProtectedRoute>} />
       
@@ -170,10 +148,6 @@ export function AppRoutes() {
       <Route path="/official/punong-barangay" element={<ProtectedRoute><PunongBarangayDashboard /></ProtectedRoute>} />
       <Route path="/official/emergency-response" element={<ProtectedRoute><EmergencyResponse /></ProtectedRoute>} />
       <Route path="/official/rbi-forms" element={<ProtectedRoute><RbiForms /></ProtectedRoute>} />
-      <Route path="/official/jobs" element={<ProtectedRoute><OfficialsJobsPage /></ProtectedRoute>} />
-      <Route path="/official/products" element={<ProtectedRoute><OfficialProductPage /></ProtectedRoute>} />
-      <Route path="/officials/profile/:id" element={<OfficialProfileView />} />
-      
       
       <Route path="/official/qr-verification" element={<ProtectedRoute><QRScanner /></ProtectedRoute>} />
       
@@ -206,34 +180,23 @@ export function AppRoutes() {
       <Route path="/admin/users/:id" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
       
       <Route path="/admin/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-      <Route path="/admin/official-registrations" element={<ProtectedRoute><OfficialRegistrationsPage /></ProtectedRoute>} />
       
       <Route path="/notifications" element={<RbiProtectedRoute><Notifications /></RbiProtectedRoute>} />
       <Route path="/settings" element={<RbiProtectedRoute><Settings /></RbiProtectedRoute>} />
       <Route path="/menu" element={<RbiProtectedRoute><Menu /></RbiProtectedRoute>} />
       <Route path="/messages" element={<RbiProtectedRoute><Messages /></RbiProtectedRoute>} />
-      <Route path="/messages/new" element={<RbiProtectedRoute><Messages /></RbiProtectedRoute>} />
       <Route path="/messages/:id" element={<RbiProtectedRoute><Messages /></RbiProtectedRoute>} />
       
       <Route path="/services" element={<RbiProtectedRoute><Services /></RbiProtectedRoute>} />
       <Route path="/jobs" element={<RbiProtectedRoute><Jobs /></RbiProtectedRoute>} />
       <Route path="/jobs/:id" element={<RbiProtectedRoute><JobDetail /></RbiProtectedRoute>} />
-      <Route path="/jobs/:id/payment" element={<RbiProtectedRoute><JobPayment /></RbiProtectedRoute>} />
       
-      {/* Resident-specific job and product management routes */}
-      <Route path="/resident/jobs" element={<RbiProtectedRoute><ResidentJobsPage /></RbiProtectedRoute>} />
-      <Route path="/resident/products" element={<RbiProtectedRoute><ResidentProductsPage /></RbiProtectedRoute>} />
-      <Route path="/resident/products/edit/:id" element={<RbiProtectedRoute><ProductEditPage /></RbiProtectedRoute>} />
-      <Route path="/resident/official" element={<RbiProtectedRoute><ResidentOfficialProfileView /></RbiProtectedRoute>} />
-      
-      <Route path="/marketplace" element={<RbiProtectedRoute><Marketplace /></RbiProtectedRoute>} />
-      <Route path="/marketplace/category/:categorySlug" element={<RbiProtectedRoute><CategoryPage /></RbiProtectedRoute>} />
-      <Route path="/marketplace/product/:id" element={<RbiProtectedRoute><ProductDetail /></RbiProtectedRoute>} />
-      <Route path="/marketplace/cart" element={<RbiProtectedRoute><Cart /></RbiProtectedRoute>} />
-      <Route path="/marketplace/checkout" element={<RbiProtectedRoute><Checkout /></RbiProtectedRoute>} />
-      <Route path="/marketplace/order-confirmation" element={<RbiProtectedRoute><OrderConfirmation /></RbiProtectedRoute>} />
-      <Route path="/marketplace/my-orders" element={<RbiProtectedRoute><MyOrders /></RbiProtectedRoute>} />
-      <Route path="/marketplace/wishlist" element={<RbiProtectedRoute><Wishlist /></RbiProtectedRoute>} />
+      <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
+      <Route path="/marketplace/product/:id" element={<ProtectedRoute><ProductDetail /></ProtectedRoute>} />
+      <Route path="/marketplace/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+      <Route path="/marketplace/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+      <Route path="/marketplace/order-confirmation" element={<ProtectedRoute><OrderConfirmation /></ProtectedRoute>} />
+      <Route path="/marketplace/my-orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
       
       <Route path="/admin/media-library" element={<ProtectedRoute><MediaLibraryPage /></ProtectedRoute>} />
       
@@ -243,8 +206,6 @@ export function AppRoutes() {
       <Route path="/admin/jobs/all" element={<ProtectedRoute><JobsAllPage /></ProtectedRoute>} />
       <Route path="/admin/jobs/edit/:id" element={<ProtectedRoute><JobEditPage /></ProtectedRoute>} />
       <Route path="/admin/jobs/applications" element={<ProtectedRoute><JobApplicationsPage /></ProtectedRoute>} />
-      
-      <Route path="/admin/rbi-forms" element={<ProtectedRoute><RbiFormsPage /></ProtectedRoute>} />
       
       <Route path="/profile/public/:userId" element={<RbiProtectedRoute><PublicProfile /></RbiProtectedRoute>} />
       <Route path="/profile/private" element={<RbiProtectedRoute><PrivateProfile /></RbiProtectedRoute>} />

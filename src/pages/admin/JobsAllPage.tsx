@@ -294,7 +294,10 @@ export default function JobsAllPage() {
                   </Button>
                 </div>
 
-                
+                {/* Map */}
+                {selectedJob.location && <div className="mb-6">
+                    <JobMap location={selectedJob.location} />
+                  </div>}
 
                 {/* Job Details Grid */}
                 <div className="grid grid-cols-2 gap-6 mb-6">

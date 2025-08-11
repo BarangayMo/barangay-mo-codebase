@@ -4,13 +4,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Heart, MessageCircle, MoreHorizontal, CornerDownRight } from "lucide-react";
+import { Heart, MessageCircle, Share, MoreHorizontal, CornerDownRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { CommunityPost, usePostComments, useCreateComment, useToggleLike } from "@/hooks/use-community-data";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { ShareButton } from "@/components/ui/share-button";
 
 interface PostCardProps {
   post: CommunityPost;
@@ -61,6 +60,45 @@ export const PostCard = ({ post }: PostCardProps) => {
       setOptimisticLiked(wasLiked);
       setOptimisticLikesCount(post.likes_count);
       console.error('Error toggling like:', error);
+    }
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: `Community Post by ${getPostAuthorName()}`,
+      text: post.content,
+      url: window.location.href
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        // Fallback to copying URL to clipboard
+        await navigator.clipboard.writeText(window.location.href);
+        toast({
+          title: "Link copied",
+          description: "Post link copied to clipboard",
+        });
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name !== 'AbortError') {
+        console.error('Error sharing:', error);
+        // Try clipboard as fallback
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          toast({
+            title: "Link copied",
+            description: "Post link copied to clipboard",
+          });
+        } catch (clipboardError) {
+          toast({
+            title: "Share failed",
+            description: "Unable to share the post",
+            variant: "destructive",
+          });
+        }
+      }
     }
   };
 
@@ -301,15 +339,15 @@ export const PostCard = ({ post }: PostCardProps) => {
             <span className="text-sm font-medium">Comment</span>
           </Button>
           
-          <ShareButton
-            title={`Community Post by ${getPostAuthorName()}`}
-            description={post.content}
-            itemId={post.id}
-            itemType="post"
-            variant="ghost"
-            size="sm"
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleShare}
             className="flex items-center gap-2 px-3 py-1 rounded-lg hover:bg-gray-100 text-gray-600"
-          />
+          >
+            <Share className="h-4 w-4" />
+            <span className="text-sm font-medium">Share</span>
+          </Button>
         </div>
 
         {/* Comments Section */}

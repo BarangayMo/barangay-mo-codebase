@@ -8,7 +8,6 @@ import { ChevronLeft, Mail } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { toastManager } from "@/lib/toast-manager";
 
 export default function EmailVerification() {
   const location = useLocation();
@@ -22,97 +21,6 @@ export default function EmailVerification() {
   const [canResend, setCanResend] = useState(false);
   const [countdown, setCountdown] = useState(30);
 
-  // Check if user is already verified and redirect if so
-  const checkVerificationStatus = async () => {
-    try {
-      console.log('🔄 Forcing session refresh to get latest verification status...');
-      
-      // Force refresh session to get latest state from server
-      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-      
-      if (refreshError) {
-        console.log('⚠️ Session refresh error (may be normal):', refreshError.message);
-      } else {
-        console.log('✅ Session refreshed successfully');
-      }
-      
-      // Now get the fresh session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        console.error('❌ Error getting session:', sessionError);
-        return;
-      }
-      
-      console.log('📊 Fresh session data:', {
-        hasUser: !!session?.user,
-        email: session?.user?.email,
-        emailConfirmed: !!session?.user?.email_confirmed_at,
-        confirmationTime: session?.user?.email_confirmed_at
-      });
-      
-      if (session?.user?.email_confirmed_at) {
-        console.log('✅ Email verified! Redirecting user...');
-        const userRole = session.user.user_metadata?.role || 'resident';
-        const redirectPath = userRole === 'official' ? '/official-dashboard' : userRole === 'superadmin' ? '/admin' : '/resident-home';
-        console.log('🚀 Redirecting verified user to:', redirectPath);
-        navigate(redirectPath, { replace: true });
-        return;
-      } else if (session?.user) {
-        console.log('🚫 Email NOT verified yet for:', session.user.email);
-      } else {
-        console.log('👤 No active session found');
-      }
-    } catch (error) {
-      console.error('💥 Unexpected error in checkVerificationStatus:', error);
-    }
-  };
-
-  // Effect 1: Initial setup and auth state listener
-  useEffect(() => {
-    console.log('🎬 Setting up email verification page...');
-    
-    // Initial check
-    checkVerificationStatus();
-
-    // Listen for auth state changes (verification on other devices)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('📧 Auth state changed:', event, {
-        hasUser: !!session?.user,
-        emailConfirmed: !!session?.user?.email_confirmed_at
-      });
-      
-      if (session?.user?.email_confirmed_at) {
-        console.log('✅ Email verified via auth state change, redirecting...');
-        const userRole = session.user.user_metadata?.role || 'resident';
-        const redirectPath = userRole === 'official' ? '/official-dashboard' : userRole === 'superadmin' ? '/admin' : '/resident-home';
-        console.log('🚀 Redirecting verified user to:', redirectPath);
-        navigate(redirectPath, { replace: true });
-      }
-    });
-
-    return () => {
-      console.log('🧹 Cleaning up auth state listener');
-      subscription.unsubscribe();
-    };
-  }, [navigate]);
-
-  // Effect 2: Periodic session checking for cross-device verification
-  useEffect(() => {
-    console.log('⏰ Setting up periodic session check (every 3 seconds)');
-    
-    const sessionCheckInterval = setInterval(async () => {
-      console.log('🔄 Periodic session check triggered...');
-      await checkVerificationStatus();
-    }, 3000);
-
-    return () => {
-      console.log('🧹 Cleaning up periodic session check');
-      clearInterval(sessionCheckInterval);
-    };
-  }, [navigate]);
-
-  // Effect 3: Countdown timer for resend button
   useEffect(() => {
     if (countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
@@ -124,61 +32,44 @@ export default function EmailVerification() {
 
   const handleResend = async () => {
     if (!email) {
-      console.log("❌ Resend failed: No email provided");
-      toastManager.showToast(() => {
-        toast({
-          variant: "destructive",
-          title: "Email required",
-          description: "Please enter your email address to resend verification"
-        });
-      }, "email-required");
+      toast({
+        variant: "destructive",
+        title: "Email required",
+        description: "Please enter your email address to resend verification"
+      });
       return;
     }
 
-    console.log("📧 Resending verification email to:", email);
     setIsResending(true);
-    
     try {
-      const emailRedirectUrl = `${window.location.origin}/auth/callback`;
-      console.log("📧 Using email redirect URL for resend:", emailRedirectUrl);
-      
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email: email,
         options: {
-          emailRedirectTo: emailRedirectUrl
+          emailRedirectTo: `${window.location.origin}/email-confirmation`
         }
       });
 
       if (error) {
-        console.error("❌ Resend error:", error);
-        toastManager.showToast(() => {
-          toast({
-            variant: "destructive",
-            title: "Resend failed",
-            description: error.message
-          });
-        }, "resend-error");
+        toast({
+          variant: "destructive",
+          title: "Resend failed",
+          description: error.message
+        });
       } else {
-        console.log("✅ Verification email resent successfully to:", email);
-        toastManager.showToast(() => {
-          toast({
-            title: "Email sent! 📧",
-            description: "Verification email has been resent. Please check your inbox."
-          });
-        }, "resend-success");
+        toast({
+          title: "Email sent",
+          description: "Verification email has been resent. Please check your inbox."
+        });
         setCanResend(false);
         setCountdown(30);
       }
     } catch (error) {
-      console.error("💥 Unexpected resend error:", error);
-      toastManager.showToast(() => {
-        toast({
-          variant: "destructive",
-          title: "Resend failed",
-          description: "An unexpected error occurred"
-        });
-      }, "resend-unexpected-error");
+      toast({
+        variant: "destructive",
+        title: "Resend failed",
+        description: "An unexpected error occurred"
+      });
     } finally {
       setIsResending(false);
     }
@@ -187,9 +78,9 @@ export default function EmailVerification() {
   const getBackLink = () => {
     // Determine back link based on role and registration flow
     if (locationState?.role === "official") {
-      return "/register/role";
+      return "/register/details";
     }
-    return "/register/role";
+    return "/register/details";
   };
 
   if (isMobile) {
@@ -214,14 +105,11 @@ export default function EmailVerification() {
 
             {/* Title and Description */}
             <div className="space-y-2">
-              <h2 className="text-xl font-bold text-gray-900">Check your inbox to verify your email</h2>
+              <h2 className="text-xl font-bold text-gray-900">Check your email</h2>
               <p className="text-gray-600 text-sm">
                 We've sent a verification link to
               </p>
               <p className="font-medium text-gray-900 text-sm">{email}</p>
-              <p className="text-gray-500 text-xs mt-2">
-                Click the link in your email to verify your account and unlock access to all features.
-              </p>
             </div>
 
             {/* Email Input for Resend */}
@@ -276,14 +164,11 @@ export default function EmailVerification() {
 
             {/* Title and Description */}
             <div className="space-y-3">
-              <h1 className="text-2xl font-bold text-gray-900">Check your inbox to verify your email</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Check your email</h1>
               <p className="text-gray-600">
                 We've sent a verification link to
               </p>
               <p className="font-medium text-gray-900">{email}</p>
-              <p className="text-gray-500 text-sm mt-2">
-                Click the link in your email to verify your account and unlock access to all features.
-              </p>
             </div>
 
             {/* Email Input for Resend */}

@@ -67,6 +67,9 @@ export default function ResidentProfile() {
     }
   };
 
+  // Check email confirmation status
+  const isEmailConfirmed = session?.user?.email_confirmed_at ? true : false;
+
   return (
     <Layout>
       <div className="max-w-4xl mx-auto p-6 space-y-6">
@@ -103,21 +106,19 @@ export default function ResidentProfile() {
                   {getInitials(profile?.first_name, profile?.last_name)}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex-1 min-w-0">
+              <div className="flex-1">
                 <CardTitle className="text-2xl">
                   {profile?.first_name} {profile?.last_name}
                 </CardTitle>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2">
+                <div className="flex items-center gap-4 mt-2">
                   <Badge className={getRoleColor(user?.role)} variant="secondary">
                     <Shield className="w-3 h-3 mr-1" />
                     {user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1)}
                   </Badge>
                   {profile?.barangay && (
-                    <div className="flex items-start gap-1 text-gray-600 min-w-0">
-                      <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                      <span className="text-sm break-words leading-relaxed">
-                        {profile.barangay}
-                      </span>
+                    <div className="flex items-center text-gray-600">
+                      <MapPin className="w-4 h-4 mr-1" />
+                      <span>{profile.barangay}</span>
                     </div>
                   )}
                 </div>
@@ -127,24 +128,29 @@ export default function ResidentProfile() {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <div className="flex items-center text-gray-600">
-                  <Mail className="w-5 h-5 mr-3 flex-shrink-0" />
-                  <span className="truncate">{profile?.email}</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center text-gray-600">
+                    <Mail className="w-5 h-5 mr-3" />
+                    <span>{profile?.email}</span>
+                  </div>
+                  <Badge variant={isEmailConfirmed ? "default" : "secondary"} className="text-xs">
+                    {isEmailConfirmed ? "Confirmed" : "Unconfirmed"}
+                  </Badge>
                 </div>
                 {user?.createdAt && (
                   <div className="flex items-center text-gray-600">
-                    <Calendar className="w-5 h-5 mr-3 flex-shrink-0" />
-                    <span className="truncate">Member since {new Date(user.createdAt).toLocaleDateString()}</span>
+                    <Calendar className="w-5 h-5 mr-3" />
+                    <span>Member since {new Date(user.createdAt).toLocaleDateString()}</span>
                   </div>
                 )}
               </div>
               <div className="space-y-4">
                 <div className="flex items-center text-gray-600">
-                  <User className="w-5 h-5 mr-3 flex-shrink-0" />
-                  <span className="truncate">ID: {profile?.id.slice(0, 8)}...</span>
+                  <User className="w-5 h-5 mr-3" />
+                  <span>ID: {profile?.id.slice(0, 8)}...</span>
                 </div>
                 <div className="flex items-center text-gray-600">
-                  <Activity className="w-5 h-5 mr-3 flex-shrink-0" />
+                  <Activity className="w-5 h-5 mr-3" />
                   <span>Status: Active</span>
                 </div>
               </div>
@@ -168,7 +174,7 @@ export default function ResidentProfile() {
               <Link to="/rbi-registration">
                 <Button variant="outline" className="w-full h-20 flex flex-col gap-2">
                   <User className="w-6 h-6" />
-                  <span>Update RBI Form</span>
+                  <span>Submit RBI Form</span>
                 </Button>
               </Link>
               <Link to="/services">

@@ -5,7 +5,8 @@ CREATE TABLE public.officials (
     user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
     position TEXT NOT NULL,
     barangay TEXT NOT NULL,
-   
+    term_start DATE,
+    term_end DATE,
     status TEXT DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
     contact_phone TEXT,
     contact_email TEXT,
