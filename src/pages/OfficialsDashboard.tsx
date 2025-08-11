@@ -374,24 +374,52 @@ const OfficialsDashboard = () => {
     )
   }
 
+  // Modal state for showing full details
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const ProfileCard = () => (
-    <div className="relative overflow-hidden">
-      {/* Red background shape for officials */}
-      <div className="absolute inset-0 bg-gradient-to-br from-red-50 to-red-100 rounded-lg"></div>
-      <div className="absolute top-0 right-0 w-20 h-20 bg-red-200/30 rounded-full transform translate-x-8 -translate-y-8"></div>
-      <div className="absolute bottom-0 left-0 w-16 h-16 bg-red-100/40 rounded-full transform -translate-x-6 translate-y-6"></div>
+    <>
+      <div
+        className="relative overflow-hidden cursor-pointer transition hover:ring-2 hover:ring-red-200"
+        onClick={() => setShowProfileModal(true)}
+        title="Click to view full details"
+      >
+        {/* Red background shape for officials */}
+        <div className="absolute inset-0 bg-gradient-to-br from-red-50 to-red-100 rounded-lg"></div>
+        <div className="absolute top-0 right-0 w-20 h-20 bg-red-200/30 rounded-full transform translate-x-8 -translate-y-8"></div>
+        <div className="absolute bottom-0 left-0 w-16 h-16 bg-red-100/40 rounded-full transform -translate-x-6 translate-y-6"></div>
 
-      {/* Content */}
-      <div className="relative flex items-center gap-3 p-4 rounded-lg">
-        {getLogoDisplay()}
-        <div className="flex-1">
-          <h3 className="text-base font-semibold text-gray-900 truncate font-outfit">{getPunongBarangayName()}</h3>
-          <p className="text-sm text-red-600 truncate font-medium">{getLocationText()}</p>
-          <p className="text-xs text-gray-500 truncate">BarangayMo Officials</p>
+        {/* Content */}
+        <div className="relative flex items-center gap-3 p-4 rounded-lg">
+          {getLogoDisplay()}
+          <div className="flex-1 min-w-0">
+            <h3 className="text-base font-semibold text-gray-900 truncate font-outfit">{getPunongBarangayName()}</h3>
+            <p className="text-sm text-red-600 font-medium truncate overflow-hidden whitespace-nowrap block max-w-[140px] md:max-w-[180px] lg:max-w-[220px]">{getLocationText()}</p>
+            <p className="text-xs text-gray-500 truncate">BarangayMo Officials</p>
+          </div>
         </div>
       </div>
-    </div>
-  )
+      {/* Modal for full details */}
+      {showProfileModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-lg shadow-lg max-w-xs w-full p-6 relative">
+            <button
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-700"
+              onClick={() => setShowProfileModal(false)}
+              aria-label="Close"
+            >
+              ×
+            </button>
+            <div className="flex flex-col items-center gap-3">
+              {getLogoDisplay()}
+              <h3 className="text-lg font-bold text-gray-900 font-outfit break-words text-center w-full">{getPunongBarangayName()}</h3>
+              <p className="text-base text-red-600 font-medium break-words text-center w-full">{getLocationText()}</p>
+              <p className="text-sm text-gray-500 text-center w-full">BarangayMo Officials</p>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
 
   // Parse puroks from barangay data
   const purokCount = useMemo(() => {
@@ -993,29 +1021,6 @@ const OfficialsDashboard = () => {
             {/* Desktop Right Sidebar */}
             <div className="w-72 xl:w-80 flex-shrink-0 bg-white border-l border-gray-200 overflow-y-auto">
               <div className="p-4 lg:p-6">
-                <h3 className="font-semibold text-gray-900 mb-4 truncate">Recent Documents</h3>
-                <div className="space-y-3">
-                  {[
-                    { name: "Barangay Resolution 2024-15", time: "2 hours ago", color: "bg-yellow-100" },
-                    { name: "Budget Allocation Report", time: "1 day ago", color: "bg-purple-100" },
-                    { name: "Community Survey Results", time: "2 days ago", color: "bg-pink-100" },
-                    { name: "Emergency Response Plan", time: "3 days ago", color: "bg-green-100" },
-                    { name: "Monthly Activity Report", time: "1 week ago", color: "bg-orange-100" },
-                  ].map((doc, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer min-w-0"
-                    >
-                      <div className={`w-8 h-8 ${doc.color} rounded flex-shrink-0`}></div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate" title={doc.name}>
-                          {doc.name}
-                        </p>
-                        <p className="text-xs text-gray-500 truncate">Updated {doc.time}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
 
                 <div className="mt-8">
                   <h3 className="font-semibold text-gray-900 mb-4 truncate">Barangay Staff</h3>
@@ -1066,13 +1071,6 @@ const OfficialsDashboard = () => {
                 <div className="mt-8">
                   <h3 className="font-semibold text-gray-900 mb-4 truncate">Urgent Alerts</h3>
                   <div className="space-y-3">
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <AlertTriangle className="h-4 w-4 text-red-500 flex-shrink-0" />
-                        <span className="text-sm font-medium text-red-800 truncate">Emergency Response</span>
-                      </div>
-                      <p className="text-xs text-red-600 mt-1 truncate">3 pending emergency requests</p>
-                    </div>
                     <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
                       <div className="flex items-center gap-2 min-w-0">
                         <FileText className="h-4 w-4 text-orange-500 flex-shrink-0" />
