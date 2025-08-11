@@ -224,6 +224,7 @@ export const RichTextEditor = ({ value, onChange, placeholder, className }: Rich
       {isCodeMode ? (
         <Textarea
           value={value}
+          dir="ltr"
           onChange={(e) => onChange(e.target.value)}
           className="border-0 resize-none min-h-[120px] focus-visible:ring-0 font-mono text-sm"
           placeholder={placeholder}
@@ -236,7 +237,7 @@ export const RichTextEditor = ({ value, onChange, placeholder, className }: Rich
             className="min-h-[96px] outline-none"
             dangerouslySetInnerHTML={{ __html: value }}
             onInput={(e) => onChange(e.currentTarget.innerHTML)}
-            style={{ whiteSpace: 'pre-wrap' }}
+            style={{ whiteSpace: 'pre-wrap', direction: 'ltr', unicodeBidi: 'isolate' }}
           />
           {!value && (
             <div className="text-muted-foreground pointer-events-none">
