@@ -2,14 +2,17 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { SearchBar } from "@/components/marketplace/SearchBar";
+import { RbiAccessCard } from "@/components/marketplace/RbiAccessCard";
 import { MobileNavigation } from "@/components/marketplace/MobileNavigation";
 import { FilterButton } from "@/components/marketplace/FilterButton";
 import { MarketHero } from "@/components/marketplace/MarketHero";
 import { ProductList } from "@/components/marketplace/ProductList";
-import { ProductCardType } from "@/components/marketplace/ProductCard";
+import { ProductCardType } from "@/types/marketplace";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryWithDebug } from "@/hooks/use-query-with-debug";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRbiForms } from "@/hooks/use-rbi-forms";
 
 // Define Category type based on Supabase schema
 interface Category {
@@ -82,6 +85,15 @@ const fetchCategories = async (): Promise<Category[]> => {
 export default function Marketplace() {
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
+  const [filters, setFilters] = useState<{
+    priceRange: [number, number];
+    selectedRatings: string[];
+  }>({
+    priceRange: [0, 100000],
+    selectedRatings: []
+  });
+  const { userRole } = useAuth();
+  const { rbiForms } = useRbiForms();
 
   console.log("🏪 Marketplace component rendering...");
 
@@ -106,44 +118,74 @@ export default function Marketplace() {
 
   const displayCategories = [{ id: "all-cat", name: "All" }, ...(categories || [])];
 
+  // Check RBI access for residents
+  const latestForm = rbiForms?.[0];
+  const isApproved = latestForm?.status === 'approved';
+  const hasRbiAccess = userRole !== 'resident' || isApproved;
+
   return (
     <Layout>
       <SearchBar search={search} setSearch={setSearch} />
       
       <div className="max-w-7xl mx-auto px-4 py-6 mb-20 md:mb-0">
+        {/* Show RBI access card for residents without approval */}
+        {!hasRbiAccess && (
+          <div className="mb-6">
+            <RbiAccessCard />
+          </div>
+        )}
+        
         <MarketHero />
         
-        <div className="mt-6 mb-8 flex items-center gap-4 overflow-x-auto pb-2 scrollbar-none">
-          <FilterButton />
-          {isLoadingCategories ? (
-            Array.from({ length: 5 }).map((_, index) => <Skeleton key={index} className="h-10 w-24 rounded-full" />)
-          ) : categoriesError ? (
-            <div>
-              <p className="text-red-500">Error loading categories.</p>
-              <p className="text-xs text-gray-500">Error: {categoriesError.message}</p>
+        <div className="mt-6 mb-8">
+          {/* Mobile Filter Layout */}
+          <div className="md:hidden mb-4">
+            <FilterButton onFiltersChange={setFilters} />
+          </div>
+          
+          {/* Category filters - responsive with proper overflow handling */}
+          <div className="flex items-center gap-2 md:gap-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+            {/* Desktop Filter Button */}
+            <div className="hidden md:block flex-shrink-0">
+              <FilterButton onFiltersChange={setFilters} />
             </div>
-          ) : (
-            displayCategories.map((cat) => (
-              <button
-                key={cat.id}
-                className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${
-                  activeFilter === cat.name
-                    ? "bg-resident text-white font-medium"
-                    : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                }`}
-                onClick={() => setActiveFilter(cat.name)}
-              >
-                {cat.name}
-              </button>
-            ))
-          )}
+            
+            {isLoadingCategories ? (
+              <div className="flex gap-2 md:gap-4">
+                {Array.from({ length: 5 }).map((_, index) => 
+                  <Skeleton key={index} className="h-8 md:h-10 w-16 md:w-24 rounded-full flex-shrink-0" />
+                )}
+              </div>
+            ) : categoriesError ? (
+              <div className="text-center w-full">
+                <p className="text-red-500 text-sm">Error loading categories.</p>
+                <p className="text-xs text-gray-500">Error: {categoriesError.message}</p>
+              </div>
+            ) : (
+              <div className="flex gap-2 md:gap-4">
+                {displayCategories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    className={`px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm whitespace-nowrap flex-shrink-0 transition-colors ${
+                      activeFilter === cat.name
+                        ? "bg-resident text-white font-medium"
+                        : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                    }`}
+                    onClick={() => setActiveFilter(cat.name)}
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {isLoadingProducts ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
-            {Array.from({ length: 10 }).map((_, index) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
+            {Array.from({ length: 12 }).map((_, index) => (
               <div key={index} className="space-y-2">
-                <Skeleton className="h-36 w-full" />
+                <Skeleton className="h-36 sm:h-40 md:h-48 w-full rounded-lg" />
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-4 w-1/2" />
                 <Skeleton className="h-8 w-full" />
@@ -153,19 +195,24 @@ export default function Marketplace() {
         ) : productsError ? (
           <div className="text-center py-10">
             <p className="text-red-500 mb-2">Error loading products: {productsError.message}</p>
-            <details className="text-left bg-red-50 p-4 rounded">
+            <details className="text-left bg-red-50 p-4 rounded max-w-2xl mx-auto">
               <summary className="cursor-pointer text-sm font-medium">Technical Details</summary>
-              <pre className="text-xs mt-2 overflow-auto">{JSON.stringify(productsError, null, 2)}</pre>
+              <pre className="text-xs mt-2 overflow-auto whitespace-pre-wrap">{JSON.stringify(productsError, null, 2)}</pre>
             </details>
           </div>
-        ) : products && products.length > 0 ? (
+        ) : hasRbiAccess && products && products.length > 0 ? (
           <ProductList 
             products={products} 
             activeFilter={activeFilter}
             search={search}
+            filters={filters}
           />
-        ) : (
+        ) : hasRbiAccess ? (
           <p className="text-center py-10 text-gray-500">No products available at the moment.</p>
+        ) : (
+          <div className="text-center py-10">
+            <p className="text-gray-500">Complete your RBI registration to access the marketplace.</p>
+          </div>
         )}
       </div>
 

@@ -1,11 +1,27 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRbiAccess } from "@/hooks/use-rbi-access";
 import { Briefcase } from "lucide-react";
+import { toast } from "sonner";
 
 export function DesktopNavItems() {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const { isAuthenticated, userRole } = useAuth();
+  const { hasRbiAccess } = useRbiAccess();
+
+  const handleRestrictedAccess = (path: string) => {
+    if (userRole === 'resident' && !hasRbiAccess) {
+      toast.dismiss(); // Dismiss any existing toasts first
+      toast.error("Restricted Access", {
+        description: "Submit your RBI form to access these options",
+        duration: 4000,
+      });
+      return;
+    }
+    navigate(path);
+  };
 
   const getDashboardRoute = () => {
     switch (userRole) {
@@ -34,40 +50,51 @@ export function DesktopNavItems() {
 
   return (
     <div className="hidden md:flex items-center space-x-1">
-      <Button 
-        variant="ghost" 
-        size="sm" 
-        asChild
-        className={pathname === "/" ? (userRole === "resident" ? "text-[#1a237e]" : "text-[#ea384c]") : ""}
-      >
-        <Link to={getHomeRoute()}>Home</Link>
-      </Button>
+      {userRole !== "resident" && (
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          asChild
+          className={pathname === "/" ? "text-[#ea384c]" : ""}
+        >
+          <Link to={getHomeRoute()}>Home</Link>
+        </Button>
+      )}
       
       <Button 
         variant="ghost" 
         size="sm" 
-        asChild
         className={pathname === "/marketplace" ? "text-[#1a237e]" : ""}
+        onClick={(e) => {
+          e.preventDefault();
+          handleRestrictedAccess('/marketplace');
+        }}
       >
-        <Link to="/marketplace">Marketplace</Link>
+        Marketplace
       </Button>
       
       <Button 
         variant="ghost" 
         size="sm" 
-        asChild
         className={pathname === "/services" ? "text-[#1a237e]" : ""}
+        onClick={(e) => {
+          e.preventDefault();
+          handleRestrictedAccess('/services');
+        }}
       >
-        <Link to="/services">Services</Link>
+        Services
       </Button>
       
       <Button 
         variant="ghost" 
         size="sm" 
-        asChild
         className={pathname.startsWith("/jobs") ? "text-[#1a237e]" : ""}
+        onClick={(e) => {
+          e.preventDefault();
+          handleRestrictedAccess('/jobs');
+        }}
       >
-        <Link to={getJobsRoute()}>Jobs</Link>
+        Jobs
       </Button>
       
       <Button 

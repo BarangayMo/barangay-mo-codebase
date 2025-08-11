@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instanciate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.3 (519615d)"
+  }
   public: {
     Tables: {
       barangay_membership_requests: {
@@ -186,6 +191,48 @@ export type Database = {
         }
         Relationships: []
       }
+      BARMM: {
+        Row: {
+          BARANGAY: string | null
+          "BARANGAY HALL TELNO": string | null
+          "CITY/MUNICIPALITY": string | null
+          FIRSTNAME: string | null
+          LASTNAME: string | null
+          MIDDLENAME: string | null
+          POSITION: string | null
+          PROVINCE: string | null
+          REGION: string
+          SUFFIX: string | null
+          TERM: string | null
+        }
+        Insert: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION: string
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Update: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Relationships: []
+      }
       budget_allocations: {
         Row: {
           allocated_amount: number
@@ -267,6 +314,48 @@ export type Database = {
           target_audience?: string | null
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      CAR: {
+        Row: {
+          BARANGAY: string | null
+          "BARANGAY HALL TELNO": string | null
+          "CITY/MUNICIPALITY": string | null
+          FIRSTNAME: string | null
+          LASTNAME: string | null
+          MIDDLENAME: string | null
+          POSITION: string | null
+          PROVINCE: string | null
+          REGION: string | null
+          SUFFIX: string | null
+          TERM: string | null
+        }
+        Insert: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Update: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
         }
         Relationships: []
       }
@@ -461,6 +550,7 @@ export type Database = {
           comments_count: number | null
           content: string
           created_at: string
+          created_by: string | null
           id: string
           image_urls: string[] | null
           likes_count: number | null
@@ -472,6 +562,7 @@ export type Database = {
           comments_count?: number | null
           content: string
           created_at?: string
+          created_by?: string | null
           id?: string
           image_urls?: string[] | null
           likes_count?: number | null
@@ -483,13 +574,22 @@ export type Database = {
           comments_count?: number | null
           content?: string
           created_at?: string
+          created_by?: string | null
           id?: string
           image_urls?: string[] | null
           likes_count?: number | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "community_posts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       complaints_requests: {
         Row: {
@@ -536,6 +636,107 @@ export type Database = {
           type?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      conversations: {
+        Row: {
+          created_at: string
+          id: string
+          is_archived: boolean | null
+          last_message_at: string | null
+          last_message_id: string | null
+          participant_one_id: string
+          participant_two_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_archived?: boolean | null
+          last_message_at?: string | null
+          last_message_id?: string | null
+          participant_one_id: string
+          participant_two_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_archived?: boolean | null
+          last_message_at?: string | null
+          last_message_id?: string | null
+          participant_one_id?: string
+          participant_two_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_conversations_last_message"
+            columns: ["last_message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      council_members: {
+        Row: {
+          barangay: string
+          created_at: string
+          created_by: string | null
+          email: string | null
+          first_name: string
+          id: string
+          is_active: boolean | null
+          landline_number: string | null
+          last_name: string
+          middle_name: string | null
+          municipality: string
+          phone_number: string | null
+          position: string
+          province: string
+          region: string
+          suffix: string | null
+          updated_at: string
+        }
+        Insert: {
+          barangay: string
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          first_name: string
+          id?: string
+          is_active?: boolean | null
+          landline_number?: string | null
+          last_name: string
+          middle_name?: string | null
+          municipality: string
+          phone_number?: string | null
+          position: string
+          province: string
+          region: string
+          suffix?: string | null
+          updated_at?: string
+        }
+        Update: {
+          barangay?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          first_name?: string
+          id?: string
+          is_active?: boolean | null
+          landline_number?: string | null
+          last_name?: string
+          middle_name?: string | null
+          municipality?: string
+          phone_number?: string | null
+          position?: string
+          province?: string
+          region?: string
+          suffix?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -627,6 +828,7 @@ export type Database = {
           category: string
           company: string
           created_at: string | null
+          created_by: string | null
           description: string
           education: string | null
           experience: string
@@ -653,6 +855,7 @@ export type Database = {
           category: string
           company: string
           created_at?: string | null
+          created_by?: string | null
           description: string
           education?: string | null
           experience: string
@@ -679,6 +882,7 @@ export type Database = {
           category?: string
           company?: string
           created_at?: string | null
+          created_by?: string | null
           description?: string
           education?: string | null
           experience?: string
@@ -740,14 +944,100 @@ export type Database = {
         }
         Relationships: []
       }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          is_read: boolean
+          message_type: string
+          metadata: Json | null
+          read_at: string | null
+          recipient_id: string
+          sender_id: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message_type?: string
+          metadata?: Json | null
+          read_at?: string | null
+          recipient_id: string
+          sender_id: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message_type?: string
+          metadata?: Json | null
+          read_at?: string | null
+          recipient_id?: string
+          sender_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      NCR: {
+        Row: {
+          BARANGAY: string | null
+          "BARANGAY HALL TELNO": string | null
+          "CITY/MUNICIPALITY": string | null
+          FIRSTNAME: string | null
+          LASTNAME: string | null
+          MIDDLENAME: string | null
+          POSITION: string | null
+          PROVINCE: string | null
+          REGION: string | null
+          SUFFIX: string | null
+          TERM: string | null
+        }
+        Insert: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Update: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           category: string
           created_at: string
           id: string
+          link_url: string | null
           message: string
           metadata: Json | null
           priority: string
+          read: boolean
           read_at: string | null
           recipient_id: string
           sender_id: string | null
@@ -759,23 +1049,27 @@ export type Database = {
           category?: string
           created_at?: string
           id?: string
+          link_url?: string | null
           message: string
           metadata?: Json | null
           priority?: string
+          read?: boolean
           read_at?: string | null
           recipient_id: string
           sender_id?: string | null
           status?: string
-          title: string
+          title?: string
           updated_at?: string
         }
         Update: {
           category?: string
           created_at?: string
           id?: string
+          link_url?: string | null
           message?: string
           metadata?: Json | null
           priority?: string
+          read?: boolean
           read_at?: string | null
           recipient_id?: string
           sender_id?: string | null
@@ -783,7 +1077,22 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_notifications_recipient"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       official_documents: {
         Row: {
@@ -821,6 +1130,93 @@ export type Database = {
           tags?: string[] | null
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      officials: {
+        Row: {
+          achievements: string[] | null
+          approved_at: string | null
+          approved_by: string | null
+          barangay: string
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          is_approved: boolean
+          landline_number: string | null
+          last_name: string
+          middle_name: string | null
+          municipality: string
+          original_password: string | null
+          password_hash: string | null
+          phone_number: string
+          position: string
+          province: string
+          region: string
+          rejection_reason: string | null
+          status: string
+          submitted_at: string
+          suffix: string | null
+          updated_at: string
+          user_id: string | null
+          years_of_service: number | null
+        }
+        Insert: {
+          achievements?: string[] | null
+          approved_at?: string | null
+          approved_by?: string | null
+          barangay: string
+          created_at?: string
+          email: string
+          first_name: string
+          id?: string
+          is_approved?: boolean
+          landline_number?: string | null
+          last_name: string
+          middle_name?: string | null
+          municipality: string
+          original_password?: string | null
+          password_hash?: string | null
+          phone_number: string
+          position: string
+          province: string
+          region: string
+          rejection_reason?: string | null
+          status?: string
+          submitted_at?: string
+          suffix?: string | null
+          updated_at?: string
+          user_id?: string | null
+          years_of_service?: number | null
+        }
+        Update: {
+          achievements?: string[] | null
+          approved_at?: string | null
+          approved_by?: string | null
+          barangay?: string
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          is_approved?: boolean
+          landline_number?: string | null
+          last_name?: string
+          middle_name?: string | null
+          municipality?: string
+          original_password?: string | null
+          password_hash?: string | null
+          phone_number?: string
+          position?: string
+          province?: string
+          region?: string
+          rejection_reason?: string | null
+          status?: string
+          submitted_at?: string
+          suffix?: string | null
+          updated_at?: string
+          user_id?: string | null
+          years_of_service?: number | null
         }
         Relationships: []
       }
@@ -904,6 +1300,7 @@ export type Database = {
           brand: string | null
           category_id: string | null
           created_at: string
+          created_by: string | null
           description: string | null
           dimensions_cm: Json | null
           gallery_image_urls: string[] | null
@@ -919,11 +1316,12 @@ export type Database = {
           seo_description: string | null
           seo_title: string | null
           shipping_info: string | null
-          sku: string | null
+          sku: string
           sold_count: number | null
           specifications: Json | null
           stock_quantity: number
           tags: string[] | null
+          title: string | null
           updated_at: string
           vendor_id: string
           weight_kg: number | null
@@ -933,6 +1331,7 @@ export type Database = {
           brand?: string | null
           category_id?: string | null
           created_at?: string
+          created_by?: string | null
           description?: string | null
           dimensions_cm?: Json | null
           gallery_image_urls?: string[] | null
@@ -948,11 +1347,12 @@ export type Database = {
           seo_description?: string | null
           seo_title?: string | null
           shipping_info?: string | null
-          sku?: string | null
+          sku?: string
           sold_count?: number | null
           specifications?: Json | null
           stock_quantity?: number
           tags?: string[] | null
+          title?: string | null
           updated_at?: string
           vendor_id: string
           weight_kg?: number | null
@@ -962,6 +1362,7 @@ export type Database = {
           brand?: string | null
           category_id?: string | null
           created_at?: string
+          created_by?: string | null
           description?: string | null
           dimensions_cm?: Json | null
           gallery_image_urls?: string[] | null
@@ -977,11 +1378,12 @@ export type Database = {
           seo_description?: string | null
           seo_title?: string | null
           shipping_info?: string | null
-          sku?: string | null
+          sku?: string
           sold_count?: number | null
           specifications?: Json | null
           stock_quantity?: number
           tags?: string[] | null
+          title?: string | null
           updated_at?: string
           vendor_id?: string
           weight_kg?: number | null
@@ -992,6 +1394,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "product_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -1009,13 +1418,24 @@ export type Database = {
           barangay: string | null
           "Barangay Reference": string | null
           created_at: string | null
+          email: string | null
           first_name: string | null
           id: string
           invited_by: string | null
+          is_approved: boolean | null
+          landline_number: string | null
           last_login: string | null
           last_name: string | null
+          logo_url: string | null
+          middle_name: string | null
+          municipality: string | null
+          officials_data: Json | null
+          phone_number: string | null
+          province: string | null
+          region: string | null
           role: Database["public"]["Enums"]["user_role"] | null
           status: string | null
+          suffix: string | null
           updated_at: string | null
         }
         Insert: {
@@ -1023,13 +1443,24 @@ export type Database = {
           barangay?: string | null
           "Barangay Reference"?: string | null
           created_at?: string | null
+          email?: string | null
           first_name?: string | null
           id: string
           invited_by?: string | null
+          is_approved?: boolean | null
+          landline_number?: string | null
           last_login?: string | null
           last_name?: string | null
+          logo_url?: string | null
+          middle_name?: string | null
+          municipality?: string | null
+          officials_data?: Json | null
+          phone_number?: string | null
+          province?: string | null
+          region?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           status?: string | null
+          suffix?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -1037,13 +1468,24 @@ export type Database = {
           barangay?: string | null
           "Barangay Reference"?: string | null
           created_at?: string | null
+          email?: string | null
           first_name?: string | null
           id?: string
           invited_by?: string | null
+          is_approved?: boolean | null
+          landline_number?: string | null
           last_login?: string | null
           last_name?: string | null
+          logo_url?: string | null
+          middle_name?: string | null
+          municipality?: string | null
+          officials_data?: Json | null
+          phone_number?: string | null
+          province?: string | null
+          region?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           status?: string | null
+          suffix?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -1077,36 +1519,48 @@ export type Database = {
       }
       rbi_forms: {
         Row: {
+          admin_notes: string | null
           barangay_id: string | null
+          decision_precedence: number | null
           form_data: Json
           id: string
           rbi_number: string | null
           reviewed_at: string | null
           reviewed_by: string | null
-          status: string
+          reviewer_type: string | null
+          status: Database["public"]["Enums"]["rbi_status"]
           submitted_at: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
+          admin_notes?: string | null
           barangay_id?: string | null
+          decision_precedence?: number | null
           form_data: Json
           id?: string
           rbi_number?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
-          status?: string
+          reviewer_type?: string | null
+          status?: Database["public"]["Enums"]["rbi_status"]
           submitted_at?: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
+          admin_notes?: string | null
           barangay_id?: string | null
+          decision_precedence?: number | null
           form_data?: Json
           id?: string
           rbi_number?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
-          status?: string
+          reviewer_type?: string | null
+          status?: Database["public"]["Enums"]["rbi_status"]
           submitted_at?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -1135,6 +1589,594 @@ export type Database = {
           last_sequence?: number
           updated_at?: string | null
           year?: number
+        }
+        Relationships: []
+      }
+      "REGION 1": {
+        Row: {
+          BARANGAY: string | null
+          "BARANGAY HALL TELNO": string | null
+          "CITY/MUNICIPALITY": string | null
+          FIRSTNAME: string | null
+          LASTNAME: string | null
+          MIDDLENAME: string | null
+          POSITION: string | null
+          PROVINCE: string | null
+          REGION: string | null
+          SUFFIX: string | null
+          TERM: string | null
+        }
+        Insert: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Update: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Relationships: []
+      }
+      "REGION 10": {
+        Row: {
+          BARANGAY: string | null
+          "BARANGAY HALL TELNO": string | null
+          "CITY/MUNICIPALITY": string | null
+          FIRSTNAME: string | null
+          LASTNAME: string | null
+          MIDDLENAME: string | null
+          POSITION: string | null
+          PROVINCE: string | null
+          REGION: string | null
+          SUFFIX: string | null
+          TERM: string | null
+        }
+        Insert: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Update: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Relationships: []
+      }
+      "REGION 11": {
+        Row: {
+          BARANGAY: string | null
+          "BARANGAY HALL TELNO": string | null
+          "CITY/MUNICIPALITY": string | null
+          FIRSTNAME: string | null
+          LASTNAME: string | null
+          MIDDLENAME: string | null
+          POSITION: string | null
+          PROVINCE: string | null
+          REGION: string | null
+          SUFFIX: string | null
+          TERM: string | null
+        }
+        Insert: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Update: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Relationships: []
+      }
+      "REGION 12": {
+        Row: {
+          BARANGAY: string | null
+          "BARANGAY HALL TELNO": string | null
+          "CITY/MUNICIPALITY": string | null
+          FIRSTNAME: string | null
+          LASTNAME: string | null
+          MIDDLENAME: string | null
+          POSITION: string | null
+          PROVINCE: string | null
+          REGION: string | null
+          SUFFIX: string | null
+          TERM: string | null
+        }
+        Insert: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Update: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Relationships: []
+      }
+      "REGION 13": {
+        Row: {
+          BARANGAY: string | null
+          "BARANGAY HALL TELNO": string | null
+          "CITY/MUNICIPALITY": string | null
+          FIRSTNAME: string | null
+          LASTNAME: string | null
+          MIDDLENAME: string | null
+          POSITION: string | null
+          PROVINCE: string | null
+          REGION: string | null
+          SUFFIX: string | null
+          TERM: string | null
+        }
+        Insert: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Update: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Relationships: []
+      }
+      "REGION 2": {
+        Row: {
+          BARANGAY: string | null
+          "BARANGAY HALL TELNO": string | null
+          "CITY/MUNICIPALITY": string | null
+          FIRSTNAME: string | null
+          LASTNAME: string | null
+          MIDDLENAME: string | null
+          POSITION: string | null
+          PROVINCE: string | null
+          REGION: string | null
+          SUFFIX: string | null
+          TERM: string | null
+        }
+        Insert: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Update: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Relationships: []
+      }
+      "REGION 3": {
+        Row: {
+          BARANGAY: string | null
+          "BARANGAY HALL TELNO": string | null
+          "CITY/MUNICIPALITY": string | null
+          FIRSTNAME: string | null
+          LASTNAME: string | null
+          MIDDLENAME: string | null
+          POSITION: string | null
+          PROVINCE: string | null
+          REGION: string | null
+          SUFFIX: string | null
+          TERM: string | null
+        }
+        Insert: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Update: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Relationships: []
+      }
+      "REGION 4A": {
+        Row: {
+          BARANGAY: string | null
+          "BARANGAY HALL TELNO": string | null
+          "CITY/MUNICIPALITY": string | null
+          FIRSTNAME: string | null
+          LASTNAME: string | null
+          MIDDLENAME: string | null
+          POSITION: string | null
+          PROVINCE: string | null
+          REGION: string | null
+          SUFFIX: string | null
+          TERM: string | null
+        }
+        Insert: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Update: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Relationships: []
+      }
+      "REGION 4B": {
+        Row: {
+          BARANGAY: string | null
+          "BARANGAY HALL TELNO": string | null
+          "CITY/MUNICIPALITY": string | null
+          FIRSTNAME: string | null
+          LASTNAME: string | null
+          MIDDLENAME: string | null
+          POSITION: string | null
+          PROVINCE: string | null
+          REGION: string | null
+          SUFFIX: string | null
+          TERM: string | null
+        }
+        Insert: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Update: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Relationships: []
+      }
+      "REGION 5": {
+        Row: {
+          BARANGAY: string | null
+          "BARANGAY HALL TELNO": string | null
+          "CITY/MUNICIPALITY": string | null
+          FIRSTNAME: string | null
+          LASTNAME: string | null
+          MIDDLENAME: string | null
+          POSITION: string | null
+          PROVINCE: string | null
+          REGION: string | null
+          SUFFIX: string | null
+          TERM: string | null
+        }
+        Insert: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Update: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Relationships: []
+      }
+      "REGION 6": {
+        Row: {
+          BARANGAY: string | null
+          "BARANGAY HALL TELNO": string | null
+          "CITY/MUNICIPALITY": string | null
+          FIRSTNAME: string | null
+          LASTNAME: string | null
+          MIDDLENAME: string | null
+          POSITION: string | null
+          PROVINCE: string | null
+          REGION: string | null
+          SUFFIX: string | null
+          TERM: string | null
+        }
+        Insert: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Update: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Relationships: []
+      }
+      "REGION 7": {
+        Row: {
+          BARANGAY: string | null
+          "BARANGAY HALL TELNO": string | null
+          "CITY/MUNICIPALITY": string | null
+          FIRSTNAME: string | null
+          LASTNAME: string | null
+          MIDDLENAME: string | null
+          POSITION: string | null
+          PROVINCE: string | null
+          REGION: string | null
+          SUFFIX: string | null
+          TERM: string | null
+        }
+        Insert: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Update: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Relationships: []
+      }
+      "REGION 8": {
+        Row: {
+          BARANGAY: string | null
+          "BARANGAY HALL TELNO": string | null
+          "CITY/MUNICIPALITY": string | null
+          FIRSTNAME: string | null
+          LASTNAME: string | null
+          MIDDLENAME: string | null
+          POSITION: string | null
+          PROVINCE: string | null
+          REGION: string | null
+          SUFFIX: string | null
+          TERM: string | null
+        }
+        Insert: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Update: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Relationships: []
+      }
+      "REGION 9": {
+        Row: {
+          BARANGAY: string | null
+          "BARANGAY HALL TELNO": string | null
+          "CITY/MUNICIPALITY": string | null
+          FIRSTNAME: string | null
+          LASTNAME: string | null
+          MIDDLENAME: string | null
+          POSITION: string | null
+          PROVINCE: string | null
+          REGION: string | null
+          SUFFIX: string | null
+          TERM: string | null
+        }
+        Insert: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
+        }
+        Update: {
+          BARANGAY?: string | null
+          "BARANGAY HALL TELNO"?: string | null
+          "CITY/MUNICIPALITY"?: string | null
+          FIRSTNAME?: string | null
+          LASTNAME?: string | null
+          MIDDLENAME?: string | null
+          POSITION?: string | null
+          PROVINCE?: string | null
+          REGION?: string | null
+          SUFFIX?: string | null
+          TERM?: string | null
         }
         Relationships: []
       }
@@ -1472,12 +2514,45 @@ export type Database = {
           },
         ]
       }
+      wishlists: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      approve_official: {
+        Args: { official_id: string }
+        Returns: undefined
+      }
+      fix_official_profiles: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       generate_job_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_product_sku: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
@@ -1489,6 +2564,22 @@ export type Database = {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
       }
+      hash_password: {
+        Args: { password_text: string }
+        Returns: string
+      }
+      insert_profile: {
+        Args: { id: string; email: string }
+        Returns: undefined
+      }
+      is_approved_official: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      sync_approved_officials_to_profiles: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       update_role_user_counts: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1497,8 +2588,23 @@ export type Database = {
         Args: { user_id: string }
         Returns: undefined
       }
+      verify_official_password: {
+        Args: { official_id: string; password_text: string }
+        Returns: boolean
+      }
+      verify_password: {
+        Args: { password_text: string; password_hash: string }
+        Returns: boolean
+      }
     }
     Enums: {
+      rbi_status:
+        | "draft"
+        | "submitted"
+        | "under_review"
+        | "approved"
+        | "rejected"
+        | "pending_documents"
       user_role: "resident" | "official" | "superadmin"
     }
     CompositeTypes: {
@@ -1507,21 +2613,25 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
@@ -1539,14 +2649,16 @@ export type Tables<
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
@@ -1562,14 +2674,16 @@ export type TablesInsert<
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
@@ -1585,14 +2699,16 @@ export type TablesUpdate<
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
@@ -1600,14 +2716,16 @@ export type Enums<
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
@@ -1615,6 +2733,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      rbi_status: [
+        "draft",
+        "submitted",
+        "under_review",
+        "approved",
+        "rejected",
+        "pending_documents",
+      ],
       user_role: ["resident", "official", "superadmin"],
     },
   },

@@ -1,5 +1,19 @@
 
-import { supabase } from "@/integrations/supabase/client";
+/**
+ * Retrieves the Google Maps API key for JavaScript
+ * @returns The Google Maps JavaScript API key
+ */
+export async function getGoogleMapsApiKey(): Promise<string> {
+  return 'AIzaSyDKWjnDlFD1mysRpXnc6KiaWZyh_6jnphM';
+}
+
+/**
+ * Retrieves the Mapbox API key (deprecated - using Google Maps instead)
+ * @returns null since we're using Google Maps now
+ */
+export async function getMapboxApiKey(): Promise<string | null> {
+  return null;
+}
 
 /**
  * Retrieves API keys securely from the database
@@ -7,32 +21,10 @@ import { supabase } from "@/integrations/supabase/client";
  * @returns The API key value or null if not found
  */
 export async function getApiKey(keyName: string): Promise<string | null> {
-  try {
-    // Only backend code should fetch API keys directly from the database
-    const { data, error } = await supabase
-      .from('system_api_keys')
-      .select('key_value')
-      .eq('key_name', keyName)
-      .single();
-      
-    if (error || !data) {
-      console.error(`Error retrieving API key ${keyName}:`, error);
-      return null;
-    }
-    
-    return data.key_value;
-  } catch (error) {
-    console.error(`Error retrieving API key ${keyName}:`, error);
-    return null;
+  if (keyName === 'google_maps_javascript_api_key') {
+    return 'AIzaSyDKWjnDlFD1mysRpXnc6KiaWZyh_6jnphM';
   }
-}
-
-/**
- * Retrieves the Google Maps API key for JavaScript
- * @returns The Google Maps JavaScript API key or null if not found
- */
-export async function getGoogleMapsApiKey(): Promise<string | null> {
-  return getApiKey('google_maps_javascript_api_key');
+  return null;
 }
 
 /**
@@ -41,26 +33,13 @@ export async function getGoogleMapsApiKey(): Promise<string | null> {
  * @returns Object with key names as keys and their values
  */
 export async function getMultipleApiKeys(keyNames: string[]): Promise<Record<string, string>> {
-  try {
-    const { data, error } = await supabase
-      .from('system_api_keys')
-      .select('key_name, key_value')
-      .in('key_name', keyNames);
-      
-    if (error || !data) {
-      console.error('Error retrieving API keys:', error);
-      return {};
+  const result: Record<string, string> = {};
+  
+  for (const keyName of keyNames) {
+    if (keyName === 'google_maps_javascript_api_key') {
+      result[keyName] = 'AIzaSyDKWjnDlFD1mysRpXnc6KiaWZyh_6jnphM';
     }
-    
-    // Convert the array to an object
-    const result: Record<string, string> = {};
-    data.forEach(item => {
-      result[item.key_name] = item.key_value;
-    });
-    
-    return result;
-  } catch (error) {
-    console.error('Error retrieving API keys:', error);
-    return {};
   }
+  
+  return result;
 }

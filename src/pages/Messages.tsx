@@ -1,50 +1,16 @@
 
-import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Layout } from "@/components/layout/Layout";
-import { MessageList } from "@/components/messages/MessageList";
-import { MessageChat } from "@/components/messages/MessageChat";
+import { ConversationsList } from "@/components/messages/ConversationsList";
+import { ChatInterface } from "@/components/messages/ChatInterface";
 import { Helmet } from "react-helmet";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, LogIn, ArrowLeft } from "lucide-react";
-import { conversations as allConversations, UserConversation } from "@/data/conversations";
-import { cn } from "@/lib/utils";
+import { MessageSquare, LogIn } from "lucide-react";
 
 export default function Messages() {
   const { isAuthenticated } = useAuth();
-  const { id: activeConversationIdFromParams } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-
-  const [selectedConversation, setSelectedConversation] = useState<UserConversation | null>(null);
-  
-  // For mobile: track if chat view is open when a conversation is selected
-  const [isChatViewOpenMobile, setIsChatViewOpenMobile] = useState(false);
-
-  useEffect(() => {
-    if (activeConversationIdFromParams) {
-      const conversation = allConversations.find(c => c.id === activeConversationIdFromParams) || null;
-      setSelectedConversation(conversation);
-      if (conversation) {
-        setIsChatViewOpenMobile(true); // Open chat view on mobile if ID is in URL
-      } else {
-        // Optional: navigate to /messages if ID is invalid, or show a "not found" in chat area
-        navigate("/messages", { replace: true }); 
-      }
-    } else {
-      setSelectedConversation(null);
-      setIsChatViewOpenMobile(false); // Close chat view on mobile if no ID
-    }
-  }, [activeConversationIdFromParams, navigate]);
-
-  const handleConversationSelect = (id: string) => {
-    navigate(`/messages/${id}`);
-  };
-
-  const handleMobileBackToList = () => {
-    navigate("/messages"); // This will clear the ID, and useEffect will reset selectedConversation
-    setIsChatViewOpenMobile(false);
-  }
+  const { id: conversationId } = useParams<{ id: string }>();
 
   // If user is not authenticated, show a login prompt
   if (!isAuthenticated) {
@@ -74,35 +40,33 @@ export default function Messages() {
   }
 
   return (
-    <Layout 
-      hideHeader={false} 
-      hideFooter={true} 
-      hideMobileNavbar={!!activeConversationIdFromParams} // Hide mobile navbar if a conversation is selected
-    >
+    <Layout hideHeader={false} hideFooter={true} hideMobileNavbar={!!conversationId}>
       <Helmet>
         <title>Messages - Barangay Management System</title>
       </Helmet>
-      {/* The main container for the messages UI, styled like the admin version */}
-      <div className="flex h-[calc(100vh-4rem)] md:h-[calc(100vh-4rem)] border md:m-0 bg-gray-100 md:rounded-lg shadow-sm overflow-hidden">
+      
+      <div className="flex h-[calc(100vh-4rem)] border bg-gray-100 md:rounded-lg shadow-sm overflow-hidden">
         {/* Desktop: Always show list and chat. Mobile: Toggle between list and chat */}
         
-        {/* Message List Panel (Left or Full on Mobile if chat not open) */}
-        <div className={cn(
-          "w-full md:w-[320px] md:flex-shrink-0 border-r border-gray-200 flex flex-col",
-          isChatViewOpenMobile && activeConversationIdFromParams ? "hidden md:flex" : "flex" // Hide list on mobile if chat is open
-        )}>
-          <MessageList 
-            activeConversationId={selectedConversation?.id}
-            onConversationSelect={handleConversationSelect}
-          />
+        {/* Conversations List Panel */}
+        <div className={`w-full md:w-[400px] md:flex-shrink-0 border-r border-gray-200 flex flex-col bg-white ${
+          conversationId ? "hidden md:flex" : "flex"
+        }`}>
+          <ConversationsList />
         </div>
 
-        {/* Chat Panel (Right or Full on Mobile if chat is open) */}
-        <div className={cn(
-          "flex-1 flex flex-col",
-          isChatViewOpenMobile && activeConversationIdFromParams ? "flex" : "hidden md:flex" // Show chat on mobile only if conversation selected
-        )}>
-          <MessageChat selectedConversation={selectedConversation} onBack={handleMobileBackToList} />
+        {/* Chat Panel */}
+        <div className={`flex-1 flex flex-col ${
+          conversationId ? "flex" : "hidden md:flex"
+        }`}>
+          {conversationId ? (
+            <ChatInterface />
+          ) : (
+            <div className="flex flex-1 flex-col items-center justify-center bg-gray-50">
+              <MessageSquare size={48} className="text-gray-300 mb-4" />
+              <p className="text-gray-500">Select a conversation to start chatting.</p>
+            </div>
+          )}
         </div>
       </div>
     </Layout>

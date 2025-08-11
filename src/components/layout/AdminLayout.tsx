@@ -300,11 +300,7 @@ export const AdminLayout = ({
                     </PopoverContent>
                   </Popover>
                   
-                  <Button variant="ghost" size="icon" className="relative">
-                    <MessageSquare className="h-5 w-5" />
-                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-medium text-white">5</span>
-                  </Button>
-                  
+                 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="rounded-full">

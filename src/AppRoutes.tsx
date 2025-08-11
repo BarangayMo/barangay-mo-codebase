@@ -3,6 +3,13 @@ import { Layout } from "@/components/layout/Layout";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import OfficialRegistration from "@/pages/OfficialRegistration";
+import OfficialRegistrationSuccess from "@/pages/OfficialRegistrationSuccess";
+import RoleSelection from "@/pages/RoleSelection";
+import LocationSelection from "@/pages/LocationSelection";
+import OfficialsInfo from "@/pages/OfficialsInfo";
+import OfficialDocuments from "@/pages/OfficialDocuments";
+import LogoUpload from "@/pages/LogoUpload";
 import EmailVerification from "@/pages/EmailVerification";
 import Verify from "@/pages/Verify";
 import MPIN from "@/pages/MPIN";
@@ -16,6 +23,7 @@ import Settings from "@/pages/Settings";
 import Menu from "@/pages/Menu";
 import Messages from "@/pages/Messages";
 import ResidentProfile from "@/pages/ResidentProfile";
+import OfficialProfile from "@/pages/OfficialProfile";
 import MobileWelcome from "@/pages/MobileWelcome";
 import RbiRegistration from "@/pages/RbiRegistration";
 import NotFound from "@/pages/NotFound";
@@ -23,6 +31,7 @@ import Services from "@/pages/Services";
 import Marketplace from "@/pages/Marketplace";
 import Jobs from "@/pages/Jobs";
 import JobDetail from "@/pages/JobDetail";
+import JobPayment from "@/pages/marketplace/JobPayment";
 import Contact from "@/pages/Contact";
 import About from "@/pages/About";
 import Features from "@/pages/Features";
@@ -53,6 +62,7 @@ import ResidentsPage from "@/pages/users/ResidentsPage";
 import OfficialsPage from "@/pages/users/OfficialsPage";
 import UserProfilePage from "@/pages/users/UserProfilePage";
 import SettingsPage from "@/pages/admin/SettingsPage";
+import OfficialRegistrationsPage from "@/pages/admin/OfficialRegistrationsPage";
 
 // Import marketplace customer-facing pages
 import ProductDetail from "@/pages/marketplace/ProductDetail";
@@ -60,6 +70,7 @@ import Cart from "@/pages/marketplace/Cart";
 import Checkout from "@/pages/marketplace/Checkout";
 import OrderConfirmation from "@/pages/marketplace/OrderConfirmation";
 import MyOrders from "@/pages/marketplace/MyOrders";
+import CategoryPage from "@/pages/marketplace/CategoryPage";
 
 // Import the EditProfile component
 import EditProfile from "./pages/EditProfile";
@@ -70,6 +81,7 @@ import UserManagementPage from "@/pages/users/UserManagementPage";
 import JobsAllPage from "@/pages/admin/JobsAllPage";
 import JobEditPage from "@/pages/admin/JobEditPage";
 import JobApplicationsPage from "@/pages/admin/JobApplicationsPage";
+import RbiFormsPage from "@/pages/admin/RbiFormsPage";
 
 // Import the new profile pages
 import PublicProfile from "@/pages/PublicProfile";
@@ -81,6 +93,10 @@ import OfficialServices from "@/pages/officials/OfficialServices";
 import OfficialRequests from "@/pages/officials/OfficialRequests";
 import PunongBarangayDashboard from "@/pages/officials/PunongBarangayDashboard";
 import EmergencyResponse from "@/pages/officials/EmergencyResponse";
+import OfficialsJobsPage from "@/pages/officials/OfficialsJobsPage";
+import OfficialProductPage from "@/pages/officials/OfficialProductPage";
+import OfficialProfileView from "@/pages/officials/OfficialProfileView";
+
 
 // Import the new EmailConfirmation component
 import EmailConfirmation from "@/pages/EmailConfirmation";
@@ -91,15 +107,38 @@ import QRScanner from "@/pages/officials/QRScanner";
 // Import the new RBI Forms component
 import RbiForms from "@/pages/officials/RbiForms";
 
+// Import Wishlist component
+import Wishlist from "@/pages/Wishlist";
+
+// Import resident-specific pages
+import ResidentJobsPage from "@/pages/resident/ResidentJobsPage";
+import ResidentProductsPage from "@/pages/resident/ResidentProductsPage";
+import ResidentOfficialProfileView from "@/pages/resident/OfficialProfileView";
+
+// Import auth components
+import { EmailConfirmationHandler } from "@/components/auth/EmailConfirmationHandler";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { RbiProtectedRoute } from "@/components/auth/RbiProtectedRoute";
+import AuthCallback from "@/pages/AuthCallback";
+
 export function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
+      {/* Registration flow routes */}
       <Route path="/register" element={<Register />} />
+      <Route path="/register/official" element={<OfficialRegistration />} />
+      <Route path="/register/official-success" element={<OfficialRegistrationSuccess />} />
+      <Route path="/register/role" element={<RoleSelection />} />
+      <Route path="/register/location" element={<LocationSelection />} />
+      <Route path="/register/officials" element={<OfficialsInfo />} />
+      <Route path="/register/official-documents" element={<OfficialDocuments />} />
+      <Route path="/register/logo" element={<LogoUpload />} />
       <Route path="/email-verification" element={<EmailVerification />} />
-      <Route path="/email-confirmation" element={<EmailConfirmation />} />
-      <Route path="/auth/confirm" element={<EmailConfirmation />} />
+      <Route path="/email-confirmation" element={<EmailConfirmationHandler />} />
+      <Route path="/auth/confirm" element={<EmailConfirmationHandler />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/verify" element={<Verify />} />
       <Route path="/mpin" element={<MPIN />} />
       <Route path="/forgot-mpin" element={<ForgotMPIN />} />
@@ -114,83 +153,102 @@ export function AppRoutes() {
       <Route path="/request-access" element={<RequestAccess />} />
       <Route path="/partnerships" element={<Partnerships />} />
       
-      <Route path="/resident-home" element={<ResidentHome />} />
-      <Route path="/rbi-registration" element={<RbiRegistration />} />
-      <Route path="/resident-profile" element={<ResidentProfile />} />
-      <Route path="/community" element={<Community />} />
+      {/* Protected routes - require authentication and email verification */}
+      <Route path="/resident-home" element={<RbiProtectedRoute><ResidentHome /></RbiProtectedRoute>} />
+      <Route path="/rbi-registration" element={<RbiProtectedRoute><RbiRegistration /></RbiProtectedRoute>} />
+      <Route path="/resident-profile" element={<RbiProtectedRoute><ResidentProfile /></RbiProtectedRoute>} />
+      <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
       
-      <Route path="/community/post/:postId" element={<CommunityPostDetail />} />
+      <Route path="/community/post/:postId" element={<RbiProtectedRoute><CommunityPostDetail /></RbiProtectedRoute>} />
       
-      <Route path="/official-dashboard" element={<OfficialsDashboard />} />
-      <Route path="/official/residents" element={<OfficialResidents />} />
-      <Route path="/official/services" element={<OfficialServices />} />
-      <Route path="/official/requests" element={<OfficialRequests />} />
-      <Route path="/official/officials" element={<OfficialsPage />} />
-      <Route path="/official/punong-barangay" element={<PunongBarangayDashboard />} />
-      <Route path="/official/emergency-response" element={<EmergencyResponse />} />
-      <Route path="/official/rbi-forms" element={<RbiForms />} />
+      <Route path="/official-dashboard" element={<ProtectedRoute><OfficialsDashboard /></ProtectedRoute>} />
+      <Route path="/official-profile" element={<ProtectedRoute><OfficialProfile /></ProtectedRoute>} />
+      <Route path="/official/residents" element={<ProtectedRoute><OfficialResidents /></ProtectedRoute>} />
+      <Route path="/official/services" element={<ProtectedRoute><OfficialServices /></ProtectedRoute>} />
+      <Route path="/official/requests" element={<ProtectedRoute><OfficialRequests /></ProtectedRoute>} />
+      <Route path="/official/officials" element={<ProtectedRoute><OfficialsPage /></ProtectedRoute>} />
+      <Route path="/official/punong-barangay" element={<ProtectedRoute><PunongBarangayDashboard /></ProtectedRoute>} />
+      <Route path="/official/emergency-response" element={<ProtectedRoute><EmergencyResponse /></ProtectedRoute>} />
+      <Route path="/official/rbi-forms" element={<ProtectedRoute><RbiForms /></ProtectedRoute>} />
+      <Route path="/official/jobs" element={<ProtectedRoute><OfficialsJobsPage /></ProtectedRoute>} />
+      <Route path="/official/products" element={<ProtectedRoute><OfficialProductPage /></ProtectedRoute>} />
+      <Route path="/officials/profile/:id" element={<OfficialProfileView />} />
       
-      <Route path="/official/qr-verification" element={<QRScanner />} />
       
-      <Route path="/admin" element={<AdminDashboard />} />
+      <Route path="/official/qr-verification" element={<ProtectedRoute><QRScanner /></ProtectedRoute>} />
       
-      <Route path="/admin/smarketplace" element={<SmarketplaceIndex />} />
-      <Route path="/admin/smarketplace/overview" element={<SmarketplaceOverview />} />
-      <Route path="/admin/smarketplace/products/all" element={<ProductsAllPage />} />
-      <Route path="/admin/smarketplace/products/edit/:id" element={<ProductEditPage />} />
-      <Route path="/admin/smarketplace/products/categories" element={<CategoriesPage />} />
-      <Route path="/admin/smarketplace/products/inventory" element={<ProductsAllPage />} />
-      <Route path="/admin/smarketplace/orders/all" element={<OrdersAllPage />} />
-      <Route path="/admin/smarketplace/orders/processing" element={<OrdersAllPage />} />
-      <Route path="/admin/smarketplace/orders/completed" element={<OrdersAllPage />} />
-      <Route path="/admin/smarketplace/vendors/all" element={<VendorsAllPage />} />
-      <Route path="/admin/smarketplace/customers/all" element={<CustomersAllPage />} />
-      <Route path="/admin/smarketplace/customers/vip" element={<CustomersAllPage />} />
+      <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
       
-      <Route path="/admin/messages" element={<MessagesPage />} />
-      <Route path="/admin/messages/:id" element={<MessagesPage />} />
+      <Route path="/admin/smarketplace" element={<ProtectedRoute><SmarketplaceIndex /></ProtectedRoute>} />
+      <Route path="/admin/smarketplace/overview" element={<ProtectedRoute><SmarketplaceOverview /></ProtectedRoute>} />
+      <Route path="/admin/smarketplace/products/all" element={<ProtectedRoute><ProductsAllPage /></ProtectedRoute>} />
+      <Route path="/admin/smarketplace/products/edit/:id" element={<ProtectedRoute><ProductEditPage /></ProtectedRoute>} />
+      <Route path="/admin/smarketplace/products/categories" element={<ProtectedRoute><CategoriesPage /></ProtectedRoute>} />
+      <Route path="/admin/smarketplace/products/inventory" element={<ProtectedRoute><ProductsAllPage /></ProtectedRoute>} />
+      <Route path="/admin/smarketplace/orders/all" element={<ProtectedRoute><OrdersAllPage /></ProtectedRoute>} />
+      <Route path="/admin/smarketplace/orders/processing" element={<ProtectedRoute><OrdersAllPage /></ProtectedRoute>} />
+      <Route path="/admin/smarketplace/orders/completed" element={<ProtectedRoute><OrdersAllPage /></ProtectedRoute>} />
+      <Route path="/admin/smarketplace/vendors/all" element={<ProtectedRoute><VendorsAllPage /></ProtectedRoute>} />
+      <Route path="/admin/smarketplace/customers/all" element={<ProtectedRoute><CustomersAllPage /></ProtectedRoute>} />
+      <Route path="/admin/smarketplace/customers/vip" element={<ProtectedRoute><CustomersAllPage /></ProtectedRoute>} />
       
-      <Route path="/admin/reports/financial" element={<FinancialReportsPage />} />
-      <Route path="/admin/reports/activity" element={<ActivityLogsPage />} />
+      <Route path="/admin/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
+      <Route path="/admin/messages/:id" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
       
-      <Route path="/admin/users" element={<UserManagementPage />} />
-      <Route path="/admin/users/all" element={<UserManagementPage />} />
-      <Route path="/admin/users/roles" element={<UserManagementPage />} />
-      <Route path="/admin/users/settings" element={<UserManagementPage />} />
-      <Route path="/admin/users/officials" element={<OfficialsPage />} />
-      <Route path="/admin/users/:id" element={<UserProfilePage />} />
+      <Route path="/admin/reports/financial" element={<ProtectedRoute><FinancialReportsPage /></ProtectedRoute>} />
+      <Route path="/admin/reports/activity" element={<ProtectedRoute><ActivityLogsPage /></ProtectedRoute>} />
       
-      <Route path="/admin/settings" element={<SettingsPage />} />
+      <Route path="/admin/users" element={<ProtectedRoute><UserManagementPage /></ProtectedRoute>} />
+      <Route path="/admin/users/all" element={<ProtectedRoute><UserManagementPage /></ProtectedRoute>} />
+      <Route path="/admin/users/roles" element={<ProtectedRoute><UserManagementPage /></ProtectedRoute>} />
+      <Route path="/admin/users/settings" element={<ProtectedRoute><UserManagementPage /></ProtectedRoute>} />
+      <Route path="/admin/users/officials" element={<ProtectedRoute><OfficialsPage /></ProtectedRoute>} />
+      <Route path="/admin/users/:id" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
       
-      <Route path="/notifications" element={<Notifications />} />
-      <Route path="/settings" element={<Settings />} />
-      <Route path="/menu" element={<Menu />} />
-      <Route path="/messages" element={<Messages />} />
-      <Route path="/messages/:id" element={<Messages />} />
+      <Route path="/admin/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+      <Route path="/admin/official-registrations" element={<ProtectedRoute><OfficialRegistrationsPage /></ProtectedRoute>} />
       
-      <Route path="/services" element={<Services />} />
-      <Route path="/jobs" element={<Jobs />} />
-      <Route path="/jobs/:id" element={<JobDetail />} />
+      <Route path="/notifications" element={<RbiProtectedRoute><Notifications /></RbiProtectedRoute>} />
+      <Route path="/settings" element={<RbiProtectedRoute><Settings /></RbiProtectedRoute>} />
+      <Route path="/menu" element={<RbiProtectedRoute><Menu /></RbiProtectedRoute>} />
+      <Route path="/messages" element={<RbiProtectedRoute><Messages /></RbiProtectedRoute>} />
+      <Route path="/messages/new" element={<RbiProtectedRoute><Messages /></RbiProtectedRoute>} />
+      <Route path="/messages/:id" element={<RbiProtectedRoute><Messages /></RbiProtectedRoute>} />
       
-      <Route path="/marketplace" element={<Marketplace />} />
-      <Route path="/marketplace/product/:id" element={<ProductDetail />} />
-      <Route path="/marketplace/cart" element={<Cart />} />
-      <Route path="/marketplace/checkout" element={<Checkout />} />
-      <Route path="/marketplace/order-confirmation" element={<OrderConfirmation />} />
-      <Route path="/marketplace/my-orders" element={<MyOrders />} />
+      <Route path="/services" element={<RbiProtectedRoute><Services /></RbiProtectedRoute>} />
+      <Route path="/jobs" element={<RbiProtectedRoute><Jobs /></RbiProtectedRoute>} />
+      <Route path="/jobs/:id" element={<RbiProtectedRoute><JobDetail /></RbiProtectedRoute>} />
+      <Route path="/jobs/:id/payment" element={<RbiProtectedRoute><JobPayment /></RbiProtectedRoute>} />
       
-      <Route path="/admin/media-library" element={<MediaLibraryPage />} />
+      {/* Resident-specific job and product management routes */}
+      <Route path="/resident/jobs" element={<RbiProtectedRoute><ResidentJobsPage /></RbiProtectedRoute>} />
+      <Route path="/resident/products" element={<RbiProtectedRoute><ResidentProductsPage /></RbiProtectedRoute>} />
+      <Route path="/resident/products/edit/:id" element={<RbiProtectedRoute><ProductEditPage /></RbiProtectedRoute>} />
+      <Route path="/resident/official" element={<RbiProtectedRoute><ResidentOfficialProfileView /></RbiProtectedRoute>} />
       
-      <Route path="/edit-profile" element={<EditProfile />} />
+      <Route path="/marketplace" element={<RbiProtectedRoute><Marketplace /></RbiProtectedRoute>} />
+      <Route path="/marketplace/category/:categorySlug" element={<RbiProtectedRoute><CategoryPage /></RbiProtectedRoute>} />
+      <Route path="/marketplace/product/:id" element={<RbiProtectedRoute><ProductDetail /></RbiProtectedRoute>} />
+      <Route path="/marketplace/cart" element={<RbiProtectedRoute><Cart /></RbiProtectedRoute>} />
+      <Route path="/marketplace/checkout" element={<RbiProtectedRoute><Checkout /></RbiProtectedRoute>} />
+      <Route path="/marketplace/order-confirmation" element={<RbiProtectedRoute><OrderConfirmation /></RbiProtectedRoute>} />
+      <Route path="/marketplace/my-orders" element={<RbiProtectedRoute><MyOrders /></RbiProtectedRoute>} />
+      <Route path="/marketplace/wishlist" element={<RbiProtectedRoute><Wishlist /></RbiProtectedRoute>} />
       
-      <Route path="/admin/jobs" element={<AdminDashboard />} />
-      <Route path="/admin/jobs/all" element={<JobsAllPage />} />
-      <Route path="/admin/jobs/edit/:id" element={<JobEditPage />} />
-      <Route path="/admin/jobs/applications" element={<JobApplicationsPage />} />
+      <Route path="/admin/media-library" element={<ProtectedRoute><MediaLibraryPage /></ProtectedRoute>} />
       
-      <Route path="/profile/public/:userId" element={<PublicProfile />} />
-      <Route path="/profile/private" element={<PrivateProfile />} />
-      <Route path="/profile" element={<PrivateProfile />} />
+      <Route path="/edit-profile" element={<RbiProtectedRoute><EditProfile /></RbiProtectedRoute>} />
+      
+      <Route path="/admin/jobs" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+      <Route path="/admin/jobs/all" element={<ProtectedRoute><JobsAllPage /></ProtectedRoute>} />
+      <Route path="/admin/jobs/edit/:id" element={<ProtectedRoute><JobEditPage /></ProtectedRoute>} />
+      <Route path="/admin/jobs/applications" element={<ProtectedRoute><JobApplicationsPage /></ProtectedRoute>} />
+      
+      <Route path="/admin/rbi-forms" element={<ProtectedRoute><RbiFormsPage /></ProtectedRoute>} />
+      
+      <Route path="/profile/public/:userId" element={<RbiProtectedRoute><PublicProfile /></RbiProtectedRoute>} />
+      <Route path="/profile/private" element={<RbiProtectedRoute><PrivateProfile /></RbiProtectedRoute>} />
+      <Route path="/profile" element={<RbiProtectedRoute><PrivateProfile /></RbiProtectedRoute>} />
       
       <Route path="*" element={<NotFound />} />
     </Routes>

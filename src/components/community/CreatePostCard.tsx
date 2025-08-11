@@ -12,7 +12,7 @@ import { useCreatePost } from "@/hooks/use-community-data";
 export const CreatePostCard = () => {
   const [content, setContent] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const createPost = useCreatePost();
 
   const handleSubmit = async () => {
@@ -92,7 +92,7 @@ export const CreatePostCard = () => {
           {!isExpanded && (
             <Avatar className="h-8 w-8 flex-shrink-0">
               <AvatarImage src={getUserAvatarUrl()} />
-              <AvatarFallback className="text-xs bg-resident text-white">
+              <AvatarFallback className={`text-xs ${userRole === 'official' ? 'bg-official' : 'bg-resident'} text-white`}>
                 {getUserInitials()}
               </AvatarFallback>
             </Avatar>
@@ -113,7 +113,7 @@ export const CreatePostCard = () => {
                 <div className="flex items-center gap-2 mb-2">
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={getUserAvatarUrl()} />
-                    <AvatarFallback className="text-xs bg-resident text-white">
+                    <AvatarFallback className={`text-xs ${userRole === 'official' ? 'bg-official' : 'bg-resident'} text-white`}>
                       {getUserInitials()}
                     </AvatarFallback>
                   </Avatar>
@@ -155,7 +155,7 @@ export const CreatePostCard = () => {
                     onClick={handleSubmit}
                     disabled={!content.trim() || createPost.isPending}
                     size="sm"
-                    className="bg-resident hover:bg-resident-dark text-white px-4"
+                    className={`${userRole === 'official' ? 'bg-official hover:bg-official-dark' : 'bg-resident hover:bg-resident-dark'} text-white px-4`}
                   >
                     {createPost.isPending ? "Posting..." : "Post"}
                   </Button>

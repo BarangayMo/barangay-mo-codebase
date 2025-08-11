@@ -1,27 +1,37 @@
 
-import { ReactNode } from "react";
-import { Button } from "@/components/ui/button";
-import { DashboardBreadcrumb } from "./Breadcrumb";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
-interface BreadcrumbItem {
-  label: string;
-  href?: string;
-}
-
-interface ActionButton {
-  label: string;
-  onClick: () => void;
-  icon?: ReactNode;
-  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | "dashboard";
-  disabled?: boolean;
-}
-
-interface DashboardPageHeaderProps {
+interface PageHeaderProps {
   title: string;
   description?: string;
-  breadcrumbItems?: BreadcrumbItem[];
-  actionButton?: ActionButton;
-  secondaryActions?: ActionButton[];
+  breadcrumbItems: Array<{
+    label: string;
+    href?: string;
+  }>;
+  actionButton?: {
+    label: string;
+    onClick: () => void;
+    icon?: React.ReactNode;
+    variant?: "default" | "dashboard" | "destructive" | "outline" | "secondary" | "ghost";
+    disabled?: boolean;
+  };
+  secondaryActions?: Array<{
+    label: string;
+    onClick: () => void;
+    icon?: React.ReactNode;
+    variant?: "default" | "dashboard" | "destructive" | "outline" | "secondary" | "ghost";
+    disabled?: boolean;
+  }>;
+  className?: string;
 }
 
 export function DashboardPageHeader({
@@ -29,39 +39,107 @@ export function DashboardPageHeader({
   description,
   breadcrumbItems,
   actionButton,
-  secondaryActions = []
-}: DashboardPageHeaderProps) {
+  secondaryActions,
+  className,
+}: PageHeaderProps) {
+  const { userRole } = useAuth();
+
+  const getHomeRoute = () => {
+    switch (userRole) {
+      case "resident":
+        return "/resident-home";
+      case "official":
+        return "/official-dashboard";
+      case "superadmin":
+        return "/admin";
+      default:
+        return "/";
+    }
+  };
+
+  const getHomeBreadcrumbLabel = () => {
+    switch (userRole) {
+      case "resident":
+        return "Home";
+      case "official":
+        return "Dashboard";
+      case "superadmin":
+        return "Dashboard";
+      default:
+        return "Home";
+    }
+  };
+
   return (
-    <div className="mb-8">
-      {breadcrumbItems && <DashboardBreadcrumb items={breadcrumbItems} />}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mt-4">
+    <div className={cn("space-y-4 py-6 md:py-8", className)}>
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href={getHomeRoute()}>
+              {getHomeBreadcrumbLabel()}
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          {breadcrumbItems.map((crumb, index) => {
+            const isLast = index === breadcrumbItems.length - 1;
+            return (
+              <BreadcrumbItem key={crumb.label}>
+                {isLast ? (
+                  <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                ) : (
+                  <>
+                    <BreadcrumbLink href={crumb.href}>{crumb.label}</BreadcrumbLink>
+                    <BreadcrumbSeparator />
+                  </>
+                )}
+              </BreadcrumbItem>
+            );
+          })}
+        </BreadcrumbList>
+      </Breadcrumb>
+      
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
-          {description && <p className="text-muted-foreground mt-2">{description}</p>}
+          <h1 className="text-3xl font-bold">{title}</h1>
+          {description && <p className="mt-2 text-gray-500">{description}</p>}
         </div>
         <div className="flex items-center gap-2">
-          {secondaryActions.map((action, index) => (
-            <Button 
-              key={index} 
-              variant={action.variant || "outline"} 
-              onClick={action.onClick} 
+          {secondaryActions && secondaryActions.map((action, index) => (
+            <button
+              key={index}
+              onClick={action.onClick}
               disabled={action.disabled}
-              className="flex items-center gap-2"
+              className={cn(
+                "inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors",
+                action.variant === "dashboard"
+                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  : action.variant === "outline"
+                  ? "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  : "bg-gray-900 text-white hover:bg-gray-800",
+                action.disabled && "opacity-50 cursor-not-allowed"
+              )}
             >
               {action.icon}
               {action.label}
-            </Button>
+            </button>
           ))}
           {actionButton && (
-            <Button 
-              variant={actionButton.variant || "default"} 
+            <button
               onClick={actionButton.onClick}
               disabled={actionButton.disabled}
-              className="flex items-center gap-2 text-slate-50 bg-blue-600 hover:bg-blue-500"
+              className={cn(
+                "inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors",
+                actionButton.variant === "dashboard"
+                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  : actionButton.variant === "outline"
+                  ? "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  : "bg-gray-900 text-white hover:bg-gray-800",
+                actionButton.disabled && "opacity-50 cursor-not-allowed"
+              )}
             >
               {actionButton.icon}
               {actionButton.label}
-            </Button>
+            </button>
           )}
         </div>
       </div>
