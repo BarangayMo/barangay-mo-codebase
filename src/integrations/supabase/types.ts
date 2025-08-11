@@ -1135,7 +1135,6 @@ export type Database = {
       }
       officials: {
         Row: {
-          achievements: string[] | null
           approved_at: string | null
           approved_by: string | null
           barangay: string
@@ -1160,10 +1159,8 @@ export type Database = {
           suffix: string | null
           updated_at: string
           user_id: string | null
-          years_of_service: number | null
         }
         Insert: {
-          achievements?: string[] | null
           approved_at?: string | null
           approved_by?: string | null
           barangay: string
@@ -1188,10 +1185,8 @@ export type Database = {
           suffix?: string | null
           updated_at?: string
           user_id?: string | null
-          years_of_service?: number | null
         }
         Update: {
-          achievements?: string[] | null
           approved_at?: string | null
           approved_by?: string | null
           barangay?: string
@@ -1216,7 +1211,6 @@ export type Database = {
           suffix?: string | null
           updated_at?: string
           user_id?: string | null
-          years_of_service?: number | null
         }
         Relationships: []
       }
@@ -1431,6 +1425,7 @@ export type Database = {
           municipality: string | null
           officials_data: Json | null
           phone_number: string | null
+          position: string | null
           province: string | null
           region: string | null
           role: Database["public"]["Enums"]["user_role"] | null
@@ -1456,6 +1451,7 @@ export type Database = {
           municipality?: string | null
           officials_data?: Json | null
           phone_number?: string | null
+          position?: string | null
           province?: string | null
           region?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
@@ -1481,6 +1477,7 @@ export type Database = {
           municipality?: string | null
           officials_data?: Json | null
           phone_number?: string | null
+          position?: string | null
           province?: string | null
           region?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
@@ -2544,9 +2541,33 @@ export type Database = {
         Args: { official_id: string }
         Returns: undefined
       }
-      fix_official_profiles: {
+      approve_official_complete: {
+        Args: { official_id: string }
+        Returns: string
+      }
+      approve_official_direct: {
+        Args: { official_id: string }
+        Returns: string
+      }
+      approve_official_simple: {
+        Args: { official_id: string }
+        Returns: string
+      }
+      approve_official_with_profile: {
+        Args: { official_id: string }
+        Returns: string
+      }
+      fix_approved_officials: {
         Args: Record<PropertyKey, never>
-        Returns: undefined
+        Returns: string
+      }
+      fix_existing_approved_officials: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      fix_specific_official: {
+        Args: { official_id: string }
+        Returns: string
       }
       generate_job_code: {
         Args: Record<PropertyKey, never>
@@ -2564,6 +2585,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
       }
+      handle_new_user_signup: {
+        Args: Record<PropertyKey, never> | { user_data: Json }
+        Returns: undefined
+      }
       hash_password: {
         Args: { password_text: string }
         Returns: string
@@ -2576,9 +2601,21 @@ export type Database = {
         Args: { user_id: string }
         Returns: boolean
       }
+      link_approved_officials: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       sync_approved_officials_to_profiles: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      test_approval: {
+        Args: { official_id: string }
+        Returns: string
+      }
+      test_edge_function_call: {
+        Args: { official_id: string }
+        Returns: string
       }
       update_role_user_counts: {
         Args: Record<PropertyKey, never>
