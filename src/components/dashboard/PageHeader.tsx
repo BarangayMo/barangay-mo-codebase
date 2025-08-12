@@ -111,11 +111,12 @@ export function DashboardPageHeader({
               disabled={action.disabled}
               className={cn(
                 "inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-medium transition-colors text-sm md:text-base",
+                action.className,
                 action.variant === "dashboard"
                   ? "bg-blue-600 text-white hover:bg-blue-700"
                   : action.variant === "outline"
                   ? "border border-gray-300 text-gray-700 hover:bg-gray-50"
-                  : "bg-gray-900 text-white hover:bg-gray-800",
+                  : (!action.className && "bg-gray-900 text-white hover:bg-gray-800"),
                 action.disabled && "opacity-50 cursor-not-allowed"
               )}
             >
@@ -129,11 +130,12 @@ export function DashboardPageHeader({
               disabled={actionButton.disabled}
               className={cn(
                 "inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-medium transition-colors text-sm md:text-base",
+                actionButton.className,
                 actionButton.variant === "dashboard"
                   ? "bg-blue-600 text-white hover:bg-blue-700"
                   : actionButton.variant === "outline"
                   ? "border border-gray-300 text-gray-700 hover:bg-gray-50"
-                  : "bg-gray-900 text-white hover:bg-gray-800",
+                  : (!actionButton.className && "bg-gray-900 text-white hover:bg-gray-800"),
                 actionButton.disabled && "opacity-50 cursor-not-allowed"
               )}
             >
