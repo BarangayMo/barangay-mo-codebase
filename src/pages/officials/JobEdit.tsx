@@ -377,11 +377,14 @@ export default function OfficialJobEditPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="description" className="text-sm font-medium">Job Description</Label>
-                  <RichTextEditor
-                    value={job.description}
-                    onChange={(value) => handleInputChange('description', value)}
-                    placeholder="Describe the job role, requirements, and expectations..."
-                  />
+                  <div dir="ltr" className="text-left">
+                    <RichTextEditor
+                      value={job.description}
+                      onChange={(value) => handleInputChange('description', value)}
+                      placeholder="Describe the job role, requirements, and expectations..."
+                      className="text-left"
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

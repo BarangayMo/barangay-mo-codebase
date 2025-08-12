@@ -888,9 +888,9 @@ const ProductEditPage = () => {
               type="submit"
               disabled={saveProductMutation.isPending || !currentVendor}
               className={`flex items-center gap-2 text-white
-                ${userRole === 'resident' ? 'bg-[#3d62f5] hover:bg-[#2746b3]' : ''}
-                ${userRole === 'official' ? 'bg-[#e53935] hover:bg-[#b71c1c]' : ''}
-                ${userRole === 'superadmin' ? 'bg-black hover:bg-gray-800' : ''}
+                ${String(userRole) === 'resident' ? 'bg-[#3d62f5] hover:bg-[#2746b3]' : ''}
+                ${String(userRole) === 'official' ? 'bg-[#e53935] hover:bg-[#b71c1c]' : ''}
+                ${String(userRole) === 'superadmin' ? 'bg-black hover:bg-gray-800' : ''}
               `}
             >
               <Save className="h-4 w-4" />

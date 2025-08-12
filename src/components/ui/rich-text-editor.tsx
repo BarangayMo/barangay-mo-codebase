@@ -75,7 +75,7 @@ export const RichTextEditor = ({ value, onChange, placeholder, className }: Rich
   };
 
   return (
-    <div className={cn("border rounded-md", className)}>
+    <div dir="ltr" className={cn("border rounded-md text-left", className)}>
       <div className="flex items-center justify-between space-x-2 px-3 py-2 border-b bg-gray-50">
         <div className="flex items-center space-x-1">
           <Button 
@@ -227,7 +227,7 @@ export const RichTextEditor = ({ value, onChange, placeholder, className }: Rich
           dir="ltr"
           onChange={(e) => onChange(e.target.value)}
           style={{ direction: 'ltr', unicodeBidi: 'isolate', textAlign: 'left' }}
-          className="border-0 resize-none min-h-[120px] focus-visible:ring-0 font-mono text-sm"
+          className="border-0 resize-none min-h-[120px] focus-visible:ring-0 font-mono text-sm text-left"
           placeholder={placeholder}
         />
       ) : (
@@ -235,7 +235,7 @@ export const RichTextEditor = ({ value, onChange, placeholder, className }: Rich
           <div
             contentEditable
             dir="ltr"
-            className="min-h-[96px] outline-none"
+            className="min-h-[96px] outline-none text-left"
             dangerouslySetInnerHTML={{ __html: value }}
             onInput={(e) => onChange(e.currentTarget.innerHTML)}
             style={{ whiteSpace: 'pre-wrap', direction: 'ltr', unicodeBidi: 'isolate', textAlign: 'left' }}

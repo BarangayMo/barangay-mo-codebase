@@ -23,6 +23,7 @@ interface PageHeaderProps {
     icon?: React.ReactNode;
     variant?: "default" | "dashboard" | "destructive" | "outline" | "secondary" | "ghost";
     disabled?: boolean;
+    className?: string;
   };
   secondaryActions?: Array<{
     label: string;
@@ -30,6 +31,7 @@ interface PageHeaderProps {
     icon?: React.ReactNode;
     variant?: "default" | "dashboard" | "destructive" | "outline" | "secondary" | "ghost";
     disabled?: boolean;
+    className?: string;
   }>;
   className?: string;
 }
