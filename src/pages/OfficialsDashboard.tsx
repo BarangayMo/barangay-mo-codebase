@@ -443,10 +443,42 @@ const OfficialsDashboard = () => {
               ×
             </button>
             <div className="flex flex-col items-center gap-3">
-              {getLogoDisplay()}
-              <h3 className="text-lg font-bold text-gray-900 font-outfit break-words text-center w-full">{getPunongBarangayName()}</h3>
-              <p className="text-base text-red-600 font-medium break-words text-center w-full">{getLocationText()}</p>
-              <p className="text-sm text-gray-500 text-center w-full">BarangayMo Officials</p>
+              {/* Prefer barangay logo, then user logo, else initials from officialProfile */}
+              {barangayData?.["Logo"] ? (
+                <img
+                  src={barangayData["Logo"] || "/placeholder.svg"}
+                  alt="Barangay logo"
+                  className="w-12 h-12 rounded-full object-cover border border-red-200"
+                  loading="lazy"
+                />
+              ) : user?.logo_url ? (
+                <img
+                  src={user.logo_url || "/placeholder.svg"}
+                  alt="Barangay logo"
+                  className="w-12 h-12 rounded-full object-cover border border-red-200"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-red-100 border border-red-200 flex items-center justify-center text-sm font-medium text-red-600">
+                  {(officialProfile?.first_name?.[0] || "U")}
+                  {(officialProfile?.last_name?.[0] || "O")}
+                </div>
+              )}
+              <h3 className="text-lg font-bold text-gray-900 font-outfit break-words text-center w-full">
+                {(officialProfile?.first_name || officialProfile?.last_name)
+                  ? `${officialProfile?.first_name ?? ""} ${officialProfile?.middle_name ?? ""} ${officialProfile?.last_name ?? ""}`.replace(/\s+/g, " ").trim()
+                  : getPunongBarangayName()}
+              </h3>
+              <p className="text-base text-red-600 font-medium break-words text-center w-full">
+                {officialProfile
+                  ? (officialProfile.municipality && officialProfile.province
+                      ? `${officialProfile.municipality}, ${officialProfile.province}`
+                      : officialProfile.barangay || getLocationText())
+                  : getLocationText()}
+              </p>
+              {officialProfile?.position && (
+                <p className="text-sm text-gray-500 text-center w-full">{officialProfile.position}</p>
+              )}
             </div>
           </div>
         </div>
