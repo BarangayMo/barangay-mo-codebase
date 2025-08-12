@@ -27,7 +27,15 @@ export default function OfficialJobEditPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
+  const getRoleButtonClass = () => {
+    if (userRole && typeof userRole === 'string') {
+      if (userRole.toLowerCase() === 'resident') return 'bg-[#3d62f5] hover:bg-[#2746b3] text-white';
+      if (userRole.toLowerCase() === 'official') return 'bg-[#e53935] hover:bg-[#b71c1c] text-white';
+      if (userRole.toLowerCase() === 'superadmin') return 'bg-black hover:bg-gray-800 text-white';
+    }
+    return '';
+  };
 
   const isEditing = !!id && id !== 'new';
 
@@ -310,14 +318,16 @@ export default function OfficialJobEditPage() {
             onClick: () => handleSave(),
             icon: <Save className="h-4 w-4" />,
             variant: "default",
-            disabled: saving
+            disabled: saving,
+            className: getRoleButtonClass()
           }}
           secondaryActions={[
             {
               label: "Back to List",
               onClick: () => navigate('/official/jobs'),
               icon: <ArrowLeft className="h-4 w-4" />,
-              variant: "ghost"
+              variant: "ghost",
+              className: getRoleButtonClass()
             }
           ]}
         />
@@ -334,6 +344,7 @@ export default function OfficialJobEditPage() {
               size="sm"
               onClick={handleSaveDraft}
               disabled={autoSaveStatus === 'saving'}
+              className={getRoleButtonClass()}
             >
               Save Draft
             </Button>
