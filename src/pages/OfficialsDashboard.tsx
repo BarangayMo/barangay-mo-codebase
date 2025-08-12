@@ -390,11 +390,43 @@ const OfficialsDashboard = () => {
 
         {/* Content */}
         <div className="relative flex items-center gap-3 p-4 rounded-lg">
-          {getLogoDisplay()}
+          {/* Prefer barangay logo, then user logo, else initials from officialProfile */}
+          {barangayData?.["Logo"] ? (
+            <img
+              src={barangayData["Logo"] || "/placeholder.svg"}
+              alt="Barangay logo"
+              className="w-12 h-12 rounded-full object-cover border border-red-200"
+              loading="lazy"
+            />
+          ) : user?.logo_url ? (
+            <img
+              src={user.logo_url || "/placeholder.svg"}
+              alt="Barangay logo"
+              className="w-12 h-12 rounded-full object-cover border border-red-200"
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-12 h-12 rounded-full bg-red-100 border border-red-200 flex items-center justify-center text-sm font-medium text-red-600">
+              {(officialProfile?.first_name?.[0] || "U")}
+              {(officialProfile?.last_name?.[0] || "O")}
+            </div>
+          )}
           <div className="flex-1 min-w-0">
-            <h3 className="text-base font-semibold text-gray-900 truncate font-outfit">{getPunongBarangayName()}</h3>
-            <p className="text-sm text-red-600 font-medium truncate overflow-hidden whitespace-nowrap block max-w-[140px] md:max-w-[180px] lg:max-w-[220px]">{getLocationText()}</p>
-            <p className="text-xs text-gray-500 truncate">BarangayMo Officials</p>
+            <h3 className="text-base font-semibold text-gray-900 truncate font-outfit">
+              {(officialProfile?.first_name || officialProfile?.last_name)
+                ? `${officialProfile?.first_name ?? ""} ${officialProfile?.middle_name ?? ""} ${officialProfile?.last_name ?? ""}`.replace(/\s+/g, " ").trim()
+                : getPunongBarangayName()}
+            </h3>
+            <p className="text-sm text-red-600 font-medium truncate overflow-hidden whitespace-nowrap block max-w-[140px] md:max-w-[180px] lg:max-w-[220px]">
+              {officialProfile
+                ? (officialProfile.municipality && officialProfile.province
+                    ? `${officialProfile.municipality}, ${officialProfile.province}`
+                    : officialProfile.barangay || getLocationText())
+                : getLocationText()}
+            </p>
+            <p className="text-xs text-gray-500 truncate">
+              {officialProfile?.position ? officialProfile.position : "BarangayMo Officials"}
+            </p>
           </div>
         </div>
       </div>
