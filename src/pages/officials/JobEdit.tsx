@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { Save, ArrowLeft, Calendar, Building2, MapPin, DollarSign, Clock, Tag, Briefcase, Target, Users, Sparkles, Search, Eye, ChevronDown } from "lucide-react";
-import { RichTextEditor } from "@/components/ui/rich-text-editor";
+
 import { MediaUpload } from "@/components/ui/media-upload";
 import { DraggableArrayInput } from "@/components/ui/draggable-array-input";
 import { CharacterLimitedInput } from "@/components/ui/character-limited-input";
@@ -375,17 +375,6 @@ export default function OfficialJobEditPage() {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="description" className="text-sm font-medium">Job Description</Label>
-                  <div dir="ltr" className="text-left">
-                    <RichTextEditor
-                      value={job.description}
-                      onChange={(value) => handleInputChange('description', value)}
-                      placeholder="Describe the job role, requirements, and expectations..."
-                      className="text-left"
-                    />
-                  </div>
-                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
