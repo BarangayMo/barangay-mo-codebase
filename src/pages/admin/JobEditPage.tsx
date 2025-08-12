@@ -28,6 +28,17 @@ export default function JobEditPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, userRole } = useAuth();
+    // Helper for role-based button color
+    const getRoleButtonClass = () => {
+      // Debug userRole value
+      console.log('Current userRole:', userRole);
+      if (userRole && typeof userRole === 'string') {
+        if (userRole.toLowerCase() === 'resident') return 'bg-[#3d62f5] hover:bg-[#2746b3] text-white';
+        if (userRole.toLowerCase() === 'official') return 'bg-[#e53935] hover:bg-[#b71c1c] text-white';
+        if (userRole.toLowerCase() === 'superadmin') return 'bg-black hover:bg-gray-800 text-white';
+      }
+      return '';
+    };
 
   const isEditing = !!id && id !== 'new';
 
@@ -310,21 +321,25 @@ export default function JobEditPage() {
           actionButton={{
             label: saving ? (isEditing ? "Publishing..." : "Creating...") : (isEditing ? "Save & Publish" : "Create"),
             onClick: () => handleSave(),
-            icon: <Save className="h-4 w-4" />,
-            variant: "default",
-            disabled: saving
+            icon: <Save className="h-4 w-4" />, 
+            // variant intentionally omitted to allow className to take over
+            disabled: saving,
+            className: getRoleButtonClass()
           }}
           secondaryActions={[
             {
               label: "Back to List",
               onClick: () => navigate('/admin/jobs/all'),
-              icon: <ArrowLeft className="h-4 w-4" />,
-              variant: "ghost"
+              icon: <ArrowLeft className="h-4 w-4" />, 
+              // variant intentionally omitted to allow className to take over
+              className: getRoleButtonClass()
             }
           ]}
         />
 
-        {/* Auto-save status */}
+  {/* Debug: Show userRole */}
+  <div className="mb-2 text-xs text-gray-500">Current userRole: {String(userRole)}</div>
+  {/* Auto-save status */}
         {isEditing && (
           <div className="mb-4 flex justify-between items-center">
             <span className="text-xs text-muted-foreground">
@@ -337,6 +352,7 @@ export default function JobEditPage() {
               size="sm"
               onClick={handleSaveDraft}
               disabled={autoSaveStatus === 'saving'}
+              className={getRoleButtonClass()}
             >
               Save Draft
             </Button>
@@ -677,7 +693,7 @@ export default function JobEditPage() {
                   currentAssigneeId={job.assigned_to}
                   onAssigneeChange={handleAssigneeChange}
                 >
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className={`w-full ${getRoleButtonClass()}`}>
                     <Users className="h-4 w-4 mr-2" />
                     Change Assignee
                   </Button>
