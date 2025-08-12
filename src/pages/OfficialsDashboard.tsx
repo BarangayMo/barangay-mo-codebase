@@ -159,6 +159,7 @@ const OfficialsDashboard = () => {
         .from("rbi_forms")
         .select("*", { count: "exact", head: true })
         .eq("barangay_id", officialProfile.barangay)
+        .eq("status", "submitted")
 
       if (error) throw error
       return count || 0
