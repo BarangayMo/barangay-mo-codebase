@@ -17,6 +17,7 @@ import { Save, ArrowLeft, Calendar, Building2, MapPin, DollarSign, Clock, Tag, B
 import { MediaUpload } from "@/components/ui/media-upload";
 import { DraggableArrayInput } from "@/components/ui/draggable-array-input";
 import { CharacterLimitedInput } from "@/components/ui/character-limited-input";
+import { SimpleDescriptionEditor } from "@/components/ui/simple-description-editor";
 import { JobMap } from "@/components/ui/job-map";
 import { AssigneeDialog } from "@/components/ui/assignee-dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -383,6 +384,14 @@ export default function JobEditPage() {
                   />
                 </div>
 
+                <div className="space-y-2">
+                  <Label htmlFor="description" className="text-sm font-medium">Job Description</Label>
+                  <SimpleDescriptionEditor
+                    value={job.description}
+                    onChange={(value) => handleInputChange('description', value)}
+                    placeholder="Describe the job role, requirements, and expectations..."
+                  />
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
