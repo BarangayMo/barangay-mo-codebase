@@ -230,12 +230,12 @@ const RbiForms = () => {
                 />
               </div>
               
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   variant={statusFilter === "all" ? "default" : "outline"}
                   size="sm"
                   onClick={() => setStatusFilter("all")}
-                  className={statusFilter === "all" ? "bg-red-600 hover:bg-red-700" : ""}
+                  className={`${statusFilter === "all" ? "bg-red-600 hover:bg-red-700" : ""} text-xs px-2 py-1 h-8`}
                 >
                   All
                 </Button>
@@ -243,7 +243,7 @@ const RbiForms = () => {
                   variant={statusFilter === "submitted" ? "default" : "outline"}
                   size="sm"
                   onClick={() => setStatusFilter("submitted")}
-                  className={statusFilter === "submitted" ? "bg-red-600 hover:bg-red-700" : ""}
+                  className={`${statusFilter === "submitted" ? "bg-red-600 hover:bg-red-700" : ""} text-xs px-2 py-1 h-8`}
                 >
                   Submitted
                 </Button>
@@ -251,7 +251,7 @@ const RbiForms = () => {
                   variant={statusFilter === "under_review" ? "default" : "outline"}
                   size="sm"
                   onClick={() => setStatusFilter("under_review")}
-                  className={statusFilter === "under_review" ? "bg-red-600 hover:bg-red-700" : ""}
+                  className={`${statusFilter === "under_review" ? "bg-red-600 hover:bg-red-700" : ""} text-xs px-2 py-1 h-8`}
                 >
                   Under Review
                 </Button>
@@ -259,7 +259,7 @@ const RbiForms = () => {
                   variant={statusFilter === "approved" ? "default" : "outline"}
                   size="sm"
                   onClick={() => setStatusFilter("approved")}
-                  className={statusFilter === "approved" ? "bg-red-600 hover:bg-red-700" : ""}
+                  className={`${statusFilter === "approved" ? "bg-red-600 hover:bg-red-700" : ""} text-xs px-2 py-1 h-8`}
                 >
                   Approved
                 </Button>
