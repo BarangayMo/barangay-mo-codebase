@@ -5,42 +5,11 @@ import { FloatingSelect } from "@/components/ui/floating-select";
 import { SelectItem } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { MapLocationModal } from "@/components/layout/header/MapLocationModal";
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { RbiFormComponentProps } from "@/types/rbi";
 
 const AddressDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiFormComponentProps) => {
   const [selectedBarangay, setSelectedBarangay] = useState(formData?.address?.barangay || "");
-  const [userBarangay, setUserBarangay] = useState<string>("");
-
-  // Fetch user's barangay from profile
-  useEffect(() => {
-    const fetchUserBarangay = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('barangay')
-            .eq('id', user.id)
-            .single();
-          
-          if (profile?.barangay) {
-            setUserBarangay(profile.barangay);
-            // If address barangay is not set, use user's registration barangay
-            if (!formData?.address?.barangay) {
-              handleChange("barangay", profile.barangay);
-              setSelectedBarangay(profile.barangay);
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching user barangay:', error);
-      }
-    };
-
-    fetchUserBarangay();
-  }, []);
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ 
@@ -122,17 +91,16 @@ const AddressDetailsForm = ({ formData, setFormData, errors, setErrors }: RbiFor
         <div className="space-y-3">
           <FloatingInput 
             id="barangay" 
-            label="Barangay (From Registration)" 
+            label="Barangay" 
             placeholder=" " 
-            className="focus-visible:ring-blue-500 text-sm sm:text-base bg-muted/50"
-            value={formData?.address?.barangay || userBarangay}
+            className="focus-visible:ring-blue-500 text-sm sm:text-base"
+            value={formData?.address?.barangay || ""}
             onChange={(e) => {
               const value = e.target.value;
               setSelectedBarangay(value);
               handleChange("barangay", value);
             }}
             error={errors?.address?.barangay}
-            readOnly={true}
           />
           
           <div className="flex justify-center">
