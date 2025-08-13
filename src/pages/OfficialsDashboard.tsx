@@ -68,7 +68,7 @@ const OfficialsDashboard = () => {
         .from("Barangays")
         .select("*")
         .eq("BARANGAY", officialProfile.barangay)
-        .single()
+        .maybeSingle()
 
       if (error) throw error
       return data
