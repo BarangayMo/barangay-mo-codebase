@@ -79,7 +79,7 @@ const RbiForms = () => {
             .from('profiles')
             .select('first_name, last_name, avatar_url')
             .eq('id', form.user_id)
-            .single();
+            .maybeSingle();
 
           return {
             ...form,
