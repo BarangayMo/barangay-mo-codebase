@@ -875,6 +875,9 @@ const OfficialsDashboard = () => {
                       </div>
                     </Card>
                   </div>
+
+                  {/* Desktop Quick Access Panel */}
+                  <QuickAccessPanel />
                 </div>
 
                 {/* Recent Residents Section */}
