@@ -765,7 +765,7 @@ const OfficialsDashboard = () => {
                       { name: "RBI Forms", icon: ClipboardList, href: "/official/rbi-forms" },
                       { name: "Job Management", icon: Briefcase, href: "/official/jobs" },
                       { name: "Product Management", icon: ShoppingCart, href: "/official/products" },
-                      { name: "Emergency Response", icon: Siren, href: "/official/emergency-responder" },
+                      { name: "Emergency Response", icon: Siren, href: "/official/emergency-response" },
                     ].map((item, index) => (
                       <Link
                         key={index}
