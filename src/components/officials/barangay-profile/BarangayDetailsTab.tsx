@@ -172,12 +172,29 @@ export const BarangayDetailsTab = () => {
     );
   }
 
-  if (!barangayData) {
-    return (
-      <div className="p-4">
-        <p className="text-muted-foreground text-center">No barangay data found.</p>
-      </div>
-    );
+  // Initialize empty data if none exists
+  if (!barangayData && !isLoading) {
+    const emptyData: BarangayData = {
+      BARANGAY: "",
+      "Mobile Number": "",
+      "Telephone No": "",
+      "Email Address": "",
+      Website: "",
+      Facebook: "",
+      Population: "",
+      "Foundation Date": "",
+      "Land Area": "",
+      Logo: "",
+      Division: "",
+      "No of Divisions": "",
+      "Fire Department Phone": "",
+      "Local Police Contact": "",
+      "VAWC Hotline No": "",
+      "BPAT Phone": ""
+    };
+    setBarangayData(emptyData);
+    setEditedData(emptyData);
+    return null;
   }
 
   return (
