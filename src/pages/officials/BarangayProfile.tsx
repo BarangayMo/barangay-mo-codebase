@@ -108,7 +108,7 @@ const BarangayProfile = () => {
           <div id="council" className="scroll-mt-20">
             <div className="p-4">
               <h2 className="text-xl font-semibold mb-4">Council</h2>
-              <BarangayCouncilTab councilMembers={councilMembers || []} />
+              <BarangayCouncilTab />
             </div>
           </div>
         </div>

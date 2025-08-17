@@ -61,32 +61,32 @@ export const BarangayAddressTab = () => {
     try {
       console.log("Fetching data for barangay:", user.barangay);
       
-      // Using RPC call instead of direct query
-      const { data, error } = await supabase.rpc('get_barangay_by_name', {
-        barangay_name: user.barangay
-      });
-
-      if (error) {
-        console.error("RPC error:", error);
-        // Fallback to direct query if RPC fails
-        const { data: queryData, error: queryError } = await supabase
-          .from("Barangays")
-          .select()
-          .textSearch('BARANGAY', user.barangay)
-          .limit(1)
-          .single();
+      // Direct query to Barangays table
+      const { data, error } = await supabase
+        .from("Barangays")
+        .select(`
+          ID,
+          BARANGAY,
+          "CITY/MUNICIPALITY",
+          PROVINCE,
+          REGION,
+          "ZIP Code",
+          Street,
+          "BLDG No",
+          Coordinates,
+          "Land Area",
+          Population,
+          "Location Pin"
+        `)
+        .eq('BARANGAY', user.barangay)
+        .maybeSingle();
           
-        if (queryError) {
-          console.error("Query error:", queryError);
-          throw queryError;
-        }
-        
-        data = queryData;
+      if (error) {
+        console.error("Query error:", error);
+        throw error;
       }
       
       console.log("Found barangay data:", data);
-
-      if (error) throw error;
 
       if (data) {
         console.log("Setting data:", data);
@@ -132,7 +132,8 @@ export const BarangayAddressTab = () => {
 
       const { error } = await supabase
         .from("Barangays")
-        .upsert(dataToUpdate);
+        .update(dataToUpdate)
+        .eq('BARANGAY', user.barangay);
 
       if (error) throw error;
 

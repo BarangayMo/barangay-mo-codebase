@@ -68,12 +68,36 @@ export const BarangayDetailsTab = () => {
           "BPAT Phone"
         `)
         .eq('BARANGAY', user.barangay)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       
-      setBarangayData(data);
-      setEditedData(data);
+      if (data) {
+        setBarangayData(data);
+        setEditedData(data);
+      } else {
+        // Initialize with empty data if none exists
+        const emptyData: BarangayData = {
+          BARANGAY: user.barangay,
+          "Mobile Number": "",
+          "Telephone No": "",
+          "Email Address": "",
+          Website: "",
+          Facebook: "",
+          Population: "",
+          "Foundation Date": "",
+          "Land Area": "",
+          Logo: "",
+          Division: "",
+          "No of Divisions": "",
+          "Fire Department Phone": "",
+          "Local Police Contact": "",
+          "VAWC Hotline No": "",
+          "BPAT Phone": ""
+        };
+        setBarangayData(emptyData);
+        setEditedData(emptyData);
+      }
     } catch (error) {
       console.error('Error fetching barangay data:', error);
       toast.error('Failed to load barangay details');
@@ -172,29 +196,12 @@ export const BarangayDetailsTab = () => {
     );
   }
 
-  // Initialize empty data if none exists
-  if (!barangayData && !isLoading) {
-    const emptyData: BarangayData = {
-      BARANGAY: "",
-      "Mobile Number": "",
-      "Telephone No": "",
-      "Email Address": "",
-      Website: "",
-      Facebook: "",
-      Population: "",
-      "Foundation Date": "",
-      "Land Area": "",
-      Logo: "",
-      Division: "",
-      "No of Divisions": "",
-      "Fire Department Phone": "",
-      "Local Police Contact": "",
-      "VAWC Hotline No": "",
-      "BPAT Phone": ""
-    };
-    setBarangayData(emptyData);
-    setEditedData(emptyData);
-    return null;
+  if (!barangayData) {
+    return (
+      <div className="p-4">
+        <p className="text-muted-foreground text-center">No barangay data found.</p>
+      </div>
+    );
   }
 
   return (
