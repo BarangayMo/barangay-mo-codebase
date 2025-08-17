@@ -316,11 +316,9 @@ export const Header = () => {
       />
       <span
         className={`text-sm font-medium ${
-          userRole === "official"
-            ? "text-red-600"
-            : userRole === "resident" && item.active
-            ? "text-blue-600"
-            : "text-gray-700"
+          item.active
+            ? "text-foreground"
+            : "text-muted-foreground"
         }`}
       >
         {item.name}
