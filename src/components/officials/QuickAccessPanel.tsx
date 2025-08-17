@@ -107,7 +107,7 @@ export const QuickAccessPanel = () => {
           </Link>
         </div>
         
-        <div className="grid grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-4 gap-2 sm:gap-3">
           {quickAccessItems.map((item, index) => (
             <Link
               key={index}
