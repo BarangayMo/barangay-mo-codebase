@@ -13,7 +13,7 @@ interface ModernTabsProps {
   defaultValue: string;
   items: TabItem[];
   className?: string;
-  children: ReactNode;
+  children: ((props: { value: string }) => ReactNode) | ReactNode;
   onValueChange?: (value: string) => void;
 }
 
@@ -33,7 +33,7 @@ export function ModernTabs({ defaultValue, items, className, children, onValueCh
         ))}
       </TabsList>
       <div className="animate-fade-in">
-        {children}
+        {typeof children === 'function' ? children({ value: defaultValue }) : children}
       </div>
     </Tabs>
   );
