@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ModernTabs } from "@/components/dashboard/ModernTabs";
@@ -12,6 +13,7 @@ import { BarangayAddressTab } from "@/components/officials/barangay-profile/Bara
 import { BarangayCouncilTab } from "@/components/officials/barangay-profile/BarangayCouncilTab";
 
 const BarangayProfile = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { barangays, isLoading: barangaysLoading } = useBarangayData();
   const userBarangay = user?.barangay;
@@ -62,7 +64,7 @@ const BarangayProfile = () => {
         <div className="bg-red-600 text-white p-4">
           <div className="flex items-center px-4">
             <button 
-              onClick={() => window.history.back()} 
+              onClick={() => navigate("/officials/dashboard")} 
               className="mr-4 p-1"
             >
               ←
