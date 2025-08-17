@@ -1,8 +1,6 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ModernTabs } from "@/components/dashboard/ModernTabs";
+import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Users, Settings } from "lucide-react";
 import { useBarangayData } from "@/hooks/use-barangay-data";
 import { useAuth } from "@/contexts/AuthContext";
@@ -64,7 +62,7 @@ const BarangayProfile = () => {
         <div className="bg-red-600 text-white p-4">
           <div className="flex items-center px-4">
             <button 
-              onClick={() => navigate("/officials/dashboard")} 
+              onClick={() => navigate("/official-dashboard")} 
               className="mr-4 p-1"
             >
               ←
@@ -73,26 +71,45 @@ const BarangayProfile = () => {
           </div>
         </div>
 
-        {/* Tabs */}
+        {/* Navigation */}
         <div className="bg-white border-b sticky top-0 z-10">
           <div className="max-w-2xl mx-auto">
-            <ModernTabs defaultValue="details" items={tabItems}>
-              <div className="mt-0">
-                <div data-value="details">
-                  <BarangayDetailsTab />
-                </div>
-                
-                <div data-value="address">
-                  <BarangayAddressTab />
-                </div>
-                
-                <div data-value="council">
-                  <div className="p-4">
-                    <BarangayCouncilTab councilMembers={councilMembers || []} />
-                  </div>
-                </div>
-              </div>
-            </ModernTabs>
+            <div className="flex justify-center space-x-4 p-4">
+              {tabItems.map((tab) => (
+                <a
+                  key={tab.value}
+                  href={`#${tab.value}`}
+                  className="flex items-center space-x-2 px-4 py-2 rounded-md hover:bg-gray-100 transition-colors"
+                >
+                  {tab.icon}
+                  <span>{tab.label}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="max-w-2xl mx-auto">
+          <div id="details" className="scroll-mt-20">
+            <div className="p-4">
+              <h2 className="text-xl font-semibold mb-4">Details</h2>
+              <BarangayDetailsTab />
+            </div>
+          </div>
+
+          <div id="address" className="scroll-mt-20">
+            <div className="p-4">
+              <h2 className="text-xl font-semibold mb-4">Address</h2>
+              <BarangayAddressTab />
+            </div>
+          </div>
+
+          <div id="council" className="scroll-mt-20">
+            <div className="p-4">
+              <h2 className="text-xl font-semibold mb-4">Council</h2>
+              <BarangayCouncilTab councilMembers={councilMembers || []} />
+            </div>
           </div>
         </div>
       </div>
