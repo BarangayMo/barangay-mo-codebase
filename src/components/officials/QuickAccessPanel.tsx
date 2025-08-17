@@ -8,7 +8,8 @@ import {
   Phone, 
   CreditCard, 
   BarChart3,
-  ChevronRight
+  ChevronRight,
+  User
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -17,6 +18,12 @@ const quickAccessItems = [
     title: "Responder",
     icon: Siren,
     href: "/official/emergency-response",
+    color: "bg-red-50 text-red-600"
+  },
+  {
+    title: "Profile",
+    icon: User,
+    href: "/official/profile",
     color: "bg-red-50 text-red-600"
   },
   {

@@ -27,6 +27,7 @@ import {
   Siren,
   Briefcase,
   ShoppingCart,
+  User,
 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -731,6 +732,7 @@ const OfficialsDashboard = () => {
                   <div className="space-y-2">
                     {[
                       { name: "Dashboard", icon: Home, active: true },
+                      { name: "Profile", icon: User, href: "/official/profile" },
                       { name: "Requests & Complaints", icon: FileText, href: "/official/requests" },
                       { name: "Messages", icon: MessageSquare, href: "/messages" },
                       { name: "Reports", icon: BarChart3, href: "/official/reports" },
