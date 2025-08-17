@@ -57,20 +57,25 @@ const BarangayProfile = () => {
 
   return (
     <Layout>
-      <div className="space-y-6 p-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-foreground">Barangay Profile</h1>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <div className="bg-red-600 text-white p-4">
+          <div className="max-w-2xl mx-auto flex items-center">
+            <button 
+              onClick={() => window.history.back()} 
+              className="mr-4 p-1"
+            >
+              ←
+            </button>
+            <h1 className="text-lg font-semibold">Barangay Profile</h1>
+          </div>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl text-primary">
-              {userBarangay || "Your Barangay"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        {/* Tabs */}
+        <div className="bg-white border-b sticky top-0 z-10">
+          <div className="max-w-2xl mx-auto">
             <ModernTabs defaultValue="details" items={tabItems}>
-              <div className="mt-6">
+              <div className="mt-0">
                 <div data-value="details">
                   <BarangayDetailsTab />
                 </div>
@@ -80,12 +85,14 @@ const BarangayProfile = () => {
                 </div>
                 
                 <div data-value="council">
-                  <BarangayCouncilTab councilMembers={councilMembers || []} />
+                  <div className="p-4">
+                    <BarangayCouncilTab councilMembers={councilMembers || []} />
+                  </div>
                 </div>
               </div>
             </ModernTabs>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </Layout>
   );

@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Edit, Save, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -18,13 +16,18 @@ interface BarangayAddressData {
   Street: string;
   "BLDG No": string;
   Coordinates: string;
+  Website: string;
+  "Land Area": string;
+  Population: string;
 }
 
 export const BarangayAddressTab = () => {
   const { user } = useAuth();
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditingAddress, setIsEditingAddress] = useState(false);
+  const [isEditingOtherInfo, setIsEditingOtherInfo] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const [isSavingAddress, setIsSavingAddress] = useState(false);
+  const [isSavingOtherInfo, setIsSavingOtherInfo] = useState(false);
   const [addressData, setAddressData] = useState<BarangayAddressData | null>(null);
   const [editedData, setEditedData] = useState<BarangayAddressData | null>(null);
 
@@ -47,7 +50,10 @@ export const BarangayAddressTab = () => {
           "ZIP Code",
           Street,
           "BLDG No",
-          Coordinates
+          Coordinates,
+          Website,
+          "Land Area",
+          Population
         `)
         .eq('BARANGAY', user.barangay)
         .single();
@@ -64,32 +70,74 @@ export const BarangayAddressTab = () => {
     }
   };
 
-  const handleSave = async () => {
+  const handleSaveAddress = async () => {
     if (!editedData || !user?.barangay) return;
 
     try {
-      setIsSaving(true);
+      setIsSavingAddress(true);
+      const addressUpdate = {
+        "BLDG No": editedData["BLDG No"],
+        Street: editedData.Street,
+        "ZIP Code": editedData["ZIP Code"]
+      };
+      
       const { error } = await supabase
         .from('Barangays')
-        .update(editedData)
+        .update(addressUpdate)
         .eq('BARANGAY', user.barangay);
 
       if (error) throw error;
 
-      setAddressData(editedData);
-      setIsEditing(false);
+      setAddressData({ ...addressData!, ...addressUpdate });
+      setIsEditingAddress(false);
       toast.success('Address details updated successfully');
     } catch (error) {
       console.error('Error updating address data:', error);
       toast.error('Failed to update address details');
     } finally {
-      setIsSaving(false);
+      setIsSavingAddress(false);
     }
   };
 
-  const handleCancel = () => {
+  const handleSaveOtherInfo = async () => {
+    if (!editedData || !user?.barangay) return;
+
+    try {
+      setIsSavingOtherInfo(true);
+      const otherInfoUpdate = {
+        Website: editedData.Website,
+        BARANGAY: editedData.BARANGAY,
+        Coordinates: editedData.Coordinates,
+        "Land Area": editedData["Land Area"],
+        Population: editedData.Population
+      };
+      
+      const { error } = await supabase
+        .from('Barangays')
+        .update(otherInfoUpdate)
+        .eq('BARANGAY', user.barangay);
+
+      if (error) throw error;
+
+      setAddressData({ ...addressData!, ...otherInfoUpdate });
+      setIsEditingOtherInfo(false);
+      toast.success('Other information updated successfully');
+    } catch (error) {
+      console.error('Error updating other information:', error);
+      toast.error('Failed to update other information');
+    } finally {
+      setIsSavingOtherInfo(false);
+    }
+  };
+
+  const handleCancelAddress = () => {
     setEditedData(addressData);
-    setIsEditing(false);
+    setIsEditingAddress(false);
+  };
+
+  const handleCancelOtherInfo = () => {
+    setEditedData(addressData);
+    setIsEditingOtherInfo(false);
   };
 
   const handleInputChange = (field: keyof BarangayAddressData, value: string) => {
@@ -99,11 +147,11 @@ export const BarangayAddressTab = () => {
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 p-4">
         <Skeleton className="h-8 w-48" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 w-full" />
+        <div className="space-y-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
           ))}
         </div>
       </div>
@@ -112,136 +160,180 @@ export const BarangayAddressTab = () => {
 
   if (!addressData) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <p className="text-muted-foreground">No address data found.</p>
-        </CardContent>
-      </Card>
+      <div className="p-4">
+        <p className="text-muted-foreground text-center">No address data found.</p>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Barangay Address</CardTitle>
-        <div className="flex gap-2">
-          {isEditing ? (
-            <>
-              <Button
-                size="sm"
-                onClick={handleSave}
-                disabled={isSaving}
-                className="text-white"
-              >
-                <Save className="w-4 h-4 mr-1" />
-                {isSaving ? 'Saving...' : 'Save'}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleCancel}
-                disabled={isSaving}
-              >
-                <X className="w-4 h-4 mr-1" />
-                Cancel
-              </Button>
-            </>
-          ) : (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setIsEditing(true)}
-            >
-              <Edit className="w-4 h-4 mr-1" />
-              Edit Address
-            </Button>
-          )}
+    <div className="space-y-6 p-4 max-w-2xl mx-auto">
+      {/* Barangay Address Section */}
+      <div className="bg-white rounded-lg shadow-sm border">
+        <div className="p-4 border-b">
+          <h3 className="text-lg font-semibold text-gray-900">Barangay Address</h3>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="p-4 space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="barangay">Barangay</Label>
+            <Label htmlFor="bldg-no" className="text-sm font-medium text-gray-700">BLDG No</Label>
             <Input
-              id="barangay"
-              value={editedData?.BARANGAY || ""}
-              onChange={(e) => handleInputChange("BARANGAY", e.target.value)}
-              disabled={!isEditing}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="municipality">City/Municipality</Label>
-            <Input
-              id="municipality"
-              value={editedData?.["CITY/MUNICIPALITY"] || ""}
-              onChange={(e) => handleInputChange("CITY/MUNICIPALITY", e.target.value)}
-              disabled={!isEditing}
+              id="bldg-no"
+              value={editedData?.["BLDG No"] || ""}
+              onChange={(e) => handleInputChange("BLDG No", e.target.value)}
+              disabled={!isEditingAddress}
+              className="w-full"
+              placeholder="Enter building number"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="province">Province</Label>
-            <Input
-              id="province"
-              value={editedData?.PROVINCE || ""}
-              onChange={(e) => handleInputChange("PROVINCE", e.target.value)}
-              disabled={!isEditing}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="region">Region</Label>
-            <Input
-              id="region"
-              value={editedData?.REGION || ""}
-              onChange={(e) => handleInputChange("REGION", e.target.value)}
-              disabled={!isEditing}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="zip-code">ZIP Code</Label>
-            <Input
-              id="zip-code"
-              value={editedData?.["ZIP Code"] || ""}
-              onChange={(e) => handleInputChange("ZIP Code", e.target.value)}
-              disabled={!isEditing}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="street">Street</Label>
+            <Label htmlFor="street" className="text-sm font-medium text-gray-700">Street</Label>
             <Input
               id="street"
               value={editedData?.Street || ""}
               onChange={(e) => handleInputChange("Street", e.target.value)}
-              disabled={!isEditing}
+              disabled={!isEditingAddress}
+              className="w-full"
+              placeholder="Enter street address"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="building-no">Building Number</Label>
+            <Label htmlFor="zip-code" className="text-sm font-medium text-gray-700">Zip Code</Label>
             <Input
-              id="building-no"
-              value={editedData?.["BLDG No"] || ""}
-              onChange={(e) => handleInputChange("BLDG No", e.target.value)}
-              disabled={!isEditing}
+              id="zip-code"
+              value={editedData?.["ZIP Code"] || ""}
+              onChange={(e) => handleInputChange("ZIP Code", e.target.value)}
+              disabled={!isEditingAddress}
+              className="w-full"
+              placeholder="Enter zip code"
+            />
+          </div>
+
+          <div className="pt-4">
+            {isEditingAddress ? (
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleSaveAddress}
+                  disabled={isSavingAddress}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                >
+                  {isSavingAddress ? 'Saving...' : 'UPDATE DETAILS'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleCancelAddress}
+                  disabled={isSavingAddress}
+                  className="px-4"
+                >
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <Button
+                onClick={() => setIsEditingAddress(true)}
+                className="w-full bg-red-600 hover:bg-red-700 text-white"
+              >
+                UPDATE DETAILS
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Other Info Section */}
+      <div className="bg-white rounded-lg shadow-sm border">
+        <div className="p-4 space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="first-address" className="text-sm font-medium text-gray-700">First Address</Label>
+            <Input
+              id="first-address"
+              value={editedData?.Website || ""}
+              onChange={(e) => handleInputChange("Website", e.target.value)}
+              disabled={!isEditingOtherInfo}
+              className="w-full"
+              placeholder="Enter website"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="coordinates">Coordinates</Label>
+            <Label htmlFor="barangay-new" className="text-sm font-medium text-gray-700">Barangay New Calabar</Label>
+            <Input
+              id="barangay-new"
+              value={editedData?.BARANGAY || ""}
+              onChange={(e) => handleInputChange("BARANGAY", e.target.value)}
+              disabled={!isEditingOtherInfo}
+              className="w-full"
+              placeholder="Enter barangay name"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="coordinates" className="text-sm font-medium text-gray-700">Coordinates</Label>
             <Input
               id="coordinates"
               value={editedData?.Coordinates || ""}
               onChange={(e) => handleInputChange("Coordinates", e.target.value)}
-              disabled={!isEditing}
-              placeholder="e.g., 14.5995,120.9842"
+              disabled={!isEditingOtherInfo}
+              className="w-full"
+              placeholder="Enter coordinates"
             />
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="land-area" className="text-sm font-medium text-gray-700">Land Area</Label>
+            <Input
+              id="land-area"
+              value={editedData?.["Land Area"] || ""}
+              onChange={(e) => handleInputChange("Land Area", e.target.value)}
+              disabled={!isEditingOtherInfo}
+              className="w-full"
+              placeholder="Enter land area"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="population" className="text-sm font-medium text-gray-700">Population</Label>
+            <Input
+              id="population"
+              value={editedData?.Population || ""}
+              onChange={(e) => handleInputChange("Population", e.target.value)}
+              disabled={!isEditingOtherInfo}
+              className="w-full"
+              placeholder="Enter population"
+            />
+          </div>
+
+          <div className="pt-4">
+            {isEditingOtherInfo ? (
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleSaveOtherInfo}
+                  disabled={isSavingOtherInfo}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                >
+                  {isSavingOtherInfo ? 'Saving...' : 'UPDATE OTHER INFO'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleCancelOtherInfo}
+                  disabled={isSavingOtherInfo}
+                  className="px-4"
+                >
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <Button
+                onClick={() => setIsEditingOtherInfo(true)}
+                className="w-full bg-red-600 hover:bg-red-700 text-white"
+              >
+                UPDATE OTHER INFO
+              </Button>
+            )}
+          </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
