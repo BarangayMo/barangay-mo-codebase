@@ -16,6 +16,7 @@ interface UserData {
   barangay?: string;
   municipality?: string;
   province?: string;
+  region?: string;
   officials_data?: any;
   logo_url?: string;
   createdAt?: string;

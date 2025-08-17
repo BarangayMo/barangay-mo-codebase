@@ -97,7 +97,7 @@ import OfficialsJobsPage from "@/pages/officials/OfficialsJobsPage";
 import OfficialProductPage from "@/pages/officials/OfficialProductPage";
 import OfficialProfileView from "@/pages/officials/OfficialProfileView";
 import OfficialJobEditPage from "@/pages/officials/JobEdit";
-
+import BarangayProfile from "@/pages/officials/BarangayProfile";
 
 // Import the new EmailConfirmation component
 import EmailConfirmation from "@/pages/EmailConfirmation";
@@ -165,6 +165,7 @@ export function AppRoutes() {
       
       <Route path="/official-dashboard" element={<ProtectedRoute><OfficialsDashboard /></ProtectedRoute>} />
       <Route path="/official-profile" element={<ProtectedRoute><OfficialProfile /></ProtectedRoute>} />
+      <Route path="/official/profile" element={<ProtectedRoute><BarangayProfile /></ProtectedRoute>} />
       <Route path="/official/residents" element={<ProtectedRoute><OfficialResidents /></ProtectedRoute>} />
       <Route path="/official/services" element={<ProtectedRoute><OfficialServices /></ProtectedRoute>} />
       <Route path="/official/requests" element={<ProtectedRoute><OfficialRequests /></ProtectedRoute>} />
