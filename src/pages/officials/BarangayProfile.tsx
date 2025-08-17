@@ -60,7 +60,7 @@ const BarangayProfile = () => {
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <div className="bg-red-600 text-white p-4">
-          <div className="max-w-2xl mx-auto flex items-center">
+          <div className="flex items-center px-4">
             <button 
               onClick={() => window.history.back()} 
               className="mr-4 p-1"
