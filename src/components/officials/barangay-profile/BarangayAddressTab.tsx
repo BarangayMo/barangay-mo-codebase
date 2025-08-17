@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface BarangayAddressData {
+  ID: string;
   BARANGAY: string;
   "CITY/MUNICIPALITY": string;
   PROVINCE: string;
@@ -16,319 +17,275 @@ interface BarangayAddressData {
   Street: string;
   "BLDG No": string;
   Coordinates: string;
-  Website: string;
   "Land Area": string;
   Population: string;
+  "Location Pin": string;
 }
 
 export const BarangayAddressTab = () => {
   const { user } = useAuth();
-  const [isEditingAddress, setIsEditingAddress] = useState(false);
-  const [isEditingOtherInfo, setIsEditingOtherInfo] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSavingAddress, setIsSavingAddress] = useState(false);
-  const [isSavingOtherInfo, setIsSavingOtherInfo] = useState(false);
-  const [addressData, setAddressData] = useState<BarangayAddressData | null>(null);
-  const [editedData, setEditedData] = useState<BarangayAddressData | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const emptyData: BarangayAddressData = {
+    ID: "",
+    BARANGAY: "",
+    "CITY/MUNICIPALITY": "",
+    PROVINCE: "",
+    REGION: "",
+    "ZIP Code": "",
+    Street: "",
+    "BLDG No": "",
+    Coordinates: "",
+    "Land Area": "",
+    Population: "",
+    "Location Pin": ""
+  };
+
+  const [addressData, setAddressData] = useState<BarangayAddressData>(emptyData);
+  const [editedData, setEditedData] = useState<BarangayAddressData>(emptyData);
+  
+  const formData = editedData ?? emptyData;
 
   useEffect(() => {
     fetchAddressData();
-  }, [user?.barangay]);
+  }, [user]);
 
   const fetchAddressData = async () => {
-    if (!user?.barangay) return;
-
+    if (!user?.barangay) {
+      console.log("No barangay in user profile", user);
+      return;
+    }
+    
     try {
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .from('Barangays')
-        .select(`
-          BARANGAY,
-          "CITY/MUNICIPALITY",
-          PROVINCE,
-          REGION,
-          "ZIP Code",
-          Street,
-          "BLDG No",
-          Coordinates,
-          Website,
-          "Land Area",
-          Population
-        `)
-        .eq('BARANGAY', user.barangay)
-        .single();
+      console.log("Fetching data for barangay:", user.barangay);
+      
+      // Using RPC call instead of direct query
+      const { data, error } = await supabase.rpc('get_barangay_by_name', {
+        barangay_name: user.barangay
+      });
+
+      if (error) {
+        console.error("RPC error:", error);
+        // Fallback to direct query if RPC fails
+        const { data: queryData, error: queryError } = await supabase
+          .from("Barangays")
+          .select()
+          .textSearch('BARANGAY', user.barangay)
+          .limit(1)
+          .single();
+          
+        if (queryError) {
+          console.error("Query error:", queryError);
+          throw queryError;
+        }
+        
+        data = queryData;
+      }
+      
+      console.log("Found barangay data:", data);
 
       if (error) throw error;
-      
-      setAddressData(data);
-      setEditedData(data);
+
+      if (data) {
+        console.log("Setting data:", data);
+        setAddressData(data);
+        setEditedData(data);
+      } else {
+        console.log("No data found for barangay:", user.barangay);
+        // Initialize with empty data but set the barangay
+        const initialData = {
+          ...emptyData,
+          BARANGAY: user.barangay
+        };
+        setAddressData(initialData);
+        setEditedData(initialData);
+      }
     } catch (error) {
-      console.error('Error fetching address data:', error);
-      toast.error('Failed to load address details');
+      console.error("Error fetching address data:", error);
+      toast.error("Failed to load address data");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSaveAddress = async () => {
-    if (!editedData || !user?.barangay) return;
-
-    try {
-      setIsSavingAddress(true);
-      const addressUpdate = {
-        "BLDG No": editedData["BLDG No"],
-        Street: editedData.Street,
-        "ZIP Code": editedData["ZIP Code"]
-      };
-      
-      const { error } = await supabase
-        .from('Barangays')
-        .update(addressUpdate)
-        .eq('BARANGAY', user.barangay);
-
-      if (error) throw error;
-
-      setAddressData({ ...addressData!, ...addressUpdate });
-      setIsEditingAddress(false);
-      toast.success('Address details updated successfully');
-    } catch (error) {
-      console.error('Error updating address data:', error);
-      toast.error('Failed to update address details');
-    } finally {
-      setIsSavingAddress(false);
-    }
-  };
-
-  const handleSaveOtherInfo = async () => {
-    if (!editedData || !user?.barangay) return;
-
-    try {
-      setIsSavingOtherInfo(true);
-      const otherInfoUpdate = {
-        Website: editedData.Website,
-        BARANGAY: editedData.BARANGAY,
-        Coordinates: editedData.Coordinates,
-        "Land Area": editedData["Land Area"],
-        Population: editedData.Population
-      };
-      
-      const { error } = await supabase
-        .from('Barangays')
-        .update(otherInfoUpdate)
-        .eq('BARANGAY', user.barangay);
-
-      if (error) throw error;
-
-      setAddressData({ ...addressData!, ...otherInfoUpdate });
-      setIsEditingOtherInfo(false);
-      toast.success('Other information updated successfully');
-    } catch (error) {
-      console.error('Error updating other information:', error);
-      toast.error('Failed to update other information');
-    } finally {
-      setIsSavingOtherInfo(false);
-    }
-  };
-
-  const handleCancelAddress = () => {
-    setEditedData(addressData);
-    setIsEditingAddress(false);
-  };
-
-  const handleCancelOtherInfo = () => {
-    setEditedData(addressData);
-    setIsEditingOtherInfo(false);
-  };
-
   const handleInputChange = (field: keyof BarangayAddressData, value: string) => {
-    if (!editedData) return;
-    setEditedData({ ...editedData, [field]: value });
+    setEditedData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSave = async () => {
+    if (!user?.barangay) return;
+
+    setIsSaving(true);
+    try {
+      console.log("Saving data:", editedData);
+      
+      const dataToUpdate = {
+        ...editedData,
+        BARANGAY: user.barangay,
+        Updated: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from("Barangays")
+        .upsert(dataToUpdate);
+
+      if (error) throw error;
+
+      console.log("Save successful");
+      setAddressData(dataToUpdate);
+      setIsEditing(false);
+      toast.success("Address updated successfully");
+      
+      // Refresh the data
+      fetchAddressData();
+    } catch (error) {
+      console.error("Error saving address:", error);
+      toast.error("Failed to update address");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setEditedData(addressData);
+    setIsEditing(false);
   };
 
   if (isLoading) {
-    return (
-      <div className="space-y-4 p-4">
-        <Skeleton className="h-8 w-48" />
-        <div className="space-y-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 w-full" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (!addressData) {
-    return (
-      <div className="p-4">
-        <p className="text-muted-foreground text-center">No address data found.</p>
-      </div>
-    );
+    return <Skeleton className="h-[400px] w-full" />;
   }
 
   return (
     <div className="space-y-6 p-4 max-w-2xl mx-auto">
-      {/* Barangay Address Section */}
       <div className="bg-white rounded-lg shadow-sm border">
         <div className="p-4 border-b">
-          <h3 className="text-lg font-semibold text-gray-900">Barangay Address</h3>
+          <h3 className="text-lg font-semibold text-gray-900">Location Details</h3>
         </div>
         <div className="p-4 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="bldg-no">Building Number</Label>
+              <Input 
+                id="bldg-no" 
+                value={formData["BLDG No"]} 
+                onChange={e => handleInputChange("BLDG No", e.target.value)} 
+                disabled={!isEditing} 
+                placeholder="Enter building number" 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="street">Street</Label>
+              <Input 
+                id="street" 
+                value={formData.Street} 
+                onChange={e => handleInputChange("Street", e.target.value)} 
+                disabled={!isEditing} 
+                placeholder="Enter street" 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="zip-code">ZIP Code</Label>
+              <Input 
+                id="zip-code" 
+                value={formData["ZIP Code"]} 
+                onChange={e => handleInputChange("ZIP Code", e.target.value)} 
+                disabled={!isEditing} 
+                placeholder="Enter ZIP code" 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="city">City/Municipality</Label>
+              <Input 
+                id="city" 
+                value={formData["CITY/MUNICIPALITY"]} 
+                onChange={e => handleInputChange("CITY/MUNICIPALITY", e.target.value)} 
+                disabled={!isEditing} 
+                placeholder="Enter city/municipality" 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="province">Province</Label>
+              <Input 
+                id="province" 
+                value={formData.PROVINCE} 
+                onChange={e => handleInputChange("PROVINCE", e.target.value)} 
+                disabled={!isEditing} 
+                placeholder="Enter province" 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="region">Region</Label>
+              <Input 
+                id="region" 
+                value={formData.REGION} 
+                onChange={e => handleInputChange("REGION", e.target.value)} 
+                disabled={!isEditing} 
+                placeholder="Enter region" 
+              />
+            </div>
+          </div>
           <div className="space-y-2">
-            <Label htmlFor="bldg-no" className="text-sm font-medium text-gray-700">BLDG No</Label>
-            <Input
-              id="bldg-no"
-              value={editedData?.["BLDG No"] || ""}
-              onChange={(e) => handleInputChange("BLDG No", e.target.value)}
-              disabled={!isEditingAddress}
-              className="w-full"
-              placeholder="Enter building number"
+            <Label htmlFor="coordinates">Coordinates</Label>
+            <Input 
+              id="coordinates" 
+              value={formData.Coordinates} 
+              onChange={e => handleInputChange("Coordinates", e.target.value)} 
+              disabled={!isEditing} 
+              placeholder="Enter coordinates" 
             />
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="street" className="text-sm font-medium text-gray-700">Street</Label>
-            <Input
-              id="street"
-              value={editedData?.Street || ""}
-              onChange={(e) => handleInputChange("Street", e.target.value)}
-              disabled={!isEditingAddress}
-              className="w-full"
-              placeholder="Enter street address"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="land-area">Land Area</Label>
+              <Input 
+                id="land-area" 
+                value={formData["Land Area"]} 
+                onChange={e => handleInputChange("Land Area", e.target.value)} 
+                disabled={!isEditing} 
+                placeholder="Enter land area" 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="population">Population</Label>
+              <Input 
+                id="population" 
+                value={formData.Population} 
+                onChange={e => handleInputChange("Population", e.target.value)} 
+                disabled={!isEditing} 
+                placeholder="Enter population" 
+              />
+            </div>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="zip-code" className="text-sm font-medium text-gray-700">Zip Code</Label>
-            <Input
-              id="zip-code"
-              value={editedData?.["ZIP Code"] || ""}
-              onChange={(e) => handleInputChange("ZIP Code", e.target.value)}
-              disabled={!isEditingAddress}
-              className="w-full"
-              placeholder="Enter zip code"
-            />
-          </div>
-
           <div className="pt-4">
-            {isEditingAddress ? (
+            {isEditing ? (
               <div className="flex gap-2">
-                <Button
-                  onClick={handleSaveAddress}
-                  disabled={isSavingAddress}
+                <Button 
+                  onClick={handleSave} 
+                  disabled={isSaving} 
                   className="flex-1 bg-red-600 hover:bg-red-700 text-white"
                 >
-                  {isSavingAddress ? 'Saving...' : 'UPDATE DETAILS'}
+                  {isSaving ? 'Saving...' : 'UPDATE ADDRESS'}
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleCancelAddress}
-                  disabled={isSavingAddress}
+                <Button 
+                  variant="outline" 
+                  onClick={handleCancel} 
+                  disabled={isSaving} 
                   className="px-4"
                 >
                   Cancel
                 </Button>
               </div>
             ) : (
-              <Button
-                onClick={() => setIsEditingAddress(true)}
+              <Button 
+                onClick={() => setIsEditing(true)} 
                 className="w-full bg-red-600 hover:bg-red-700 text-white"
               >
-                UPDATE DETAILS
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Other Info Section */}
-      <div className="bg-white rounded-lg shadow-sm border">
-        <div className="p-4 space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="first-address" className="text-sm font-medium text-gray-700">First Address</Label>
-            <Input
-              id="first-address"
-              value={editedData?.Website || ""}
-              onChange={(e) => handleInputChange("Website", e.target.value)}
-              disabled={!isEditingOtherInfo}
-              className="w-full"
-              placeholder="Enter website"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="barangay-new" className="text-sm font-medium text-gray-700">Barangay New Calabar</Label>
-            <Input
-              id="barangay-new"
-              value={editedData?.BARANGAY || ""}
-              onChange={(e) => handleInputChange("BARANGAY", e.target.value)}
-              disabled={!isEditingOtherInfo}
-              className="w-full"
-              placeholder="Enter barangay name"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="coordinates" className="text-sm font-medium text-gray-700">Coordinates</Label>
-            <Input
-              id="coordinates"
-              value={editedData?.Coordinates || ""}
-              onChange={(e) => handleInputChange("Coordinates", e.target.value)}
-              disabled={!isEditingOtherInfo}
-              className="w-full"
-              placeholder="Enter coordinates"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="land-area" className="text-sm font-medium text-gray-700">Land Area</Label>
-            <Input
-              id="land-area"
-              value={editedData?.["Land Area"] || ""}
-              onChange={(e) => handleInputChange("Land Area", e.target.value)}
-              disabled={!isEditingOtherInfo}
-              className="w-full"
-              placeholder="Enter land area"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="population" className="text-sm font-medium text-gray-700">Population</Label>
-            <Input
-              id="population"
-              value={editedData?.Population || ""}
-              onChange={(e) => handleInputChange("Population", e.target.value)}
-              disabled={!isEditingOtherInfo}
-              className="w-full"
-              placeholder="Enter population"
-            />
-          </div>
-
-          <div className="pt-4">
-            {isEditingOtherInfo ? (
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleSaveOtherInfo}
-                  disabled={isSavingOtherInfo}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
-                >
-                  {isSavingOtherInfo ? 'Saving...' : 'UPDATE OTHER INFO'}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleCancelOtherInfo}
-                  disabled={isSavingOtherInfo}
-                  className="px-4"
-                >
-                  Cancel
-                </Button>
-              </div>
-            ) : (
-              <Button
-                onClick={() => setIsEditingOtherInfo(true)}
-                className="w-full bg-red-600 hover:bg-red-700 text-white"
-              >
-                UPDATE OTHER INFO
+                UPDATE ADDRESS
               </Button>
             )}
           </div>
