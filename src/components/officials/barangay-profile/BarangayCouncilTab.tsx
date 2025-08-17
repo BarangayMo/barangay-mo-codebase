@@ -1,7 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Phone, Mail } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRegionOfficials } from "@/hooks/useRegionOfficials";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface CouncilMember {
   id: string;
@@ -19,11 +25,30 @@ interface CouncilMember {
   is_active: boolean;
 }
 
-interface BarangayCouncilTabProps {
-  councilMembers: CouncilMember[];
-}
+export const BarangayCouncilTab = () => {
+  const { user } = useAuth();
 
-export const BarangayCouncilTab = ({ councilMembers }: BarangayCouncilTabProps) => {
+  // Get user's barangay from their profile
+  const { data: userProfile } = useQuery({
+    queryKey: ['user-profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('barangay, municipality, province, region')
+        .eq('id', user.id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id
+  });
+
+  // Fetch officials using the same hook as OfficialsPage
+  const { data: councilMembers = [], isLoading } = useRegionOfficials(
+    userProfile?.barangay,
+    userProfile?.region
+  );
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   };
@@ -38,15 +63,49 @@ export const BarangayCouncilTab = ({ councilMembers }: BarangayCouncilTabProps) 
     return parts.join(" ");
   };
 
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">Council Members</h3>
+          <Button 
+            variant="outline"
+            className="bg-red-600 hover:bg-red-700 text-white"
+            disabled
+          >
+            Add Member
+          </Button>
+        </div>
+        <Card>
+          <CardContent className="p-6">
+            <Skeleton className="h-[200px] w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (!councilMembers || councilMembers.length === 0) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <p className="text-muted-foreground text-center">
-            No council members found for this barangay.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">Council Members</h3>
+          <Button 
+            variant="outline"
+            className="bg-red-600 hover:bg-red-700 text-white"
+            onClick={() => {/* Add new member logic here */}}
+          >
+            Add Member
+          </Button>
+        </div>
+        <Card>
+          <CardContent className="p-6">
+            <p className="text-muted-foreground text-center">
+              No council members yet. Click "Add Member" to add council members.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
