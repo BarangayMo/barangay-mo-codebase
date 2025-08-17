@@ -151,6 +151,11 @@ export const Header = () => {
           active: location.pathname === "/official-dashboard"
         },
         {
+          name: "Profile",
+          icon: User,
+          href: "/official/profile"
+        },
+        {
           name: "Requests & Complaints",
           icon: FileText,
           href: "/official/requests"
