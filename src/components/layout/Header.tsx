@@ -138,7 +138,7 @@ export const Header = () => {
 
                 {/* Navigation items */}
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-3">Navigation</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-3">Navigation</h3>
                   <div className="space-y-2">
         {(() => {
   if (isAuthenticated) {
