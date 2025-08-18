@@ -3,10 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Lock, Delete } from "lucide-react";
+import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function MPIN() {
   const [mpin, setMpin] = useState("");
+  const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -48,8 +51,62 @@ export default function MPIN() {
   };
 
   const handleLogin = async () => {
-    // MPIN functionality temporarily disabled
-    navigate("/login", { replace: true });
+    if (mpin.length !== 4) {
+      toast.error("Please enter a 4-digit MPIN");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Call the MPIN authentication edge function
+      const { data, error } = await supabase.functions.invoke('mpin-auth', {
+        body: { email, mpin }
+      });
+
+      if (error || !data.success) {
+        console.error("MPIN auth error:", error || data);
+        
+        if (data?.reason === 'locked') {
+          const lockedUntil = new Date(data.locked_until).toLocaleString();
+          toast.error(`Account locked until ${lockedUntil}`);
+        } else if (data?.reason === 'invalid') {
+          toast.error(`Invalid MPIN. ${data.remaining_attempts} attempts remaining.`);
+        } else if (data?.reason === 'not_set') {
+          toast.error("MPIN not set. Please set up MPIN in settings first.");
+        } else if (data?.reason === 'not_found') {
+          toast.error("Email not found. Please check your email address.");
+        } else {
+          toast.error("Authentication failed. Please try again.");
+        }
+        return;
+      }
+
+      // Set session with tokens from edge function
+      if (data.access_token && data.refresh_token) {
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token
+        });
+
+        if (sessionError) {
+          console.error("Session set error:", sessionError);
+          toast.error("Failed to establish session. Please try again.");
+          return;
+        }
+      } else {
+        console.error("No session tokens received");
+        toast.error("Authentication failed - no session data");
+        return;
+      }
+
+      toast.success("Welcome back!");
+      navigate("/", { replace: true });
+    } catch (error) {
+      console.error("MPIN login error:", error);
+      toast.error("Login failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -111,7 +168,7 @@ export default function MPIN() {
             size="lg"
             className="h-16 text-sm"
             onClick={handleClear}
-            disabled={mpin.length === 0}
+            disabled={loading || mpin.length === 0}
           >
             Clear
           </Button>
@@ -120,6 +177,7 @@ export default function MPIN() {
             size="lg"
             className="h-16 text-xl font-semibold"
             onClick={() => handleNumberClick("0")}
+            disabled={loading}
           >
             0
           </Button>
@@ -128,7 +186,7 @@ export default function MPIN() {
             size="lg"
             className="h-16"
             onClick={handleBackspace}
-            disabled={mpin.length === 0}
+            disabled={loading || mpin.length === 0}
             >
               <Delete className="h-5 w-5" />
             </Button>
@@ -138,9 +196,9 @@ export default function MPIN() {
           <Button 
             onClick={handleLogin}
             className="w-full h-12"
-            disabled={mpin.length !== 4}
+            disabled={loading || mpin.length !== 4}
           >
-            Sign In
+            {loading ? "Signing in..." : "Sign In"}
           </Button>
         </CardContent>
       </Card>
