@@ -3,45 +3,72 @@ import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronLeft, ScanFace, Fingerprint, ArrowRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+interface DeviceData {
+  mpin: string;
+  biometricEnabled: boolean;
+  failedAttempts: number;
+  email: string;
+  userRole?: string;
+}
 
 export default function MPIN() {
   const [otp, setOtp] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+  const [userName, setUserName] = useState("");
   const [biometricsAvailable, setBiometricsAvailable] = useState<'none' | 'face' | 'fingerprint'>('none');
   const [isLoading, setIsLoading] = useState(true);
+  const [deviceData, setDeviceData] = useState<DeviceData | null>(null);
+  const [failedAttempts, setFailedAttempts] = useState(0);
   const navigate = useNavigate();
   const { userRole, isAuthenticated, user } = useAuth();
 
-  // Fetch last login device info
+  // Generate device fingerprint
+  const getDeviceFingerprint = () => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    ctx!.textBaseline = 'top';
+    ctx!.font = '14px Arial';
+    ctx!.fillText('Device fingerprint', 2, 2);
+    
+    return btoa(
+      navigator.userAgent +
+      navigator.language +
+      screen.width + 'x' + screen.height +
+      new Date().getTimezoneOffset() +
+      canvas.toDataURL()
+    ).substring(0, 32);
+  };
+
+  // Load device data on mount
   useEffect(() => {
-    const fetchLastLoginDevice = async () => {
-      if (!user?.id) return;
+    const loadDeviceData = () => {
+      const fingerprint = getDeviceFingerprint();
+      const storageKey = `quicklogin_${fingerprint}`;
+      const stored = localStorage.getItem(storageKey);
       
-      try {
-        const { data, error } = await supabase
-          .from('user_devices')
-          .select('phone_number, mpin')
-          .eq('user_id', user.id)
-          .eq('is_active', true)
-          .single();
-
-        if (error) throw error;
-
-        if (data) {
-          setPhoneNumber(data.phone_number);
+      if (stored) {
+        try {
+          const data = JSON.parse(stored);
+          setDeviceData(data);
+          setUserEmail(data.email);
+          setUserName(data.email.split('@')[0]); // Use email prefix as name
+          setFailedAttempts(data.failedAttempts || 0);
+        } catch (error) {
+          console.error('Error parsing stored device data:', error);
+          // If no stored data, redirect to login
+          navigate('/login');
         }
-      } catch (error) {
-        console.error('Error fetching device info:', error);
+      } else {
+        // No stored device data, redirect to login
         navigate('/login');
-      } finally {
-        setIsLoading(false);
       }
+      setIsLoading(false);
     };
 
-    fetchLastLoginDevice();
-  }, [user?.id, navigate]);
+    loadDeviceData();
+  }, [navigate]);
 
   useEffect(() => {
     // Check for biometrics availability
@@ -71,8 +98,8 @@ export default function MPIN() {
 
   const handleBiometricAuth = async () => {
     try {
-      if (!user?.id) {
-        toast.error('No user found');
+      if (!deviceData?.biometricEnabled) {
+        toast.error('Biometric authentication not set up');
         return;
       }
 
@@ -91,22 +118,25 @@ export default function MPIN() {
       });
 
       if (credential) {
-        // Biometric authentication successful
-        if (isAuthenticated) {
-          switch(userRole) {
-            case "official":
-              navigate("/official-dashboard");
-              break;
-            case "superadmin":
-              navigate("/admin");
-              break;
-            case "resident":
-            default:
-              navigate("/resident-home");
-              break;
-          }
-        } else {
-          navigate("/login");
+        // Reset failed attempts on success
+        const fingerprint = getDeviceFingerprint();
+        const storageKey = `quicklogin_${fingerprint}`;
+        const updatedData = { ...deviceData, failedAttempts: 0 };
+        localStorage.setItem(storageKey, JSON.stringify(updatedData));
+        
+        // Navigate based on stored user role
+        const role = deviceData.userRole || 'resident';
+        switch(role) {
+          case "official":
+            navigate("/official-dashboard");
+            break;
+          case "superadmin":
+            navigate("/admin");
+            break;
+          case "resident":
+          default:
+            navigate("/resident-home");
+            break;
         }
       }
     } catch (error) {
@@ -117,7 +147,55 @@ export default function MPIN() {
 
   const handleNumPadInput = (value: string) => {
     if (otp.length < 4) {
-      setOtp(prev => prev + value);
+      const newOtp = otp + value;
+      setOtp(newOtp);
+      
+      // Auto-submit when 4 digits are entered
+      if (newOtp.length === 4) {
+        setTimeout(() => {
+          if (deviceData && newOtp === deviceData.mpin) {
+            // Reset failed attempts on success
+            const fingerprint = getDeviceFingerprint();
+            const storageKey = `quicklogin_${fingerprint}`;
+            const updatedData = { ...deviceData, failedAttempts: 0 };
+            localStorage.setItem(storageKey, JSON.stringify(updatedData));
+            
+            // Navigate based on stored user role
+            const role = deviceData.userRole || 'resident';
+            switch(role) {
+              case "official":
+                navigate("/official-dashboard");
+                break;
+              case "superadmin":
+                navigate("/admin");
+                break;
+              case "resident":
+              default:
+                navigate("/resident-home");
+                break;
+            }
+          } else {
+            const newFailedAttempts = failedAttempts + 1;
+            setFailedAttempts(newFailedAttempts);
+            
+            if (deviceData) {
+              // Update stored failed attempts
+              const fingerprint = getDeviceFingerprint();
+              const storageKey = `quicklogin_${fingerprint}`;
+              const updatedData = { ...deviceData, failedAttempts: newFailedAttempts };
+              localStorage.setItem(storageKey, JSON.stringify(updatedData));
+            }
+            
+            if (newFailedAttempts >= 5) {
+              toast.error('Too many failed attempts. Redirecting to password login.');
+              setTimeout(() => navigate('/login'), 2000);
+            } else {
+              toast.error(`Invalid PIN. ${5 - newFailedAttempts} attempts remaining.`);
+              setOtp(''); // Clear the input
+            }
+          }
+        }, 100); // Small delay for visual feedback
+      }
     }
   };
 
@@ -131,55 +209,58 @@ export default function MPIN() {
       return;
     }
 
-    try {
-      if (!user?.id) {
-        toast.error('No user found');
-        navigate('/login');
-        return;
+    if (!deviceData) {
+      toast.error('No device data found');
+      navigate('/login');
+      return;
+    }
+
+    // Check if too many failed attempts
+    if (failedAttempts >= 5) {
+      toast.error('Too many failed attempts. Please use password login.');
+      navigate('/login');
+      return;
+    }
+
+    // Verify MPIN
+    if (deviceData.mpin === otp) {
+      // Reset failed attempts on success
+      const fingerprint = getDeviceFingerprint();
+      const storageKey = `quicklogin_${fingerprint}`;
+      const updatedData = { ...deviceData, failedAttempts: 0 };
+      localStorage.setItem(storageKey, JSON.stringify(updatedData));
+      
+      // Navigate based on stored user role
+      const role = deviceData.userRole || 'resident';
+      switch(role) {
+        case "official":
+          navigate("/official-dashboard");
+          break;
+        case "superadmin":
+          navigate("/admin");
+          break;
+        case "resident":
+        default:
+          navigate("/resident-home");
+          break;
       }
-
-      // Verify MPIN
-      const { data, error } = await supabase
-        .from('user_devices')
-        .select('mpin')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .single();
-
-      if (error) throw error;
-
-      if (!data) {
-        toast.error('No device found');
-        navigate('/login');
-        return;
-      }
-
-      // Compare MPIN
-      if (data.mpin === otp) {
-        // Successfully verified MPIN
-        if (isAuthenticated) {
-          switch(userRole) {
-            case "official":
-              navigate("/official-dashboard");
-              break;
-            case "superadmin":
-              navigate("/admin");
-              break;
-            case "resident":
-            default:
-              navigate("/resident-home");
-              break;
-          }
-        } else {
-          navigate("/login");
-        }
+    } else {
+      const newFailedAttempts = failedAttempts + 1;
+      setFailedAttempts(newFailedAttempts);
+      
+      // Update stored failed attempts
+      const fingerprint = getDeviceFingerprint();
+      const storageKey = `quicklogin_${fingerprint}`;
+      const updatedData = { ...deviceData, failedAttempts: newFailedAttempts };
+      localStorage.setItem(storageKey, JSON.stringify(updatedData));
+      
+      if (newFailedAttempts >= 5) {
+        toast.error('Too many failed attempts. Redirecting to password login.');
+        setTimeout(() => navigate('/login'), 2000);
       } else {
-        toast.error('Invalid PIN');
+        toast.error(`Invalid PIN. ${5 - newFailedAttempts} attempts remaining.`);
         setOtp(''); // Clear the input
       }
-    } catch (error) {
-      console.error('Error verifying MPIN:', error);
-      toast.error('Failed to verify PIN');
     }
   };
 
@@ -257,10 +338,10 @@ export default function MPIN() {
             />
           </div>
 
-          {/* Phone Number Display */}
+          {/* User Email Display */}
           <div className="text-center mb-6">
-            <h1 className="text-xl font-bold text-gray-900 mb-1">{phoneNumber}</h1>
-            <p className="text-gray-500 text-sm">Walter</p>
+            <h1 className="text-xl font-bold text-gray-900 mb-1">{userEmail}</h1>
+            <p className="text-gray-500 text-sm">{userName}</p>
           </div>
         </div>
 
@@ -305,8 +386,8 @@ export default function MPIN() {
             ))}
           </div>
 
-          {/* Biometrics Button - Only show if available */}
-          {biometricsAvailable !== 'none' && (
+          {/* Biometrics Button - Only show if available and enabled */}
+          {biometricsAvailable !== 'none' && deviceData?.biometricEnabled && (
             <Button
               variant="outline"
               className="w-full h-11 mb-3 bg-red-500 hover:bg-red-600 active:bg-red-700 text-white hover:text-white border-none rounded-xl font-medium transition-all duration-150 active:scale-95"
@@ -317,14 +398,25 @@ export default function MPIN() {
             </Button>
           )}
 
+          {/* Failed attempts warning */}
+          {failedAttempts > 0 && (
+            <div className="text-center mb-3">
+              <p className="text-sm text-red-500">
+                {failedAttempts >= 5 
+                  ? "Too many failed attempts" 
+                  : `${5 - failedAttempts} attempts remaining`}
+              </p>
+            </div>
+          )}
+
           {/* Skip Button */}
           <Button
             variant="ghost"
-            onClick={handleSkip}
+            onClick={() => navigate('/login')}
             className="text-gray-400 hover:text-gray-600 mb-2 transition-colors duration-150 flex items-center"
           >
             <ArrowRight className="mr-1 h-4 w-4" />
-            Skip for now
+            Use Password Instead
           </Button>
 
           {/* Forgot PIN Link */}

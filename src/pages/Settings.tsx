@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEnhancedToast } from "@/components/ui/enhanced-toast";
 import { CheckCircle } from "lucide-react";
+import { QuickLoginTab } from "@/components/dashboard/QuickLoginTab";
 
 const Settings = () => {
   const { userRole } = useAuth();
@@ -86,6 +87,7 @@ const Settings = () => {
             <TabsTrigger value="preferences">Preferences</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
             <TabsTrigger value="account">Account</TabsTrigger>
+            <TabsTrigger value="quicklogin">Quick Login</TabsTrigger>
             <TabsTrigger value="privacy">Privacy</TabsTrigger>
           </TabsList>
 
@@ -359,6 +361,10 @@ const Settings = () => {
                 </Button>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="quicklogin" className="space-y-4">
+            <QuickLoginTab />
           </TabsContent>
 
           <TabsContent value="privacy" className="space-y-4">

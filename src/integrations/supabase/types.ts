@@ -2338,6 +2338,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_devices: {
+        Row: {
+          created_at: string | null
+          device_info: Json | null
+          id: string
+          is_active: boolean | null
+          mpin: string | null
+          phone_number: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          device_info?: Json | null
+          id?: string
+          is_active?: boolean | null
+          mpin?: string | null
+          phone_number?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          device_info?: Json | null
+          id?: string
+          is_active?: boolean | null
+          mpin?: string | null
+          phone_number?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_invitations: {
         Row: {
           created_at: string
