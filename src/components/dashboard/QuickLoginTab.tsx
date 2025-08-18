@@ -1,5 +1,5 @@
 // ...existing code...
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 // Simple hash function for demonstration (use a secure hash in production)
 function hashMpin(mpin: string) {
+	if (mpin.length !== 4) throw new Error("MPIN must be exactly 4 digits");
 	let hash = 0;
 	for (let i = 0; i < mpin.length; i++) {
 		hash = ((hash << 5) - hash) + mpin.charCodeAt(i);
@@ -30,6 +31,7 @@ async function setMpin(email: string, mpin: string) {
 	return { data, error };
 }
 
+
 // Store last login email locally
 function storeLastLoginEmail(email: string) {
 	localStorage.setItem('last_login_email', email);
@@ -42,12 +44,24 @@ export function QuickLoginTab() {
 	const [isSettingMpin, setIsSettingMpin] = useState(false);
 	const [hasMpin, setHasMpin] = useState(false);
 
-	// Check if MPIN is set (simulate by checking user metadata, replace with real check)
-	// You may want to fetch from DB on mount
+	// Fetch MPIN status from DB on mount
+	useEffect(() => {
+		async function fetchMpinStatus() {
+			if (!user?.email) return;
+			const { data, error } = await supabase
+				.from('profiles')
+				.select('mpin_hash')
+				.eq('email', user.email)
+				.single();
+			if (data?.mpin_hash) setHasMpin(true);
+			else setHasMpin(false);
+		}
+		fetchMpinStatus();
+	}, [user?.email]);
 
 	const handleSetMpin = async () => {
-		if (mpinFirst.length < 4 || mpinFirst.length > 6) {
-			toast.error("MPIN must be 4-6 digits");
+		if (mpinFirst.length !== 4) {
+			toast.error("MPIN must be exactly 4 digits");
 			return;
 		}
 		if (mpinFirst !== mpinConfirm) {
@@ -83,7 +97,7 @@ export function QuickLoginTab() {
 					<h2 className="text-xl font-semibold">Make logging in faster!</h2>
 				</div>
 				<p className="text-muted-foreground">
-					Set a 4-6 digit MPIN to sign in instantly.
+					Set a 4-digit MPIN to sign in instantly.
 				</p>
 			</div>
 
@@ -131,13 +145,13 @@ export function QuickLoginTab() {
 					) : (
 						<div className="space-y-4">
 							<div>
-								<label className="text-sm font-medium">Enter 4-6 digit MPIN</label>
+								<label className="text-sm font-medium">Enter 4-digit MPIN</label>
 								<Input
 									type="password"
-									maxLength={6}
+									maxLength={4}
 									value={mpinFirst}
-									onChange={(e) => setMpinFirst(e.target.value.replace(/\D/g, ''))}
-									placeholder="******"
+									onChange={(e) => setMpinFirst(e.target.value.replace(/\D/g, '').slice(0, 4))}
+									placeholder="••••"
 									className="text-center text-2xl tracking-widest"
 								/>
 							</div>
@@ -145,10 +159,10 @@ export function QuickLoginTab() {
 								<label className="text-sm font-medium">Confirm MPIN</label>
 								<Input
 									type="password"
-									maxLength={6}
+									maxLength={4}
 									value={mpinConfirm}
-									onChange={(e) => setMpinConfirm(e.target.value.replace(/\D/g, ''))}
-									placeholder="******"
+									onChange={(e) => setMpinConfirm(e.target.value.replace(/\D/g, '').slice(0, 4))}
+									placeholder="••••"
 									className="text-center text-2xl tracking-widest"
 								/>
 							</div>
