@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +8,39 @@ import { Skeleton } from "@/components/ui/skeleton";
 export const BarangayLogoTab = () => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [logoUrl, setLogoUrl] = useState(user?.logo_url || "");
+  const [logoUrl, setLogoUrl] = useState("");
+  const [fetchingLogo, setFetchingLogo] = useState(true);
+
+  // Fetch current logo from Barangays table
+  useEffect(() => {
+    const fetchBarangayLogo = async () => {
+      if (!user?.barangay) return;
+      
+      try {
+        setFetchingLogo(true);
+        const { data, error } = await supabase
+          .from('Barangays')
+          .select('Logo')
+          .eq('BARANGAY', user.barangay)
+          .single();
+
+        if (error) {
+          console.error('Error fetching barangay logo:', error);
+          return;
+        }
+
+        if (data?.Logo) {
+          setLogoUrl(data.Logo);
+        }
+      } catch (error) {
+        console.error('Error fetching barangay logo:', error);
+      } finally {
+        setFetchingLogo(false);
+      }
+    };
+
+    fetchBarangayLogo();
+  }, [user?.barangay]);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -53,7 +85,7 @@ export const BarangayLogoTab = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || fetchingLogo) {
     return <Skeleton className="h-[400px] w-full" />;
   }
 
