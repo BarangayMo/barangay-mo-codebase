@@ -403,251 +403,368 @@ const ProductEditPage = () => {
 
   return userRole === 'superadmin' ? (
     <AdminLayout title={isEditing ? 'Edit Product' : 'Add Product'}>
-      <div className="p-6 max-w-7xl mx-auto">
-        <DashboardPageHeader
-          title={isEditing ? 'Edit Product' : 'Create Product'}
-          description={isEditing ? 'Update your product information' : 'Fill in product details'}
-          breadcrumbItems={[
-            { label: 'S-Marketplace', href: '/admin/smarketplace' },
-            { label: 'Products', href: '/admin/smarketplace/products' },
-            { label: isEditing ? 'Edit Product' : 'Create Product' }
-          ]}
-          actionButton={{
-            label: saveProductMutation.isPending ? (isEditing ? 'Saving...' : 'Creating...') : (isEditing ? 'Save & Publish' : 'Create'),
-            onClick: () => formRef.current?.requestSubmit(),
-            icon: <Save className="h-4 w-4" />,
-            variant: 'default',
-            disabled: saveProductMutation.isPending
-          }}
-          secondaryActions={[{
-            label: 'Back to List',
-            onClick: handleBackToProducts,
-            icon: <ArrowLeft className="h-4 w-4" />,
-            variant: 'ghost'
-          }]}
-        />
-
-        <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left Column - Main Content */}
-            <div className="lg:col-span-2 space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Product Information</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Product Name *</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => handleInputChange('name', e.target.value)}
-                      placeholder="Enter product name"
-                      required
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      SKU will be automatically generated when the product is created
-                    </p>
+      <div className="min-h-screen bg-gray-50">
+        {/* Top Header Bar */}
+        <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+          <div className="max-w-7xl mx-auto px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="ghost"
+                  onClick={handleBackToProducts}
+                  className="text-gray-600 hover:text-gray-800"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <div>
+                  <h1 className="text-xl font-semibold text-gray-900">
+                    {isEditing ? product?.name || 'Edit Product' : 'Add product'}
+                  </h1>
+                  <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
+                    <span>S-Marketplace</span>
+                    <span>/</span>
+                    <span>Products</span>
+                    <span>/</span>
+                    <span>{isEditing ? 'Edit' : 'Create'}</span>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) => handleInputChange('description', e.target.value)}
-                      placeholder="Enter product description"
-                      rows={3}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="price">Price *</Label>
-                      <Input
-                        id="price"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={formData.price}
-                        onChange={(e) => handleInputChange('price', e.target.value)}
-                        placeholder="0.00"
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="stock_quantity">Stock Quantity *</Label>
-                      <Input
-                        id="stock_quantity"
-                        type="number"
-                        min="0"
-                        value={formData.stock_quantity}
-                        onChange={(e) => handleInputChange('stock_quantity', e.target.value)}
-                        placeholder="0"
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="category_id">Category</Label>
-                      <Select value={formData.category_id} onValueChange={(value) => handleInputChange('category_id', value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories?.map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Right Column - Sidebar */}
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Status</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="is_active"
-                      checked={formData.is_active}
-                      onCheckedChange={(checked) => handleInputChange('is_active', checked)}
-                    />
-                    <Label htmlFor="is_active">Active Product</Label>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Product Images</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Main Image */}
-                  <div className="space-y-2">
-                    <Label>Main Product Image</Label>
-                    <div className="flex items-center gap-4">
-                      {formData.main_image_url && (
-                        <div className="relative">
-                          <img 
-                            src={formData.main_image_url} 
-                            alt="Main product" 
-                            className="w-20 h-20 object-cover rounded-md border"
-                          />
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
-                            onClick={() => handleInputChange('main_image_url', '')}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      )}
-                      <div className="flex-1">
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handleImageUpload(file, true);
-                          }}
-                          className="hidden"
-                          id="main-image-upload"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => document.getElementById('main-image-upload')?.click()}
-                          className="flex items-center gap-2"
-                        >
-                          <Upload className="h-4 w-4" />
-                          {formData.main_image_url ? 'Change Main Image' : 'Upload Main Image'}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Additional Images */}
-                  <div className="space-y-2">
-                    <Label>Additional Images</Label>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {formData.additional_images?.map((imageUrl, index) => (
-                        <div key={index} className="relative">
-                          <img 
-                            src={imageUrl} 
-                            alt={`Additional ${index + 1}`} 
-                            className="w-full h-20 object-cover rounded-md border"
-                          />
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
-                            onClick={() => removeAdditionalImage(index)}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      ))}
-                      <div className="flex items-center justify-center h-20 md:h-32 lg:h-36 w-full md:w-32 lg:w-36 border-2 border-dashed border-gray-300 rounded-md hover:border-gray-400 ">
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handleImageUpload(file, false);
-                          }}
-                          className="hidden"
-                          id="additional-image-upload"
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          onClick={() => document.getElementById('additional-image-upload')?.click()}
-                          className="h-full w-full flex flex-col items-center gap-1 text-gray-500 md:h-32 md:w-32 lg:h-36 lg:w-36"
-                        >
-                          <Plus className="h-5 w-5 md:h-6 md:w-6" />
-                          <span className="text-xs md:text-sm lg:text-base whitespace-nowrap">Add Image</span>
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button variant="outline" onClick={handleBackToProducts}>
+                  Discard
+                </Button>
+                <Button 
+                  onClick={() => formRef.current?.requestSubmit()}
+                  disabled={saveProductMutation.isPending}
+                  className="bg-gray-900 hover:bg-gray-800 text-white"
+                >
+                  {saveProductMutation.isPending ? (
+                    isEditing ? 'Saving...' : 'Creating...'
+                  ) : (
+                    'Save'
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
+        </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-            <RoleButton
-              type="submit"
-              disabled={saveProductMutation.isPending}
-              className="flex items-center gap-2"
-            >
-              <Save className="h-4 w-4" />
-              {saveProductMutation.isPending ? 'Saving...' : (isEditing ? 'Update Product' : 'Create Product')}
-            </RoleButton>
-            
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
-              disabled={saveProductMutation.isPending}
-              className="flex items-center gap-2"
-            >
-              <X className="h-4 w-4" />
-              Cancel
-            </Button>
+        <form ref={formRef} onSubmit={handleSubmit}>
+          <div className="max-w-7xl mx-auto p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Main Content - Left Column */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* Product Information Card */}
+                <Card className="shadow-sm">
+                  <CardContent className="p-6">
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="name" className="text-sm font-medium text-gray-900">
+                          Title
+                        </Label>
+                        <Input
+                          id="name"
+                          value={formData.name}
+                          onChange={(e) => handleInputChange('name', e.target.value)}
+                          placeholder="Short sleeve t-shirt"
+                          className="text-lg font-medium"
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="description" className="text-sm font-medium text-gray-900">
+                          Description
+                        </Label>
+                        <Textarea
+                          id="description"
+                          value={formData.description}
+                          onChange={(e) => handleInputChange('description', e.target.value)}
+                          placeholder="A brief description of your product"
+                          rows={4}
+                          className="resize-none"
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Media Card */}
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-lg font-medium text-gray-900">Media</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Main Image */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-900">Product Image</Label>
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                        {formData.main_image_url ? (
+                          <div className="relative">
+                            <img 
+                              src={formData.main_image_url} 
+                              alt="Product" 
+                              className="mx-auto h-32 w-32 object-cover rounded-lg"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleInputChange('main_image_url', '')}
+                              className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500 text-white hover:bg-red-600"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div>
+                            <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                            <p className="text-sm text-gray-600 mb-2">Drop files to upload</p>
+                            <label className="cursor-pointer">
+                              <span className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                                Choose files
+                              </span>
+                              <input
+                                type="file"
+                                className="hidden"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handleImageUpload(file, true);
+                                }}
+                              />
+                            </label>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Additional Images */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-900">Additional Images</Label>
+                      <div className="grid grid-cols-3 gap-4">
+                        {formData.additional_images?.map((url, index) => (
+                          <div key={index} className="relative">
+                            <img 
+                              src={url} 
+                              alt={`Additional ${index + 1}`} 
+                              className="w-full h-24 object-cover rounded-lg border"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeAdditionalImage(index)}
+                              className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500 text-white hover:bg-red-600"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg h-24 flex items-center justify-center hover:border-gray-400 transition-colors">
+                          <label className="cursor-pointer flex flex-col items-center">
+                            <Plus className="h-6 w-6 text-gray-400 mb-1" />
+                            <span className="text-xs text-gray-500">Add Image</span>
+                            <input
+                              type="file"
+                              className="hidden"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleImageUpload(file, false);
+                              }}
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Pricing Card */}
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-lg font-medium text-gray-900">Pricing</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="price" className="text-sm font-medium text-gray-900">
+                          Price
+                        </Label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₱</span>
+                          <Input
+                            id="price"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={formData.price}
+                            onChange={(e) => handleInputChange('price', e.target.value)}
+                            placeholder="0.00"
+                            className="pl-8"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-900">
+                          Compare at price
+                        </Label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₱</span>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="0.00"
+                            className="pl-8"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Inventory Card */}
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-lg font-medium text-gray-900">Inventory</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-gray-900">SKU</Label>
+                          <Input 
+                            placeholder="Auto-generated"
+                            disabled
+                            className="bg-gray-50"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-gray-900">Barcode</Label>
+                          <Input 
+                            placeholder="(Stock Keeping Unit)"
+                            className="bg-gray-50"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="stock_quantity" className="text-sm font-medium text-gray-900">
+                          Quantity
+                        </Label>
+                        <Input
+                          id="stock_quantity"
+                          type="number"
+                          min="0"
+                          value={formData.stock_quantity}
+                          onChange={(e) => handleInputChange('stock_quantity', e.target.value)}
+                          placeholder="0"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Sidebar - Right Column */}
+              <div className="space-y-6">
+                {/* Product Status */}
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-lg font-medium text-gray-900">Product status</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="is_active" className="text-sm font-medium text-gray-900">
+                          Status
+                        </Label>
+                        <Switch
+                          id="is_active"
+                          checked={formData.is_active}
+                          onCheckedChange={(checked) => handleInputChange('is_active', checked)}
+                        />
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        {formData.is_active ? 'Product is active and visible to customers' : 'Product is hidden from customers'}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Product Organization */}
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-lg font-medium text-gray-900">Product organization</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-900">Product category</Label>
+                        <Select value={formData.category_id} onValueChange={(value) => handleInputChange('category_id', value)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Choose a category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categories?.map((category) => (
+                              <SelectItem key={category.id} value={category.id}>
+                                {category.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-900">Product type</Label>
+                        <Input 
+                          placeholder="e.g. Shirts, Shoes, etc."
+                          className="text-sm"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-900">Vendor</Label>
+                        <Input 
+                          value={currentVendor?.shop_name || ''}
+                          disabled
+                          className="bg-gray-50 text-sm"
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* SEO */}
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-lg font-medium text-gray-900">Search engine listing preview</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                        <div className="text-blue-600 text-sm font-medium truncate">
+                          {formData.name || 'Product name'}
+                        </div>
+                        <div className="text-gray-600 text-xs mt-1">
+                          yourstore.com/products/{formData.name?.toLowerCase().replace(/\s+/g, '-') || 'product-name'}
+                        </div>
+                        <div className="text-gray-600 text-sm mt-2">
+                          {formData.description ? 
+                            formData.description.slice(0, 160) + (formData.description.length > 160 ? '...' : '') 
+                            : 'Add a description to see how this product might appear in a search engine listing'
+                          }
+                        </div>
+                      </div>
+                      <Button variant="outline" size="sm" className="text-sm">
+                        Edit website SEO
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </div>
         </form>
       </div>
@@ -682,57 +799,210 @@ const ProductEditPage = () => {
           )}
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column - Main Content */}
             <div className="lg:col-span-2 space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Product Information</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Product Name *</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => handleInputChange('name', e.target.value)}
-                      placeholder="Enter product name"
-                      required
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      SKU will be automatically generated when the product is created
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) => handleInputChange('description', e.target.value)}
-                      placeholder="Enter product description"
-                      rows={3}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Product Information Card */}
+              <Card className="shadow-sm">
+                <CardContent className="p-6">
+                  <div className="space-y-6">
                     <div className="space-y-2">
-                      <Label htmlFor="price">Price *</Label>
+                      <Label htmlFor="name" className="text-sm font-medium text-gray-900">
+                        Title
+                      </Label>
                       <Input
-                        id="price"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={formData.price}
-                        onChange={(e) => handleInputChange('price', e.target.value)}
-                        placeholder="0.00"
+                        id="name"
+                        value={formData.name}
+                        onChange={(e) => handleInputChange('name', e.target.value)}
+                        placeholder="Short sleeve t-shirt"
+                        className="text-lg font-medium"
                         required
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="stock_quantity">Stock Quantity *</Label>
+                      <Label htmlFor="description" className="text-sm font-medium text-gray-900">
+                        Description
+                      </Label>
+                      <Textarea
+                        id="description"
+                        value={formData.description}
+                        onChange={(e) => handleInputChange('description', e.target.value)}
+                        placeholder="A brief description of your product"
+                        rows={4}
+                        className="resize-none"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Media Card */}
+              <Card className="shadow-sm">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg font-medium text-gray-900">Media</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Main Image */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-900">Product Image</Label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                      {formData.main_image_url ? (
+                        <div className="relative">
+                          <img 
+                            src={formData.main_image_url} 
+                            alt="Product" 
+                            className="mx-auto h-32 w-32 object-cover rounded-lg"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleInputChange('main_image_url', '')}
+                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500 text-white hover:bg-red-600"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div>
+                          <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                          <p className="text-sm text-gray-600 mb-2">Drop files to upload</p>
+                          <label className="cursor-pointer">
+                            <span className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                              Choose files
+                            </span>
+                            <input
+                              type="file"
+                              className="hidden"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleImageUpload(file, true);
+                              }}
+                            />
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Additional Images */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-900">Additional Images</Label>
+                    <div className="grid grid-cols-3 gap-4">
+                      {formData.additional_images?.map((url, index) => (
+                        <div key={index} className="relative">
+                          <img 
+                            src={url} 
+                            alt={`Additional ${index + 1}`} 
+                            className="w-full h-24 object-cover rounded-lg border"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeAdditionalImage(index)}
+                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500 text-white hover:bg-red-600"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg h-24 flex items-center justify-center hover:border-gray-400 transition-colors">
+                        <label className="cursor-pointer flex flex-col items-center">
+                          <Plus className="h-6 w-6 text-gray-400 mb-1" />
+                          <span className="text-xs text-gray-500">Add Image</span>
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleImageUpload(file, false);
+                            }}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Pricing Card */}
+              <Card className="shadow-sm">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg font-medium text-gray-900">Pricing</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="price" className="text-sm font-medium text-gray-900">
+                        Price
+                      </Label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₱</span>
+                        <Input
+                          id="price"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={formData.price}
+                          onChange={(e) => handleInputChange('price', e.target.value)}
+                          placeholder="0.00"
+                          className="pl-8"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-900">
+                        Compare at price
+                      </Label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₱</span>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          placeholder="0.00"
+                          className="pl-8"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Inventory Card */}
+              <Card className="shadow-sm">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg font-medium text-gray-900">Inventory</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-900">SKU</Label>
+                        <Input 
+                          placeholder="Auto-generated"
+                          disabled
+                          className="bg-gray-50"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-900">Barcode</Label>
+                        <Input 
+                          placeholder="(Stock Keeping Unit)"
+                          className="bg-gray-50"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="stock_quantity" className="text-sm font-medium text-gray-900">
+                        Quantity
+                      </Label>
                       <Input
                         id="stock_quantity"
                         type="number"
@@ -743,12 +1013,49 @@ const ProductEditPage = () => {
                         required
                       />
                     </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
+            {/* Sidebar - Right Column */}
+            <div className="space-y-6">
+              {/* Product Status */}
+              <Card className="shadow-sm">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg font-medium text-gray-900">Product status</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="is_active" className="text-sm font-medium text-gray-900">
+                        Status
+                      </Label>
+                      <Switch
+                        id="is_active"
+                        checked={formData.is_active}
+                        onCheckedChange={(checked) => handleInputChange('is_active', checked)}
+                      />
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      {formData.is_active ? 'Product is active and visible to customers' : 'Product is hidden from customers'}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Product Organization */}
+              <Card className="shadow-sm">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg font-medium text-gray-900">Product organization</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="category_id">Category</Label>
+                      <Label className="text-sm font-medium text-gray-900">Product category</Label>
                       <Select value={formData.category_id} onValueChange={(value) => handleInputChange('category_id', value)}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
+                          <SelectValue placeholder="Choose a category" />
                         </SelectTrigger>
                         <SelectContent>
                           {categories?.map((category) => (
@@ -759,154 +1066,53 @@ const ProductEditPage = () => {
                         </SelectContent>
                       </Select>
                     </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-900">Product type</Label>
+                      <Input 
+                        placeholder="e.g. Shirts, Shoes, etc."
+                        className="text-sm"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-900">Vendor</Label>
+                      <Input 
+                        value={currentVendor?.shop_name || ''}
+                        disabled
+                        className="bg-gray-50 text-sm"
+                      />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
-            </div>
 
-            {/* Right Column - Sidebar */}
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Status</CardTitle>
+              {/* SEO */}
+              <Card className="shadow-sm">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg font-medium text-gray-900">Search engine listing preview</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="is_active"
-                      checked={formData.is_active}
-                      onCheckedChange={(checked) => handleInputChange('is_active', checked)}
-                    />
-                    <Label htmlFor="is_active">Active Product</Label>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Product Images</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Main Image */}
-                  <div className="space-y-2">
-                    <Label>Main Product Image</Label>
-                    <div className="flex items-center gap-4">
-                      {formData.main_image_url && (
-                        <div className="relative">
-                          <img 
-                            src={formData.main_image_url} 
-                            alt="Main product" 
-                            className="w-20 h-20 object-cover rounded-md border"
-                          />
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
-                            onClick={() => handleInputChange('main_image_url', '')}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      )}
-                      <div className="flex-1">
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handleImageUpload(file, true);
-                          }}
-                          className="hidden"
-                          id="main-image-upload"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => document.getElementById('main-image-upload')?.click()}
-                          className="flex items-center gap-2"
-                        >
-                          <Upload className="h-4 w-4" />
-                          {formData.main_image_url ? 'Change Main Image' : 'Upload Main Image'}
-                        </Button>
+                  <div className="space-y-4">
+                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                      <div className="text-blue-600 text-sm font-medium truncate">
+                        {formData.name || 'Product name'}
+                      </div>
+                      <div className="text-gray-600 text-xs mt-1">
+                        yourstore.com/products/{formData.name?.toLowerCase().replace(/\s+/g, '-') || 'product-name'}
+                      </div>
+                      <div className="text-gray-600 text-sm mt-2">
+                        {formData.description ? 
+                          formData.description.slice(0, 160) + (formData.description.length > 160 ? '...' : '') 
+                          : 'Add a description to see how this product might appear in a search engine listing'
+                        }
                       </div>
                     </div>
-                  </div>
-
-                  {/* Additional Images */}
-                  <div className="space-y-2">
-                    <Label>Additional Images</Label>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {formData.additional_images?.map((imageUrl, index) => (
-                        <div key={index} className="relative">
-                          <img 
-                            src={imageUrl} 
-                            alt={`Additional ${index + 1}`} 
-                            className="w-full h-20 object-cover rounded-md border"
-                          />
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
-                            onClick={() => removeAdditionalImage(index)}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      ))}
-                      <div className="flex items-center justify-center h-20 md:h-32 lg:h-36 w-full md:w-32 lg:w-36 border-2 border-dashed border-gray-300 rounded-md hover:border-gray-400">
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handleImageUpload(file, false);
-                          }}
-                          className="hidden"
-                          id="additional-image-upload"
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          onClick={() => document.getElementById('additional-image-upload')?.click()}
-                          className="h-full w-full flex flex-col items-center gap-1 text-gray-500 md:h-32 md:w-32 lg:h-36 lg:w-36"
-                        >
-                          <Plus className="h-5 w-5 md:h-6 md:w-6" />
-                          <span className="text-xs md:text-sm lg:text-base whitespace-nowrap">Add Image</span>
-                        </Button>
-                      </div>
-                    </div>
+                    <Button variant="outline" size="sm" className="text-sm">
+                      Edit website SEO
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
             </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-            <RoleButton
-              type="submit"
-              disabled={saveProductMutation.isPending || !currentVendor}
-              className={`flex items-center gap-2 text-white
-                ${String(userRole) === 'resident' ? 'bg-[#3d62f5] hover:bg-[#2746b3]' : ''}
-                ${String(userRole) === 'official' ? 'bg-[#e53935] hover:bg-[#b71c1c]' : ''}
-                ${String(userRole) === 'superadmin' ? 'bg-black hover:bg-gray-800' : ''}
-              `}
-            >
-              <Save className="h-4 w-4" />
-              {saveProductMutation.isPending ? 'Saving...' : (isEditing ? 'Update Product' : 'Create Product')}
-            </RoleButton>
-            
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
-              disabled={saveProductMutation.isPending}
-              className="flex items-center gap-2"
-            >
-              <X className="h-4 w-4" />
-              Cancel
-            </Button>
           </div>
         </form>
       </div>
