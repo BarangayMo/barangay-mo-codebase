@@ -119,13 +119,25 @@ export function QuickLoginTab() {
     }
 
     try {
+      if (!user?.id || !user?.email) {
+        toast.error("User information not available");
+        return;
+      }
+
       // Store MPIN in database using Supabase RPC
-      const { error } = await supabase.rpc('set_user_mpin', {
-        mpin_text: mpinFirst
+      const { data, error } = await supabase.rpc('set_user_mpin', { 
+        mpin_text: mpinFirst 
       });
 
+      console.log('MPIN set response:', { data, error });
+      
       if (error) {
-        console.error('Error setting MPIN:', error);
+        console.error('MPIN Error details:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
         toast.error("Failed to set MPIN");
         return;
       }
