@@ -1,7 +1,7 @@
 
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Layout } from "@/components/layout/Layout";
-import { ShoppingCart, Briefcase, AlertCircle, CheckCircle } from "lucide-react";
+import { ShoppingCart, Briefcase, Users, User, AlertCircle, CheckCircle, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Helmet } from "react-helmet";
@@ -12,7 +12,6 @@ import { useRbiAccess } from "@/hooks/use-rbi-access";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { User, Users } from "lucide-react";
 
 export default function ResidentHome() {
   const isMobile = useIsMobile();
@@ -52,8 +51,8 @@ export default function ResidentHome() {
     { icon: ShoppingCart, label: "Marketplace", path: "/marketplace" },
     { icon: Briefcase, label: "Jobs", path: "/jobs" },
     { icon: Users, label: "Community", path: "/community" },
-   { icon: User, label: "Barangay Official", path: "/resident/official" },
-
+    { icon: User, label: "Barangay Official", path: "/resident/official" },
+    { icon: MapPin, label: "Barangay Profile", path: "/resident/barangay-profile" },
   ];
 
   // Management Actions for Residents
