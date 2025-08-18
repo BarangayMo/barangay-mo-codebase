@@ -70,7 +70,7 @@ export default function MPIN() {
 
   // Load device data on mount - get the latest stored account only
   useEffect(() => {
-    const loadDeviceData = () => {
+    const loadDeviceData = async () => {
       const fingerprint = getDeviceFingerprint();
       const storageKey = `quicklogin_${fingerprint}`;
       const stored = localStorage.getItem(storageKey);
@@ -168,34 +168,69 @@ export default function MPIN() {
       // Auto-submit when 4 digits are entered
       if (newOtp.length === 4) {
         setTimeout(async () => {
-          if (deviceData && newOtp === deviceData.mpin) {
-            // Reset failed attempts on success
-            const fingerprint = getDeviceFingerprint();
-            const storageKey = `quicklogin_${fingerprint}`;
-            const updatedData = { ...deviceData, failedAttempts: 0 };
-            localStorage.setItem(storageKey, JSON.stringify(updatedData));
-            
-            // Authenticate user with Supabase before navigation
-            await authenticateUser(deviceData.email, deviceData.userRole || 'resident');
+          if (deviceData && deviceData.email) {
+            try {
+              // Verify MPIN against database
+              const { data, error } = await supabase
+                .from('profiles')
+                .select('mpin, id, role')
+                .eq('email', deviceData.email)
+                .single();
+
+              if (error || !data) {
+                toast.error('User not found. Please use password login.');
+                navigate('/login');
+                return;
+              }
+
+              if (data.mpin === newOtp) {
+                // Reset failed attempts on success
+                const fingerprint = getDeviceFingerprint();
+                const storageKey = `quicklogin_${fingerprint}`;
+                const updatedData = { ...deviceData, failedAttempts: 0 };
+                localStorage.setItem(storageKey, JSON.stringify(updatedData));
+                
+                // Sign in user with Supabase
+                const { error: signInError } = await supabase.auth.signInWithPassword({
+                  email: deviceData.email,
+                  password: 'demo123' // This is a placeholder - in real implementation, you'd need proper authentication
+                });
+
+                if (signInError) {
+                  console.error('Sign in error:', signInError);
+                  toast.error('Authentication failed. Please use password login.');
+                  navigate('/login');
+                  return;
+                }
+                
+                // Navigate based on role
+                await authenticateUser(deviceData.email, data.role || 'resident');
+              } else {
+                const newFailedAttempts = failedAttempts + 1;
+                setFailedAttempts(newFailedAttempts);
+                
+                // Update stored failed attempts
+                const fingerprint = getDeviceFingerprint();
+                const storageKey = `quicklogin_${fingerprint}`;
+                const updatedData = { ...deviceData, failedAttempts: newFailedAttempts };
+                localStorage.setItem(storageKey, JSON.stringify(updatedData));
+                
+                if (newFailedAttempts >= 5) {
+                  toast.error('Too many failed attempts. Redirecting to password login.');
+                  setTimeout(() => navigate('/login'), 2000);
+                } else {
+                  toast.error(`Invalid PIN. ${5 - newFailedAttempts} attempts remaining.`);
+                  setOtp(''); // Clear the input
+                }
+              }
+            } catch (error) {
+              console.error('Error verifying MPIN:', error);
+              toast.error('Verification failed. Please try again.');
+              setOtp('');
+            }
           } else {
-            const newFailedAttempts = failedAttempts + 1;
-            setFailedAttempts(newFailedAttempts);
-            
-            if (deviceData) {
-              // Update stored failed attempts
-              const fingerprint = getDeviceFingerprint();
-              const storageKey = `quicklogin_${fingerprint}`;
-              const updatedData = { ...deviceData, failedAttempts: newFailedAttempts };
-              localStorage.setItem(storageKey, JSON.stringify(updatedData));
-            }
-            
-            if (newFailedAttempts >= 5) {
-              toast.error('Too many failed attempts. Redirecting to password login.');
-              setTimeout(() => navigate('/login'), 2000);
-            } else {
-              toast.error(`Invalid PIN. ${5 - newFailedAttempts} attempts remaining.`);
-              setOtp(''); // Clear the input
-            }
+            toast.error('No device data found');
+            navigate('/login');
           }
         }, 100); // Small delay for visual feedback
       }
@@ -225,33 +260,64 @@ export default function MPIN() {
       return;
     }
 
-    // Verify MPIN
-    if (deviceData.mpin === otp) {
-      // Reset failed attempts on success
-      const fingerprint = getDeviceFingerprint();
-      const storageKey = `quicklogin_${fingerprint}`;
-      const updatedData = { ...deviceData, failedAttempts: 0 };
-      localStorage.setItem(storageKey, JSON.stringify(updatedData));
-      
-      // Authenticate user with Supabase before navigation
-      await authenticateUser(deviceData.email, deviceData.userRole || 'resident');
-    } else {
-      const newFailedAttempts = failedAttempts + 1;
-      setFailedAttempts(newFailedAttempts);
-      
-      // Update stored failed attempts
-      const fingerprint = getDeviceFingerprint();
-      const storageKey = `quicklogin_${fingerprint}`;
-      const updatedData = { ...deviceData, failedAttempts: newFailedAttempts };
-      localStorage.setItem(storageKey, JSON.stringify(updatedData));
-      
-      if (newFailedAttempts >= 5) {
-        toast.error('Too many failed attempts. Redirecting to password login.');
-        setTimeout(() => navigate('/login'), 2000);
-      } else {
-        toast.error(`Invalid PIN. ${5 - newFailedAttempts} attempts remaining.`);
-        setOtp(''); // Clear the input
+    try {
+      // Verify MPIN against database
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('mpin, id, role')
+        .eq('email', deviceData.email)
+        .single();
+
+      if (error || !data) {
+        toast.error('User not found. Please use password login.');
+        navigate('/login');
+        return;
       }
+
+      if (data.mpin === otp) {
+        // Reset failed attempts on success
+        const fingerprint = getDeviceFingerprint();
+        const storageKey = `quicklogin_${fingerprint}`;
+        const updatedData = { ...deviceData, failedAttempts: 0 };
+        localStorage.setItem(storageKey, JSON.stringify(updatedData));
+        
+        // Sign in user with Supabase
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: deviceData.email,
+          password: 'demo123' // This is a placeholder - in real implementation, you'd need proper authentication
+        });
+
+        if (signInError) {
+          console.error('Sign in error:', signInError);
+          toast.error('Authentication failed. Please use password login.');
+          navigate('/login');
+          return;
+        }
+        
+        // Navigate based on role
+        await authenticateUser(deviceData.email, data.role || 'resident');
+      } else {
+        const newFailedAttempts = failedAttempts + 1;
+        setFailedAttempts(newFailedAttempts);
+        
+        // Update stored failed attempts
+        const fingerprint = getDeviceFingerprint();
+        const storageKey = `quicklogin_${fingerprint}`;
+        const updatedData = { ...deviceData, failedAttempts: newFailedAttempts };
+        localStorage.setItem(storageKey, JSON.stringify(updatedData));
+        
+        if (newFailedAttempts >= 5) {
+          toast.error('Too many failed attempts. Redirecting to password login.');
+          setTimeout(() => navigate('/login'), 2000);
+        } else {
+          toast.error(`Invalid PIN. ${5 - newFailedAttempts} attempts remaining.`);
+          setOtp(''); // Clear the input
+        }
+      }
+    } catch (error) {
+      console.error('Error verifying MPIN:', error);
+      toast.error('Verification failed. Please try again.');
+      setOtp('');
     }
   };
 

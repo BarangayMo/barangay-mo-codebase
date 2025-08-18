@@ -1422,6 +1422,7 @@ export type Database = {
           last_name: string | null
           logo_url: string | null
           middle_name: string | null
+          mpin: string | null
           municipality: string | null
           officials_data: Json | null
           phone_number: string | null
@@ -1448,6 +1449,7 @@ export type Database = {
           last_name?: string | null
           logo_url?: string | null
           middle_name?: string | null
+          mpin?: string | null
           municipality?: string | null
           officials_data?: Json | null
           phone_number?: string | null
@@ -1474,6 +1476,7 @@ export type Database = {
           last_name?: string | null
           logo_url?: string | null
           middle_name?: string | null
+          mpin?: string | null
           municipality?: string | null
           officials_data?: Json | null
           phone_number?: string | null

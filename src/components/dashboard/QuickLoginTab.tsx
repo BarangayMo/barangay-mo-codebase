@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Lock, Fingerprint, Check, X, AlertCircle, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DeviceData {
   mpin: string;
@@ -22,6 +23,7 @@ export function QuickLoginTab() {
   const [isSettingMpin, setIsSettingMpin] = useState(false);
   const [deviceData, setDeviceData] = useState<DeviceData | null>(null);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [currentUserMpin, setCurrentUserMpin] = useState<string | null>(null);
 
   // Generate device fingerprint
   const getDeviceFingerprint = () => {
@@ -40,30 +42,52 @@ export function QuickLoginTab() {
     ).substring(0, 32);
   };
 
-  // Load device data on mount - only for current user, replace any existing data
+  // Load user MPIN and device data on mount
   useEffect(() => {
-    if (!user?.email) return;
-    
-    const fingerprint = getDeviceFingerprint();
-    const storageKey = `quicklogin_${fingerprint}`;
-    const stored = localStorage.getItem(storageKey);
-    
-    if (stored) {
+    const loadUserData = async () => {
+      if (!user?.id || !user?.email) return;
+      
       try {
-        const data = JSON.parse(stored);
-        // Always update to current user's data (latest login account only)
-        if (data.email !== user.email) {
-          // Clear old user data and reset for current user
-          setDeviceData(null);
+        // Load MPIN from database
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('mpin')
+          .eq('id', user.id)
+          .single();
+
+        if (error) {
+          console.error('Error fetching user MPIN:', error);
         } else {
-          setDeviceData(data);
+          setCurrentUserMpin(data?.mpin || null);
         }
       } catch (error) {
-        console.error('Error parsing stored device data:', error);
-        setDeviceData(null);
+        console.error('Error loading user MPIN:', error);
       }
-    }
-  }, [user?.email]);
+
+      // Load device data for biometrics
+      const fingerprint = getDeviceFingerprint();
+      const storageKey = `quicklogin_${fingerprint}`;
+      const stored = localStorage.getItem(storageKey);
+      
+      if (stored) {
+        try {
+          const data = JSON.parse(stored);
+          // Always update to current user's data (latest login account only)
+          if (data.email !== user.email) {
+            // Clear old user data and reset for current user
+            setDeviceData(null);
+          } else {
+            setDeviceData(data);
+          }
+        } catch (error) {
+          console.error('Error parsing stored device data:', error);
+          setDeviceData(null);
+        }
+      }
+    };
+
+    loadUserData();
+  }, [user?.id, user?.email]);
 
   // Check biometric availability
   useEffect(() => {
@@ -80,7 +104,7 @@ export function QuickLoginTab() {
     checkBiometrics();
   }, []);
 
-  const handleSetMpin = () => {
+  const handleSetMpin = async () => {
     if (mpinFirst.length !== 4) {
       toast.error("MPIN must be 4 digits");
       return;
@@ -91,24 +115,47 @@ export function QuickLoginTab() {
       return;
     }
 
-    const fingerprint = getDeviceFingerprint();
-    const storageKey = `quicklogin_${fingerprint}`;
-    
-    const newDeviceData: DeviceData = {
-      mpin: mpinFirst,
-      biometricEnabled: deviceData?.biometricEnabled || false,
-      failedAttempts: 0,
-      email: user!.email!,
-      userRole: user!.role
-    };
+    if (!user?.id || !user?.email) {
+      toast.error("User information not available");
+      return;
+    }
 
-    localStorage.setItem(storageKey, JSON.stringify(newDeviceData));
-    setDeviceData(newDeviceData);
-    setMpinFirst("");
-    setMpinConfirm("");
-    setIsSettingMpin(false);
-    
-    toast.success("✨ MPIN set successfully!");
+    try {
+      // Save MPIN to database
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ mpin: mpinFirst })
+        .eq('id', user.id);
+
+      if (updateError) {
+        toast.error("Failed to save MPIN to database");
+        return;
+      }
+
+      // Update local device data for biometrics only
+      const fingerprint = getDeviceFingerprint();
+      const storageKey = `quicklogin_${fingerprint}`;
+      
+      const newDeviceData: DeviceData = {
+        mpin: '', // No longer store MPIN in localStorage
+        biometricEnabled: deviceData?.biometricEnabled || false,
+        failedAttempts: 0,
+        email: user.email,
+        userRole: user.role
+      };
+
+      localStorage.setItem(storageKey, JSON.stringify(newDeviceData));
+      setDeviceData(newDeviceData);
+      setCurrentUserMpin(mpinFirst);
+      setMpinFirst("");
+      setMpinConfirm("");
+      setIsSettingMpin(false);
+      
+      toast.success("✨ MPIN set successfully!");
+    } catch (error) {
+      console.error('Error setting MPIN:', error);
+      toast.error("Failed to set MPIN");
+    }
   };
 
   const handleEnableBiometric = async () => {
@@ -161,20 +208,41 @@ export function QuickLoginTab() {
     }
   };
 
-  const handleResetQuickLogin = () => {
-    const fingerprint = getDeviceFingerprint();
-    const storageKey = `quicklogin_${fingerprint}`;
-    
-    localStorage.removeItem(storageKey);
-    setDeviceData(null);
-    setMpinFirst("");
-    setMpinConfirm("");
-    setIsSettingMpin(false);
-    
-    toast.success("Quick login reset successfully");
+  const handleResetQuickLogin = async () => {
+    if (!user?.id) return;
+
+    try {
+      // Remove MPIN from database
+      const { error } = await supabase
+        .from('profiles')
+        .update({ mpin: null })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Error removing MPIN from database:', error);
+        toast.error('Failed to remove MPIN');
+        return;
+      }
+
+      // Clear local device data
+      const fingerprint = getDeviceFingerprint();
+      const storageKey = `quicklogin_${fingerprint}`;
+      
+      localStorage.removeItem(storageKey);
+      setDeviceData(null);
+      setCurrentUserMpin(null);
+      setMpinFirst("");
+      setMpinConfirm("");
+      setIsSettingMpin(false);
+      
+      toast.success("Quick login reset successfully");
+    } catch (error) {
+      console.error('Error resetting quick login:', error);
+      toast.error('Failed to reset quick login');
+    }
   };
 
-  const hasMpin = deviceData?.mpin;
+  const hasMpin = currentUserMpin;
   const hasBiometric = deviceData?.biometricEnabled;
 
   return (
