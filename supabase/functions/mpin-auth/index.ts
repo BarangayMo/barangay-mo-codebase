@@ -111,20 +111,17 @@ serve(async (req) => {
       );
     }
 
-    // Generate a magic link and OTP, then verify on client to create session
-    const { data: linkData, error: linkError } = await supabaseServiceRole.auth.admin
+    // Create a session directly for the authenticated user
+    const { data: sessionData, error: sessionError } = await supabaseServiceRole.auth.admin
       .generateLink({
-        type: 'magiclink',
-        email: user.email!,
-        options: {
-          redirectTo: `${req.headers.get('origin') || Deno.env.get('SUPABASE_URL')}/`
-        }
+        type: 'recovery',
+        email: user.email!
       });
 
-    if (linkError) {
-      console.error('Magic link generation error:', linkError);
+    if (sessionError) {
+      console.error('Session creation error:', sessionError);
       return new Response(
-        JSON.stringify({ error: 'Failed to initiate session' }), 
+        JSON.stringify({ error: 'Failed to create session' }), 
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -132,13 +129,21 @@ serve(async (req) => {
       );
     }
 
+    // Extract the access and refresh tokens from the generated link
+    let accessToken = '';
+    let refreshToken = '';
+    
+    if (sessionData.properties?.action_link) {
+      const url = new URL(sessionData.properties.action_link);
+      accessToken = url.searchParams.get('access_token') || '';
+      refreshToken = url.searchParams.get('refresh_token') || '';
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true,
-        // Client will call supabase.auth.verifyOtp with these values to create a session
-        email_otp: linkData.properties?.email_otp,
-        verification_type: linkData.properties?.verification_type || 'magiclink',
-        action_link: linkData.properties?.action_link,
+        access_token: accessToken,
+        refresh_token: refreshToken,
         user: {
           id: user.id,
           email: user.email,
