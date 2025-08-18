@@ -1,4 +1,3 @@
-// ...existing code...
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -16,6 +15,7 @@ function storeLastLoginEmail(email: string) {
 
 // Simple hash function for demonstration (use a secure hash in production)
 function hashMpin(mpin: string) {
+	if (mpin.length !== 4) throw new Error("MPIN must be exactly 4 digits");
 	let hash = 0;
 	for (let i = 0; i < mpin.length; i++) {
 		hash = ((hash << 5) - hash) + mpin.charCodeAt(i);
@@ -25,8 +25,8 @@ function hashMpin(mpin: string) {
 }
 
 
-// Call Edge Function to verify MPIN and get magic link (using user's mpin-auth function)
-async function verifyMpinAndGetMagicLink(email: string, mpin: string) {
+// Call Edge Function to verify MPIN (using user's mpin-auth function)
+async function verifyMpin(email: string, mpin: string) {
 	const response = await fetch('https://lsygeaoqahfryyfvpxrk.supabase.co/functions/v1/mpin-auth', {
 		method: 'POST',
 		headers: {
@@ -38,18 +38,38 @@ async function verifyMpinAndGetMagicLink(email: string, mpin: string) {
 	return { ...result, status: response.status };
 }
 
-
 async function loginWithMpin(email: string, mpin: string) {
-	const result = await verifyMpinAndGetMagicLink(email, mpin);
+	// Verify MPIN with Edge Function
+	const result = await verifyMpin(email, mpin);
+	console.log("Edge function response:", result);
+
 	if (!result.success) {
 		return { error: result.error || 'Authentication failed' };
 	}
-	if (result.magic_link) {
-		// Redirect user to magic link for login
-		window.location.href = result.magic_link;
-		return { success: true };
+
+	// Expect server-issued tokens for auto-login
+	if (result.access_token && result.refresh_token) {
+		try {
+			const { error } = await supabase.auth.setSession({
+				access_token: result.access_token,
+				refresh_token: result.refresh_token,
+			});
+
+			if (error) {
+				console.error('setSession error:', error);
+				return { error: 'Failed to establish session' };
+			}
+
+			return { success: true, message: 'Logged in successfully' };
+		} catch (e) {
+			console.error('setSession exception:', e);
+			return { error: 'Authentication failed' };
+		}
 	}
-	return { error: 'No magic link returned' };
+
+	// No tokens returned: treat as server failure — do NOT send magic link
+	console.error('MPIN verification succeeded but no session tokens returned from Edge Function');
+	return { error: 'Server did not return session tokens. Contact support or try again.' };
 }
 
 export default function MPIN() {
@@ -81,7 +101,7 @@ export default function MPIN() {
 	}, [navigate]);
 
 	const handleNumberClick = (number: string) => {
-		if (mpin.length < 6) {
+		if (mpin.length < 4) {
 			setMpin(prev => prev + number);
 		}
 	};
@@ -95,27 +115,31 @@ export default function MPIN() {
 	};
 
 	const handleLogin = async () => {
-		if (mpin.length < 4 || mpin.length > 6) {
-			toast.error("Please enter a 4-6 digit MPIN");
+		if (mpin.length !== 4) {
+			toast.error("Please enter a 4-digit MPIN");
 			return;
 		}
 		setLoading(true);
 		try {
 			const result = await loginWithMpin(email, mpin);
-					if (result.error) {
-						if (result.error === 'MPIN not set') {
-							toast.error("MPIN not set. Please set up MPIN in Quick Login tab.");
-						} else if (result.error === 'User not found') {
-							toast.error("User not found. Please check your email address.");
-						} else if (result.error === 'Invalid MPIN') {
-							toast.error("Invalid MPIN. Please try again.");
-						} else {
-							toast.error("Authentication failed. Please try again.");
-						}
-						return;
-					}
-					toast.success("MPIN verified! Redirecting to login...");
-					// The user will be redirected to the magic link for login
+			console.log("MPIN login result:", result); // Debug log
+			if (result.error) {
+				if (result.error === 'MPIN not set') {
+					toast.error("MPIN not set. Please set up MPIN in Quick Login tab.");
+				} else if (result.error === 'User not found') {
+					toast.error("User not found. Please check your email address.");
+				} else if (result.error === 'Invalid MPIN') {
+					toast.error("Invalid MPIN. Please try again.");
+				} else {
+					toast.error(result.error || "Authentication failed. Please try again.");
+				}
+				return;
+			}
+
+			if (result.success) {
+				toast.success(result.message || "MPIN verified! Check your email for the magic link.");
+				setMpin(""); // Clear MPIN field after successful verification
+			}
 		} catch (error) {
 			toast.error("Login failed. Please try again.");
 		} finally {
@@ -143,14 +167,14 @@ export default function MPIN() {
 					<div className="space-y-2">
 						<h2 className="text-lg font-semibold">Welcome back</h2>
 						<p className="text-sm text-muted-foreground break-all">{email}</p>
-						<p className="text-xs text-muted-foreground">Enter your 4-6 digit MPIN</p>
+						<p className="text-xs text-muted-foreground">Enter your 4-digit MPIN</p>
 					</div>
 				</CardHeader>
 
 				<CardContent className="space-y-6">
 					{/* MPIN Display */}
 					<div className="flex justify-center space-x-3">
-						{[0, 1, 2, 3, 4, 5].map((index) => (
+						{[0, 1, 2, 3].map((index) => (
 							<div
 								key={index}
 								className="w-4 h-4 rounded-full border-2 border-muted-foreground/30 flex items-center justify-center"
@@ -171,7 +195,7 @@ export default function MPIN() {
 								size="lg"
 								className="h-16 text-xl font-semibold"
 								onClick={() => handleNumberClick(number.toString())}
-								disabled={loading || mpin.length >= 6}
+								disabled={loading || mpin.length >= 4}
 							>
 								{number}
 							</Button>
@@ -192,7 +216,7 @@ export default function MPIN() {
 							size="lg"
 							className="h-16 text-xl font-semibold"
 							onClick={() => handleNumberClick("0")}
-							disabled={loading || mpin.length >= 6}
+							disabled={loading || mpin.length >= 4}
 						>
 							0
 						</Button>
@@ -211,7 +235,7 @@ export default function MPIN() {
 					<Button 
 						onClick={handleLogin}
 						className="w-full h-12"
-						disabled={loading || mpin.length < 4 || mpin.length > 6}
+						disabled={loading || mpin.length !== 4}
 					>
 						{loading ? "Signing in..." : "Sign In"}
 					</Button>
