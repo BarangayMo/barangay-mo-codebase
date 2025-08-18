@@ -66,22 +66,19 @@ export default function MPIN() {
       if (error || !data.success) {
         console.error("MPIN auth error:", error || data);
         
-        if (data?.reason === 'locked') {
-          const lockedUntil = new Date(data.locked_until).toLocaleString();
-          toast.error(`Account locked until ${lockedUntil}`);
-        } else if (data?.reason === 'invalid') {
-          toast.error(`Invalid MPIN. ${data.remaining_attempts} attempts remaining.`);
-        } else if (data?.reason === 'not_set') {
+        if (data?.error === 'MPIN not set') {
           toast.error("MPIN not set. Please set up MPIN in settings first.");
-        } else if (data?.reason === 'not_found') {
-          toast.error("Email not found. Please check your email address.");
+        } else if (data?.error === 'User not found') {
+          toast.error("User not found. Please check your email address.");
+        } else if (data?.error === 'Invalid MPIN') {
+          toast.error("Invalid MPIN. Please try again.");
         } else {
           toast.error("Authentication failed. Please try again.");
         }
         return;
       }
 
-      // Set session with tokens from edge function
+      // Set session with tokens
       if (data.access_token && data.refresh_token) {
         const { error: sessionError } = await supabase.auth.setSession({
           access_token: data.access_token,
@@ -94,7 +91,6 @@ export default function MPIN() {
           return;
         }
       } else {
-        console.error("No session tokens received");
         toast.error("Authentication failed - no session data");
         return;
       }

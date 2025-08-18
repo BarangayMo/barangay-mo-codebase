@@ -32,36 +32,46 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Verify MPIN using the database function
-    const { data: verifyResult, error: verifyError } = await supabaseServiceRole
-      .rpc('verify_user_mpin', { 
-        p_email: email, 
-        p_mpin: mpin 
-      });
+    // Find user by email and verify MPIN directly
+    const { data: profile, error: profileError } = await supabaseServiceRole
+      .from('profiles')
+      .select('id, mpin_hash')
+      .eq('email', email)
+      .single();
 
-    if (verifyError) {
-      console.error('MPIN verification error:', verifyError);
+    if (profileError || !profile) {
       return new Response(
-        JSON.stringify({ error: 'Authentication failed' }), 
+        JSON.stringify({ error: 'User not found' }), 
         { 
-          status: 500, 
+          status: 404, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
 
-    if (!verifyResult.ok) {
-      // Return specific error based on reason
-      const status = verifyResult.reason === 'locked' ? 429 : 401;
+    // Check if MPIN is set
+    if (!profile.mpin_hash) {
       return new Response(
-        JSON.stringify({ 
-          error: 'Authentication failed',
-          reason: verifyResult.reason,
-          remaining_attempts: verifyResult.remaining_attempts,
-          locked_until: verifyResult.locked_until
-        }), 
+        JSON.stringify({ error: 'MPIN not set' }), 
         { 
-          status, 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Verify MPIN using pgcrypto
+    const { data: mpinValid, error: mpinError } = await supabaseServiceRole
+      .rpc('verify_user_mpin', { 
+        p_email: email, 
+        p_mpin: mpin 
+      });
+
+    if (mpinError || !mpinValid?.ok) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid MPIN' }), 
+        { 
+          status: 401, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
@@ -96,7 +106,7 @@ serve(async (req) => {
     // Create a session for the authenticated user
     const { data: sessionData, error: sessionError } = await supabaseServiceRole.auth.admin
       .createSession({
-        user_id: user.id,
+        user_id: profile.id,
         session_data: {}
       });
 
@@ -111,15 +121,12 @@ serve(async (req) => {
       );
     }
 
-    // Return session tokens like normal login
+    // Return session tokens for simple login
     return new Response(
       JSON.stringify({ 
         success: true,
         access_token: sessionData.session.access_token,
         refresh_token: sessionData.session.refresh_token,
-        expires_in: sessionData.session.expires_in,
-        expires_at: sessionData.session.expires_at,
-        token_type: sessionData.session.token_type,
         user: sessionData.user
       }), 
       { 
