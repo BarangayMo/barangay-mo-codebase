@@ -14,9 +14,12 @@ serve(async (req) => {
   }
 
   try {
+    console.log('🔍 MPIN auth request started');
     const { email, mpin } = await req.json();
+    console.log('📧 Request data:', { email, mpinLength: mpin?.length });
 
     if (!email || !mpin) {
+      console.log('❌ Missing email or MPIN');
       return new Response(
         JSON.stringify({ error: 'Email and MPIN are required' }), 
         { 
@@ -27,20 +30,32 @@ serve(async (req) => {
     }
 
     // Create Supabase client with service role key
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    console.log('🔑 Environment check:', { 
+      hasUrl: !!supabaseUrl, 
+      hasServiceKey: !!serviceRoleKey,
+      urlPrefix: supabaseUrl?.substring(0, 20) + '...'
+    });
+    
     const supabaseServiceRole = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      supabaseUrl ?? '',
+      serviceRoleKey ?? ''
     );
+    console.log('✅ Supabase client created');
 
     // Verify MPIN using database function first
+    console.log('🔐 Attempting MPIN verification via RPC');
     const { data: mpinValid, error: mpinError } = await supabaseServiceRole
       .rpc('verify_user_mpin', { 
         p_email: email, 
         p_mpin: mpin 
       });
+    console.log('🔐 RPC result:', { mpinValid, mpinError });
 
     if (mpinError) {
-      console.error('verify_user_mpin error:', mpinError);
+      console.error('❌ verify_user_mpin RPC failed:', mpinError);
+      console.log('🔄 Attempting legacy MPIN fallback');
 
       // Fallback: handle legacy MPINs that were stored with a simple hash
       const { data: legacyProfile, error: legacyFetchError } = await supabaseServiceRole
@@ -48,6 +63,14 @@ serve(async (req) => {
         .select('id, mpin_hash')
         .eq('email', email)
         .maybeSingle();
+      
+      console.log('👤 Legacy profile lookup:', { 
+        found: !!legacyProfile, 
+        hasId: !!legacyProfile?.id,
+        hasMpinHash: !!legacyProfile?.mpin_hash,
+        mpinHashType: legacyProfile?.mpin_hash ? typeof legacyProfile.mpin_hash : 'none',
+        error: legacyFetchError 
+      });
 
       if (legacyFetchError) {
         console.error('Legacy profile fetch error:', legacyFetchError);
@@ -83,6 +106,7 @@ serve(async (req) => {
       }
 
       // Simple legacy hash used previously on the client
+      console.log('🔢 Calculating legacy hash for comparison');
       const simpleHash = (val: string) => {
         let hash = 0;
         for (let i = 0; i < val.length; i++) {
@@ -92,7 +116,15 @@ serve(async (req) => {
         return hash.toString();
       };
 
-      if (simpleHash(mpin) !== stored) {
+      const calculatedHash = simpleHash(mpin);
+      console.log('🔢 Hash comparison:', { 
+        stored, 
+        calculated: calculatedHash, 
+        match: calculatedHash === stored 
+      });
+
+      if (calculatedHash !== stored) {
+        console.log('❌ Legacy MPIN hash mismatch');
         return new Response(
           JSON.stringify({ error: 'Invalid MPIN' }),
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -100,8 +132,15 @@ serve(async (req) => {
       }
 
       // Legacy MPIN matched – create a session using the profile id
+      console.log('✅ Legacy MPIN matched, creating session');
       const { data: legacySession, error: legacySessionError } = await supabaseServiceRole.auth.admin
         .createSession({ user_id: legacyProfile.id, session_data: {} });
+      
+      console.log('🎫 Legacy session creation:', { 
+        success: !!legacySession, 
+        hasTokens: !!legacySession?.session?.access_token,
+        error: legacySessionError 
+      });
 
       if (legacySessionError) {
         console.error('Legacy session creation error:', legacySessionError);
@@ -123,6 +162,7 @@ serve(async (req) => {
     }
 
     if (!mpinValid?.ok) {
+      console.log('✅ RPC verification successful, creating session');
       const reason = mpinValid?.reason;
       const map = {
         not_found: { status: 404, error: 'User not found' },
@@ -131,6 +171,7 @@ serve(async (req) => {
         invalid: { status: 401, error: 'Invalid MPIN' },
       } as const;
       const res = map[reason as keyof typeof map] ?? { status: 401, error: 'Invalid MPIN' };
+      console.log('❌ RPC verification failed:', { reason, response: res });
       return new Response(
         JSON.stringify({ error: res.error }), 
         { 
@@ -140,8 +181,11 @@ serve(async (req) => {
       );
     }
 
+    console.log('✅ MPIN verification successful, proceeding with session creation');
     const userId = mpinValid.user_id;
+    console.log('👤 User ID from verification:', userId);
     if (!userId) {
+      console.log('❌ No user ID returned from verification');
       return new Response(
         JSON.stringify({ error: 'User not found' }), 
         { 
@@ -152,11 +196,18 @@ serve(async (req) => {
     }
 
     // Create a session for the authenticated user
+    console.log('🎫 Creating session for user:', userId);
     const { data: sessionData, error: sessionError } = await supabaseServiceRole.auth.admin
       .createSession({
         user_id: userId,
         session_data: {}
       });
+    
+    console.log('🎫 Session creation result:', { 
+      success: !!sessionData, 
+      hasTokens: !!sessionData?.session?.access_token,
+      error: sessionError 
+    });
 
     if (sessionError) {
       console.error('Session creation error:', sessionError);

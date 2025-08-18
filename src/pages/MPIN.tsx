@@ -27,6 +27,7 @@ function hashMpin(mpin: string) {
 
 // Call Edge Function to verify MPIN (using user's mpin-auth function)
 async function verifyMpin(email: string, mpin: string) {
+	console.log('🔄 Frontend: Calling MPIN auth edge function', { email, mpinLength: mpin.length });
 	const response = await fetch('https://lsygeaoqahfryyfvpxrk.supabase.co/functions/v1/mpin-auth', {
 		method: 'POST',
 		headers: {
@@ -34,21 +35,27 @@ async function verifyMpin(email: string, mpin: string) {
 		},
 		body: JSON.stringify({ email, mpin }),
 	});
+	console.log('📨 Frontend: Edge function response status:', response.status);
 	const result = await response.json();
+	console.log('📄 Frontend: Edge function response data:', result);
 	return { ...result, status: response.status };
 }
 
 async function loginWithMpin(email: string, mpin: string) {
+	console.log('🚀 Frontend: Starting MPIN login process');
 	// Verify MPIN with Edge Function
 	const result = await verifyMpin(email, mpin);
-	console.log("Edge function response:", result);
+	console.log("📦 Frontend: Edge function complete response:", result);
 
 	if (!result.success) {
+		console.log('❌ Frontend: Login failed with error:', result.error);
 		return { error: result.error || 'Authentication failed' };
 	}
 
+	console.log('✅ Frontend: MPIN verification successful, checking tokens');
 	// Expect server-issued tokens for auto-login
 	if (result.access_token && result.refresh_token) {
+		console.log('🎫 Frontend: Tokens received, setting session');
 		try {
 			const { error } = await supabase.auth.setSession({
 				access_token: result.access_token,
@@ -56,19 +63,20 @@ async function loginWithMpin(email: string, mpin: string) {
 			});
 
 			if (error) {
-				console.error('setSession error:', error);
+				console.error('❌ Frontend: setSession error:', error);
 				return { error: 'Failed to establish session' };
 			}
 
+			console.log('✅ Frontend: Session established successfully');
 			return { success: true, message: 'Logged in successfully' };
 		} catch (e) {
-			console.error('setSession exception:', e);
+			console.error('❌ Frontend: setSession exception:', e);
 			return { error: 'Authentication failed' };
 		}
 	}
 
 	// No tokens returned: treat as server failure — do NOT send magic link
-	console.error('MPIN verification succeeded but no session tokens returned from Edge Function');
+	console.error('❌ Frontend: MPIN verification succeeded but no session tokens returned');
 	return { error: 'Server did not return session tokens. Contact support or try again.' };
 }
 
@@ -115,15 +123,19 @@ export default function MPIN() {
 	};
 
 	const handleLogin = async () => {
+		console.log('🎯 Frontend: Login button clicked', { mpinLength: mpin.length, email });
 		if (mpin.length !== 4) {
+			console.log('❌ Frontend: MPIN length validation failed');
 			toast.error("Please enter a 4-digit MPIN");
 			return;
 		}
 		setLoading(true);
+		console.log('🔄 Frontend: Starting login process...');
 		try {
 			const result = await loginWithMpin(email, mpin);
-			console.log("MPIN login result:", result); // Debug log
+			console.log("🎯 Frontend: Final MPIN login result:", result);
 			if (result.error) {
+				console.log('❌ Frontend: Login error received:', result.error);
 				if (result.error === 'MPIN not set') {
 					toast.error("MPIN not set. Please set up MPIN in Quick Login tab.");
 				} else if (result.error === 'User not found') {
