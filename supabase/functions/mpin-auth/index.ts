@@ -111,11 +111,11 @@ serve(async (req) => {
       );
     }
 
-    // Create a session directly for the authenticated user
+    // Create a session directly using admin.createSession (like normal login)
     const { data: sessionData, error: sessionError } = await supabaseServiceRole.auth.admin
-      .generateLink({
-        type: 'recovery',
-        email: user.email!
+      .createSession({
+        user_id: user.id,
+        session_data: {}
       });
 
     if (sessionError) {
@@ -129,27 +129,16 @@ serve(async (req) => {
       );
     }
 
-    // Extract the access and refresh tokens from the generated link
-    let accessToken = '';
-    let refreshToken = '';
-    
-    if (sessionData.properties?.action_link) {
-      const url = new URL(sessionData.properties.action_link);
-      accessToken = url.searchParams.get('access_token') || '';
-      refreshToken = url.searchParams.get('refresh_token') || '';
-    }
-
+    // Return session tokens exactly like normal email/password login
     return new Response(
       JSON.stringify({ 
         success: true,
-        access_token: accessToken,
-        refresh_token: refreshToken,
-        user: {
-          id: user.id,
-          email: user.email,
-          role: profile.role,
-          ...profile
-        }
+        access_token: sessionData.session.access_token,
+        refresh_token: sessionData.session.refresh_token,
+        expires_in: sessionData.session.expires_in,
+        expires_at: sessionData.session.expires_at,
+        token_type: sessionData.session.token_type,
+        user: sessionData.user
       }), 
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
