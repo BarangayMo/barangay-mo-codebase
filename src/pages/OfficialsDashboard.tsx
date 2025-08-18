@@ -414,9 +414,9 @@ const OfficialsDashboard = () => {
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-4">
-              {activeTab === 'address' && <BarangayAddressTab barangayData={barangayData} />}
-              {activeTab === 'details' && <BarangayDetailsTab barangayData={barangayData} />}
-              {activeTab === 'logo' && <BarangayLogoTab barangayData={barangayData} />}
+              {activeTab === 'address' && <BarangayAddressTab />}
+              {activeTab === 'details' && <BarangayDetailsTab />}
+              {activeTab === 'logo' && <BarangayLogoTab />}
             </div>
           </div>
         </div>}

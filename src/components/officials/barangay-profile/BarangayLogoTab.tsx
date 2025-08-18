@@ -58,15 +58,15 @@ export const BarangayLogoTab = () => {
   }
 
   return (
-    <div className="space-y-6 p-4 max-w-2xl mx-auto">
+    <div className="space-y-6 p-2 sm:p-4 max-w-2xl mx-auto">
       <div className="bg-white rounded-lg shadow-sm border">
-        <div className="p-4 border-b">
-          <h3 className="text-lg font-semibold text-gray-900">Barangay Logo</h3>
+        <div className="p-3 sm:p-4 border-b">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900">Barangay Logo</h3>
         </div>
-        <div className="p-4 space-y-4">
+        <div className="p-3 sm:p-4 space-y-4">
           <div className="flex flex-col items-center gap-4">
             {/* Logo Preview */}
-            <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-red-200">
+            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden border-2 border-red-200 relative">
               {logoUrl ? (
                 <img 
                   src={logoUrl} 
@@ -74,14 +74,14 @@ export const BarangayLogoTab = () => {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-red-50 flex items-center justify-center text-red-600">
+                <div className="w-full h-full bg-red-50 flex items-center justify-center text-red-600 text-xs sm:text-sm">
                   No Logo
                 </div>
               )}
             </div>
 
             {/* Upload Button */}
-            <div className="flex flex-col items-center gap-2">
+            <div className="flex flex-col items-center gap-2 w-full">
               <input
                 type="file"
                 id="logo-upload"
@@ -91,11 +91,11 @@ export const BarangayLogoTab = () => {
               />
               <label
                 htmlFor="logo-upload"
-                className="cursor-pointer inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                className="cursor-pointer inline-flex items-center justify-center px-3 py-2 sm:px-4 sm:py-2 border border-transparent text-xs sm:text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 w-full max-w-xs"
               >
                 Upload New Logo
               </label>
-              <p className="text-sm text-gray-500">
+              <p className="text-xs sm:text-sm text-gray-500 text-center px-2">
                 Recommended: Square image, at least 200x200 pixels
               </p>
             </div>
