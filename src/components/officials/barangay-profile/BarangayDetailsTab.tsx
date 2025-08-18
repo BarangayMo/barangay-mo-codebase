@@ -120,17 +120,19 @@ export const BarangayDetailsTab = () => {
         "No of Divisions": editedData["No of Divisions"]
       };
       
-      // First try to update existing barangay
-      const { error: updateError } = await supabase
+      // First try to update existing barangay and check affected rows
+      const { data: updatedRows, error: updateError } = await supabase
         .from('Barangays')
         .update(detailsUpdate)
-        .eq('BARANGAY', user.barangay);
+        .eq('BARANGAY', user.barangay)
+        .select('ID');
 
       if (updateError) {
-        // If update fails, the barangay might not exist - create it
-        console.log('Update failed, attempting to create new barangay:', updateError);
-        
-        // Call the function to create barangay from region data
+        throw updateError;
+      }
+
+      if (!updatedRows || updatedRows.length === 0) {
+        // No existing row - create barangay from region data, then update
         const { data: newBarangayId, error: createError } = await supabase
           .rpc('create_barangay_from_region_data', {
             barangay_name: user.barangay,
@@ -146,7 +148,6 @@ export const BarangayDetailsTab = () => {
 
         console.log('Created new barangay with ID:', newBarangayId);
         
-        // Now update the newly created barangay with the details
         const { error: secondUpdateError } = await supabase
           .from('Barangays')
           .update(detailsUpdate)
@@ -181,17 +182,19 @@ export const BarangayDetailsTab = () => {
         "VAWC Hotline No": editedData["VAWC Hotline No"]
       };
       
-      // First try to update existing barangay
-      const { error: updateError } = await supabase
+      // First try to update existing barangay and check affected rows
+      const { data: updatedRows, error: updateError } = await supabase
         .from('Barangays')
         .update(contactsUpdate)
-        .eq('BARANGAY', user.barangay);
+        .eq('BARANGAY', user.barangay)
+        .select('ID');
 
       if (updateError) {
-        // If update fails, the barangay might not exist - create it
-        console.log('Update failed, attempting to create new barangay:', updateError);
-        
-        // Call the function to create barangay from region data
+        throw updateError;
+      }
+
+      if (!updatedRows || updatedRows.length === 0) {
+        // No existing row - create barangay from region data, then update
         const { data: newBarangayId, error: createError } = await supabase
           .rpc('create_barangay_from_region_data', {
             barangay_name: user.barangay,
@@ -207,7 +210,6 @@ export const BarangayDetailsTab = () => {
 
         console.log('Created new barangay with ID:', newBarangayId);
         
-        // Now update the newly created barangay with the emergency contacts
         const { error: secondUpdateError } = await supabase
           .from('Barangays')
           .update(contactsUpdate)
