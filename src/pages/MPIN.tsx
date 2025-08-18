@@ -73,21 +73,28 @@ export default function MPIN() {
         return;
       }
 
-      // Set the session using the complete session object from the edge function
-      if (data.session) {
-        const { error: sessionError } = await supabase.auth.setSession({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token
+      // Verify the OTP returned by the edge function to create a session
+      if (data.email_otp) {
+        const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
+          email,
+          token: data.email_otp,
+          type: 'email'
         });
 
-        if (sessionError) {
-          console.error("Session set error:", sessionError);
-          toast.error("Failed to establish session. Please try again.");
+        if (verifyError) {
+          console.error("OTP verify error:", verifyError);
+          toast.error("Failed to verify sign-in. Please try again.");
+          return;
+        }
+
+        if (!verifyData?.session) {
+          console.error("No session received after verifyOtp");
+          toast.error("Authentication failed - no session data");
           return;
         }
       } else {
-        console.error("No session data received");
-        toast.error("Authentication failed - no session data");
+        console.error("No OTP received from server");
+        toast.error("Authentication failed - missing OTP");
         return;
       }
 
