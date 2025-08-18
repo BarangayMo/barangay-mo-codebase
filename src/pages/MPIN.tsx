@@ -192,7 +192,7 @@ export default function MPIN() {
                 const updatedData = { ...deviceData, failedAttempts: 0 };
                 localStorage.setItem(storageKey, JSON.stringify(updatedData));
                 
-                // Sign in user with appropriate demo login
+                // Sign in user with appropriate authentication
                 const userRole = deviceData.userRole || 'resident';
                 
                 try {
@@ -202,12 +202,14 @@ export default function MPIN() {
                     
                     if (signInError) {
                       console.error('Demo login error:', signInError);
-                      toast.error('Authentication failed. Please use password login.');
-                      navigate('/login');
+                      toast.error('Authentication failed. Please try again.');
+                      setOtp('');
                       return;
                     }
                   } else {
-                    toast.error('Please use password login for your account.');
+                    // For regular accounts, we need to handle authentication differently
+                    // Since we don't store passwords, we'll show a message to use regular login
+                    toast.error('MPIN login is currently only available for demo accounts. Please use password login for your account.');
                     navigate('/login');
                     return;
                   }
@@ -216,8 +218,8 @@ export default function MPIN() {
                   await authenticateUser(deviceData.email, userRole);
                 } catch (authError) {
                   console.error('Authentication error:', authError);
-                  toast.error('Authentication failed. Please use password login.');
-                  navigate('/login');
+                  toast.error('Authentication failed. Please try again.');
+                  setOtp('');
                 }
               } else {
                 // Invalid MPIN
@@ -296,12 +298,14 @@ export default function MPIN() {
             
             if (signInError) {
               console.error('Demo login error:', signInError);
-              toast.error('Authentication failed. Please use password login.');
-              navigate('/login');
+              toast.error('Authentication failed. Please try again.');
+              setOtp('');
               return;
             }
           } else {
-            toast.error('Please use password login for your account.');
+            // For regular accounts, we need to handle authentication differently
+            // Since we don't store passwords, we'll show a message to use regular login
+            toast.error('MPIN login is currently only available for demo accounts. Please use password login for your account.');
             navigate('/login');
             return;
           }
@@ -310,8 +314,8 @@ export default function MPIN() {
           await authenticateUser(deviceData.email, userRole);
         } catch (authError) {
           console.error('Authentication error:', authError);
-          toast.error('Authentication failed. Please use password login.');
-          navigate('/login');
+          toast.error('Authentication failed. Please try again.');
+          setOtp('');
         }
       } else {
         // Invalid MPIN
