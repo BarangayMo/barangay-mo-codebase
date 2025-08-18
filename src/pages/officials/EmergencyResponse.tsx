@@ -1,82 +1,36 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Phone, MapPin, Headphones, MessageSquare, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { toast } from "sonner";
-import { useAuth } from "@/contexts/AuthContext";
 
 const EmergencyResponse = () => {
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
-  const { user } = useAuth();
-  const [emergencyNumbers, setEmergencyNumbers] = useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = useState(true);
 
   const emergencyContacts = [
     {
       name: "BPAT",
       icon: Phone,
-      action: "Call",
-      field: "BPAT Phone"
+      action: "Call"
     },
     {
       name: "Police",
       icon: Phone,
-      action: "Call",
-      field: "Local Police Contact"
+      action: "Call"
     },
     {
       name: "Fire Department",
       icon: Phone,
-      action: "Call",
-      field: "Fire Department Phone"
+      action: "Call"
     },
     {
       name: "Ambulance",
       icon: Phone,
-      action: "Call",
-      field: "Ambulance Phone"
+      action: "Call"
     }
   ];
-
-  useEffect(() => {
-    const fetchEmergencyNumbers = async () => {
-      if (!user?.barangay) return;
-
-      try {
-        const { data, error } = await supabase
-          .from('Barangays')
-          .select('BPAT Phone, Local Police Contact, Fire Department Phone, Ambulance Phone')
-          .eq('BARANGAY', user.barangay)
-          .single();
-
-        if (error) {
-          console.error('Error fetching emergency numbers:', error);
-          return;
-        }
-
-        if (data) {
-          setEmergencyNumbers({
-            "BPAT Phone": data["BPAT Phone"] || "",
-            "Local Police Contact": data["Local Police Contact"] || "",
-            "Fire Department Phone": data["Fire Department Phone"] || "",
-            "Ambulance Phone": data["Ambulance Phone"] || ""
-          });
-        }
-      } catch (error) {
-        console.error('Error:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchEmergencyNumbers();
-  }, [user?.barangay]);
 
   const quickActions = [
     {
@@ -96,25 +50,9 @@ const EmergencyResponse = () => {
     }
   ];
 
-  const handleCall = (serviceName: string, phoneField: string) => {
-    const phoneNumber = emergencyNumbers[phoneField];
-    
-    if (!phoneNumber || phoneNumber.trim() === "") {
-      toast.error(`No ${serviceName} number available for your barangay`);
-      return;
-    }
-
-    if (isMobile) {
-      // For mobile: open phone dialer with the number
-      window.open(`tel:${phoneNumber}`, '_self');
-    } else {
-      // For desktop: copy number to clipboard
-      navigator.clipboard.writeText(phoneNumber).then(() => {
-        toast.success(`${serviceName} number (${phoneNumber}) copied to clipboard`);
-      }).catch(() => {
-        toast.error('Failed to copy number to clipboard');
-      });
-    }
+  const handleCall = (service: string) => {
+    // In a real app, this would initiate a phone call
+    console.log(`Calling ${service}`);
   };
 
   return (
@@ -154,10 +92,9 @@ const EmergencyResponse = () => {
                       <Button
                         size="sm"
                         className="bg-red-600 hover:bg-red-700 text-white px-4"
-                        onClick={() => handleCall(contact.name, contact.field)}
-                        disabled={isLoading || !emergencyNumbers[contact.field]}
+                        onClick={() => handleCall(contact.name)}
                       >
-                        {isLoading ? "..." : isMobile ? "Call" : "Copy"}
+                        {contact.action}
                       </Button>
                     </div>
                   </CardContent>
