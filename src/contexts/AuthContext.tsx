@@ -404,7 +404,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                   biometricEnabled: deviceData?.biometricEnabled || false,
                   failedAttempts: 0, // Reset failed attempts on successful login
                   email: data.user.email,
-                  userRole: userProfile.role
+                  userRole: userProfile.role,
+                  sessionTokens: {
+                    accessToken: data.session.access_token,
+                    refreshToken: data.session.refresh_token,
+                    expiresAt: data.session.expires_at
+                  }
                 };
                 
                 localStorage.setItem(storageKey, JSON.stringify(newDeviceData));

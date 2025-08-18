@@ -13,6 +13,11 @@ interface DeviceData {
   failedAttempts: number;
   email: string;
   userRole?: string;
+  sessionTokens?: {
+    accessToken: string;
+    refreshToken: string;
+    expiresAt: number;
+  };
 }
 
 export default function MPIN() {
@@ -192,34 +197,62 @@ export default function MPIN() {
                 const updatedData = { ...deviceData, failedAttempts: 0 };
                 localStorage.setItem(storageKey, JSON.stringify(updatedData));
                 
-                // Sign in user with appropriate authentication
+                // Sign in user using stored session tokens
                 const userRole = deviceData.userRole || 'resident';
                 
                 try {
-                  if (deviceData.email.includes('demo.')) {
-                    // Use demo login for demo accounts
-                    const { error: signInError } = await demoLogin(userRole as 'official' | 'resident' | 'superadmin');
-                    
-                    if (signInError) {
-                      console.error('Demo login error:', signInError);
-                      toast.error('Authentication failed. Please try again.');
-                      setOtp('');
+                  if (deviceData.sessionTokens) {
+                    // Check if session is still valid
+                    const now = Math.floor(Date.now() / 1000);
+                    if (deviceData.sessionTokens.expiresAt > now) {
+                      // Session is still valid, restore it
+                      const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+                        access_token: deviceData.sessionTokens.accessToken,
+                        refresh_token: deviceData.sessionTokens.refreshToken
+                      });
+                      
+                      if (sessionError) {
+                        console.error('Session restore error:', sessionError);
+                        toast.error('Session expired. Please login with your password.');
+                        navigate('/login');
+                        return;
+                      }
+                      
+                      if (sessionData.session) {
+                        // Update stored tokens with refreshed session
+                        const updatedDeviceData = {
+                          ...deviceData,
+                          sessionTokens: {
+                            accessToken: sessionData.session.access_token,
+                            refreshToken: sessionData.session.refresh_token,
+                            expiresAt: sessionData.session.expires_at || 0
+                          }
+                        };
+                        
+                        const fingerprint = getDeviceFingerprint();
+                        const storageKey = `quicklogin_${fingerprint}`;
+                        localStorage.setItem(storageKey, JSON.stringify(updatedDeviceData));
+                        
+                        // Navigate based on role
+                        await authenticateUser(deviceData.email, userRole);
+                        return;
+                      }
+                    } else {
+                      // Session expired
+                      toast.error('Session expired. Please login with your password.');
+                      navigate('/login');
                       return;
                     }
                   } else {
-                    // For regular accounts, we need to handle authentication differently
-                    // Since we don't store passwords, we'll show a message to use regular login
-                    toast.error('MPIN login is currently only available for demo accounts. Please use password login for your account.');
+                    // No session tokens stored
+                    toast.error('No session found. Please login with your password to set up MPIN.');
                     navigate('/login');
                     return;
                   }
-                  
-                  // Navigate based on role
-                  await authenticateUser(deviceData.email, userRole);
                 } catch (authError) {
                   console.error('Authentication error:', authError);
-                  toast.error('Authentication failed. Please try again.');
-                  setOtp('');
+                  toast.error('Authentication failed. Please login with your password.');
+                  navigate('/login');
                 }
               } else {
                 // Invalid MPIN
@@ -292,30 +325,58 @@ export default function MPIN() {
         const userRole = deviceData.userRole || 'resident';
         
         try {
-          if (deviceData.email.includes('demo.')) {
-            // Use demo login for demo accounts
-            const { error: signInError } = await demoLogin(userRole as 'official' | 'resident' | 'superadmin');
-            
-            if (signInError) {
-              console.error('Demo login error:', signInError);
-              toast.error('Authentication failed. Please try again.');
-              setOtp('');
+          if (deviceData.sessionTokens) {
+            // Check if session is still valid
+            const now = Math.floor(Date.now() / 1000);
+            if (deviceData.sessionTokens.expiresAt > now) {
+              // Session is still valid, restore it
+              const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+                access_token: deviceData.sessionTokens.accessToken,
+                refresh_token: deviceData.sessionTokens.refreshToken
+              });
+              
+              if (sessionError) {
+                console.error('Session restore error:', sessionError);
+                toast.error('Session expired. Please login with your password.');
+                navigate('/login');
+                return;
+              }
+              
+              if (sessionData.session) {
+                // Update stored tokens with refreshed session
+                const updatedDeviceData = {
+                  ...deviceData,
+                  sessionTokens: {
+                    accessToken: sessionData.session.access_token,
+                    refreshToken: sessionData.session.refresh_token,
+                    expiresAt: sessionData.session.expires_at || 0
+                  }
+                };
+                
+                const fingerprint = getDeviceFingerprint();
+                const storageKey = `quicklogin_${fingerprint}`;
+                localStorage.setItem(storageKey, JSON.stringify(updatedDeviceData));
+                
+                // Navigate based on role
+                await authenticateUser(deviceData.email, userRole);
+                return;
+              }
+            } else {
+              // Session expired
+              toast.error('Session expired. Please login with your password.');
+              navigate('/login');
               return;
             }
           } else {
-            // For regular accounts, we need to handle authentication differently
-            // Since we don't store passwords, we'll show a message to use regular login
-            toast.error('MPIN login is currently only available for demo accounts. Please use password login for your account.');
+            // No session tokens stored
+            toast.error('No session found. Please login with your password to set up MPIN.');
             navigate('/login');
             return;
           }
-          
-          // Navigate based on role
-          await authenticateUser(deviceData.email, userRole);
         } catch (authError) {
           console.error('Authentication error:', authError);
-          toast.error('Authentication failed. Please try again.');
-          setOtp('');
+          toast.error('Authentication failed. Please login with your password.');
+          navigate('/login');
         }
       } else {
         // Invalid MPIN

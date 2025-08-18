@@ -13,6 +13,11 @@ interface DeviceData {
   failedAttempts: number;
   email: string;
   userRole?: string;
+  sessionTokens?: {
+    accessToken: string;
+    refreshToken: string;
+    expiresAt: number;
+  };
 }
 
 export function QuickLoginTab() {
@@ -125,7 +130,8 @@ export function QuickLoginTab() {
         biometricEnabled: deviceData?.biometricEnabled || false,
         failedAttempts: 0,
         email: user.email,
-        userRole: user.role
+        userRole: user.role,
+        sessionTokens: deviceData?.sessionTokens // Keep existing session tokens
       };
 
       localStorage.setItem(storageKey, JSON.stringify(newDeviceData));
