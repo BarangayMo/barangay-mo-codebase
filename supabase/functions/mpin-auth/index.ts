@@ -41,12 +41,84 @@ serve(async (req) => {
 
     if (mpinError) {
       console.error('verify_user_mpin error:', mpinError);
-      return new Response(
-        JSON.stringify({ error: 'Internal server error' }), 
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+
+      // Fallback: handle legacy MPINs that were stored with a simple hash
+      const { data: legacyProfile, error: legacyFetchError } = await supabaseServiceRole
+        .from('profiles')
+        .select('id, mpin_hash')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (legacyFetchError) {
+        console.error('Legacy profile fetch error:', legacyFetchError);
+        return new Response(
+          JSON.stringify({ error: 'Internal server error' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      if (!legacyProfile) {
+        return new Response(
+          JSON.stringify({ error: 'User not found' }),
+          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      if (!legacyProfile.mpin_hash) {
+        return new Response(
+          JSON.stringify({ error: 'MPIN not set' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const stored = String(legacyProfile.mpin_hash);
+      const isBcrypt = stored.startsWith('$2');
+
+      // If it looks like bcrypt, then the RPC should have worked; report error
+      if (isBcrypt) {
+        return new Response(
+          JSON.stringify({ error: 'Internal server error' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Simple legacy hash used previously on the client
+      const simpleHash = (val: string) => {
+        let hash = 0;
+        for (let i = 0; i < val.length; i++) {
+          hash = ((hash << 5) - hash) + val.charCodeAt(i);
+          hash |= 0;
         }
+        return hash.toString();
+      };
+
+      if (simpleHash(mpin) !== stored) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid MPIN' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Legacy MPIN matched – create a session using the profile id
+      const { data: legacySession, error: legacySessionError } = await supabaseServiceRole.auth.admin
+        .createSession({ user_id: legacyProfile.id, session_data: {} });
+
+      if (legacySessionError) {
+        console.error('Legacy session creation error:', legacySessionError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to create session' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          access_token: legacySession.session.access_token,
+          refresh_token: legacySession.session.refresh_token,
+          user: legacySession.user
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
