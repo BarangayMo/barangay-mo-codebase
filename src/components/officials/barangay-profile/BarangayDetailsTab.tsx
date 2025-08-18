@@ -120,16 +120,47 @@ export const BarangayDetailsTab = () => {
         "No of Divisions": editedData["No of Divisions"]
       };
       
-      const { error } = await supabase
+      // First try to update existing barangay
+      const { error: updateError } = await supabase
         .from('Barangays')
         .update(detailsUpdate)
         .eq('BARANGAY', user.barangay);
 
-      if (error) throw error;
+      if (updateError) {
+        // If update fails, the barangay might not exist - create it
+        console.log('Update failed, attempting to create new barangay:', updateError);
+        
+        // Call the function to create barangay from region data
+        const { data: newBarangayId, error: createError } = await supabase
+          .rpc('create_barangay_from_region_data', {
+            barangay_name: user.barangay,
+            municipality_name: user.municipality || '',
+            province_name: user.province || '',
+            region_name: user.region || 'REGION 3'
+          });
+
+        if (createError) {
+          console.error('Failed to create barangay:', createError);
+          throw createError;
+        }
+
+        console.log('Created new barangay with ID:', newBarangayId);
+        
+        // Now update the newly created barangay with the details
+        const { error: secondUpdateError } = await supabase
+          .from('Barangays')
+          .update(detailsUpdate)
+          .eq('BARANGAY', user.barangay);
+
+        if (secondUpdateError) throw secondUpdateError;
+        
+        toast.success('Barangay created and details updated successfully');
+      } else {
+        toast.success('Barangay details updated successfully');
+      }
 
       setBarangayData({ ...barangayData!, ...detailsUpdate });
       setIsEditingDetails(false);
-      toast.success('Barangay details updated successfully');
     } catch (error) {
       console.error('Error updating barangay details:', error);
       toast.error('Failed to update barangay details');
@@ -150,16 +181,47 @@ export const BarangayDetailsTab = () => {
         "VAWC Hotline No": editedData["VAWC Hotline No"]
       };
       
-      const { error } = await supabase
+      // First try to update existing barangay
+      const { error: updateError } = await supabase
         .from('Barangays')
         .update(contactsUpdate)
         .eq('BARANGAY', user.barangay);
 
-      if (error) throw error;
+      if (updateError) {
+        // If update fails, the barangay might not exist - create it
+        console.log('Update failed, attempting to create new barangay:', updateError);
+        
+        // Call the function to create barangay from region data
+        const { data: newBarangayId, error: createError } = await supabase
+          .rpc('create_barangay_from_region_data', {
+            barangay_name: user.barangay,
+            municipality_name: user.municipality || '',
+            province_name: user.province || '',
+            region_name: user.region || 'REGION 3'
+          });
+
+        if (createError) {
+          console.error('Failed to create barangay:', createError);
+          throw createError;
+        }
+
+        console.log('Created new barangay with ID:', newBarangayId);
+        
+        // Now update the newly created barangay with the emergency contacts
+        const { error: secondUpdateError } = await supabase
+          .from('Barangays')
+          .update(contactsUpdate)
+          .eq('BARANGAY', user.barangay);
+
+        if (secondUpdateError) throw secondUpdateError;
+        
+        toast.success('Barangay created and emergency contacts updated successfully');
+      } else {
+        toast.success('Emergency contacts updated successfully');
+      }
 
       setBarangayData({ ...barangayData!, ...contactsUpdate });
       setIsEditingContacts(false);
-      toast.success('Emergency contacts updated successfully');
     } catch (error) {
       console.error('Error updating emergency contacts:', error);
       toast.error('Failed to update emergency contacts');

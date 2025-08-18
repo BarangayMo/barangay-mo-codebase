@@ -2557,6 +2557,15 @@ export type Database = {
         Args: { official_id: string }
         Returns: string
       }
+      create_barangay_from_region_data: {
+        Args: {
+          barangay_name: string
+          municipality_name: string
+          province_name: string
+          region_name: string
+        }
+        Returns: string
+      }
       fix_approved_officials: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -2584,6 +2593,10 @@ export type Database = {
       get_barangay_by_name: {
         Args: { barangay_name: string }
         Returns: Json
+      }
+      get_region_table_name: {
+        Args: { region_name: string }
+        Returns: string
       }
       get_user_role: {
         Args: { user_id: string }
