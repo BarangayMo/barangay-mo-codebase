@@ -43,6 +43,7 @@ import Partnerships from "@/pages/Partnerships";
 import MediaLibraryPage from "@/pages/admin/MediaLibraryPage";
 import Community from "@/pages/Community";
 import CommunityPostDetail from "@/pages/CommunityPostDetail";
+import BarangayProfileView from "@/pages/resident/BarangayProfileView";
 
 // Import marketplace components
 import SmarketplaceIndex from "@/pages/smarketplace/SmarketplaceIndex";
@@ -236,6 +237,7 @@ export function AppRoutes() {
       <Route path="/resident/products/edit/:id" element={<RbiProtectedRoute><ProductEditPage /></RbiProtectedRoute>} />
       <Route path="/resident/products/edit/new" element={<RbiProtectedRoute><ProductEditPage /></RbiProtectedRoute>} />
       <Route path="/resident/official" element={<RbiProtectedRoute><ResidentOfficialProfileView /></RbiProtectedRoute>} />
+      <Route path="/resident/barangay-profile" element={<RbiProtectedRoute><BarangayProfileView /></RbiProtectedRoute>} />
       
       <Route path="/marketplace" element={<RbiProtectedRoute><Marketplace /></RbiProtectedRoute>} />
       <Route path="/marketplace/category/:categorySlug" element={<RbiProtectedRoute><CategoryPage /></RbiProtectedRoute>} />
