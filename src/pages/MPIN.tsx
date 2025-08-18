@@ -3,31 +3,117 @@ import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronLeft, ScanFace, Fingerprint, ArrowRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export default function MPIN() {
   const [otp, setOtp] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("+63 952 483 0859");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [biometricsAvailable, setBiometricsAvailable] = useState<'none' | 'face' | 'fingerprint'>('none');
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  const { userRole, isAuthenticated } = useAuth();
+  const { userRole, isAuthenticated, user } = useAuth();
+
+  // Fetch last login device info
+  useEffect(() => {
+    const fetchLastLoginDevice = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('user_devices')
+          .select('phone_number, mpin')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .single();
+
+        if (error) throw error;
+
+        if (data) {
+          setPhoneNumber(data.phone_number);
+        }
+      } catch (error) {
+        console.error('Error fetching device info:', error);
+        navigate('/login');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchLastLoginDevice();
+  }, [user?.id, navigate]);
 
   useEffect(() => {
     // Check for biometrics availability
-    const checkBiometrics = () => {
-      // Check if device has Face ID (iOS Safari/WebKit)
-      if (window.navigator.userAgent.includes('iPhone') || window.navigator.userAgent.includes('iPad')) {
-        setBiometricsAvailable('face');
+    const checkBiometrics = async () => {
+      try {
+        // Check if device has Face ID (iOS Safari/WebKit)
+        if (window.navigator.userAgent.includes('iPhone') || window.navigator.userAgent.includes('iPad')) {
+          if ('FaceID' in window) {
+            setBiometricsAvailable('face');
+          }
+        }
+        // Check for fingerprint/touch ID support using WebAuthn
+        else if ('credentials' in navigator && 'PublicKeyCredential' in window) {
+          // Check if platform authenticator is available
+          const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+          if (available) {
+            setBiometricsAvailable('fingerprint');
+          }
+        }
+      } catch (error) {
+        console.error('Error checking biometrics:', error);
       }
-      // Check for fingerprint/touch ID support
-      else if ('credentials' in navigator && 'webauthn' in window) {
-        setBiometricsAvailable('fingerprint');
-      }
-      // For development/testing, you can uncomment this to simulate biometrics
-      // setBiometricsAvailable('face');
     };
 
     checkBiometrics();
   }, []);
+
+  const handleBiometricAuth = async () => {
+    try {
+      if (!user?.id) {
+        toast.error('No user found');
+        return;
+      }
+
+      // Create WebAuthn credential options
+      const publicKeyCredentialRequestOptions: PublicKeyCredentialRequestOptions = {
+        challenge: new Uint8Array(32),
+        timeout: 60000,
+        rpId: window.location.hostname,
+        userVerification: "required",
+        allowCredentials: [] // Allow any registered credential
+      };
+
+      // Request biometric verification
+      const credential = await navigator.credentials.get({
+        publicKey: publicKeyCredentialRequestOptions
+      });
+
+      if (credential) {
+        // Biometric authentication successful
+        if (isAuthenticated) {
+          switch(userRole) {
+            case "official":
+              navigate("/official-dashboard");
+              break;
+            case "superadmin":
+              navigate("/admin");
+              break;
+            case "resident":
+            default:
+              navigate("/resident-home");
+              break;
+          }
+        } else {
+          navigate("/login");
+        }
+      }
+    } catch (error) {
+      console.error('Biometric authentication failed:', error);
+      toast.error('Biometric authentication failed');
+    }
+  };
 
   const handleNumPadInput = (value: string) => {
     if (otp.length < 4) {
@@ -39,28 +125,61 @@ export default function MPIN() {
     setOtp(prev => prev.slice(0, -1));
   };
 
-  const handleLogin = () => {
-    // Simulate login process
-    if (otp.length === 4) {
-      // This would normally validate the MPIN
-      // For demo purposes, we'll redirect based on role or default
-      if (isAuthenticated) {
-        switch(userRole) {
-          case "official":
-            navigate("/official-dashboard");
-            break;
-          case "superadmin":
-            navigate("/admin");
-            break;
-          case "resident":
-          default:
-            navigate("/resident-home");
-            break;
+  const handleLogin = async () => {
+    if (otp.length !== 4) {
+      toast.error('Please enter a 4-digit PIN');
+      return;
+    }
+
+    try {
+      if (!user?.id) {
+        toast.error('No user found');
+        navigate('/login');
+        return;
+      }
+
+      // Verify MPIN
+      const { data, error } = await supabase
+        .from('user_devices')
+        .select('mpin')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .single();
+
+      if (error) throw error;
+
+      if (!data) {
+        toast.error('No device found');
+        navigate('/login');
+        return;
+      }
+
+      // Compare MPIN
+      if (data.mpin === otp) {
+        // Successfully verified MPIN
+        if (isAuthenticated) {
+          switch(userRole) {
+            case "official":
+              navigate("/official-dashboard");
+              break;
+            case "superadmin":
+              navigate("/admin");
+              break;
+            case "resident":
+            default:
+              navigate("/resident-home");
+              break;
+          }
+        } else {
+          navigate("/login");
         }
       } else {
-        // If not authenticated, redirect to resident home as default
-        navigate("/resident-home");
+        toast.error('Invalid PIN');
+        setOtp(''); // Clear the input
       }
+    } catch (error) {
+      console.error('Error verifying MPIN:', error);
+      toast.error('Failed to verify PIN');
     }
   };
 
@@ -191,7 +310,7 @@ export default function MPIN() {
             <Button
               variant="outline"
               className="w-full h-11 mb-3 bg-red-500 hover:bg-red-600 active:bg-red-700 text-white hover:text-white border-none rounded-xl font-medium transition-all duration-150 active:scale-95"
-              onClick={handleLogin}
+              onClick={handleBiometricAuth}
             >
               {getBiometricsIcon()}
               {getBiometricsButtonText()}
