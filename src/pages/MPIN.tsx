@@ -14,6 +14,13 @@ interface DeviceData {
   userRole?: string;
 }
 
+interface MpinVerificationResult {
+  valid: boolean;
+  user_id?: string;
+  role?: string;
+  error?: string;
+}
+
 export default function MPIN() {
   const [otp, setOtp] = useState("");
   const [userEmail, setUserEmail] = useState("");
@@ -170,20 +177,22 @@ export default function MPIN() {
         setTimeout(async () => {
           if (deviceData && deviceData.email) {
             try {
-              // Verify MPIN against database
-              const { data, error } = await supabase
-                .from('profiles')
-                .select('mpin, id, role')
-                .eq('email', deviceData.email)
-                .single();
+              // Use database function to verify MPIN securely
+              const { data, error } = await supabase.rpc('verify_user_mpin', {
+                user_email: deviceData.email,
+                mpin_input: newOtp
+              });
 
-              if (error || !data) {
-                toast.error('User not found. Please use password login.');
-                navigate('/login');
+              if (error) {
+                console.error('Error verifying MPIN:', error);
+                toast.error('Verification failed. Please try again.');
+                setOtp('');
                 return;
               }
 
-              if (data.mpin === newOtp) {
+              const result = data as unknown as MpinVerificationResult;
+
+              if (result.valid) {
                 // Reset failed attempts on success
                 const fingerprint = getDeviceFingerprint();
                 const storageKey = `quicklogin_${fingerprint}`;
@@ -202,10 +211,22 @@ export default function MPIN() {
                   navigate('/login');
                   return;
                 }
-                
                 // Navigate based on role
-                await authenticateUser(deviceData.email, data.role || 'resident');
+                await authenticateUser(deviceData.email, result.role || 'resident');
               } else {
+                // Invalid MPIN - handle error from database function
+                const errorMsg = result.error || 'Invalid MPIN';
+                
+                if (errorMsg === 'User not found') {
+                  toast.error('User not found. Please use password login.');
+                  navigate('/login');
+                  return;
+                } else if (errorMsg === 'MPIN not set') {
+                  toast.error('MPIN not set. Please use password login.');
+                  navigate('/login');
+                  return;
+                }
+                
                 const newFailedAttempts = failedAttempts + 1;
                 setFailedAttempts(newFailedAttempts);
                 
@@ -261,20 +282,22 @@ export default function MPIN() {
     }
 
     try {
-      // Verify MPIN against database
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('mpin, id, role')
-        .eq('email', deviceData.email)
-        .single();
+      // Use database function to verify MPIN securely
+      const { data, error } = await supabase.rpc('verify_user_mpin', {
+        user_email: deviceData.email,
+        mpin_input: otp
+      });
 
-      if (error || !data) {
-        toast.error('User not found. Please use password login.');
-        navigate('/login');
+      if (error) {
+        console.error('Error verifying MPIN:', error);
+        toast.error('Verification failed. Please try again.');
+        setOtp('');
         return;
       }
 
-      if (data.mpin === otp) {
+      const result = data as unknown as MpinVerificationResult;
+
+      if (result.valid) {
         // Reset failed attempts on success
         const fingerprint = getDeviceFingerprint();
         const storageKey = `quicklogin_${fingerprint}`;
@@ -293,10 +316,21 @@ export default function MPIN() {
           navigate('/login');
           return;
         }
-        
         // Navigate based on role
-        await authenticateUser(deviceData.email, data.role || 'resident');
+        await authenticateUser(deviceData.email, result.role || 'resident');
       } else {
+        // Invalid MPIN - handle error from database function
+        const errorMsg = result.error || 'Invalid MPIN';
+        
+        if (errorMsg === 'User not found') {
+          toast.error('User not found. Please use password login.');
+          navigate('/login');
+          return;
+        } else if (errorMsg === 'MPIN not set') {
+          toast.error('MPIN not set. Please use password login.');
+          navigate('/login');
+          return;
+        }
         const newFailedAttempts = failedAttempts + 1;
         setFailedAttempts(newFailedAttempts);
         

@@ -55,10 +55,11 @@ export function QuickLoginTab() {
           .eq('id', user.id)
           .single();
 
+        // Check if user has MPIN set (we only check if it exists, not the value)
         if (error) {
           console.error('Error fetching user MPIN:', error);
         } else {
-          setCurrentUserMpin(data?.mpin || null);
+          setCurrentUserMpin(data?.mpin ? 'set' : null);
         }
       } catch (error) {
         console.error('Error loading user MPIN:', error);
@@ -121,14 +122,15 @@ export function QuickLoginTab() {
     }
 
     try {
-      // Save MPIN to database
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ mpin: mpinFirst })
-        .eq('id', user.id);
+      // Use database function to securely hash and save MPIN
+      const { error: updateError } = await supabase.rpc('update_user_mpin', {
+        user_id: user.id,
+        new_mpin: mpinFirst
+      });
 
       if (updateError) {
-        toast.error("Failed to save MPIN to database");
+        console.error('Error saving MPIN:', updateError);
+        toast.error("Failed to save MPIN");
         return;
       }
 
@@ -146,7 +148,7 @@ export function QuickLoginTab() {
 
       localStorage.setItem(storageKey, JSON.stringify(newDeviceData));
       setDeviceData(newDeviceData);
-      setCurrentUserMpin(mpinFirst);
+      setCurrentUserMpin('set');
       setMpinFirst("");
       setMpinConfirm("");
       setIsSettingMpin(false);
