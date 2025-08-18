@@ -2648,10 +2648,6 @@ export type Database = {
         Args: Record<PropertyKey, never> | { user_data: Json }
         Returns: undefined
       }
-      hash_password: {
-        Args: { password_text: string }
-        Returns: string
-      }
       insert_profile: {
         Args: { email: string; id: string }
         Returns: undefined
@@ -2666,7 +2662,7 @@ export type Database = {
       }
       set_user_mpin: {
         Args: { mpin_text: string }
-        Returns: undefined
+        Returns: boolean
       }
       sync_approved_officials_to_profiles: {
         Args: Record<PropertyKey, never>
@@ -2690,10 +2686,6 @@ export type Database = {
       }
       verify_official_password: {
         Args: { official_id: string; password_text: string }
-        Returns: boolean
-      }
-      verify_password: {
-        Args: { password_hash: string; password_text: string }
         Returns: boolean
       }
       verify_user_mpin: {
