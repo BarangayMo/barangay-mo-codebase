@@ -41,6 +41,28 @@ async function verifyMpin(email: string, mpin: string) {
 	return { ...result, status: response.status };
 }
 
+// Compute device fingerprint (must match AuthContext implementation)
+function getDeviceFingerprint() {
+	try {
+		const canvas = document.createElement('canvas');
+		const ctx = canvas.getContext('2d');
+		ctx!.textBaseline = 'top';
+		ctx!.font = '14px Arial';
+		ctx!.fillText('Device fingerprint', 2, 2);
+		return btoa(
+			navigator.userAgent +
+			navigator.language +
+			screen.width + 'x' + screen.height +
+			new Date().getTimezoneOffset() +
+			canvas.toDataURL()
+		).substring(0, 32);
+	} catch (e) {
+		console.warn('Fingerprint generation failed, falling back');
+		return btoa(navigator.userAgent).substring(0, 16);
+	}
+}
+
+
 async function loginWithMpin(email: string, mpin: string) {
 	console.log('🚀 Frontend: Starting MPIN login process');
 	// Verify MPIN with Edge Function
@@ -52,32 +74,48 @@ async function loginWithMpin(email: string, mpin: string) {
 		return { error: result.error || 'Authentication failed' };
 	}
 
-	console.log('✅ Frontend: MPIN verification successful, checking tokens');
-	// Expect server-issued tokens for auto-login
-	if (result.access_token && result.refresh_token) {
-		console.log('🎫 Frontend: Tokens received, setting session');
-		try {
-			const { error } = await supabase.auth.setSession({
-				access_token: result.access_token,
-				refresh_token: result.refresh_token,
-			});
-
-			if (error) {
-				console.error('❌ Frontend: setSession error:', error);
-				return { error: 'Failed to establish session' };
-			}
-
-			console.log('✅ Frontend: Session established successfully');
-			return { success: true, message: 'Logged in successfully' };
-		} catch (e) {
-			console.error('❌ Frontend: setSession exception:', e);
-			return { error: 'Authentication failed' };
+	console.log('✅ Frontend: MPIN verification successful, restoring stored session tokens');
+	try {
+		const fingerprint = getDeviceFingerprint();
+		const storageKey = `quicklogin_${fingerprint}`;
+		console.log('🔎 Frontend: Reading storage key:', storageKey);
+		const existingData = localStorage.getItem(storageKey);
+		if (!existingData) {
+			console.warn('⚠️ Frontend: No quicklogin data found on this device');
+			return { error: 'Quick Login unavailable on this device. Please login with email/password once.' };
 		}
+		let deviceData: any;
+		try {
+			deviceData = JSON.parse(existingData);
+		} catch (e) {
+			console.error('💥 Frontend: Failed to parse quicklogin data:', e);
+			return { error: 'Corrupted quick login data. Please login with password once.' };
+		}
+		console.log('📦 Frontend: Loaded device data:', { hasTokens: !!deviceData?.sessionTokens, email: deviceData?.email });
+		if (deviceData?.email && deviceData.email !== email) {
+			console.warn('🚫 Frontend: Stored session belongs to a different email');
+			return { error: 'This device is linked to a different account. Please login once with password.' };
+		}
+		if (!deviceData?.sessionTokens?.accessToken || !deviceData?.sessionTokens?.refreshToken) {
+			console.warn('⚠️ Frontend: Missing tokens in device data');
+			return { error: 'No saved session tokens. Please login with password once.' };
+		}
+		console.log('🎫 Frontend: Setting session from stored tokens');
+		const { error } = await supabase.auth.setSession({
+			access_token: deviceData.sessionTokens.accessToken,
+			refresh_token: deviceData.sessionTokens.refreshToken,
+		});
+		if (error) {
+			console.error('❌ Frontend: setSession failed:', error);
+			return { error: 'Saved session expired. Please login with password once.' };
+		}
+		console.log('✅ Frontend: Session restored from stored tokens');
+		return { success: true, message: 'Logged in successfully' };
+	} catch (e) {
+		console.error('💥 Frontend: Unexpected error restoring session:', e);
+		return { error: 'Authentication failed' };
 	}
 
-	// No tokens returned: treat as server failure — do NOT send magic link
-	console.error('❌ Frontend: MPIN verification succeeded but no session tokens returned');
-	return { error: 'Server did not return session tokens. Contact support or try again.' };
 }
 
 export default function MPIN() {

@@ -131,32 +131,10 @@ serve(async (req) => {
         );
       }
 
-      // Legacy MPIN matched – create a session using the profile id
-      console.log('✅ Legacy MPIN matched, creating session');
-      const { data: legacySession, error: legacySessionError } = await supabaseServiceRole.auth.admin
-        .createSession({ user_id: legacyProfile.id, session_data: {} });
-      
-      console.log('🎫 Legacy session creation:', { 
-        success: !!legacySession, 
-        hasTokens: !!legacySession?.session?.access_token,
-        error: legacySessionError 
-      });
-
-      if (legacySessionError) {
-        console.error('Legacy session creation error:', legacySessionError);
-        return new Response(
-          JSON.stringify({ error: 'Failed to create session' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
+      // Legacy MPIN matched – return success; client will restore session from stored tokens
+      console.log('✅ Legacy MPIN matched. Returning success without server-side session');
       return new Response(
-        JSON.stringify({
-          success: true,
-          access_token: legacySession.session.access_token,
-          refresh_token: legacySession.session.refresh_token,
-          user: legacySession.user
-        }),
+        JSON.stringify({ success: true, user_id: legacyProfile.id }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -195,42 +173,11 @@ serve(async (req) => {
       );
     }
 
-    // Create a session for the authenticated user
-    console.log('🎫 Creating session for user:', userId);
-    const { data: sessionData, error: sessionError } = await supabaseServiceRole.auth.admin
-      .createSession({
-        user_id: userId,
-        session_data: {}
-      });
-    
-    console.log('🎫 Session creation result:', { 
-      success: !!sessionData, 
-      hasTokens: !!sessionData?.session?.access_token,
-      error: sessionError 
-    });
-
-    if (sessionError) {
-      console.error('Session creation error:', sessionError);
-      return new Response(
-        JSON.stringify({ error: 'Failed to create session' }), 
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    // Return session tokens for simple login
+    // Success: return minimal response; session will be restored on client using stored tokens
+    console.log('✅ MPIN verified. Returning success without server-side session');
     return new Response(
-      JSON.stringify({ 
-        success: true,
-        access_token: sessionData.session.access_token,
-        refresh_token: sessionData.session.refresh_token,
-        user: sessionData.user
-      }), 
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      JSON.stringify({ success: true, user_id: userId }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
