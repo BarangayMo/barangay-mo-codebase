@@ -1422,7 +1422,6 @@ export type Database = {
           last_name: string | null
           logo_url: string | null
           middle_name: string | null
-          mpin: string | null
           municipality: string | null
           officials_data: Json | null
           phone_number: string | null
@@ -1449,7 +1448,6 @@ export type Database = {
           last_name?: string | null
           logo_url?: string | null
           middle_name?: string | null
-          mpin?: string | null
           municipality?: string | null
           officials_data?: Json | null
           phone_number?: string | null
@@ -1476,7 +1474,6 @@ export type Database = {
           last_name?: string | null
           logo_url?: string | null
           middle_name?: string | null
-          mpin?: string | null
           municipality?: string | null
           officials_data?: Json | null
           phone_number?: string | null
@@ -2639,10 +2636,6 @@ export type Database = {
         Args: Record<PropertyKey, never> | { user_data: Json }
         Returns: undefined
       }
-      hash_mpin: {
-        Args: { mpin_text: string }
-        Returns: string
-      }
       hash_password: {
         Args: { password_text: string }
         Returns: string
@@ -2679,14 +2672,6 @@ export type Database = {
         Args: { user_id: string }
         Returns: undefined
       }
-      update_user_mpin: {
-        Args: { new_mpin: string; user_id: string }
-        Returns: undefined
-      }
-      verify_mpin: {
-        Args: { mpin_hash: string; mpin_text: string }
-        Returns: boolean
-      }
       verify_official_password: {
         Args: { official_id: string; password_text: string }
         Returns: boolean
@@ -2694,10 +2679,6 @@ export type Database = {
       verify_password: {
         Args: { password_hash: string; password_text: string }
         Returns: boolean
-      }
-      verify_user_mpin: {
-        Args: { mpin_input: string; user_email: string }
-        Returns: Json
       }
     }
     Enums: {

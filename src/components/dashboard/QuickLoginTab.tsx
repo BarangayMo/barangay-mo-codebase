@@ -6,10 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Lock, Fingerprint, Check, X, AlertCircle, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 
 interface DeviceData {
-  mpin: string;
+  mpin: string; // Local hash of MPIN
   biometricEnabled: boolean;
   failedAttempts: number;
   email: string;
@@ -23,7 +22,6 @@ export function QuickLoginTab() {
   const [isSettingMpin, setIsSettingMpin] = useState(false);
   const [deviceData, setDeviceData] = useState<DeviceData | null>(null);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
-  const [currentUserMpin, setCurrentUserMpin] = useState<string | null>(null);
 
   // Generate device fingerprint
   const getDeviceFingerprint = () => {
@@ -42,30 +40,23 @@ export function QuickLoginTab() {
     ).substring(0, 32);
   };
 
-  // Load user MPIN and device data on mount
+  // Simple hash function for local MPIN storage
+  const hashMpin = (mpin: string) => {
+    let hash = 0;
+    for (let i = 0; i < mpin.length; i++) {
+      const char = mpin.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return hash.toString();
+  };
+
+  // Load device data on mount
   useEffect(() => {
-    const loadUserData = async () => {
+    const loadDeviceData = () => {
       if (!user?.id || !user?.email) return;
-      
-      try {
-        // Load MPIN from database
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('mpin')
-          .eq('id', user.id)
-          .single();
 
-        // Check if user has MPIN set (we only check if it exists, not the value)
-        if (error) {
-          console.error('Error fetching user MPIN:', error);
-        } else {
-          setCurrentUserMpin(data?.mpin ? 'set' : null);
-        }
-      } catch (error) {
-        console.error('Error loading user MPIN:', error);
-      }
-
-      // Load device data for biometrics
+      // Load device data 
       const fingerprint = getDeviceFingerprint();
       const storageKey = `quicklogin_${fingerprint}`;
       const stored = localStorage.getItem(storageKey);
@@ -87,7 +78,7 @@ export function QuickLoginTab() {
       }
     };
 
-    loadUserData();
+    loadDeviceData();
   }, [user?.id, user?.email]);
 
   // Check biometric availability
@@ -122,35 +113,15 @@ export function QuickLoginTab() {
     }
 
     try {
-      // Hash the MPIN using database function and then update directly
-      const { data: hashedMpin, error: hashError } = await supabase.rpc('hash_mpin', {
-        mpin_text: mpinFirst
-      });
+      // Hash the MPIN locally for storage
+      const hashedMpin = hashMpin(mpinFirst);
 
-      if (hashError || !hashedMpin) {
-        console.error('Error hashing MPIN:', hashError);
-        toast.error("Failed to hash MPIN");
-        return;
-      }
-
-      // Update the profiles table directly with the hashed MPIN
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ mpin: hashedMpin })
-        .eq('id', user.id);
-
-      if (updateError) {
-        console.error('Error saving MPIN:', updateError);
-        toast.error("Failed to save MPIN");
-        return;
-      }
-
-      // Update local device data for biometrics only
+      // Store device data locally
       const fingerprint = getDeviceFingerprint();
       const storageKey = `quicklogin_${fingerprint}`;
       
       const newDeviceData: DeviceData = {
-        mpin: '', // No longer store MPIN in localStorage
+        mpin: hashedMpin,
         biometricEnabled: deviceData?.biometricEnabled || false,
         failedAttempts: 0,
         email: user.email,
@@ -159,7 +130,6 @@ export function QuickLoginTab() {
 
       localStorage.setItem(storageKey, JSON.stringify(newDeviceData));
       setDeviceData(newDeviceData);
-      setCurrentUserMpin('set');
       setMpinFirst("");
       setMpinConfirm("");
       setIsSettingMpin(false);
@@ -225,25 +195,12 @@ export function QuickLoginTab() {
     if (!user?.id) return;
 
     try {
-      // Remove MPIN from database
-      const { error } = await supabase
-        .from('profiles')
-        .update({ mpin: null })
-        .eq('id', user.id);
-
-      if (error) {
-        console.error('Error removing MPIN from database:', error);
-        toast.error('Failed to remove MPIN');
-        return;
-      }
-
       // Clear local device data
       const fingerprint = getDeviceFingerprint();
       const storageKey = `quicklogin_${fingerprint}`;
       
       localStorage.removeItem(storageKey);
       setDeviceData(null);
-      setCurrentUserMpin(null);
       setMpinFirst("");
       setMpinConfirm("");
       setIsSettingMpin(false);
@@ -255,7 +212,7 @@ export function QuickLoginTab() {
     }
   };
 
-  const hasMpin = currentUserMpin;
+  const hasMpin = deviceData?.mpin;
   const hasBiometric = deviceData?.biometricEnabled;
 
   return (

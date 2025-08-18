@@ -359,6 +359,62 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       } else {
         console.log("✅ Login successful for:", email);
         console.log("📧 Email verified status:", !!data.user?.email_confirmed_at);
+        
+        // Store device data for MPIN functionality after successful login
+        if (data.user) {
+          setTimeout(async () => {
+            try {
+              const userProfile = await fetchUserProfile(data.user.id);
+              if (userProfile) {
+                // Generate device fingerprint
+                const getDeviceFingerprint = () => {
+                  const canvas = document.createElement('canvas');
+                  const ctx = canvas.getContext('2d');
+                  ctx!.textBaseline = 'top';
+                  ctx!.font = '14px Arial';
+                  ctx!.fillText('Device fingerprint', 2, 2);
+                  
+                  return btoa(
+                    navigator.userAgent +
+                    navigator.language +
+                    screen.width + 'x' + screen.height +
+                    new Date().getTimezoneOffset() +
+                    canvas.toDataURL()
+                  ).substring(0, 32);
+                };
+
+                const fingerprint = getDeviceFingerprint();
+                const storageKey = `quicklogin_${fingerprint}`;
+                
+                // Check if device data already exists for this user
+                const existingData = localStorage.getItem(storageKey);
+                let deviceData = null;
+                
+                if (existingData) {
+                  try {
+                    deviceData = JSON.parse(existingData);
+                  } catch (error) {
+                    console.error('Error parsing existing device data:', error);
+                  }
+                }
+                
+                // Update or create device data with latest login info
+                const newDeviceData = {
+                  mpin: deviceData?.mpin || '', // Keep existing MPIN if any
+                  biometricEnabled: deviceData?.biometricEnabled || false,
+                  failedAttempts: 0, // Reset failed attempts on successful login
+                  email: data.user.email,
+                  userRole: userProfile.role
+                };
+                
+                localStorage.setItem(storageKey, JSON.stringify(newDeviceData));
+              }
+            } catch (error) {
+              console.error('Error storing device data:', error);
+            }
+          }, 0);
+        }
+        
         return { error: null };
       }
     } catch (error) {
