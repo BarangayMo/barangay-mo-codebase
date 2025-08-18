@@ -137,7 +137,7 @@ const BarangayProfileView = () => {
         <div className="bg-white border-b sticky top-0 z-10">
           <div className="max-w-2xl mx-auto">
             <div className="flex justify-center space-x-4 p-4">
-              {tabItems.map(tab => <a key={tab.value} href={`#${tab.value}`} className="flex items-center space-x-2 py-2 rounded-md hover:bg-gray-100 transition-colors px-[13px]">
+              {tabItems.map(tab => <a key={tab.value} href={`#${tab.value}`} className="flex items-center space-x-2 py-2 rounded-md hover:bg-gray-100 transition-colors px-[12px]">
                   {tab.icon}
                   <span>{tab.label}</span>
                 </a>)}
