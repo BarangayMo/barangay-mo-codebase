@@ -1,16 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Lock, Delete } from "lucide-react";
-import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 
 export default function MPIN() {
   const [mpin, setMpin] = useState("");
-  const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -37,7 +33,6 @@ export default function MPIN() {
     }
   }, [navigate]);
 
-
   const handleNumberClick = (number: string) => {
     if (mpin.length < 4) {
       setMpin(prev => prev + number);
@@ -53,62 +48,8 @@ export default function MPIN() {
   };
 
   const handleLogin = async () => {
-    if (mpin.length !== 4) {
-      toast.error("Please enter a 4-digit MPIN");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // Call the MPIN authentication edge function
-      const { data, error } = await supabase.functions.invoke('mpin-auth', {
-        body: { email, mpin }
-      });
-
-      if (error || !data.success) {
-        console.error("MPIN auth error:", error || data);
-        
-        if (data?.reason === 'locked') {
-          const lockedUntil = new Date(data.locked_until).toLocaleString();
-          toast.error(`Account locked until ${lockedUntil}`);
-        } else if (data?.reason === 'invalid') {
-          toast.error(`Invalid MPIN. ${data.remaining_attempts} attempts remaining.`);
-        } else if (data?.reason === 'not_set') {
-          toast.error("MPIN not set. Please set up MPIN in settings first.");
-        } else if (data?.reason === 'not_found') {
-          toast.error("Email not found. Please check your email address.");
-        } else {
-          toast.error("Authentication failed. Please try again.");
-        }
-        return;
-      }
-
-      // Set session directly with tokens from edge function (like normal login)
-      if (data.access_token && data.refresh_token) {
-        const { error: sessionError } = await supabase.auth.setSession({
-          access_token: data.access_token,
-          refresh_token: data.refresh_token
-        });
-
-        if (sessionError) {
-          console.error("Session set error:", sessionError);
-          toast.error("Failed to establish session. Please try again.");
-          return;
-        }
-      } else {
-        console.error("No session tokens received");
-        toast.error("Authentication failed - no session data");
-        return;
-      }
-
-      toast.success("Welcome back!");
-      navigate("/", { replace: true });
-    } catch (error) {
-      console.error("MPIN login error:", error);
-      toast.error("Login failed. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    // MPIN functionality temporarily disabled
+    navigate("/login", { replace: true });
   };
 
   return (
@@ -159,37 +100,35 @@ export default function MPIN() {
                 size="lg"
                 className="h-16 text-xl font-semibold"
                 onClick={() => handleNumberClick(number.toString())}
-                disabled={loading}
-              >
-                {number}
-              </Button>
-            ))}
-            
-            {/* Bottom row: Clear, 0, Backspace */}
-            <Button
-              variant="ghost"
-              size="lg"
-              className="h-16 text-sm"
-              onClick={handleClear}
-              disabled={loading || mpin.length === 0}
             >
-              Clear
+              {number}
             </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="h-16 text-xl font-semibold"
-              onClick={() => handleNumberClick("0")}
-              disabled={loading}
-            >
-              0
-            </Button>
-            <Button
-              variant="ghost"
-              size="lg"
-              className="h-16"
-              onClick={handleBackspace}
-              disabled={loading || mpin.length === 0}
+          ))}
+          
+          {/* Bottom row: Clear, 0, Backspace */}
+          <Button
+            variant="ghost"
+            size="lg"
+            className="h-16 text-sm"
+            onClick={handleClear}
+            disabled={mpin.length === 0}
+          >
+            Clear
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            className="h-16 text-xl font-semibold"
+            onClick={() => handleNumberClick("0")}
+          >
+            0
+          </Button>
+          <Button
+            variant="ghost"
+            size="lg"
+            className="h-16"
+            onClick={handleBackspace}
+            disabled={mpin.length === 0}
             >
               <Delete className="h-5 w-5" />
             </Button>
@@ -199,9 +138,9 @@ export default function MPIN() {
           <Button 
             onClick={handleLogin}
             className="w-full h-12"
-            disabled={loading || mpin.length !== 4}
+            disabled={mpin.length !== 4}
           >
-            {loading ? "Signing in..." : "Sign In"}
+            Sign In
           </Button>
         </CardContent>
       </Card>
