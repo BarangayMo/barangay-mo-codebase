@@ -51,12 +51,6 @@ h1, .font-heading, .font-outfit {
     --resident-foreground: 0 0% 100%;
     --resident-light: 122 39% 95%;
     --resident-dark: 122 65% 34%;
-    --resident-color: #000084; /* Primary resident blue */
-    --resident-light: #534bae;
-    --resident-dark: #000051;
-    --official-color: #ea384c; /* Red for official theme */
-    --official-light: #ff6b78;
-    --official-dark: #b00024;
   }
 
   .dark {

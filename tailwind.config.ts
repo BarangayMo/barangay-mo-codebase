@@ -61,16 +61,16 @@ export default {
 					foreground: 'hsl(var(--card-foreground))'
 				},
 				official: {
-					DEFAULT: '#ea384c',
-					foreground: '#ffffff',
-					light: '#ff6b78',
-					dark: '#b00024'
+					DEFAULT: 'hsl(var(--official))',
+					foreground: 'hsl(var(--official-foreground))',
+					light: 'hsl(var(--official-light))',
+					dark: 'hsl(var(--official-dark))'
 				},
 				resident: {
-					DEFAULT: '#000084',
-					foreground: '#ffffff',
-					light: '#534bae',
-					dark: '#000051'
+					DEFAULT: 'hsl(var(--resident))',
+					foreground: 'hsl(var(--resident-foreground))',
+					light: 'hsl(var(--resident-light))',
+					dark: 'hsl(var(--resident-dark))'
 				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',

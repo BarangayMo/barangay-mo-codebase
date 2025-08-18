@@ -83,12 +83,14 @@ const Settings = () => {
         </div>
 
         <Tabs defaultValue="preferences" className="space-y-4">
-          <TabsList className="grid grid-cols-3 md:grid-cols-5 w-full">
-            <TabsTrigger value="preferences" className="text-xs md:text-sm">Preferences</TabsTrigger>
-            <TabsTrigger value="notifications" className="text-xs md:text-sm">Notifications</TabsTrigger>
-            <TabsTrigger value="account" className="text-xs md:text-sm">Account</TabsTrigger>
-            <TabsTrigger value="quicklogin" className="text-xs md:text-sm">Quick Login</TabsTrigger>
-            <TabsTrigger value="privacy" className="text-xs md:text-sm">Privacy</TabsTrigger>
+          <TabsList className="grid w-full h-auto p-1">
+            <div className="grid grid-cols-3 md:grid-cols-5 gap-1 w-full">
+              <TabsTrigger value="preferences" className="text-xs md:text-sm px-2 py-2">Preferences</TabsTrigger>
+              <TabsTrigger value="notifications" className="text-xs md:text-sm px-2 py-2">Notifications</TabsTrigger>
+              <TabsTrigger value="account" className="text-xs md:text-sm px-2 py-2">Account</TabsTrigger>
+              <TabsTrigger value="quicklogin" className="text-xs md:text-sm px-2 py-2">Quick Login</TabsTrigger>
+              <TabsTrigger value="privacy" className="text-xs md:text-sm px-2 py-2">Privacy</TabsTrigger>
+            </div>
           </TabsList>
 
           <TabsContent value="preferences" className="space-y-4">
