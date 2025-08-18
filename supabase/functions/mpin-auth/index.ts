@@ -32,59 +32,17 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Find user by email and verify MPIN directly
-    const { data: profile, error: profileError } = await supabaseServiceRole
-      .from('profiles')
-      .select('id, mpin_hash')
-      .eq('email', email)
-      .single();
-
-    if (profileError || !profile) {
-      return new Response(
-        JSON.stringify({ error: 'User not found' }), 
-        { 
-          status: 404, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    // Check if MPIN is set
-    if (!profile.mpin_hash) {
-      return new Response(
-        JSON.stringify({ error: 'MPIN not set' }), 
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    // Verify MPIN using pgcrypto
+    // Verify MPIN using database function first
     const { data: mpinValid, error: mpinError } = await supabaseServiceRole
       .rpc('verify_user_mpin', { 
         p_email: email, 
         p_mpin: mpin 
       });
 
-    if (mpinError || !mpinValid?.ok) {
+    if (mpinError) {
+      console.error('verify_user_mpin error:', mpinError);
       return new Response(
-        JSON.stringify({ error: 'Invalid MPIN' }), 
-        { 
-          status: 401, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    // Find the auth user by email
-    const { data: authUsers, error: authError } = await supabaseServiceRole.auth.admin
-      .listUsers();
-
-    if (authError) {
-      console.error('Auth user lookup error:', authError);
-      return new Response(
-        JSON.stringify({ error: 'Authentication service error' }), 
+        JSON.stringify({ error: 'Internal server error' }), 
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -92,8 +50,26 @@ serve(async (req) => {
       );
     }
 
-    const user = authUsers.users.find(u => u.email === email);
-    if (!user) {
+    if (!mpinValid?.ok) {
+      const reason = mpinValid?.reason;
+      const map = {
+        not_found: { status: 404, error: 'User not found' },
+        not_set: { status: 400, error: 'MPIN not set' },
+        locked: { status: 423, error: 'Account locked' },
+        invalid: { status: 401, error: 'Invalid MPIN' },
+      } as const;
+      const res = map[reason as keyof typeof map] ?? { status: 401, error: 'Invalid MPIN' };
+      return new Response(
+        JSON.stringify({ error: res.error }), 
+        { 
+          status: res.status, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    const userId = mpinValid.user_id;
+    if (!userId) {
       return new Response(
         JSON.stringify({ error: 'User not found' }), 
         { 
@@ -106,7 +82,7 @@ serve(async (req) => {
     // Create a session for the authenticated user
     const { data: sessionData, error: sessionError } = await supabaseServiceRole.auth.admin
       .createSession({
-        user_id: profile.id,
+        user_id: userId,
         session_data: {}
       });
 
