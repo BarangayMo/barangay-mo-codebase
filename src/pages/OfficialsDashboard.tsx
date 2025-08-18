@@ -1,7 +1,9 @@
 "use client"
 
-
 import { useState } from "react"
+import { BarangayAddressTab } from "@/components/officials/barangay-profile/BarangayAddressTab"
+import { BarangayDetailsTab } from "@/components/officials/barangay-profile/BarangayDetailsTab"
+import { BarangayLogoTab } from "@/components/officials/barangay-profile/BarangayLogoTab"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -378,10 +380,11 @@ const OfficialsDashboard = () => {
     )
   }
 
-  // Modal state for showing full details
+  // Modal states
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<'address' | 'details' | 'logo'>('address');
   const ProfileCard = () => (
-    <>
+    <div className="w-full">
       <div
         className="relative overflow-hidden cursor-pointer transition hover:ring-2 hover:ring-red-200"
         onClick={() => setShowProfileModal(true)}
@@ -393,28 +396,45 @@ const OfficialsDashboard = () => {
         <div className="absolute bottom-0 left-0 w-16 h-16 bg-red-100/40 rounded-full transform -translate-x-6 translate-y-6"></div>
 
         {/* Content */}
-        <div className="relative flex items-center gap-3 p-4 rounded-lg">
-          {/* Prefer barangay logo, then user logo, else initials from officialProfile */}
-          {barangayData?.["Logo"] ? (
-            <img
-              src={barangayData["Logo"] || "/placeholder.svg"}
-              alt="Barangay logo"
-              className="w-12 h-12 rounded-full object-cover border border-red-200"
-              loading="lazy"
-            />
-          ) : user?.logo_url ? (
-            <img
-              src={user.logo_url || "/placeholder.svg"}
-              alt="Barangay logo"
-              className="w-12 h-12 rounded-full object-cover border border-red-200"
-              loading="lazy"
-            />
-          ) : (
-            <div className="w-12 h-12 rounded-full bg-red-100 border border-red-200 flex items-center justify-center text-sm font-medium text-red-600">
-              {(officialProfile?.first_name?.[0] || "U")}
-              {(officialProfile?.last_name?.[0] || "O")}
-            </div>
-          )}
+        <div className="relative p-4 rounded-lg flex flex-row items-start gap-4">
+          {/* Logo Section */}
+          <div className="flex-shrink-0">
+            {barangayData?.["Logo"] ? (
+              <img
+                src={barangayData["Logo"]}
+                alt="Barangay logo"
+                className="w-16 h-16 rounded-full object-cover border-2 border-red-200"
+                loading="lazy"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-red-100 border-2 border-red-200 flex items-center justify-center text-lg font-medium text-red-600">
+                {`${officialProfile?.first_name?.[0] || ""}${officialProfile?.last_name?.[0] || ""}`}
+              </div>
+            )}
+          </div>
+
+          {/* Text Information Section */}
+          <div className="flex flex-col gap-0.5">
+            {/* Barangay Name */}
+            <h3 className="text-lg font-semibold text-gray-900 truncate">
+              {barangayData?.["BARANGAY"] || "Loading..."}
+            </h3>
+
+            {/* Province */}
+            <p className="text-sm text-gray-600 truncate">
+              {barangayData?.["PROVINCE"] || "Loading..."}
+            </p>
+
+            {/* Official's Name */}
+            <p className="text-sm font-medium text-gray-800 mt-1 truncate">
+              {officialProfile?.first_name || ""} {officialProfile?.last_name || ""}
+            </p>
+
+            {/* Official's Position */}
+            <p className="text-xs text-red-600 font-medium truncate">
+              {officialProfile?.role || "Official"}
+            </p>
+          </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-base font-semibold text-gray-900 truncate font-outfit">
               {(officialProfile?.first_name || officialProfile?.last_name)
@@ -437,56 +457,65 @@ const OfficialsDashboard = () => {
       {/* Modal for full details */}
       {showProfileModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-lg shadow-lg max-w-xs w-full p-6 relative">
-            <button
-              className="absolute top-2 right-2 text-gray-400 hover:text-gray-700"
-              onClick={() => setShowProfileModal(false)}
-              aria-label="Close"
-            >
-              ×
-            </button>
-            <div className="flex flex-col items-center gap-3">
-              {/* Prefer barangay logo, then user logo, else initials from officialProfile */}
-              {barangayData?.["Logo"] ? (
-                <img
-                  src={barangayData["Logo"] || "/placeholder.svg"}
-                  alt="Barangay logo"
-                  className="w-12 h-12 rounded-full object-cover border border-red-200"
-                  loading="lazy"
-                />
-              ) : user?.logo_url ? (
-                <img
-                  src={user.logo_url || "/placeholder.svg"}
-                  alt="Barangay logo"
-                  className="w-12 h-12 rounded-full object-cover border border-red-200"
-                  loading="lazy"
-                />
-              ) : (
-                <div className="w-12 h-12 rounded-full bg-red-100 border border-red-200 flex items-center justify-center text-sm font-medium text-red-600">
-                  {(officialProfile?.first_name?.[0] || "U")}
-                  {(officialProfile?.last_name?.[0] || "O")}
-                </div>
-              )}
-              <h3 className="text-lg font-bold text-gray-900 font-outfit break-words text-center w-full">
-                {(officialProfile?.first_name || officialProfile?.last_name)
-                  ? `${officialProfile?.first_name ?? ""} ${officialProfile?.middle_name ?? ""} ${officialProfile?.last_name ?? ""}`.replace(/\s+/g, " ").trim()
-                  : getPunongBarangayName()}
-              </h3>
-              <p className="text-base text-red-600 font-medium break-words text-center w-full">
-                {officialProfile
-                  ? (officialProfile.municipality && officialProfile.province
-                      ? `${officialProfile.municipality}, ${officialProfile.province}`
-                      : officialProfile.barangay || getLocationText())
-                  : getLocationText()}
-              </p>
-              {officialProfile?.position && (
-                <p className="text-sm text-gray-500 text-center w-full">{officialProfile.position}</p>
-              )}
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl h-[80vh] relative flex flex-col">
+            {/* Header */}
+            <div className="p-4 border-b flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-900">Barangay Profile</h2>
+              <button
+                onClick={() => setShowProfileModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <span className="sr-only">Close</span>
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex border-b">
+              <button
+                onClick={() => setActiveTab('address')}
+                className={`px-4 py-2 font-medium ${
+                  activeTab === 'address'
+                    ? 'border-b-2 border-red-500 text-red-600'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Address Details
+              </button>
+              <button
+                onClick={() => setActiveTab('details')}
+                className={`px-4 py-2 font-medium ${
+                  activeTab === 'details'
+                    ? 'border-b-2 border-red-500 text-red-600'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Barangay Details
+              </button>
+              <button
+                onClick={() => setActiveTab('logo')}
+                className={`px-4 py-2 font-medium ${
+                  activeTab === 'logo'
+                    ? 'border-b-2 border-red-500 text-red-600'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Logo
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-4">
+              {activeTab === 'address' && <BarangayAddressTab barangayData={barangayData} />}
+              {activeTab === 'details' && <BarangayDetailsTab barangayData={barangayData} />}
+              {activeTab === 'logo' && <BarangayLogoTab barangayData={barangayData} />}
             </div>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 
   // Parse puroks from barangay data
