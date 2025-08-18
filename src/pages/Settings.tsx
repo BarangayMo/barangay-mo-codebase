@@ -83,12 +83,12 @@ const Settings = () => {
         </div>
 
         <Tabs defaultValue="preferences" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="preferences">Preferences</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
-            <TabsTrigger value="account">Account</TabsTrigger>
-            <TabsTrigger value="quicklogin">Quick Login</TabsTrigger>
-            <TabsTrigger value="privacy">Privacy</TabsTrigger>
+          <TabsList className="grid grid-cols-3 md:grid-cols-5 w-full">
+            <TabsTrigger value="preferences" className="text-xs md:text-sm">Preferences</TabsTrigger>
+            <TabsTrigger value="notifications" className="text-xs md:text-sm">Notifications</TabsTrigger>
+            <TabsTrigger value="account" className="text-xs md:text-sm">Account</TabsTrigger>
+            <TabsTrigger value="quicklogin" className="text-xs md:text-sm">Quick Login</TabsTrigger>
+            <TabsTrigger value="privacy" className="text-xs md:text-sm">Privacy</TabsTrigger>
           </TabsList>
 
           <TabsContent value="preferences" className="space-y-4">

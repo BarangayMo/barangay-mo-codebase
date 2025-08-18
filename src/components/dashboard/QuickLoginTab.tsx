@@ -40,7 +40,7 @@ export function QuickLoginTab() {
     ).substring(0, 32);
   };
 
-  // Load device data on mount
+  // Load device data on mount - only for current user, replace any existing data
   useEffect(() => {
     if (!user?.email) return;
     
@@ -51,11 +51,16 @@ export function QuickLoginTab() {
     if (stored) {
       try {
         const data = JSON.parse(stored);
-        if (data.email === user.email) {
+        // Always update to current user's data (latest login account only)
+        if (data.email !== user.email) {
+          // Clear old user data and reset for current user
+          setDeviceData(null);
+        } else {
           setDeviceData(data);
         }
       } catch (error) {
         console.error('Error parsing stored device data:', error);
+        setDeviceData(null);
       }
     }
   }, [user?.email]);

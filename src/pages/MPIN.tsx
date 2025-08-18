@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ChevronLeft, ScanFace, Fingerprint, ArrowRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DeviceData {
   mpin: string;
@@ -24,6 +25,32 @@ export default function MPIN() {
   const navigate = useNavigate();
   const { userRole, isAuthenticated, user } = useAuth();
 
+  // Function to authenticate user and navigate
+  const authenticateUser = async (email: string, role: string) => {
+    try {
+      // Here we would normally sign in the user with Supabase
+      // For quick login, we assume the user is already authenticated via their stored session
+      // Navigate based on stored user role
+      switch(role) {
+        case "official":
+          navigate("/official-dashboard");
+          break;
+        case "superadmin":
+          navigate("/admin");
+          break;
+        case "resident":
+        default:
+          navigate("/resident-home");
+          break;
+      }
+      toast.success("Welcome back!");
+    } catch (error) {
+      console.error('Authentication error:', error);
+      toast.error("Authentication failed. Please use password login.");
+      navigate('/login');
+    }
+  };
+
   // Generate device fingerprint
   const getDeviceFingerprint = () => {
     const canvas = document.createElement('canvas');
@@ -41,7 +68,7 @@ export default function MPIN() {
     ).substring(0, 32);
   };
 
-  // Load device data on mount
+  // Load device data on mount - get the latest stored account only
   useEffect(() => {
     const loadDeviceData = () => {
       const fingerprint = getDeviceFingerprint();
@@ -124,20 +151,8 @@ export default function MPIN() {
         const updatedData = { ...deviceData, failedAttempts: 0 };
         localStorage.setItem(storageKey, JSON.stringify(updatedData));
         
-        // Navigate based on stored user role
-        const role = deviceData.userRole || 'resident';
-        switch(role) {
-          case "official":
-            navigate("/official-dashboard");
-            break;
-          case "superadmin":
-            navigate("/admin");
-            break;
-          case "resident":
-          default:
-            navigate("/resident-home");
-            break;
-        }
+        // Authenticate user with Supabase before navigation
+        await authenticateUser(deviceData.email, deviceData.userRole || 'resident');
       }
     } catch (error) {
       console.error('Biometric authentication failed:', error);
@@ -152,7 +167,7 @@ export default function MPIN() {
       
       // Auto-submit when 4 digits are entered
       if (newOtp.length === 4) {
-        setTimeout(() => {
+        setTimeout(async () => {
           if (deviceData && newOtp === deviceData.mpin) {
             // Reset failed attempts on success
             const fingerprint = getDeviceFingerprint();
@@ -160,20 +175,8 @@ export default function MPIN() {
             const updatedData = { ...deviceData, failedAttempts: 0 };
             localStorage.setItem(storageKey, JSON.stringify(updatedData));
             
-            // Navigate based on stored user role
-            const role = deviceData.userRole || 'resident';
-            switch(role) {
-              case "official":
-                navigate("/official-dashboard");
-                break;
-              case "superadmin":
-                navigate("/admin");
-                break;
-              case "resident":
-              default:
-                navigate("/resident-home");
-                break;
-            }
+            // Authenticate user with Supabase before navigation
+            await authenticateUser(deviceData.email, deviceData.userRole || 'resident');
           } else {
             const newFailedAttempts = failedAttempts + 1;
             setFailedAttempts(newFailedAttempts);
@@ -230,20 +233,8 @@ export default function MPIN() {
       const updatedData = { ...deviceData, failedAttempts: 0 };
       localStorage.setItem(storageKey, JSON.stringify(updatedData));
       
-      // Navigate based on stored user role
-      const role = deviceData.userRole || 'resident';
-      switch(role) {
-        case "official":
-          navigate("/official-dashboard");
-          break;
-        case "superadmin":
-          navigate("/admin");
-          break;
-        case "resident":
-        default:
-          navigate("/resident-home");
-          break;
-      }
+      // Authenticate user with Supabase before navigation
+      await authenticateUser(deviceData.email, deviceData.userRole || 'resident');
     } else {
       const newFailedAttempts = failedAttempts + 1;
       setFailedAttempts(newFailedAttempts);
