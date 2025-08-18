@@ -169,6 +169,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         }
         
         if (session?.user) {
+          // Store last login email for MPIN convenience
+          if (session.user.email) {
+            try { localStorage.setItem('last_login_email', session.user.email); } catch {}
+          }
           // Use setTimeout to prevent blocking other queries
           setTimeout(async () => {
             try {

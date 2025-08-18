@@ -23,6 +23,17 @@ export default function MPIN() {
     }
   }, [user, navigate]);
 
+  // Auto-fill last used email and skip email step
+  useEffect(() => {
+    try {
+      const last = localStorage.getItem('last_login_email');
+      if (last) {
+        setEmail(last);
+        setStep('mpin');
+      }
+    } catch {}
+  }, []);
+
   const handleEmailSubmit = () => {
     if (!email || !email.includes("@")) {
       toast.error("Please enter a valid email address");
