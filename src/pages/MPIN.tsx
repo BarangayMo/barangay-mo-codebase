@@ -14,68 +14,34 @@ export default function MPIN() {
   const navigate = useNavigate();
   const { userRole, isAuthenticated, user } = useAuth();
 
-  // Check session and fetch last login device info
+  // Fetch last login device info
   useEffect(() => {
-    const checkSessionAndFetchDevice = async () => {
+    const fetchLastLoginDevice = async () => {
+      if (!user?.id) return;
+      
       try {
-        // First check if there's an active session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) throw sessionError;
-
-        if (!session) {
-          // Try to get last device info from local storage
-          const lastDevice = localStorage.getItem('lastLoginDevice');
-          if (lastDevice) {
-            const deviceInfo = JSON.parse(lastDevice);
-            setPhoneNumber(deviceInfo.phone_number || '');
-          } else {
-            // No stored device info, redirect to login
-            navigate('/login');
-          }
-          return;
-        }
-
-        // If we have a session, fetch device info
         const { data, error } = await supabase
           .from('user_devices')
           .select('phone_number, mpin')
-          .eq('user_id', session.user.id)
+          .eq('user_id', user.id)
           .eq('is_active', true)
           .single();
 
-        if (error) {
-          console.error('Error fetching device info:', error);
-          // Don't redirect, just show stored info if available
-          const lastDevice = localStorage.getItem('lastLoginDevice');
-          if (lastDevice) {
-            const deviceInfo = JSON.parse(lastDevice);
-            setPhoneNumber(deviceInfo.phone_number || '');
-          }
-          return;
-        }
+        if (error) throw error;
 
         if (data) {
-          setPhoneNumber(data.phone_number || '');
-          // Store device info for future quick access
-          localStorage.setItem('lastLoginDevice', JSON.stringify({
-            phone_number: data.phone_number
-          }));
+          setPhoneNumber(data.phone_number);
         }
       } catch (error) {
-        console.error('Error in session check:', error);
-        const lastDevice = localStorage.getItem('lastLoginDevice');
-        if (lastDevice) {
-          const deviceInfo = JSON.parse(lastDevice);
-          setPhoneNumber(deviceInfo.phone_number || '');
-        }
+        console.error('Error fetching device info:', error);
+        navigate('/login');
       } finally {
         setIsLoading(false);
       }
     };
 
-    checkSessionAndFetchDevice();
-  }, [navigate]);
+    fetchLastLoginDevice();
+  }, [user?.id, navigate]);
 
   useEffect(() => {
     // Check for biometrics availability
@@ -166,100 +132,54 @@ export default function MPIN() {
     }
 
     try {
-      // First check current session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) throw sessionError;
+      if (!user?.id) {
+        toast.error('No user found');
+        navigate('/login');
+        return;
+      }
 
-      if (session?.user) {
-        // User is already authenticated, verify MPIN
-        const { data, error } = await supabase
-          .from('user_devices')
-          .select('mpin')
-          .eq('user_id', session.user.id)
-          .eq('is_active', true)
-          .single();
+      // Verify MPIN
+      const { data, error } = await supabase
+        .from('user_devices')
+        .select('mpin')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .single();
 
-        if (error) {
-          // If no device found, try stored MPIN
-          const storedMpin = localStorage.getItem('lastLoginMpin');
-          if (storedMpin === otp) {
-            handleSuccessfulLogin(session.user);
-            return;
+      if (error) throw error;
+
+      if (!data) {
+        toast.error('No device found');
+        navigate('/login');
+        return;
+      }
+
+      // Compare MPIN
+      if (data.mpin === otp) {
+        // Successfully verified MPIN
+        if (isAuthenticated) {
+          switch(userRole) {
+            case "official":
+              navigate("/official-dashboard");
+              break;
+            case "superadmin":
+              navigate("/admin");
+              break;
+            case "resident":
+            default:
+              navigate("/resident-home");
+              break;
           }
-          throw error;
-        }
-
-        if (data?.mpin === otp) {
-          handleSuccessfulLogin(session.user);
         } else {
-          toast.error('Invalid PIN');
-          setOtp(''); // Clear the input
+          navigate("/login");
         }
       } else {
-        // No active session, try to sign in with stored credentials
-        const storedMpin = localStorage.getItem('lastLoginMpin');
-        const storedEmail = localStorage.getItem('lastLoginEmail');
-        
-        if (storedMpin === otp && storedEmail) {
-          // Use stored email to sign in
-          const { error: signInError } = await supabase.auth.signInWithOtp({
-            email: storedEmail
-          });
-
-          if (signInError) {
-            toast.error('Authentication failed. Please login again.');
-            navigate('/login');
-            return;
-          }
-
-          // Wait for session to be established
-          const { data: { user: newUser } } = await supabase.auth.getUser();
-          if (newUser) {
-            handleSuccessfulLogin(newUser);
-          } else {
-            navigate('/login');
-          }
-        } else {
-          toast.error('Invalid PIN or no stored credentials');
-          setOtp(''); // Clear the input
-        }
+        toast.error('Invalid PIN');
+        setOtp(''); // Clear the input
       }
     } catch (error) {
-      console.error('Error in login process:', error);
-      toast.error('Login failed. Please try again');
-      navigate('/login');
-    }
-  };
-
-  const handleSuccessfulLogin = async (user: any) => {
-    // Store credentials and device info for future quick access
-    localStorage.setItem('lastLoginDevice', JSON.stringify({
-      phone_number: phoneNumber // Using the current phoneNumber state
-    }));
-    localStorage.setItem('lastLoginMpin', otp);
-    localStorage.setItem('lastLoginEmail', user.email || '');
-
-    // Update device info
-    try {
-      await supabase.from('user_devices').upsert({
-        user_id: user.id,
-        phone_number: phoneNumber,
-        mpin: otp,
-        is_active: true,
-        last_used: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('Error updating device info:', error);
-    }
-
-    // Navigate based on role
-    if (userRole === "official") {
-      navigate("/official-dashboard");
-    } else if (userRole === "superadmin") {
-      navigate("/admin");
-    } else {
-      navigate("/resident-home");
+      console.error('Error verifying MPIN:', error);
+      toast.error('Failed to verify PIN');
     }
   };
 
