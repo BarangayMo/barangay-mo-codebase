@@ -12,6 +12,9 @@ import {
   User
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const quickAccessItems = [
   {
@@ -41,8 +44,9 @@ const quickAccessItems = [
   {
     title: "Police",
     icon: Phone,
-    href: "/official/police-contact",
-    color: "bg-red-50 text-red-600"
+    href: "#",
+    color: "bg-red-50 text-red-600",
+    action: true
   },
   {
     title: "Barangay Clearance",
@@ -60,6 +64,23 @@ const quickAccessItems = [
 
 export const QuickAccessPanel = () => {
   const { user } = useAuth();
+  
+  // Get barangay data including emergency contacts
+  const { data: barangayData } = useQuery({
+    queryKey: ["barangay-data", user?.barangay],
+    queryFn: async () => {
+      if (!user?.barangay) return null;
+      const { data, error } = await supabase
+        .from("Barangays")
+        .select("*")
+        .eq("BARANGAY", user.barangay)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.barangay,
+  });
   
   // Get actual location data from user profile
   const getLocationText = () => {
@@ -108,20 +129,35 @@ export const QuickAccessPanel = () => {
         </div>
         
         <div className="grid grid-cols-4 gap-2 sm:gap-3">
-          {quickAccessItems.map((item, index) => (
-            <Link
-              key={index}
-              to={item.href}
-              className="flex flex-col items-center p-2 sm:p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 group active:scale-95"
-            >
-              <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mb-2 ${item.color} group-hover:scale-105 transition-transform duration-200 shadow-sm`}>
-                <item.icon className="h-5 w-5 sm:h-6 sm:w-6" />
-              </div>
-              <span className="text-xs text-center font-medium text-gray-700 leading-tight">
-                {item.title}
-              </span>
-            </Link>
-          ))}
+          {quickAccessItems.map((item, index) => {
+            const handleClick = (e: React.MouseEvent) => {
+              if (item.action && item.title === "Police") {
+                e.preventDefault();
+                const policeNumber = barangayData?.["Local Police Contact"];
+                if (policeNumber) {
+                  window.location.href = `tel:${policeNumber}`;
+                } else {
+                  toast.error("No police contact number available");
+                }
+              }
+            };
+
+            return (
+              <Link
+                key={index}
+                to={item.href}
+                onClick={handleClick}
+                className="flex flex-col items-center p-2 sm:p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 group active:scale-95"
+              >
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mb-2 ${item.color} group-hover:scale-105 transition-transform duration-200 shadow-sm`}>
+                  <item.icon className="h-5 w-5 sm:h-6 sm:w-6" />
+                </div>
+                <span className="text-xs text-center font-medium text-gray-700 leading-tight">
+                  {item.title}
+                </span>
+              </Link>
+            );
+          })}
         </div>
       </CardContent>
     </Card>
