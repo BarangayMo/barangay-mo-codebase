@@ -73,15 +73,21 @@ export default function MPIN() {
         return;
       }
 
-      // Set the session using the tokens from the edge function
-      const { error: sessionError } = await supabase.auth.setSession({
-        access_token: data.access_token,
-        refresh_token: data.refresh_token
-      });
+      // Set the session using the complete session object from the edge function
+      if (data.session) {
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token
+        });
 
-      if (sessionError) {
-        console.error("Session set error:", sessionError);
-        toast.error("Failed to establish session. Please try again.");
+        if (sessionError) {
+          console.error("Session set error:", sessionError);
+          toast.error("Failed to establish session. Please try again.");
+          return;
+        }
+      } else {
+        console.error("No session data received");
+        toast.error("Authentication failed - no session data");
         return;
       }
 
