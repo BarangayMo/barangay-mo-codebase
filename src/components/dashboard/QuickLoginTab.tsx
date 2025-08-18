@@ -9,25 +9,16 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
-// Simple hash function for demonstration (use a secure hash in production)
-function hashMpin(mpin: string) {
-	if (mpin.length !== 4) throw new Error("MPIN must be exactly 4 digits");
-	let hash = 0;
-	for (let i = 0; i < mpin.length; i++) {
-		hash = ((hash << 5) - hash) + mpin.charCodeAt(i);
-		hash |= 0;
-	}
-	return hash.toString();
-}
-
-// Set MPIN in database using Supabase client
+// Set MPIN using the secure database function
 async function setMpin(email: string, mpin: string) {
-	const mpinHash = hashMpin(mpin);
-	const { data, error } = await supabase
-		.from('profiles')
-		.update({ mpin_hash: mpinHash, mpin_set_at: new Date().toISOString() })
-		.eq('email', email)
-		.select('mpin_hash');
+	if (mpin.length !== 4) {
+		throw new Error("MPIN must be exactly 4 digits");
+	}
+	
+	const { data, error } = await supabase.rpc('set_user_mpin', {
+		mpin_text: mpin
+	});
+	
 	return { data, error };
 }
 
