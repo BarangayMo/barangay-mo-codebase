@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export const BarangayLogoTab = () => {
+export const BarangayLogoTab = ({ onLogoUpdate }: { onLogoUpdate?: () => void }) => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [logoUrl, setLogoUrl] = useState("");
@@ -76,6 +76,7 @@ export const BarangayLogoTab = () => {
       if (updateError) throw updateError;
 
       setLogoUrl(publicUrl);
+      onLogoUpdate?.(); // Refresh barangay data in parent component
       toast.success('Logo updated successfully');
     } catch (error) {
       console.error('Error updating logo:', error);

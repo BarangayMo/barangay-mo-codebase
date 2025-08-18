@@ -49,7 +49,8 @@ const OfficialsDashboard = () => {
 
   // Get barangay data including logo and puroks
   const {
-    data: barangayData
+    data: barangayData,
+    refetch: refetchBarangayData
   } = useQuery({
     queryKey: ["barangay-data", officialProfile?.barangay],
     queryFn: async () => {
@@ -416,7 +417,7 @@ const OfficialsDashboard = () => {
             <div className="flex-1 overflow-y-auto p-4">
               {activeTab === 'address' && <BarangayAddressTab />}
               {activeTab === 'details' && <BarangayDetailsTab />}
-              {activeTab === 'logo' && <BarangayLogoTab />}
+              {activeTab === 'logo' && <BarangayLogoTab onLogoUpdate={refetchBarangayData} />}
             </div>
           </div>
         </div>}
