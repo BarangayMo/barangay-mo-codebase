@@ -11,7 +11,7 @@ CREATE INDEX IF NOT EXISTS idx_profiles_lower_email ON public.profiles (lower(em
 
 -- 2) Function for users to set their own MPIN (hash + reset counters)
 CREATE OR REPLACE FUNCTION public.set_user_mpin(mpin_text text)
-RETURNS void
+RETURNS boolean
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
@@ -32,6 +32,8 @@ BEGIN
     mpin_locked_until = NULL,
     mpin_set_at = now()
   WHERE id = auth.uid();
+
+  RETURN true;
 END;
 $$;
 
