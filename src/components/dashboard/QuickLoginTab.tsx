@@ -6,9 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Lock, Fingerprint, Check, X, AlertCircle, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DeviceData {
-  mpin: string; // Local hash of MPIN
+  mpin: string; // 'stored_in_db' or local hash (legacy)
   biometricEnabled: boolean;
   failedAttempts: number;
   email: string;
@@ -118,20 +119,28 @@ export function QuickLoginTab() {
     }
 
     try {
-      // Hash the MPIN locally for storage
-      const hashedMpin = hashMpin(mpinFirst);
+      // Store MPIN in database using Supabase RPC
+      const { error } = await supabase.rpc('set_user_mpin', {
+        mpin_text: mpinFirst
+      });
 
-      // Store device data locally
+      if (error) {
+        console.error('Error setting MPIN:', error);
+        toast.error("Failed to set MPIN");
+        return;
+      }
+
+      // Clear local storage and update device data to reflect DB storage
       const fingerprint = getDeviceFingerprint();
       const storageKey = `quicklogin_${fingerprint}`;
       
       const newDeviceData: DeviceData = {
-        mpin: hashedMpin,
+        mpin: 'stored_in_db', // Indicator that MPIN is in database
         biometricEnabled: deviceData?.biometricEnabled || false,
         failedAttempts: 0,
         email: user.email,
         userRole: user.role,
-        sessionTokens: deviceData?.sessionTokens // Keep existing session tokens
+        sessionTokens: deviceData?.sessionTokens
       };
 
       localStorage.setItem(storageKey, JSON.stringify(newDeviceData));
@@ -218,7 +227,7 @@ export function QuickLoginTab() {
     }
   };
 
-  const hasMpin = deviceData?.mpin;
+  const hasMpin = deviceData?.mpin && deviceData.mpin !== '';
   const hasBiometric = deviceData?.biometricEnabled;
 
   return (
