@@ -1,36 +1,90 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Phone, MapPin, Headphones, MessageSquare, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const EmergencyResponse = () => {
   const navigate = useNavigate();
-
-  const emergencyContacts = [
+  const { user } = useAuth();
+  const [emergencyContacts, setEmergencyContacts] = useState([
     {
       name: "BPAT",
       icon: Phone,
-      action: "Call"
+      action: "Call",
+      number: ""
     },
     {
       name: "Police",
       icon: Phone,
-      action: "Call"
+      action: "Call",
+      number: ""
     },
     {
       name: "Fire Department",
       icon: Phone,
-      action: "Call"
+      action: "Call",
+      number: ""
     },
     {
-      name: "Ambulance",
+      name: "VAWC Hotline",
       icon: Phone,
-      action: "Call"
+      action: "Call",
+      number: ""
     }
-  ];
+  ]);
+
+  useEffect(() => {
+    const fetchBarangayContacts = async () => {
+      if (!user?.barangay) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('Barangays')
+          .select(`
+            "BPAT Phone",
+            "Local Police Contact",
+            "Fire Department Phone",
+            "VAWC Hotline No"
+          `)
+          .eq('BARANGAY', user.barangay)
+          .single();
+
+        if (error) throw error;
+
+        if (data) {
+          setEmergencyContacts(contacts => contacts.map(contact => {
+            let number = "";
+            switch(contact.name) {
+              case "BPAT":
+                number = data["BPAT Phone"];
+                break;
+              case "Police":
+                number = data["Local Police Contact"];
+                break;
+              case "Fire Department":
+                number = data["Fire Department Phone"];
+                break;
+              case "VAWC Hotline":
+                number = data["VAWC Hotline No"];
+                break;
+            }
+            return { ...contact, number };
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching barangay contacts:', error);
+        toast.error('Failed to load emergency contacts');
+      }
+    };
+
+    fetchBarangayContacts();
+  }, [user?.barangay]);
 
   const quickActions = [
     {
@@ -51,8 +105,12 @@ const EmergencyResponse = () => {
   ];
 
   const handleCall = (service: string) => {
-    // In a real app, this would initiate a phone call
-    console.log(`Calling ${service}`);
+    const contact = emergencyContacts.find(c => c.name === service);
+    if (contact?.number) {
+      window.location.href = `tel:${contact.number}`;
+    } else {
+      toast.error('No contact number available for this service');
+    }
   };
 
   return (
