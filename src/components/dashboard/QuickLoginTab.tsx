@@ -122,11 +122,22 @@ export function QuickLoginTab() {
     }
 
     try {
-      // Use database function to securely hash and save MPIN
-      const { error: updateError } = await supabase.rpc('update_user_mpin', {
-        user_id: user.id,
-        new_mpin: mpinFirst
+      // Hash the MPIN using database function and then update directly
+      const { data: hashedMpin, error: hashError } = await supabase.rpc('hash_mpin', {
+        mpin_text: mpinFirst
       });
+
+      if (hashError || !hashedMpin) {
+        console.error('Error hashing MPIN:', hashError);
+        toast.error("Failed to hash MPIN");
+        return;
+      }
+
+      // Update the profiles table directly with the hashed MPIN
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ mpin: hashedMpin })
+        .eq('id', user.id);
 
       if (updateError) {
         console.error('Error saving MPIN:', updateError);
