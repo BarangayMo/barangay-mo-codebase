@@ -12,63 +12,56 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
 const BarangayProfileView = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { barangays, isLoading: barangaysLoading } = useBarangayData();
+  const {
+    user
+  } = useAuth();
+  const {
+    barangays,
+    isLoading: barangaysLoading
+  } = useBarangayData();
   const userBarangay = user?.barangay;
   const userRegion = user?.region;
-
-  const [emergencyContacts, setEmergencyContacts] = useState([
-    {
-      name: "BPAT",
-      icon: Phone,
-      action: "Call",
-      number: ""
-    },
-    {
-      name: "Police",
-      icon: Phone,
-      action: "Call",
-      number: ""
-    },
-    {
-      name: "Fire Department",
-      icon: Phone,
-      action: "Call",
-      number: ""
-    },
-    {
-      name: "VAWC Hotline",
-      icon: Phone,
-      action: "Call",
-      number: ""
-    }
-  ]);
-
+  const [emergencyContacts, setEmergencyContacts] = useState([{
+    name: "BPAT",
+    icon: Phone,
+    action: "Call",
+    number: ""
+  }, {
+    name: "Police",
+    icon: Phone,
+    action: "Call",
+    number: ""
+  }, {
+    name: "Fire Department",
+    icon: Phone,
+    action: "Call",
+    number: ""
+  }, {
+    name: "VAWC Hotline",
+    icon: Phone,
+    action: "Call",
+    number: ""
+  }]);
   useEffect(() => {
     const fetchBarangayContacts = async () => {
       if (!user?.barangay) return;
-
       try {
-        const { data, error } = await supabase
-          .from('Barangays')
-          .select(`
+        const {
+          data,
+          error
+        } = await supabase.from('Barangays').select(`
             "BPAT Phone",
             "Local Police Contact",
             "Fire Department Phone",
             "VAWC Hotline No"
-          `)
-          .eq('BARANGAY', user.barangay)
-          .single();
-
+          `).eq('BARANGAY', user.barangay).single();
         if (error) throw error;
-
         if (data) {
           setEmergencyContacts(contacts => contacts.map(contact => {
             let number = "";
-            switch(contact.name) {
+            switch (contact.name) {
               case "BPAT":
                 number = data["BPAT Phone"];
                 break;
@@ -82,7 +75,10 @@ const BarangayProfileView = () => {
                 number = data["VAWC Hotline No"];
                 break;
             }
-            return { ...contact, number };
+            return {
+              ...contact,
+              number
+            };
           }));
         }
       } catch (error) {
@@ -90,28 +86,21 @@ const BarangayProfileView = () => {
         toast.error('Failed to load emergency contacts');
       }
     };
-
     fetchBarangayContacts();
   }, [user?.barangay]);
-
-  const tabItems = [
-    {
-      value: "details",
-      label: "Details",
-      icon: <Settings className="w-4 h-4" />
-    },
-    {
-      value: "address",
-      label: "Address", 
-      icon: <MapPin className="w-4 h-4" />
-    },
-    {
-      value: "emergency",
-      label: "Emergency",
-      icon: <Phone className="w-4 h-4" />
-    }
-  ];
-
+  const tabItems = [{
+    value: "details",
+    label: "Details",
+    icon: <Settings className="w-4 h-4" />
+  }, {
+    value: "address",
+    label: "Address",
+    icon: <MapPin className="w-4 h-4" />
+  }, {
+    value: "emergency",
+    label: "Emergency",
+    icon: <Phone className="w-4 h-4" />
+  }];
   const handleCall = (service: string) => {
     const contact = emergencyContacts.find(c => c.name === service);
     if (contact?.number) {
@@ -120,10 +109,8 @@ const BarangayProfileView = () => {
       toast.error('No contact number available for this service');
     }
   };
-
   if (barangaysLoading) {
-    return (
-      <Layout>
+    return <Layout>
         <div className="space-y-6 p-6">
           <Skeleton className="h-8 w-48" />
           <Card>
@@ -132,20 +119,14 @@ const BarangayProfileView = () => {
             </CardContent>
           </Card>
         </div>
-      </Layout>
-    );
+      </Layout>;
   }
-
-  return (
-    <Layout>
+  return <Layout>
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <div className="bg-blue-600 text-white p-4">
           <div className="flex items-center px-4">
-            <button 
-              onClick={() => navigate(-1)} 
-              className="mr-4 p-1"
-            >
+            <button onClick={() => navigate(-1)} className="mr-4 p-1">
               ←
             </button>
             <h1 className="text-lg font-semibold">Barangay Profile</h1>
@@ -156,16 +137,10 @@ const BarangayProfileView = () => {
         <div className="bg-white border-b sticky top-0 z-10">
           <div className="max-w-2xl mx-auto">
             <div className="flex justify-center space-x-4 p-4">
-              {tabItems.map((tab) => (
-                <a
-                  key={tab.value}
-                  href={`#${tab.value}`}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-md hover:bg-gray-100 transition-colors"
-                >
+              {tabItems.map(tab => <a key={tab.value} href={`#${tab.value}`} className="flex items-center space-x-2 py-2 rounded-md hover:bg-gray-100 transition-colors px-[13px]">
                   {tab.icon}
                   <span>{tab.label}</span>
-                </a>
-              ))}
+                </a>)}
             </div>
           </div>
         </div>
@@ -190,8 +165,7 @@ const BarangayProfileView = () => {
             <div className="p-4">
               <h2 className="text-xl font-semibold mb-4">Emergency Contacts</h2>
               <div className="space-y-3">
-                {emergencyContacts.map((contact, index) => (
-                  <Card key={index}>
+                {emergencyContacts.map((contact, index) => <Card key={index}>
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -200,24 +174,17 @@ const BarangayProfileView = () => {
                           </div>
                           <span className="font-medium text-gray-800">{contact.name}</span>
                         </div>
-                        <Button
-                          size="sm"
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-4"
-                          onClick={() => handleCall(contact.name)}
-                        >
+                        <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white px-4" onClick={() => handleCall(contact.name)}>
                           {contact.action}
                         </Button>
                       </div>
                     </CardContent>
-                  </Card>
-                ))}
+                  </Card>)}
               </div>
             </div>
           </div>
         </div>
       </div>
-    </Layout>
-  );
+    </Layout>;
 };
-
 export default BarangayProfileView;
