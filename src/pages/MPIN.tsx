@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Lock } from "lucide-react";
+import { ArrowLeft, Lock, Delete } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,6 +40,20 @@ export default function MPIN() {
       return;
     }
     setStep("mpin");
+  };
+
+  const handleNumberClick = (number: string) => {
+    if (mpin.length < 4) {
+      setMpin(prev => prev + number);
+    }
+  };
+
+  const handleBackspace = () => {
+    setMpin(prev => prev.slice(0, -1));
+  };
+
+  const handleClear = () => {
+    setMpin("");
   };
 
   const handleLogin = async () => {
@@ -110,75 +124,140 @@ export default function MPIN() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/20 via-background to-secondary/20 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => step === "mpin" ? setStep("email") : navigate("/login")}
-              className="p-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div className="flex items-center gap-2">
-              <Lock className="h-5 w-5 text-primary" />
-              <CardTitle className="text-xl">
-                {step === "email" ? "MPIN Login" : "Enter MPIN"}
-              </CardTitle>
+      {step === "email" ? (
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-1">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/login")}
+                className="p-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <div className="flex items-center gap-2">
+                <Lock className="h-5 w-5 text-primary" />
+                <CardTitle className="text-xl">MPIN Login</CardTitle>
+              </div>
             </div>
-          </div>
-          <p className="text-muted-foreground text-sm">
-            {step === "email" 
-              ? "Enter your email address to continue with MPIN login"
-              : "Enter your 4-digit MPIN to sign in"
-            }
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {step === "email" ? (
-            <>
-              <div className="space-y-2">
-                <Input
-                  type="email"
-                  placeholder="Enter your email address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={loading}
-                />
-              </div>
-              <Button 
-                onClick={handleEmailSubmit}
-                className="w-full"
-                disabled={!email}
+            <p className="text-muted-foreground text-sm">
+              Enter your email address to continue with MPIN login
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Input
+                type="email"
+                placeholder="Enter your email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+              />
+            </div>
+            <Button 
+              onClick={handleEmailSubmit}
+              className="w-full"
+              disabled={!email}
+            >
+              Continue
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="w-full max-w-sm">
+          {/* Header with user email */}
+          <CardHeader className="text-center space-y-4 pb-6">
+            <div className="flex items-center justify-between">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setStep("email")}
+                className="p-2"
               >
-                Continue
+                <ArrowLeft className="h-4 w-4" />
               </Button>
-            </>
-          ) : (
-            <>
-              <div className="space-y-2">
-                <Input
-                  type="password"
-                  placeholder="Enter 4-digit MPIN"
-                  value={mpin}
-                  onChange={(e) => setMpin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                  className="text-center text-2xl tracking-widest"
-                  maxLength={4}
+              <Lock className="h-5 w-5 text-primary" />
+              <div className="w-8" /> {/* Spacer for alignment */}
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-lg font-semibold">Welcome back</h2>
+              <p className="text-sm text-muted-foreground break-all">{email}</p>
+              <p className="text-xs text-muted-foreground">Enter your 4-digit MPIN</p>
+            </div>
+          </CardHeader>
+
+          <CardContent className="space-y-6">
+            {/* MPIN Display */}
+            <div className="flex justify-center space-x-3">
+              {[0, 1, 2, 3].map((index) => (
+                <div
+                  key={index}
+                  className="w-4 h-4 rounded-full border-2 border-muted-foreground/30 flex items-center justify-center"
+                >
+                  {mpin[index] && (
+                    <div className="w-2 h-2 rounded-full bg-primary" />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Number Pad */}
+            <div className="grid grid-cols-3 gap-4">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((number) => (
+                <Button
+                  key={number}
+                  variant="outline"
+                  size="lg"
+                  className="h-16 text-xl font-semibold"
+                  onClick={() => handleNumberClick(number.toString())}
                   disabled={loading}
-                />
-              </div>
-              <Button 
-                onClick={handleLogin}
-                className="w-full"
-                disabled={loading || mpin.length !== 4}
+                >
+                  {number}
+                </Button>
+              ))}
+              
+              {/* Bottom row: Clear, 0, Backspace */}
+              <Button
+                variant="ghost"
+                size="lg"
+                className="h-16 text-sm"
+                onClick={handleClear}
+                disabled={loading || mpin.length === 0}
               >
-                {loading ? "Signing in..." : "Sign In"}
+                Clear
               </Button>
-            </>
-          )}
-        </CardContent>
-      </Card>
+              <Button
+                variant="outline"
+                size="lg"
+                className="h-16 text-xl font-semibold"
+                onClick={() => handleNumberClick("0")}
+                disabled={loading}
+              >
+                0
+              </Button>
+              <Button
+                variant="ghost"
+                size="lg"
+                className="h-16"
+                onClick={handleBackspace}
+                disabled={loading || mpin.length === 0}
+              >
+                <Delete className="h-5 w-5" />
+              </Button>
+            </div>
+
+            {/* Login Button */}
+            <Button 
+              onClick={handleLogin}
+              className="w-full h-12"
+              disabled={loading || mpin.length !== 4}
+            >
+              {loading ? "Signing in..." : "Sign In"}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
