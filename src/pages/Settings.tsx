@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEnhancedToast } from "@/components/ui/enhanced-toast";
 import { CheckCircle } from "lucide-react";
 import { QuickLoginTab } from "@/components/dashboard/QuickLoginTab";
+import { MPINSecuritySection } from "@/components/settings/MPINSecuritySection";
 
 const Settings = () => {
   const { userRole } = useAuth();
@@ -88,7 +89,7 @@ const Settings = () => {
               <TabsTrigger value="preferences" className="text-xs md:text-sm px-2 py-2">Preferences</TabsTrigger>
               <TabsTrigger value="notifications" className="text-xs md:text-sm px-2 py-2">Notifications</TabsTrigger>
               <TabsTrigger value="account" className="text-xs md:text-sm px-2 py-2">Account</TabsTrigger>
-              <TabsTrigger value="quicklogin" className="text-xs md:text-sm px-2 py-2">Quick Login</TabsTrigger>
+              <TabsTrigger value="security" className="text-xs md:text-sm px-2 py-2">Security</TabsTrigger>
               <TabsTrigger value="privacy" className="text-xs md:text-sm px-2 py-2">Privacy</TabsTrigger>
             </div>
           </TabsList>
@@ -365,8 +366,8 @@ const Settings = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="quicklogin" className="space-y-4">
-            <QuickLoginTab />
+          <TabsContent value="security" className="space-y-4">
+            <MPINSecuritySection />
           </TabsContent>
 
           <TabsContent value="privacy" className="space-y-4">
