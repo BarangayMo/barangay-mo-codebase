@@ -12,6 +12,8 @@ import OfficialDocuments from "@/pages/OfficialDocuments";
 import LogoUpload from "@/pages/LogoUpload";
 import EmailVerification from "@/pages/EmailVerification";
 import Verify from "@/pages/Verify";
+import MPIN from "@/pages/MPIN";
+import ForgotMPIN from "@/pages/ForgotMPIN";
 import Phone from "@/pages/Phone";
 import ResidentHome from "@/pages/ResidentHome";
 import OfficialsDashboard from "@/pages/OfficialsDashboard";
@@ -121,14 +123,12 @@ import { EmailConfirmationHandler } from "@/components/auth/EmailConfirmationHan
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { RbiProtectedRoute } from "@/components/auth/RbiProtectedRoute";
 import AuthCallback from "@/pages/AuthCallback";
-import MPINLogin from "@/pages/MPINLogin";
 
 export function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/mpin-login" element={<MPINLogin />} />
       {/* Registration flow routes */}
       <Route path="/register" element={<Register />} />
       <Route path="/register/official" element={<OfficialRegistration />} />
@@ -143,6 +143,8 @@ export function AppRoutes() {
       <Route path="/auth/confirm" element={<EmailConfirmationHandler />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/verify" element={<Verify />} />
+      <Route path="/mpin" element={<MPIN />} />
+      <Route path="/forgot-mpin" element={<ForgotMPIN />} />
       <Route path="/phone" element={<Phone />} />
       <Route path="/welcome" element={<MobileWelcome />} />
       <Route path="/contact" element={<Contact />} />

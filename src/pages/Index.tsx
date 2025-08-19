@@ -7,46 +7,28 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { hasLastUser } from "@/services/mpinAuth";
-
+import { mpinAuthService } from "@/services/mpinAuth";
 
 export default function Index() {
   const currentYear = new Date().getFullYear();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-  const { isAuthenticated, isEmailVerified, userRole } = useAuth();
+  const { isAuthenticated } = useAuth();
   
-  // Handle authenticated user redirects
-  useEffect(() => {
-    if (isAuthenticated && isEmailVerified) {
-      console.log("User is authenticated and email verified, redirecting based on role:", userRole);
-      
-      // Redirect based on user role
-      switch (userRole) {
-        case 'official':
-          navigate('/official-dashboard', { replace: true });
-          break;
-        case 'superadmin':
-          navigate('/admin', { replace: true });
-          break;
-        case 'resident':
-        default:
-          navigate('/resident-home', { replace: true });
-          break;
-      }
-    } else if (!isAuthenticated && hasLastUser()) {
-      // If user is not authenticated but there's a last user, redirect to MPIN login
-      console.log("Last user found, redirecting to MPIN login");
-      navigate('/mpin-login', { replace: true });
-    }
-  }, [isAuthenticated, isEmailVerified, userRole, navigate]);
-  
-  // Handle redirects for mobile users
+  // Handle redirects for mobile users and MPIN login
   useEffect(() => {
     if (isMobile) {
       navigate('/welcome');
+    } else if (!isAuthenticated) {
+      // Check if device has stored MPIN credentials for desktop users
+      const storedCredentials = mpinAuthService.hasStoredCredentials();
+      
+      if (storedCredentials) {
+        // Redirect to MPIN login if credentials found
+        navigate("/mpin", { replace: true });
+      }
     }
-  }, [isMobile, navigate]);
+  }, [isMobile, navigate, isAuthenticated]);
 
   // Show loading or nothing for mobile users while redirecting
   if (isMobile) {

@@ -2,7 +2,6 @@ import { createContext, useContext, useState, ReactNode, useEffect, useRef } fro
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
-import { storeLastUser, clearLastUser, type LastUserInfo } from "@/services/mpinAuth";
 
 export type UserRole = "resident" | "official" | "superadmin" | null;
 
@@ -218,7 +217,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                   userRole: role
                 });
                 
-                if (currentPath === '/login' || currentPath === '/register' || currentPath === '/email-confirmation') {
+                if (currentPath === '/login' || currentPath === '/register' || currentPath === '/email-confirmation' || currentPath === '/mpin') {
                   if (emailVerified) {
                     console.log("✅ Email verified, redirecting to:", redirectPath, "after", event);
                     redirectInProgress.current = true;
@@ -357,35 +356,26 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (error) {
         console.error("❌ Login error:", error.message);
         return { error };
-        } else {
-          console.log("✅ Login successful for:", email);
-          console.log("📧 Email verified status:", !!data.user?.email_confirmed_at);
-          
-          // Store user info for MPIN login including refresh token
+      } else {
+        console.log("✅ Login successful for:", email);
+        console.log("📧 Email verified status:", !!data.user?.email_confirmed_at);
+        
+        // Store credentials for MPIN functionality after successful login
+        if (data.user && data.user.email) {
           setTimeout(async () => {
-            if (data.session && data.user) {
-              try {
-                const profileData = await fetchUserProfile(data.user.id);
-                const { role: determinedRole } = getUserRoleAndRedirect(
-                  profileData.role || data.user.user_metadata?.role, 
-                  data.user.email || ''
-                );
-                
-                const userInfo: LastUserInfo = {
-                  email: data.user.email || '',
-                  name: `${profileData.firstName || ''} ${profileData.lastName || ''}`.trim() || data.user.email || '',
-                  role: determinedRole,
-                  refreshToken: data.session.refresh_token
-                };
-                storeLastUser(userInfo);
-              } catch (error) {
-                console.warn('Error storing user info for MPIN:', error);
-              }
+            try {
+              // Import the MPIN auth service
+              const { mpinAuthService } = await import('@/services/mpinAuth');
+              mpinAuthService.storeCredentials(data.user.email!, data.user.id, password);
+              console.log("✅ Credentials stored for MPIN login");
+            } catch (error) {
+              console.error('Error storing credentials for MPIN:', error);
             }
-          }, 100);
-          
-          return { error: null };
+          }, 0);
         }
+        
+        return { error: null };
+      }
     } catch (error) {
       console.error("💥 Unexpected login error:", error);
       return { error: error as Error };
@@ -450,9 +440,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUserRole(null);
       setUser(null);
       setSession(null);
-      
-      // Clear stored user info for MPIN
-      clearLastUser();
       
       if (!redirectInProgress.current) {
         redirectInProgress.current = true;
