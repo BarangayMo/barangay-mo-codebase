@@ -36,12 +36,15 @@ serve(async (req) => {
       serviceRoleKey ?? ''
     );
 
-    // Get user profile and verify MPIN
+    // Get user profile and verify MPIN - use maybeSingle to avoid errors
+    console.log('Looking up user profile for email:', email);
     const { data: profile, error: profileError } = await supabaseServiceRole
       .from('profiles')
       .select('id, mpin_hash, mpin_attempts, mpin_locked_until')
       .eq('email', email)
-      .single();
+      .maybeSingle();
+    
+    console.log('Profile lookup result:', { profile, profileError });
 
     if (profileError || !profile) {
       return new Response(
