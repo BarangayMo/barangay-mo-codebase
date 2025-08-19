@@ -419,7 +419,7 @@ export default function OfficialRegistration() {
                 disabled={isSubmitting} 
                 className="w-full bg-red-600 hover:bg-red-700 text-white py-3 h-12 text-base font-medium"
               >
-                {isSubmitting ? "Submitting Form..." : "Submit Form"}
+                {isSubmitting ? "Registering..." : "Register Form"}
               </Button>
             </form>
           </div>
@@ -630,7 +630,7 @@ export default function OfficialRegistration() {
             disabled={isSubmitting} 
             className="w-full bg-red-600 hover:bg-red-700 text-white py-3 h-12 text-base font-medium"
           >
-            {isSubmitting ? "Submitting Form..." : "Submit Form"}
+            {isSubmitting ? "Registering..." : "Register Form"}
           </Button>
         </form>
       </div>
