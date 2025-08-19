@@ -2,6 +2,7 @@ import { createContext, useContext, useState, ReactNode, useEffect, useRef } fro
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
+import { storeLastUser, clearLastUser, type LastUserInfo } from "@/services/mpinAuth";
 
 export type UserRole = "resident" | "official" | "superadmin" | null;
 
@@ -356,13 +357,35 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (error) {
         console.error("❌ Login error:", error.message);
         return { error };
-      } else {
-        console.log("✅ Login successful for:", email);
-        console.log("📧 Email verified status:", !!data.user?.email_confirmed_at);
-        
-        
-        return { error: null };
-      }
+        } else {
+          console.log("✅ Login successful for:", email);
+          console.log("📧 Email verified status:", !!data.user?.email_confirmed_at);
+          
+          // Store user info for MPIN login including refresh token
+          setTimeout(async () => {
+            if (data.session && data.user) {
+              try {
+                const profileData = await fetchUserProfile(data.user.id);
+                const { role: determinedRole } = getUserRoleAndRedirect(
+                  profileData.role || data.user.user_metadata?.role, 
+                  data.user.email || ''
+                );
+                
+                const userInfo: LastUserInfo = {
+                  email: data.user.email || '',
+                  name: `${profileData.firstName || ''} ${profileData.lastName || ''}`.trim() || data.user.email || '',
+                  role: determinedRole,
+                  refreshToken: data.session.refresh_token
+                };
+                storeLastUser(userInfo);
+              } catch (error) {
+                console.warn('Error storing user info for MPIN:', error);
+              }
+            }
+          }, 100);
+          
+          return { error: null };
+        }
     } catch (error) {
       console.error("💥 Unexpected login error:", error);
       return { error: error as Error };
@@ -427,6 +450,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUserRole(null);
       setUser(null);
       setSession(null);
+      
+      // Clear stored user info for MPIN
+      clearLastUser();
       
       if (!redirectInProgress.current) {
         redirectInProgress.current = true;

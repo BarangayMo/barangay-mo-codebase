@@ -7,13 +7,39 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { hasLastUser } from "@/services/mpinAuth";
 
 
 export default function Index() {
   const currentYear = new Date().getFullYear();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isEmailVerified, userRole } = useAuth();
+  
+  // Handle authenticated user redirects
+  useEffect(() => {
+    if (isAuthenticated && isEmailVerified) {
+      console.log("User is authenticated and email verified, redirecting based on role:", userRole);
+      
+      // Redirect based on user role
+      switch (userRole) {
+        case 'official':
+          navigate('/official-dashboard', { replace: true });
+          break;
+        case 'superadmin':
+          navigate('/admin', { replace: true });
+          break;
+        case 'resident':
+        default:
+          navigate('/resident-home', { replace: true });
+          break;
+      }
+    } else if (!isAuthenticated && hasLastUser()) {
+      // If user is not authenticated but there's a last user, redirect to MPIN login
+      console.log("Last user found, redirecting to MPIN login");
+      navigate('/mpin-login', { replace: true });
+    }
+  }, [isAuthenticated, isEmailVerified, userRole, navigate]);
   
   // Handle redirects for mobile users
   useEffect(() => {

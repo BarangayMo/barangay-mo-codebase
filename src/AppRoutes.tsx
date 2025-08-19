@@ -121,12 +121,14 @@ import { EmailConfirmationHandler } from "@/components/auth/EmailConfirmationHan
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { RbiProtectedRoute } from "@/components/auth/RbiProtectedRoute";
 import AuthCallback from "@/pages/AuthCallback";
+import MPINLogin from "@/pages/MPINLogin";
 
 export function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/mpin-login" element={<MPINLogin />} />
       {/* Registration flow routes */}
       <Route path="/register" element={<Register />} />
       <Route path="/register/official" element={<OfficialRegistration />} />
