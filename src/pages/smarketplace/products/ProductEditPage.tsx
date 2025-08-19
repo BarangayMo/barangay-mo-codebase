@@ -1129,7 +1129,11 @@ const ProductEditPage = () => {
             <Button
               type="submit"
               disabled={saveProductMutation.isPending}
-              className="order-1 sm:order-2 w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
+              className={`order-1 sm:order-2 w-full sm:w-auto ${
+                userRole === 'official' 
+                  ? 'bg-red-600 hover:bg-red-700' 
+                  : 'bg-blue-600 hover:bg-blue-700'
+              }`}
             >
               <Save className="h-4 w-4 mr-2" />
               {saveProductMutation.isPending ? (
