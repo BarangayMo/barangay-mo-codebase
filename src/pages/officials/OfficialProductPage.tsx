@@ -172,7 +172,7 @@ const OfficialProductsPage = () => {
   };
 
   const handleEditProduct = (productId: string) => {
-    navigate(`/admin/smarketplace/products/edit/${productId}`);
+    navigate(`/official/products/edit/${productId}`);
   };
 
   const handleDeleteProduct = async (productId: string, productName: string) => {
@@ -194,7 +194,7 @@ const OfficialProductsPage = () => {
   };
 
   const handleAddProduct = () => {
-    navigate('/admin/smarketplace/products/edit/new');
+    navigate('/official/products/edit/new');
   };
 
   const tabItems = [

@@ -138,7 +138,7 @@ const ResidentProductsPage = () => {
   };
 
   const handleEditProduct = (productId: string) => {
-    navigate(`/admin/smarketplace/products/edit/${productId}`);
+    navigate(`/resident/products/edit/${productId}`);
   };
 
   const handleDeleteProduct = (productId: string, productName: string) => {
@@ -148,7 +148,7 @@ const ResidentProductsPage = () => {
   };
 
   const handleAddProduct = () => {
-    navigate('/admin/smarketplace/products/edit/new');
+    navigate('/resident/products/edit/new');
   };
 
   const tabItems = [

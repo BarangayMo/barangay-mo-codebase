@@ -1114,6 +1114,31 @@ const ProductEditPage = () => {
               </Card>
             </div>
           </div>
+          
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-6 border-t border-gray-200">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCancel}
+              className="order-2 sm:order-1 w-full sm:w-auto"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={saveProductMutation.isPending}
+              className="order-1 sm:order-2 w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {saveProductMutation.isPending ? (
+                isEditing ? 'Updating...' : 'Creating...'
+              ) : (
+                isEditing ? 'Update Product' : 'Create Product'
+              )}
+            </Button>
+          </div>
         </form>
       </div>
     </Layout>
