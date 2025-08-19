@@ -1,156 +1,141 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export interface StoredCredentials {
+interface StoredCredentials {
   email: string;
-  encryptedRefreshToken: string;
   userId: string;
-  role: string;
-  timestamp: number;
+  password: string; // Encrypted with device key
+  lastLoginTime: number;
 }
 
-const STORAGE_KEY = 'smartbarangay_last_user';
-const ENCRYPTION_KEY = 'sb_encrypt_key_v1'; // Simple encryption key for demo
-
-// Simple encryption/decryption for local storage
-const encrypt = (text: string): string => {
-  return btoa(text); // Base64 encoding for demo (use proper encryption in production)
-};
-
-const decrypt = (encrypted: string): string => {
+// Device fingerprint for security
+function getDeviceFingerprint(): string {
   try {
-    return atob(encrypted);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    ctx!.textBaseline = 'top';
+    ctx!.font = '14px Arial';
+    ctx!.fillText('Device fingerprint', 2, 2);
+    return btoa(
+      navigator.userAgent +
+      navigator.language +
+      screen.width + 'x' + screen.height +
+      new Date().getTimezoneOffset() +
+      canvas.toDataURL()
+    ).substring(0, 32);
+  } catch (e) {
+    return btoa(navigator.userAgent).substring(0, 16);
+  }
+}
+
+// Simple encryption for demo purposes (use proper encryption in production)
+function encryptPassword(password: string, deviceKey: string): string {
+  const combined = password + deviceKey;
+  return btoa(combined);
+}
+
+function decryptPassword(encrypted: string, deviceKey: string): string {
+  try {
+    const decoded = atob(encrypted);
+    return decoded.replace(deviceKey, '');
   } catch {
     return '';
   }
-};
+}
 
-export const mpinAuth = {
-  // Store user credentials after successful login
-  storeCredentials: async (email: string, refreshToken: string, userId: string, role: string) => {
-    const credentials: StoredCredentials = {
-      email,
-      encryptedRefreshToken: encrypt(refreshToken),
-      userId,
-      role,
-      timestamp: Date.now()
-    };
-    
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(credentials));
-  },
-
-  // Get stored credentials if available
-  getStoredCredentials: (): StoredCredentials | null => {
+export const mpinAuthService = {
+  // Check if device has stored credentials
+  hasStoredCredentials(): StoredCredentials | null {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (!stored) return null;
-      
-      const credentials = JSON.parse(stored) as StoredCredentials;
-      
-      // Check if credentials are less than 30 days old
-      const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-      if (Date.now() - credentials.timestamp > thirtyDays) {
-        localStorage.removeItem(STORAGE_KEY);
-        return null;
+      const deviceKey = getDeviceFingerprint();
+      const stored = localStorage.getItem(`mpin_creds_${deviceKey}`);
+      if (stored) {
+        const credentials = JSON.parse(stored) as StoredCredentials;
+        // Check if credentials are not too old (7 days)
+        const isValid = Date.now() - credentials.lastLoginTime < 7 * 24 * 60 * 60 * 1000;
+        return isValid ? credentials : null;
       }
-      
-      return credentials;
+      return null;
     } catch {
-      localStorage.removeItem(STORAGE_KEY);
       return null;
     }
   },
 
-  // Verify MPIN with stored user
-  verifyMpin: async (mpin: string): Promise<{ success: boolean; error?: string; user?: any }> => {
-    const credentials = mpinAuth.getStoredCredentials();
-    if (!credentials) {
-      return { success: false, error: 'No stored user found' };
-    }
-
+  // Store credentials after successful login
+  storeCredentials(email: string, userId: string, password: string): void {
     try {
-      // Call our database function to verify MPIN
-      const { data, error } = await supabase.rpc('verify_user_mpin', {
-        p_email: credentials.email,
-        p_mpin: mpin
-      });
-
-      if (error) {
-        console.error('MPIN verification error:', error);
-        return { success: false, error: 'Verification failed' };
-      }
-
-      const result = data as any; // Type assertion for database function result
-      if (!result.ok) {
-        switch (result.reason) {
-          case 'not_set':
-            return { success: false, error: 'MPIN not set up' };
-          case 'locked':
-            return { success: false, error: `Account locked until ${new Date(result.locked_until).toLocaleTimeString()}` };
-          case 'invalid':
-            return { success: false, error: `Invalid MPIN. ${result.remaining_attempts} attempts remaining` };
-          default:
-            return { success: false, error: 'MPIN verification failed' };
-        }
-      }
-
-      // MPIN verified, now restore session using stored refresh token
-      const refreshToken = decrypt(credentials.encryptedRefreshToken);
-      if (!refreshToken) {
-        return { success: false, error: 'Invalid stored credentials' };
-      }
-
-      const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-        access_token: '', // Will be refreshed
-        refresh_token: refreshToken
-      });
-
-      if (sessionError || !sessionData.user) {
-        // Refresh token expired, clear storage
-        localStorage.removeItem(STORAGE_KEY);
-        return { success: false, error: 'Session expired, please login again' };
-      }
-
-      return { success: true, user: sessionData.user };
-    } catch (error) {
-      console.error('MPIN verification error:', error);
-      return { success: false, error: 'Verification failed' };
-    }
-  },
-
-  // Set MPIN for current user
-  setMpin: async (mpin: string): Promise<{ success: boolean; error?: string }> => {
-    try {
-      const { data, error } = await supabase.rpc('set_user_mpin', { mpin_text: mpin });
-
-      if (error) {
-        console.error('MPIN setup error:', error);
-        return { success: false, error: 'Failed to set MPIN' };
-      }
-
-      return { success: true };
-    } catch (error) {
-      console.error('MPIN setup error:', error);
-      return { success: false, error: 'Failed to set MPIN' };
-    }
-  },
-
-  // Check if user has MPIN set up
-  hasMpinSetup: async (): Promise<boolean> => {
-    try {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('mpin_hash')
-        .eq('id', (await supabase.auth.getUser()).data.user?.id)
-        .single();
-
-      return !!profile?.mpin_hash;
-    } catch {
-      return false;
+      const deviceKey = getDeviceFingerprint();
+      const encryptedPassword = encryptPassword(password, deviceKey);
+      const credentials: StoredCredentials = {
+        email,
+        userId,
+        password: encryptedPassword,
+        lastLoginTime: Date.now()
+      };
+      localStorage.setItem(`mpin_creds_${deviceKey}`, JSON.stringify(credentials));
+    } catch (e) {
+      console.warn('Failed to store credentials:', e);
     }
   },
 
   // Clear stored credentials
-  clearStoredCredentials: () => {
-    localStorage.removeItem(STORAGE_KEY);
+  clearStoredCredentials(): void {
+    try {
+      const deviceKey = getDeviceFingerprint();
+      localStorage.removeItem(`mpin_creds_${deviceKey}`);
+    } catch (e) {
+      console.warn('Failed to clear credentials:', e);
+    }
+  },
+
+  // Verify MPIN and login
+  async verifyMpinAndLogin(mpin: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const credentials = this.hasStoredCredentials();
+      if (!credentials) {
+        return { success: false, error: 'No stored credentials found' };
+      }
+
+      // Call edge function to verify MPIN
+      const response = await fetch('https://lsygeaoqahfryyfvpxrk.supabase.co/functions/v1/mpin-auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          email: credentials.email, 
+          mpin 
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        return { success: false, error: result.error || 'MPIN verification failed' };
+      }
+
+      // MPIN verified, now login with stored credentials
+      const deviceKey = getDeviceFingerprint();
+      const password = decryptPassword(credentials.password, deviceKey);
+
+      if (!password) {
+        return { success: false, error: 'Failed to decrypt stored password' };
+      }
+
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email: credentials.email,
+        password: password
+      });
+
+      if (loginError) {
+        // If login fails, clear stored credentials as they might be invalid
+        this.clearStoredCredentials();
+        return { success: false, error: 'Stored credentials are invalid' };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('MPIN verification error:', error);
+      return { success: false, error: 'Verification failed' };
+    }
   }
 };

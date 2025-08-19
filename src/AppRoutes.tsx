@@ -12,6 +12,8 @@ import OfficialDocuments from "@/pages/OfficialDocuments";
 import LogoUpload from "@/pages/LogoUpload";
 import EmailVerification from "@/pages/EmailVerification";
 import Verify from "@/pages/Verify";
+import MPIN from "@/pages/MPIN";
+import ForgotMPIN from "@/pages/ForgotMPIN";
 import Phone from "@/pages/Phone";
 import ResidentHome from "@/pages/ResidentHome";
 import OfficialsDashboard from "@/pages/OfficialsDashboard";
@@ -100,8 +102,6 @@ import BarangayProfile from "@/pages/officials/BarangayProfile";
 
 // Import the new EmailConfirmation component
 import EmailConfirmation from "@/pages/EmailConfirmation";
-import MPINSetupPage from "@/pages/MPINSetupPage";
-import MPINLoginPage from "@/pages/MPINLoginPage";
 
 // Import the new QR Scanner component
 import QRScanner from "@/pages/officials/QRScanner";
@@ -142,9 +142,9 @@ export function AppRoutes() {
       <Route path="/email-confirmation" element={<EmailConfirmationHandler />} />
       <Route path="/auth/confirm" element={<EmailConfirmationHandler />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
-      <Route path="/mpin-setup" element={<MPINSetupPage />} />
-      <Route path="/mpin-login" element={<MPINLoginPage />} />
       <Route path="/verify" element={<Verify />} />
+      <Route path="/mpin" element={<MPIN />} />
+      <Route path="/forgot-mpin" element={<ForgotMPIN />} />
       <Route path="/phone" element={<Phone />} />
       <Route path="/welcome" element={<MobileWelcome />} />
       <Route path="/contact" element={<Contact />} />

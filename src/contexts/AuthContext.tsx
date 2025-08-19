@@ -217,7 +217,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                   userRole: role
                 });
                 
-                if (currentPath === '/login' || currentPath === '/register' || currentPath === '/email-confirmation') {
+                if (currentPath === '/login' || currentPath === '/register' || currentPath === '/email-confirmation' || currentPath === '/mpin') {
                   if (emailVerified) {
                     console.log("✅ Email verified, redirecting to:", redirectPath, "after", event);
                     redirectInProgress.current = true;
@@ -360,16 +360,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         console.log("✅ Login successful for:", email);
         console.log("📧 Email verified status:", !!data.user?.email_confirmed_at);
         
-        // Store credentials for MPIN login after successful login
-        if (data.session && data.user) {
-          const { mpinAuth } = await import("@/services/mpinAuth");
-          const role = data.user.user_metadata?.role || 'resident';
-          await mpinAuth.storeCredentials(
-            email,
-            data.session.refresh_token,
-            data.user.id,
-            role
-          );
+        // Store credentials for MPIN functionality after successful login
+        if (data.user && data.user.email) {
+          setTimeout(async () => {
+            try {
+              // Import the MPIN auth service
+              const { mpinAuthService } = await import('@/services/mpinAuth');
+              mpinAuthService.storeCredentials(data.user.email!, data.user.id, password);
+              console.log("✅ Credentials stored for MPIN login");
+            } catch (error) {
+              console.error('Error storing credentials for MPIN:', error);
+            }
+          }, 0);
         }
         
         return { error: null };
@@ -423,18 +425,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       console.log("✅ User registration successful - Check your inbox to verify your email!");
       console.log("📧 Verification email sent to:", email);
-      
-      // Store credentials for MPIN login after successful registration
-      if (authData.session && authData.user) {
-        const { mpinAuth } = await import("@/services/mpinAuth");
-        await mpinAuth.storeCredentials(
-          email,
-          authData.session.refresh_token,
-          authData.user.id,
-          userData.role || 'resident'
-        );
-      }
-      
       return { error: null };
     } catch (error) {
       console.error("Unexpected registration error:", error);

@@ -54,7 +54,7 @@ export default function Welcome() {
           </nav>
           {!isAuthenticated && (
             <div className="flex items-center gap-3">
-              <Link to="/login">
+              <Link to="/mpin">
                 <Button variant="outline" className="border-red-600 text-red-600 hover:bg-red-50">
                   Login
                 </Button>
@@ -87,7 +87,7 @@ export default function Welcome() {
           </nav>
           {!isAuthenticated && (
             <div className="flex flex-col gap-3">
-              <Link to="/login">
+              <Link to="/mpin">
                 <Button variant="outline" className="w-full border-red-600 text-red-600 hover:bg-red-50">
                   Login
                 </Button>

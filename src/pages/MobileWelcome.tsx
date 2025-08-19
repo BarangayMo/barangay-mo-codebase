@@ -50,7 +50,7 @@ export default function Welcome() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.9 }}
         >
-          <Link to="/login">
+          <Link to="/mpin">
             <Button className="w-full h-14 text-lg font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl">
               Login
             </Button>
