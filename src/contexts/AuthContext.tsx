@@ -217,7 +217,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                   userRole: role
                 });
                 
-                if (currentPath === '/login' || currentPath === '/register' || currentPath === '/email-confirmation' || currentPath === '/mpin') {
+                if (currentPath === '/login' || currentPath === '/register' || currentPath === '/email-confirmation') {
                   if (emailVerified) {
                     console.log("✅ Email verified, redirecting to:", redirectPath, "after", event);
                     redirectInProgress.current = true;
@@ -360,19 +360,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         console.log("✅ Login successful for:", email);
         console.log("📧 Email verified status:", !!data.user?.email_confirmed_at);
         
-        // Store credentials for MPIN functionality after successful login
-        if (data.user && data.user.email && data.session?.refresh_token) {
-          setTimeout(async () => {
-            try {
-              // Import the MPIN auth service
-              const { mpinAuthService } = await import('@/services/mpinAuth');
-              mpinAuthService.storeCredentials(data.user.email!, data.user.id, password, data.session.refresh_token);
-              console.log("✅ Credentials stored for MPIN login");
-            } catch (error) {
-              console.error('Error storing credentials for MPIN:', error);
-            }
-          }, 0);
-        }
         
         return { error: null };
       }
