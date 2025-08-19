@@ -200,9 +200,16 @@ export const mpinAuthService = {
       });
 
       if (!result.success) {
-        // If refresh token is invalid, try to update it with current session
-        if (result.error === 'Invalid or expired refresh token' && currentSession.session?.refresh_token) {
-          console.log('🔄 Refresh token expired, updating stored credentials...');
+        // If refresh token is invalid, clear credentials and require re-login
+        if (result.error === 'refresh_token_expired' || result.error === 'Invalid or expired refresh token') {
+          console.log('🔄 Refresh token expired, clearing stored credentials...');
+          this.clearStoredCredentials();
+          return { success: false, error: 'Session expired. Please log in again to set up MPIN.' };
+        }
+        
+        // Try to update refresh token if we have a current session
+        if (result.error === 'session_expired' && currentSession.session?.refresh_token) {
+          console.log('🔄 Updating stored credentials with current session...');
           this.storeCredentials(
             credentials.email,
             credentials.userId,
