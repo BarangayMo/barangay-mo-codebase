@@ -346,7 +346,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, [navigate, currentPath, isInitialized]);
 
   const login = async (email: string, password: string) => {
-    console.log("🔐 Login attempt for:", email);
+    console.log("� Login attempt for:", email);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -360,23 +360,46 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         console.log("✅ Login successful for:", email);
         console.log("📧 Email verified status:", !!data.user?.email_confirmed_at);
         
+        // DEBUG: Log session data structure
+        console.log("🔍 Login session data:", {
+          hasUser: !!data.user,
+          userEmail: data.user?.email,
+          userId: data.user?.id?.substring(0, 8) + '...',
+          hasSession: !!data.session,
+          accessTokenLength: data.session?.access_token?.length,
+          refreshTokenLength: data.session?.refresh_token?.length,
+          refreshTokenStart: data.session?.refresh_token?.substring(0, 10) + '...',
+          refreshTokenEnd: '...' + data.session?.refresh_token?.substring(data.session.refresh_token.length - 10),
+          tokenType: data.session?.token_type,
+          expiresAt: data.session?.expires_at,
+          expiresIn: data.session?.expires_in
+        });
+        
         // Store credentials for MPIN functionality after successful login
         if (data.user && data.user.email && data.session?.refresh_token) {
           setTimeout(async () => {
             try {
+              console.log("💾 About to store credentials with refresh token length:", data.session.refresh_token.length);
+              
               // Import the MPIN auth service
               const { mpinAuthService } = await import('@/services/mpinAuth');
               mpinAuthService.storeCredentials(
                 data.user.email!,
                 data.user.id,
                 password,
-                data.session.refresh_token
+                data.session.refresh_token  // Make sure this is the full token
               );
               console.log("✅ Credentials stored for MPIN login");
             } catch (error) {
-              console.error('Error storing credentials for MPIN:', error);
+              console.error('❌ Error storing credentials for MPIN:', error);
             }
           }, 0);
+        } else {
+          console.warn("⚠️ Missing required data for credential storage:", {
+            hasUser: !!data.user,
+            hasEmail: !!data.user?.email,
+            hasRefreshToken: !!data.session?.refresh_token
+          });
         }
         
         return { error: null };
