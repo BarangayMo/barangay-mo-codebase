@@ -5,118 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Lock, Delete } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-
-// Modular functions
-function storeLastLoginEmail(email: string) {
-	localStorage.setItem('last_login_email', email);
-}
-
-
-// Simple hash function for demonstration (use a secure hash in production)
-function hashMpin(mpin: string) {
-	if (mpin.length !== 4) throw new Error("MPIN must be exactly 4 digits");
-	let hash = 0;
-	for (let i = 0; i < mpin.length; i++) {
-		hash = ((hash << 5) - hash) + mpin.charCodeAt(i);
-		hash |= 0;
-	}
-	return hash.toString();
-}
-
-
-// Call Edge Function to verify MPIN (using user's mpin-auth function)
-async function verifyMpin(email: string, mpin: string) {
-	console.log('🔄 Frontend: Calling MPIN auth edge function', { email, mpinLength: mpin.length });
-	const response = await fetch('https://lsygeaoqahfryyfvpxrk.supabase.co/functions/v1/mpin-auth', {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-		},
-		body: JSON.stringify({ email, mpin }),
-	});
-	console.log('📨 Frontend: Edge function response status:', response.status);
-	const result = await response.json();
-	console.log('📄 Frontend: Edge function response data:', result);
-	return { ...result, status: response.status };
-}
-
-// Compute device fingerprint (must match AuthContext implementation)
-function getDeviceFingerprint() {
-	try {
-		const canvas = document.createElement('canvas');
-		const ctx = canvas.getContext('2d');
-		ctx!.textBaseline = 'top';
-		ctx!.font = '14px Arial';
-		ctx!.fillText('Device fingerprint', 2, 2);
-		return btoa(
-			navigator.userAgent +
-			navigator.language +
-			screen.width + 'x' + screen.height +
-			new Date().getTimezoneOffset() +
-			canvas.toDataURL()
-		).substring(0, 32);
-	} catch (e) {
-		console.warn('Fingerprint generation failed, falling back');
-		return btoa(navigator.userAgent).substring(0, 16);
-	}
-}
-
-
-async function loginWithMpin(email: string, mpin: string) {
-	console.log('🚀 Frontend: Starting MPIN login process');
-	// Verify MPIN with Edge Function
-	const result = await verifyMpin(email, mpin);
-	console.log("📦 Frontend: Edge function complete response:", result);
-
-	if (!result.success) {
-		console.log('❌ Frontend: Login failed with error:', result.error);
-		return { error: result.error || 'Authentication failed' };
-	}
-
-	console.log('✅ Frontend: MPIN verification successful, restoring stored session tokens');
-	try {
-		const fingerprint = getDeviceFingerprint();
-		const storageKey = `quicklogin_${fingerprint}`;
-		console.log('🔎 Frontend: Reading storage key:', storageKey);
-		const existingData = localStorage.getItem(storageKey);
-		if (!existingData) {
-			console.warn('⚠️ Frontend: No quicklogin data found on this device');
-			return { error: 'Quick Login unavailable on this device. Please login with email/password once.' };
-		}
-		let deviceData: any;
-		try {
-			deviceData = JSON.parse(existingData);
-		} catch (e) {
-			console.error('💥 Frontend: Failed to parse quicklogin data:', e);
-			return { error: 'Corrupted quick login data. Please login with password once.' };
-		}
-		console.log('📦 Frontend: Loaded device data:', { hasTokens: !!deviceData?.sessionTokens, email: deviceData?.email });
-		if (deviceData?.email && deviceData.email !== email) {
-			console.warn('🚫 Frontend: Stored session belongs to a different email');
-			return { error: 'This device is linked to a different account. Please login once with password.' };
-		}
-		if (!deviceData?.sessionTokens?.accessToken || !deviceData?.sessionTokens?.refreshToken) {
-			console.warn('⚠️ Frontend: Missing tokens in device data');
-			return { error: 'No saved session tokens. Please login with password once.' };
-		}
-		console.log('🎫 Frontend: Setting session from stored tokens');
-		const { error } = await supabase.auth.setSession({
-			access_token: deviceData.sessionTokens.accessToken,
-			refresh_token: deviceData.sessionTokens.refreshToken,
-		});
-		if (error) {
-			console.error('❌ Frontend: setSession failed:', error);
-			return { error: 'Saved session expired. Please login with password once.' };
-		}
-		console.log('✅ Frontend: Session restored from stored tokens');
-		return { success: true, message: 'Logged in successfully' };
-	} catch (e) {
-		console.error('💥 Frontend: Unexpected error restoring session:', e);
-		return { error: 'Authentication failed' };
-	}
-
-}
+import { mpinAuthService } from "@/services/mpinAuth";
 
 export default function MPIN() {
 	const [mpin, setMpin] = useState("");
@@ -132,12 +21,12 @@ export default function MPIN() {
 		}
 	}, [user, navigate]);
 
-	// Check for stored email, redirect to login if not found
+	// Check for stored credentials, redirect to login if not found
 	useEffect(() => {
 		try {
-			const last = localStorage.getItem('last_login_email');
-			if (last) {
-				setEmail(last);
+			const storedCredentials = mpinAuthService.hasStoredCredentials();
+			if (storedCredentials) {
+				setEmail(storedCredentials.email);
 			} else {
 				navigate("/login", { replace: true });
 			}
@@ -161,25 +50,26 @@ export default function MPIN() {
 	};
 
 	const handleLogin = async () => {
-		console.log('🎯 Frontend: Login button clicked', { mpinLength: mpin.length, email });
 		if (mpin.length !== 4) {
-			console.log('❌ Frontend: MPIN length validation failed');
 			toast.error("Please enter a 4-digit MPIN");
 			return;
 		}
 		setLoading(true);
-		console.log('🔄 Frontend: Starting login process...');
 		try {
-			const result = await loginWithMpin(email, mpin);
-			console.log("🎯 Frontend: Final MPIN login result:", result);
+			const result = await mpinAuthService.verifyMpinAndLogin(mpin);
 			if (result.error) {
-				console.log('❌ Frontend: Login error received:', result.error);
 				if (result.error === 'MPIN not set') {
-					toast.error("MPIN not set. Please set up MPIN in Quick Login tab.");
+					toast.error("MPIN not set. Please login with email/password first.");
 				} else if (result.error === 'User not found') {
 					toast.error("User not found. Please check your email address.");
 				} else if (result.error === 'Invalid MPIN') {
 					toast.error("Invalid MPIN. Please try again.");
+				} else if (result.error === 'No stored credentials found') {
+					toast.error("Please login with email/password first to enable MPIN.");
+					navigate("/login", { replace: true });
+				} else if (result.error === 'Stored credentials are invalid') {
+					toast.error("Stored credentials expired. Please login again.");
+					navigate("/login", { replace: true });
 				} else {
 					toast.error(result.error || "Authentication failed. Please try again.");
 				}
@@ -187,7 +77,7 @@ export default function MPIN() {
 			}
 
 			if (result.success) {
-				toast.success(result.message || "MPIN verified! Check your email for the magic link.");
+				toast.success("Successfully logged in with MPIN!");
 				setMpin(""); // Clear MPIN field after successful verification
 			}
 		} catch (error) {
@@ -217,7 +107,7 @@ export default function MPIN() {
 					<div className="space-y-2">
 						<h2 className="text-lg font-semibold">Welcome back</h2>
 						<p className="text-sm text-muted-foreground break-all">{email}</p>
-						<p className="text-xs text-muted-foreground">Enter your 4-digit MPIN</p>
+						<p className="text-xs text-muted-foreground">Enter your 4-digit MPIN to continue</p>
 					</div>
 				</CardHeader>
 
