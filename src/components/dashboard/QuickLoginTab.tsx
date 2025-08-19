@@ -39,13 +39,24 @@ export function QuickLoginTab() {
 	useEffect(() => {
 		async function fetchMpinStatus() {
 			if (!user?.id) return;
-			const { data, error } = await supabase
-				.from('profiles')
-				.select('mpin_hash')
-				.eq('id', user.id)
-				.single();
-			if (data?.mpin_hash) setHasMpin(true);
-			else setHasMpin(false);
+			try {
+				const { data, error } = await supabase
+					.from('profiles')
+					.select('mpin_hash')
+					.eq('id', user.id)
+					.maybeSingle(); // Use maybeSingle to handle case where no profile exists
+				
+				if (error) {
+					console.error('Error fetching MPIN status:', error);
+					setHasMpin(false);
+					return;
+				}
+				
+				setHasMpin(!!data?.mpin_hash);
+			} catch (error) {
+				console.error('Error in fetchMpinStatus:', error);
+				setHasMpin(false);
+			}
 		}
 		fetchMpinStatus();
 	}, [user?.id]);
@@ -71,13 +82,18 @@ export function QuickLoginTab() {
 			}
 			
 			// Refresh MPIN status from DB after setting
-			const { data } = await supabase
-				.from('profiles')
-				.select('mpin_hash')
-				.eq('id', user.id)
-				.single();
-			
-			setHasMpin(!!data?.mpin_hash);
+			try {
+				const { data } = await supabase
+					.from('profiles')
+					.select('mpin_hash')
+					.eq('id', user.id)
+					.maybeSingle(); // Use maybeSingle to handle case where no profile exists
+				
+				setHasMpin(!!data?.mpin_hash);
+			} catch (error) {
+				console.error('Error refreshing MPIN status:', error);
+				setHasMpin(false);
+			}
 			setMpinFirst("");
 			setMpinConfirm("");
 			setIsSettingMpin(false);
