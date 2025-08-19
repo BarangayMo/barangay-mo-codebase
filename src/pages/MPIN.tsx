@@ -56,32 +56,58 @@ export default function MPIN() {
 		}
 		setLoading(true);
 		try {
+			console.log("🔑 Starting MPIN verification...");
 			const result = await mpinAuthService.verifyMpinAndLogin(mpin);
+			console.log("📊 MPIN verification result:", {
+				success: result.success,
+				error: result.error,
+				hasSession: result.hasSession
+			});
+
 			if (result.error) {
 				if (result.error === 'MPIN not set') {
 					toast.error("MPIN not set. Please login with email/password first.");
+					navigate("/login", { replace: true });
 				} else if (result.error === 'User not found') {
-					toast.error("User not found. Please check your email address.");
+					toast.error("Session expired. Please login again with email/password.");
+					navigate("/login", { replace: true });
 				} else if (result.error === 'Invalid MPIN') {
 					toast.error("Invalid MPIN. Please try again.");
+					setMpin(""); // Clear MPIN on invalid attempt
 				} else if (result.error === 'No stored credentials found') {
-					toast.error("Please login with email/password first to enable MPIN.");
+					toast.error("No saved login found. Please login with email/password.");
 					navigate("/login", { replace: true });
 				} else if (result.error === 'Stored credentials are invalid') {
-					toast.error("Stored credentials expired. Please login again.");
+					console.warn("🚫 Stored credentials invalid:", result.error);
+					toast.error("Your saved login has expired. Please login again.");
+					// Clear invalid stored credentials
+					try {
+						mpinAuthService.clearStoredCredentials();
+					} catch (e) {
+						console.error("Failed to clear invalid credentials:", e);
+					}
+					navigate("/login", { replace: true });
+				} else if (result.error.includes('401')) {
+					console.warn("🔒 Authorization failed:", result.error);
+					toast.error("Session expired. Please login again.");
 					navigate("/login", { replace: true });
 				} else {
-					toast.error(result.error || "Authentication failed. Please try again.");
+					console.error("❌ Unknown MPIN error:", result.error);
+					toast.error("Login failed. Please try again with email/password.");
+					navigate("/login", { replace: true });
 				}
 				return;
 			}
 
 			if (result.success) {
+				console.log("✅ MPIN verification successful!");
 				toast.success("Successfully logged in with MPIN!");
 				setMpin(""); // Clear MPIN field after successful verification
 			}
 		} catch (error) {
-			toast.error("Login failed. Please try again.");
+			console.error("💥 MPIN verification error:", error);
+			toast.error("Login failed. Please try again with email/password.");
+			navigate("/login", { replace: true });
 		} finally {
 			setLoading(false);
 		}
