@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEnhancedToast } from "@/components/ui/enhanced-toast";
 import { CheckCircle } from "lucide-react";
+import { MPINSecuritySection } from "@/components/settings/MPINSecuritySection";
 
 
 const Settings = () => {
@@ -319,6 +320,8 @@ const Settings = () => {
                 </Button>
               </CardContent>
             </Card>
+            
+            <MPINSecuritySection accentColor={getAccentColor()} />
             
             <Card>
               <CardHeader>
