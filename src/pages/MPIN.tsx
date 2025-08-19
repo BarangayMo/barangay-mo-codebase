@@ -60,8 +60,7 @@ export default function MPIN() {
 			const result = await mpinAuthService.verifyMpinAndLogin(mpin);
 			console.log("📊 MPIN verification result:", {
 				success: result.success,
-				error: result.error,
-				hasSession: result.hasSession
+				error: result.error
 			});
 
 			if (result.error) {

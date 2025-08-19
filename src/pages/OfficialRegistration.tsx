@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from '@supabase/supabase-js';
+import { useRegionOfficialData } from '@/hooks/use-region-official-data';
 
 interface LocationState {
   role: string;
@@ -93,13 +94,14 @@ export default function OfficialRegistration() {
     phoneNumber: "",
     landlineNumber: "",
     position: "",
-    password: "",
-    confirmPassword: ""
+    password: ""
   });
 
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Fetch official data from region tables
+  const { officialData, loading: fetchingData } = useRegionOfficialData(region!, barangay!, formData.position);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -123,18 +125,23 @@ export default function OfficialRegistration() {
     }));
   };
 
+  // Auto-populate form when official data is fetched
+  useEffect(() => {
+    if (officialData) {
+      setFormData(prev => ({
+        ...prev,
+        firstName: officialData.firstName,
+        lastName: officialData.lastName,
+        middleName: officialData.middleName,
+        suffix: officialData.suffix,
+        landlineNumber: officialData.landlineNumber
+      }));
+    }
+  }, [officialData]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate password match
-    if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Password Mismatch",
-        description: "Passwords do not match. Please check and try again.",
-        variant: "destructive",
-      });
-      return;
-    }
 
     // Validate password strength
     if (formData.password.length < 8) {
@@ -261,56 +268,59 @@ export default function OfficialRegistration() {
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="firstName" className="text-gray-700 text-sm">First Name *</Label>
-                  <Input 
-                    id="firstName" 
-                    name="firstName" 
-                    value={formData.firstName} 
-                    onChange={handleInputChange} 
-                    required 
-                    className="mt-1 h-12 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500" 
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="lastName" className="text-gray-700 text-sm">Last Name *</Label>
-                  <Input 
-                    id="lastName" 
-                    name="lastName" 
-                    value={formData.lastName} 
-                    onChange={handleInputChange} 
-                    required 
-                    className="mt-1 h-12 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500" 
-                  />
-                </div>
+              <div>
+                <Label htmlFor="firstName" className="text-gray-700 text-sm">First Name *</Label>
+                <Input 
+                  id="firstName" 
+                  name="firstName" 
+                  value={formData.firstName} 
+                  onChange={handleInputChange} 
+                  required 
+                  disabled={fetchingData}
+                  className="mt-1 h-12 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500 disabled:bg-gray-100" 
+                />
+              </div>
+              <div>
+                <Label htmlFor="lastName" className="text-gray-700 text-sm">Last Name *</Label>
+                <Input 
+                  id="lastName" 
+                  name="lastName" 
+                  value={formData.lastName} 
+                  onChange={handleInputChange} 
+                  required 
+                  disabled={fetchingData}
+                  className="mt-1 h-12 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500 disabled:bg-gray-100" 
+                />
+              </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="middleName" className="text-gray-700 text-sm">Middle Name</Label>
-                  <Input 
-                    id="middleName" 
-                    name="middleName" 
-                    value={formData.middleName} 
-                    onChange={handleInputChange} 
-                    className="mt-1 h-12 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500" 
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="suffix" className="text-gray-700 text-sm">Suffix</Label>
-                  <Select value={formData.suffix} onValueChange={handleSuffixChange}>
-                    <SelectTrigger className="mt-1 h-12 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500">
-                      <SelectValue placeholder="Select suffix" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {COMMON_SUFFIXES.map((suffix) => (
-                        <SelectItem key={suffix} value={suffix}>
-                          {suffix}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div>
+                <Label htmlFor="middleName" className="text-gray-700 text-sm">Middle Name</Label>
+                <Input 
+                  id="middleName" 
+                  name="middleName" 
+                  value={formData.middleName} 
+                  onChange={handleInputChange} 
+                  disabled={fetchingData}
+                  className="mt-1 h-12 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500 disabled:bg-gray-100" 
+                />
+              </div>
+              <div>
+                <Label htmlFor="suffix" className="text-gray-700 text-sm">Suffix</Label>
+                <Select value={formData.suffix} onValueChange={handleSuffixChange} disabled={fetchingData}>
+                  <SelectTrigger className="mt-1 h-12 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500 disabled:bg-gray-100">
+                    <SelectValue placeholder="Select suffix" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COMMON_SUFFIXES.map((suffix) => (
+                      <SelectItem key={suffix} value={suffix}>
+                        {suffix}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               </div>
 
               <div>
@@ -363,7 +373,8 @@ export default function OfficialRegistration() {
                   type="tel" 
                   value={formData.landlineNumber} 
                   onChange={handleInputChange} 
-                  className="mt-1 h-12 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500" 
+                  disabled={fetchingData}
+                  className="mt-1 h-12 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500 disabled:bg-gray-100" 
                 />
               </div>
 
@@ -391,28 +402,6 @@ export default function OfficialRegistration() {
                 <p className="text-xs text-gray-500 mt-1">Password must be at least 8 characters long</p>
               </div>
 
-              <div>
-                <Label htmlFor="confirmPassword" className="text-gray-700 text-sm">Confirm Password *</Label>
-                <div className="relative mt-1">
-                  <Input 
-                    id="confirmPassword" 
-                    name="confirmPassword" 
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={formData.confirmPassword} 
-                    onChange={handleInputChange} 
-                    required 
-                    className="h-12 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500 pr-10" 
-                    placeholder="Confirm your password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
 
               <div className="text-center text-xs text-gray-600 leading-4">
                 By submitting this form, you agree with the{" "}
@@ -498,7 +487,8 @@ export default function OfficialRegistration() {
                 value={formData.firstName} 
                 onChange={handleInputChange} 
                 required 
-                className="mt-1 h-12 border-gray-300 focus:border-red-500 focus:ring-red-500" 
+                disabled={fetchingData}
+                className="mt-1 h-12 border-gray-300 focus:border-red-500 focus:ring-red-500 disabled:bg-gray-100" 
               />
             </div>
             <div>
@@ -509,7 +499,8 @@ export default function OfficialRegistration() {
                 value={formData.lastName} 
                 onChange={handleInputChange} 
                 required 
-                className="mt-1 h-12 border-gray-300 focus:border-red-500 focus:ring-red-500" 
+                disabled={fetchingData}
+                className="mt-1 h-12 border-gray-300 focus:border-red-500 focus:ring-red-500 disabled:bg-gray-100" 
               />
             </div>
           </div>
@@ -522,13 +513,14 @@ export default function OfficialRegistration() {
                 name="middleName" 
                 value={formData.middleName} 
                 onChange={handleInputChange} 
-                className="mt-1 h-12 border-gray-300 focus:border-red-500 focus:ring-red-500" 
+                disabled={fetchingData}
+                className="mt-1 h-12 border-gray-300 focus:border-red-500 focus:ring-red-500 disabled:bg-gray-100" 
               />
             </div>
             <div>
               <Label htmlFor="suffix-desktop" className="text-gray-700">Suffix</Label>
-              <Select value={formData.suffix} onValueChange={handleSuffixChange}>
-                <SelectTrigger className="mt-1 h-12 border-gray-300 focus:border-red-500 focus:ring-red-500">
+              <Select value={formData.suffix} onValueChange={handleSuffixChange} disabled={fetchingData}>
+                <SelectTrigger className="mt-1 h-12 border-gray-300 focus:border-red-500 focus:ring-red-500 disabled:bg-gray-100">
                   <SelectValue placeholder="Select suffix" />
                 </SelectTrigger>
                 <SelectContent>
@@ -592,7 +584,8 @@ export default function OfficialRegistration() {
               type="tel" 
               value={formData.landlineNumber} 
               onChange={handleInputChange} 
-              className="mt-1 h-12 border-gray-300 focus:border-red-500 focus:ring-red-500" 
+              disabled={fetchingData}
+              className="mt-1 h-12 border-gray-300 focus:border-red-500 focus:ring-red-500 disabled:bg-gray-100" 
             />
           </div>
 
@@ -620,28 +613,6 @@ export default function OfficialRegistration() {
             <p className="text-xs text-gray-500 mt-1">Password must be at least 8 characters long</p>
           </div>
 
-          <div>
-            <Label htmlFor="confirmPassword-desktop" className="text-gray-700">Confirm Password *</Label>
-            <div className="relative mt-1">
-              <Input 
-                id="confirmPassword-desktop" 
-                name="confirmPassword" 
-                type={showConfirmPassword ? "text" : "password"}
-                value={formData.confirmPassword} 
-                onChange={handleInputChange} 
-                required 
-                className="h-12 border-gray-300 focus:border-red-500 focus:ring-red-500 pr-10" 
-                placeholder="Confirm your password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
 
           <div className="text-center text-sm text-gray-600 leading-5">
             By submitting this form, you agree with the{" "}
