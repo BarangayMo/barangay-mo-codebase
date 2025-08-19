@@ -40,7 +40,7 @@ export function useRegionOfficialData(region: string, barangay: string, position
         });
 
         if (error) {
-          if (error.code === 'PGRST116' || !data) {
+          if (error.code === 'PGRST116' || !data || (Array.isArray(data) && data.length === 0)) {
             // No data found
             setOfficialData(null);
             return;
@@ -48,15 +48,18 @@ export function useRegionOfficialData(region: string, barangay: string, position
           throw error;
         }
 
-        if (data) {
+        if (data && Array.isArray(data) && data.length > 0) {
+          const official = data[0] as any;
           setOfficialData({
-            firstName: data.firstname || '',
-            lastName: data.lastname || '',
-            middleName: data.middlename || '',
-            suffix: data.suffix || '',
+            firstName: official.firstname || '',
+            lastName: official.lastname || '',
+            middleName: official.middlename || '',
+            suffix: official.suffix || '',
             phoneNumber: '',
-            landlineNumber: data.phone || ''
+            landlineNumber: official.phone || ''
           });
+        } else {
+          setOfficialData(null);
         }
       } catch (err: any) {
         console.error('Error fetching official data:', err);

@@ -2636,6 +2636,20 @@ export type Database = {
         Args: { barangay_name: string }
         Returns: Json
       }
+      get_official_by_position_and_barangay: {
+        Args: {
+          barangay_name: string
+          position_name: string
+          region_name: string
+        }
+        Returns: {
+          firstname: string
+          lastname: string
+          middlename: string
+          phone: string
+          suffix: string
+        }[]
+      }
       get_region_table_name: {
         Args: { region_name: string }
         Returns: string
