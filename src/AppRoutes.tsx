@@ -100,6 +100,8 @@ import BarangayProfile from "@/pages/officials/BarangayProfile";
 
 // Import the new EmailConfirmation component
 import EmailConfirmation from "@/pages/EmailConfirmation";
+import MPINSetupPage from "@/pages/MPINSetupPage";
+import MPINLoginPage from "@/pages/MPINLoginPage";
 
 // Import the new QR Scanner component
 import QRScanner from "@/pages/officials/QRScanner";
@@ -140,6 +142,8 @@ export function AppRoutes() {
       <Route path="/email-confirmation" element={<EmailConfirmationHandler />} />
       <Route path="/auth/confirm" element={<EmailConfirmationHandler />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
+      <Route path="/mpin-setup" element={<MPINSetupPage />} />
+      <Route path="/mpin-login" element={<MPINLoginPage />} />
       <Route path="/verify" element={<Verify />} />
       <Route path="/phone" element={<Phone />} />
       <Route path="/welcome" element={<MobileWelcome />} />

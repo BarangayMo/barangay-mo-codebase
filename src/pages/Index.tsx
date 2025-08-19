@@ -7,6 +7,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { mpinAuth } from "@/services/mpinAuth";
 
 
 export default function Index() {
@@ -15,12 +16,22 @@ export default function Index() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   
-  // Handle redirects for mobile users
+  // Handle redirects for mobile users and MPIN login
   useEffect(() => {
+    // Check if there's a stored user for MPIN login (only if not authenticated)
+    if (!isAuthenticated) {
+      const storedCredentials = mpinAuth.getStoredCredentials();
+      if (storedCredentials) {
+        // Redirect to MPIN login if user has previously logged in
+        navigate('/mpin-login');
+        return;
+      }
+    }
+    
     if (isMobile) {
       navigate('/welcome');
     }
-  }, [isMobile, navigate]);
+  }, [isMobile, navigate, isAuthenticated]);
 
   // Show loading or nothing for mobile users while redirecting
   if (isMobile) {
