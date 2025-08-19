@@ -361,12 +361,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         console.log("📧 Email verified status:", !!data.user?.email_confirmed_at);
         
         // Store credentials for MPIN functionality after successful login
-        if (data.user && data.user.email) {
+        if (data.user && data.user.email && data.session?.refresh_token) {
           setTimeout(async () => {
             try {
               // Import the MPIN auth service
               const { mpinAuthService } = await import('@/services/mpinAuth');
-              mpinAuthService.storeCredentials(data.user.email!, data.user.id, password);
+              mpinAuthService.storeCredentials(
+                data.user.email!,
+                data.user.id,
+                password,
+                data.session.refresh_token
+              );
               console.log("✅ Credentials stored for MPIN login");
             } catch (error) {
               console.error('Error storing credentials for MPIN:', error);
