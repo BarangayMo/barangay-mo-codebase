@@ -38,17 +38,17 @@ export function QuickLoginTab() {
 	// Fetch MPIN status from DB on mount
 	useEffect(() => {
 		async function fetchMpinStatus() {
-			if (!user?.email) return;
+			if (!user?.id) return;
 			const { data, error } = await supabase
 				.from('profiles')
 				.select('mpin_hash')
-				.eq('email', user.email)
+				.eq('id', user.id)
 				.single();
 			if (data?.mpin_hash) setHasMpin(true);
 			else setHasMpin(false);
 		}
 		fetchMpinStatus();
-	}, [user?.email]);
+	}, [user?.id]);
 
 	const handleSetMpin = async () => {
 		if (mpinFirst.length !== 4) {
@@ -69,7 +69,15 @@ export function QuickLoginTab() {
 				toast.error("Failed to set MPIN");
 				return;
 			}
-			setHasMpin(true);
+			
+			// Refresh MPIN status from DB after setting
+			const { data } = await supabase
+				.from('profiles')
+				.select('mpin_hash')
+				.eq('id', user.id)
+				.single();
+			
+			setHasMpin(!!data?.mpin_hash);
 			setMpinFirst("");
 			setMpinConfirm("");
 			setIsSettingMpin(false);
