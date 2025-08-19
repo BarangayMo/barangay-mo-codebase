@@ -5,6 +5,7 @@ interface StoredCredentials {
   userId: string;
   password: string; // Encrypted with device key
   lastLoginTime: number;
+  refreshToken: string;
 }
 
 // Device fingerprint for security
@@ -61,7 +62,7 @@ export const mpinAuthService = {
   },
 
   // Store credentials after successful login
-  storeCredentials(email: string, userId: string, password: string): void {
+  storeCredentials(email: string, userId: string, password: string, refreshToken: string): void {
     try {
       const deviceKey = getDeviceFingerprint();
       const encryptedPassword = encryptPassword(password, deviceKey);
@@ -69,7 +70,8 @@ export const mpinAuthService = {
         email,
         userId,
         password: encryptedPassword,
-        lastLoginTime: Date.now()
+        lastLoginTime: Date.now(),
+        refreshToken
       };
       localStorage.setItem(`mpin_creds_${deviceKey}`, JSON.stringify(credentials));
     } catch (e) {
@@ -95,6 +97,13 @@ export const mpinAuthService = {
         return { success: false, error: 'No stored credentials found' };
       }
 
+      if (!credentials.refreshToken) {
+        return { success: false, error: 'Refresh token missing in stored credentials' };
+      }
+
+  // Debug: print the email being sent
+  console.log('MPIN Auth Request Email:', credentials.email);
+
       // Call edge function to verify MPIN
       const response = await fetch('https://lsygeaoqahfryyfvpxrk.supabase.co/functions/v1/mpin-auth', {
         method: 'POST',
@@ -103,7 +112,8 @@ export const mpinAuthService = {
         },
         body: JSON.stringify({ 
           email: credentials.email, 
-          mpin 
+          mpin,
+          refresh_token: credentials.refreshToken
         }),
       });
 
