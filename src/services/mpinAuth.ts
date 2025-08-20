@@ -66,6 +66,13 @@ export const mpinAuthService = {
           isValid: Date.now() - credentials.lastLoginTime < 7 * 24 * 60 * 60 * 1000
         });
         
+        // Validate refresh token length
+        if (credentials.refreshToken && credentials.refreshToken.length < 50) {
+          console.log('⚠️ Stored refresh token is too short, clearing credentials');
+          this.clearStoredCredentials();
+          return null;
+        }
+        
         // Check if credentials are not too old (7 days)
         const isValid = Date.now() - credentials.lastLoginTime < 7 * 24 * 60 * 60 * 1000;
         if (!isValid) {
@@ -84,6 +91,12 @@ export const mpinAuthService = {
   // Store credentials after successful login
   storeCredentials(email: string, userId: string, password: string, refreshToken: string): void {
     try {
+      // Validate refresh token before storing
+      if (!refreshToken || refreshToken.length < 50) {
+        console.error('❌ Invalid refresh token - too short:', refreshToken?.length || 0);
+        throw new Error('Invalid refresh token provided');
+      }
+
       const deviceKey = getDeviceFingerprint();
       console.log('💾 Storing credentials:', {
         email,
@@ -108,11 +121,23 @@ export const mpinAuthService = {
       localStorage.setItem(storageKey, JSON.stringify(credentials));
       console.log('✅ Credentials stored successfully with key:', storageKey.substring(0, 20) + '...');
       
-      // Verify storage worked
+      // Verify storage worked and token wasn't truncated
       const verification = localStorage.getItem(storageKey);
-      console.log('🔍 Storage verification:', !!verification);
+      if (verification) {
+        const parsed = JSON.parse(verification);
+        if (parsed.refreshToken.length !== refreshToken.length) {
+          console.error('❌ Storage corrupted refresh token!', {
+            original: refreshToken.length,
+            stored: parsed.refreshToken.length
+          });
+          localStorage.removeItem(storageKey);
+          throw new Error('Storage corrupted the refresh token');
+        }
+      }
+      console.log('🔍 Storage verification passed');
     } catch (e) {
       console.error('❌ Failed to store credentials:', e);
+      throw e; // Re-throw to let caller know storage failed
     }
   },
 
