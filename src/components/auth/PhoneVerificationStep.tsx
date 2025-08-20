@@ -103,6 +103,8 @@ const PhoneVerificationStep = ({ userRole, onBack }: PhoneVerificationStepProps)
           errorMessage = "Phone number needs verification. Please contact support or try a different number.";
         } else if (data?.twilioCode === 21610) {
           errorMessage = "This phone number needs verification. Please contact support.";
+        } else if (data?.twilioCode === 21612) {
+          errorMessage = "International SMS not enabled. Please contact support or try a different number.";
         }
         
         toast.error(errorMessage);
