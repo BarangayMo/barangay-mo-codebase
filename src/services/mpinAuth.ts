@@ -162,7 +162,21 @@ export const mpinAuthService = {
       if (currentSession.session?.refresh_token && 
           currentSession.session.user?.email === credentials.email) {
         console.log('🔄 Using current session refresh token instead of stored one');
+        console.log('📊 Token comparison:', {
+          storedTokenLength: credentials.refreshToken.length,
+          currentTokenLength: currentSession.session.refresh_token.length,
+          storedTokenStart: credentials.refreshToken.substring(0, 10) + '...',
+          currentTokenStart: currentSession.session.refresh_token.substring(0, 10) + '...'
+        });
         refreshTokenToUse = currentSession.session.refresh_token;
+      } else {
+        console.log('⚠️ Using stored refresh token:', {
+          length: credentials.refreshToken.length,
+          start: credentials.refreshToken.substring(0, 10) + '...',
+          hasCurrentSession: !!currentSession.session,
+          currentSessionEmail: currentSession.session?.user?.email,
+          credentialsEmail: credentials.email
+        });
       }
 
       console.log('📤 MPIN Auth Request Details:', {
