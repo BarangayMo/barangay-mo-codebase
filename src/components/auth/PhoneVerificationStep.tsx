@@ -90,7 +90,22 @@ const PhoneVerificationStep = ({ userRole, onBack }: PhoneVerificationStepProps)
         });
       } else {
         console.error('OTP sending failed:', data);
-        toast.error(data?.error || "Failed to send OTP");
+        
+        // Show specific error message based on the error type
+        let errorMessage = data?.message || data?.error || "Failed to send OTP";
+        
+        // Handle specific Twilio errors
+        if (data?.twilioCode === 21408) {
+          errorMessage = "SMS is not available for your region. Please contact support.";
+        } else if (data?.twilioCode === 21211) {
+          errorMessage = "Please enter a valid international phone number format.";
+        } else if (data?.twilioCode === 21608) {
+          errorMessage = "Phone number needs verification. Please contact support or try a different number.";
+        } else if (data?.twilioCode === 21610) {
+          errorMessage = "This phone number needs verification. Please contact support.";
+        }
+        
+        toast.error(errorMessage);
       }
     } catch (error) {
       console.error('Error sending OTP:', error);
