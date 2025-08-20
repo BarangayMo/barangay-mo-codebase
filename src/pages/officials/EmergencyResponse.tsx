@@ -105,10 +105,18 @@ const EmergencyResponse = () => {
   ];
 
   const handleCall = (service: string) => {
+    console.log('handleCall called with service:', service);
+    console.log('Available contacts:', emergencyContacts);
+    
     const contact = emergencyContacts.find(c => c.name === service);
-    if (contact?.number) {
-      window.location.href = `tel:${contact.number}`;
+    console.log('Found contact:', contact);
+    
+    if (contact?.number && contact.number.trim() !== '') {
+      const phoneNumber = contact.number.replace(/\s+/g, ''); // Remove spaces
+      console.log('Calling number:', phoneNumber);
+      window.location.href = `tel:${phoneNumber}`;
     } else {
+      console.log('No contact number available for:', service);
       toast.error('No contact number available for this service');
     }
   };
