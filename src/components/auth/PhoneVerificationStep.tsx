@@ -57,20 +57,33 @@ const PhoneVerificationStep = ({ userRole, onBack }: PhoneVerificationStepProps)
     try {
       console.log('Attempting to send OTP to:', validatedPhone, 'for role:', userRole);
       
-      const { data, error } = await supabase.functions.invoke('send-otp', {
-        body: {
+      // Try direct fetch to the edge function as a fallback
+      const functionUrl = `https://lsygeaoqahfryyfvpxrk.supabase.co/functions/v1/send-otp`;
+      console.log('Function URL:', functionUrl);
+      
+      const response = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxzeWdlYW9xYWhmcnl5ZnZweHJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyMjcxODEsImV4cCI6MjA2MDgwMzE4MX0.G1OJ6IjdvIujheeEH8MeBqOaEvO2AMvS1XapMzEUpI4`,
+        },
+        body: JSON.stringify({
           phoneNumber: validatedPhone,
           userRole: userRole
-        }
+        })
       });
 
-      console.log('Supabase function response:', { data, error });
+      console.log('Direct fetch response status:', response.status);
+      console.log('Direct fetch response ok:', response.ok);
 
-      if (error) {
-        console.error('Send OTP error:', error);
-        toast.error(`Failed to send OTP: ${error.message || 'Unknown error'}`);
-        return;
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Direct fetch error response:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
+
+      const data = await response.json();
+      console.log('Direct fetch response data:', data);
 
       if (data && data.success) {
         toast.success("OTP sent to your phone number!");
