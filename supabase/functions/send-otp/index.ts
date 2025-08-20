@@ -75,6 +75,31 @@ const handler = async (req: Request): Promise<Response> => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Get Twilio credentials first
+    const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
+    const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+    const twilioPhoneNumber = Deno.env.get('TWILIO_PHONE_NUMBER');
+
+    console.log('Twilio credentials check:', {
+      accountSid: !!accountSid,
+      authToken: !!authToken,
+      twilioPhoneNumber: !!twilioPhoneNumber
+    });
+
+    if (!accountSid || !authToken || !twilioPhoneNumber) {
+      console.error('Missing Twilio credentials - SMS service not configured');
+      return new Response(
+        JSON.stringify({ 
+          error: 'SMS service not configured',
+          message: 'Phone verification is currently unavailable. Please contact support.'
+        }),
+        { 
+          status: 503, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
     // Generate 6-digit OTP
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     console.log('Generated OTP:', otpCode);
@@ -92,55 +117,7 @@ const handler = async (req: Request): Promise<Response> => {
       console.error('Error deleting existing OTP:', deleteError);
     }
 
-    // Store OTP in database (expires in 10 minutes)
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-    const { error: dbError } = await supabase
-      .from('otp_verifications')
-      .insert({
-        phone_number: cleanPhone,
-        otp_code: otpCode,
-        user_role: userRole,
-        expires_at: expiresAt.toISOString()
-      });
-
-    if (dbError) {
-      console.error('Database error:', dbError);
-      return new Response(
-        JSON.stringify({ error: 'Failed to store OTP' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Get Twilio credentials
-    const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
-    const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
-    const twilioPhoneNumber = Deno.env.get('TWILIO_PHONE_NUMBER');
-
-    console.log('Twilio credentials check:', {
-      accountSid: !!accountSid,
-      authToken: !!authToken,
-      twilioPhoneNumber: !!twilioPhoneNumber
-    });
-
-    if (!accountSid || !authToken || !twilioPhoneNumber) {
-      console.error('Missing Twilio credentials');
-      // For development, return success without sending SMS
-      console.log('Returning success without sending SMS (missing Twilio config)');
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'OTP generated (SMS disabled in development)',
-          expiresAt: expiresAt.toISOString(),
-          debug: { otpCode } // Remove this in production
-        }),
-        { 
-          status: 200, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    // Send SMS via Twilio
+    // Send SMS via Twilio first
     const smsMessage = `Your Smart Barangay verification code is: ${otpCode}. This code will expire in 10 minutes.`;
     
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
@@ -168,7 +145,33 @@ const handler = async (req: Request): Promise<Response> => {
     if (!twilioResponse.ok) {
       console.error('Twilio error:', twilioResult);
       return new Response(
-        JSON.stringify({ error: 'Failed to send SMS' }),
+        JSON.stringify({ 
+          error: 'Failed to send SMS',
+          message: 'Unable to send verification code. Please check your phone number and try again.'
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Only store OTP in database after SMS is successfully sent
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    const { error: dbError } = await supabase
+      .from('otp_verifications')
+      .insert({
+        phone_number: cleanPhone,
+        otp_code: otpCode,
+        user_role: userRole,
+        expires_at: expiresAt.toISOString()
+      });
+
+    if (dbError) {
+      console.error('Database error after SMS sent:', dbError);
+      // SMS was sent but we couldn't store in DB - this is a critical error
+      return new Response(
+        JSON.stringify({ 
+          error: 'Verification setup failed',
+          message: 'SMS sent but verification setup failed. Please try again.'
+        }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
