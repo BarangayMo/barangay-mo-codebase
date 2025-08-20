@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ChevronLeft } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { MediaUpload } from "@/components/ui/media-upload";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LocationState {
   role: string;
@@ -12,7 +13,11 @@ interface LocationState {
   province: string;
   municipality: string;
   barangay: string;
-  officials: any[];
+  officials?: any[];
+  logoUrl?: string;
+  verifiedPhoneNumber?: string;
+  userRole?: 'resident' | 'official';
+  registrationId?: string;
 }
 
 interface DocumentUploads {
@@ -33,6 +38,80 @@ export default function OfficialDocuments() {
     brgyaptainGovId: ""
   });
 
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Generate or use existing registration ID
+  const [registrationId] = useState(() => {
+    return locationState?.registrationId || crypto.randomUUID();
+  });
+
+  // Load existing documents on component mount
+  useEffect(() => {
+    const loadExistingDocuments = async () => {
+      try {
+        // First try to get from session storage for immediate persistence
+        const sessionKey = `registration_documents_${registrationId}`;
+        const sessionData = sessionStorage.getItem(sessionKey);
+        
+        if (sessionData) {
+          const savedDocuments = JSON.parse(sessionData);
+          setDocuments(savedDocuments);
+          console.log('Loaded documents from session storage:', savedDocuments);
+        }
+
+        // Also try to fetch from Supabase Storage to check for uploaded files
+        const { data: files, error } = await supabase.storage
+          .from('official-documents')
+          .list(`registration_${registrationId}`, {
+            limit: 100,
+            offset: 0
+          });
+
+        if (error) {
+          console.error('Error fetching documents from storage:', error);
+        } else if (files && files.length > 0) {
+          console.log('Found files in storage:', files);
+          
+          // Map storage files to document types based on filename patterns
+          const storageDocuments: Partial<DocumentUploads> = {};
+          
+          for (const file of files) {
+            const { data: urlData } = supabase.storage
+              .from('official-documents')
+              .getPublicUrl(`registration_${registrationId}/${file.name}`);
+            
+            if (file.name.includes('secretaries_appointment')) {
+              storageDocuments.secretariesAppointment = urlData.publicUrl;
+            } else if (file.name.includes('secretaries_gov_id')) {
+              storageDocuments.secretariesGovId = urlData.publicUrl;
+            } else if (file.name.includes('brgy_captain_gov_id')) {
+              storageDocuments.brgyaptainGovId = urlData.publicUrl;
+            }
+          }
+          
+          // Update documents with storage URLs, but don't override session storage URLs
+          setDocuments(prev => ({
+            secretariesAppointment: prev.secretariesAppointment || storageDocuments.secretariesAppointment || "",
+            secretariesGovId: prev.secretariesGovId || storageDocuments.secretariesGovId || "",
+            brgyaptainGovId: prev.brgyaptainGovId || storageDocuments.brgyaptainGovId || ""
+          }));
+        }
+      } catch (error) {
+        console.error('Error loading existing documents:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadExistingDocuments();
+  }, [registrationId]);
+
+  // Save documents to session storage whenever they change
+  useEffect(() => {
+    const sessionKey = `registration_documents_${registrationId}`;
+    sessionStorage.setItem(sessionKey, JSON.stringify(documents));
+  }, [documents, registrationId]);
+
   const handleDocumentUpload = (field: keyof DocumentUploads, url: string) => {
     setDocuments(prev => ({ ...prev, [field]: url }));
   };
@@ -45,7 +124,8 @@ export default function OfficialDocuments() {
     navigate("/register/logo", { 
       state: { 
         ...locationState,
-        documents
+        documents,
+        registrationId // Pass registration ID to next step
       } 
     });
   };
@@ -86,7 +166,18 @@ export default function OfficialDocuments() {
           <div className="w-6" />
         </div>
 
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto mb-2"></div>
+              <p className="text-sm text-gray-600">Loading documents...</p>
+            </div>
+          </div>
+        )}
+
         {/* Content */}
+        {!isLoading && (
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 space-y-6">
             {/* Location Info */}
@@ -116,6 +207,8 @@ export default function OfficialDocuments() {
                   onRemove={() => handleDocumentRemove('secretariesAppointment')}
                   accept="image/*,.pdf,.doc,.docx"
                   className="w-full"
+                  bucketName="official-documents"
+                  filePath={`registration_${registrationId}/secretaries_appointment`}
                 />
               </div>
 
@@ -130,6 +223,8 @@ export default function OfficialDocuments() {
                   onRemove={() => handleDocumentRemove('secretariesGovId')}
                   accept="image/*,.pdf"
                   className="w-full"
+                  bucketName="official-documents"
+                  filePath={`registration_${registrationId}/secretaries_gov_id`}
                 />
               </div>
 
@@ -144,13 +239,17 @@ export default function OfficialDocuments() {
                   onRemove={() => handleDocumentRemove('brgyaptainGovId')}
                   accept="image/*,.pdf"
                   className="w-full"
+                  bucketName="official-documents"
+                  filePath={`registration_${registrationId}/brgy_captain_gov_id`}
                 />
               </div>
             </div>
           </div>
         </div>
+        )}
 
         {/* Next Button */}
+        {!isLoading && (
         <div className="p-4 border-t">
           <Button
             onClick={handleNext}
@@ -159,6 +258,7 @@ export default function OfficialDocuments() {
             NEXT
           </Button>
         </div>
+        )}
       </div>
     );
   }
@@ -172,6 +272,18 @@ export default function OfficialDocuments() {
           <div className="h-1 w-4/5 bg-red-600"></div>
         </div>
 
+        {/* Loading State */}
+        {isLoading && (
+          <div className="p-8 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading documents...</p>
+            </div>
+          </div>
+        )}
+
+        {/* Content */}
+        {!isLoading && (
         <div className="p-8 max-h-[80vh] overflow-y-auto">
           <button onClick={handleBack} className="inline-flex items-center text-sm text-red-600 mb-6 hover:text-red-700">
             <ChevronLeft className="w-4 h-4 mr-1" /> Back
@@ -212,6 +324,8 @@ export default function OfficialDocuments() {
                   onRemove={() => handleDocumentRemove('secretariesAppointment')}
                   accept="image/*,.pdf,.doc,.docx"
                   className="w-full"
+                  bucketName="official-documents"
+                  filePath={`registration_${registrationId}/secretaries_appointment`}
                 />
               </div>
 
@@ -226,6 +340,8 @@ export default function OfficialDocuments() {
                   onRemove={() => handleDocumentRemove('secretariesGovId')}
                   accept="image/*,.pdf"
                   className="w-full"
+                  bucketName="official-documents"
+                  filePath={`registration_${registrationId}/secretaries_gov_id`}
                 />
               </div>
 
@@ -240,6 +356,8 @@ export default function OfficialDocuments() {
                   onRemove={() => handleDocumentRemove('brgyaptainGovId')}
                   accept="image/*,.pdf"
                   className="w-full"
+                  bucketName="official-documents"
+                  filePath={`registration_${registrationId}/brgy_captain_gov_id`}
                 />
               </div>
             </div>
@@ -253,6 +371,7 @@ export default function OfficialDocuments() {
             Next
           </Button>
         </div>
+        )}
       </div>
     </div>
   );
