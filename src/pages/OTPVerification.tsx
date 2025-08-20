@@ -84,23 +84,13 @@ const OTPVerification = () => {
 
       if (data?.success) {
         toast.success("Phone number verified successfully!");
-        
-        // Navigate to appropriate registration form with verified phone number
-        if (state.userRole === 'official') {
-          navigate('/register/official', { 
-            state: { 
-              verifiedPhoneNumber: state.phoneNumber,
-              userRole: state.userRole 
-            } 
-          });
-        } else {
-          navigate('/register', { 
-            state: { 
-              verifiedPhoneNumber: state.phoneNumber,
-              userRole: state.userRole 
-            } 
-          });
-        }
+        // Move to location selection step after OTP verification
+        navigate('/register/location', {
+          state: {
+            role: state.userRole,
+            verifiedPhoneNumber: state.phoneNumber
+          }
+        });
       } else {
         if (data?.remainingAttempts !== undefined) {
           setRemainingAttempts(data.remainingAttempts);
