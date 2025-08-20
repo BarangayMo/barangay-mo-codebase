@@ -171,7 +171,8 @@ export default function OfficialRegistration() {
         barangay: barangay!,
         municipality: municipality!,
         province: province!,
-        region: region!
+        region: region!,
+        registration_id: locationState?.registrationId // Include registration ID
       };
       const { data, error } = await supabase
         .from('officials')
@@ -361,10 +362,10 @@ export default function OfficialRegistration() {
                   id="phoneNumber" 
                   name="phoneNumber" 
                   type="tel" 
-                  value={formData.phoneNumber} 
-                  onChange={handleInputChange} 
+                  value={verifiedPhoneNumber || formData.phoneNumber} 
+                  disabled
                   required 
-                  className="mt-1 h-12 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500" 
+                  className="mt-1 h-12 text-sm border-gray-300 focus:border-red-500 focus:ring-red-500 bg-gray-100 cursor-not-allowed" 
                 />
               </div>
 
