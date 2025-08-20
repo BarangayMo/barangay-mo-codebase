@@ -66,7 +66,7 @@ export default function LogoUpload() {
       const filePath = `logos/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('barangay-logos')
+        .from('companylogo')
         .upload(filePath, file);
 
       if (uploadError) {
@@ -75,7 +75,7 @@ export default function LogoUpload() {
       }
 
       const { data } = supabase.storage
-        .from('barangay-logos')
+        .from('companylogo')
         .getPublicUrl(filePath);
 
       return data.publicUrl;
@@ -99,16 +99,6 @@ export default function LogoUpload() {
           return;
         }
         logoUrl = uploadedUrl;
-
-        // Update the Barangays table with the new logo URL
-        const { error: updateError } = await supabase
-          .from('Barangays')
-          .update({ Logo: logoUrl })
-          .eq('BARANGAY', locationState.barangay);
-
-        if (updateError) {
-          console.error('Error updating barangay logo:', updateError);
-        }
       }
 
       const registrationData = {
