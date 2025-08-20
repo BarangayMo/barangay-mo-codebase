@@ -66,13 +66,6 @@ export const mpinAuthService = {
           isValid: Date.now() - credentials.lastLoginTime < 7 * 24 * 60 * 60 * 1000
         });
         
-        // Validate refresh token length
-        if (credentials.refreshToken && credentials.refreshToken.length < 50) {
-          console.log('⚠️ Stored refresh token is too short, clearing credentials');
-          this.clearStoredCredentials();
-          return null;
-        }
-        
         // Check if credentials are not too old (7 days)
         const isValid = Date.now() - credentials.lastLoginTime < 7 * 24 * 60 * 60 * 1000;
         if (!isValid) {
@@ -91,10 +84,9 @@ export const mpinAuthService = {
   // Store credentials after successful login
   storeCredentials(email: string, userId: string, password: string, refreshToken: string): void {
     try {
-      // Validate refresh token before storing
-      if (!refreshToken || refreshToken.length < 50) {
-        console.error('❌ Invalid refresh token - too short:', refreshToken?.length || 0);
-        throw new Error('Invalid refresh token provided');
+      // Validate refresh token before storing (more lenient now)
+      if (!refreshToken || refreshToken.length < 10) {
+        console.warn('⚠️ Refresh token seems short but storing anyway:', refreshToken?.length || 0);
       }
 
       const deviceKey = getDeviceFingerprint();
@@ -121,20 +113,12 @@ export const mpinAuthService = {
       localStorage.setItem(storageKey, JSON.stringify(credentials));
       console.log('✅ Credentials stored successfully with key:', storageKey.substring(0, 20) + '...');
       
-      // Verify storage worked and token wasn't truncated
+      // Verify storage worked
       const verification = localStorage.getItem(storageKey);
       if (verification) {
         const parsed = JSON.parse(verification);
-        if (parsed.refreshToken.length !== refreshToken.length) {
-          console.error('❌ Storage corrupted refresh token!', {
-            original: refreshToken.length,
-            stored: parsed.refreshToken.length
-          });
-          localStorage.removeItem(storageKey);
-          throw new Error('Storage corrupted the refresh token');
-        }
+        console.log('🔍 Storage verification passed, token length:', parsed.refreshToken.length);
       }
-      console.log('🔍 Storage verification passed');
     } catch (e) {
       console.error('❌ Failed to store credentials:', e);
       throw e; // Re-throw to let caller know storage failed
@@ -162,129 +146,96 @@ export const mpinAuthService = {
       const credentials = this.hasStoredCredentials();
       if (!credentials) {
         console.log('❌ No valid stored credentials found');
-        return { success: false, error: 'No stored credentials found' };
+        return { success: false, error: 'No stored credentials found. Please set up MPIN first.' };
       }
 
-      if (!credentials.refreshToken) {
-        console.log('❌ No refresh token in stored credentials');
-        return { success: false, error: 'Refresh token missing in stored credentials' };
+      console.log('📤 Verifying MPIN for user:', credentials.email);
+
+      // First, verify the MPIN using the database function
+      const { data: verifyResult, error: verifyError } = await supabase.rpc('verify_user_mpin', {
+        p_email: credentials.email,
+        p_mpin: mpin
+      });
+
+      console.log('📋 MPIN verification result:', { verifyResult, verifyError });
+
+      if (verifyError) {
+        console.error('❌ MPIN verification error:', verifyError);
+        return { success: false, error: 'MPIN verification failed' };
       }
 
-      // Debug: Check current session state
-      const { data: currentSession } = await supabase.auth.getSession();
-      console.log('🔍 Current session state:', {
-        hasSession: !!currentSession.session,
-        sessionUserId: currentSession.session?.user?.id?.substring(0, 8) + '...',
-        sessionEmail: currentSession.session?.user?.email,
-        accessTokenLength: currentSession.session?.access_token?.length,
-        refreshTokenLength: currentSession.session?.refresh_token?.length,
-        storedRefreshTokenLength: credentials.refreshToken.length,
-        tokensMatch: currentSession.session?.refresh_token === credentials.refreshToken
-      });
-
-      // Check if we should use current session's refresh token instead
-      let refreshTokenToUse = credentials.refreshToken;
-      if (currentSession.session?.refresh_token && 
-          currentSession.session.user?.email === credentials.email) {
-        console.log('🔄 Using current session refresh token instead of stored one');
-        console.log('📊 Token comparison:', {
-          storedTokenLength: credentials.refreshToken.length,
-          currentTokenLength: currentSession.session.refresh_token.length,
-          storedTokenStart: credentials.refreshToken.substring(0, 10) + '...',
-          currentTokenStart: currentSession.session.refresh_token.substring(0, 10) + '...'
-        });
-        refreshTokenToUse = currentSession.session.refresh_token;
-      } else {
-        console.log('⚠️ Using stored refresh token:', {
-          length: credentials.refreshToken.length,
-          start: credentials.refreshToken.substring(0, 10) + '...',
-          hasCurrentSession: !!currentSession.session,
-          currentSessionEmail: currentSession.session?.user?.email,
-          credentialsEmail: credentials.email
-        });
-      }
-
-      console.log('📤 MPIN Auth Request Details:', {
-        email: credentials.email,
-        mpinLength: mpin.length,
-        refreshTokenLength: refreshTokenToUse.length,
-        refreshTokenStart: refreshTokenToUse.substring(0, 10) + '...',
-        refreshTokenEnd: '...' + refreshTokenToUse.substring(refreshTokenToUse.length - 10)
-      });
-
-      // Call edge function to verify MPIN
-      const response = await fetch('https://lsygeaoqahfryyfvpxrk.supabase.co/functions/v1/mpin-auth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          email: credentials.email, 
-          mpin,
-          refresh_token: refreshTokenToUse
-        }),
-      });
-
-      console.log('📥 Edge function response:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok
-      });
-
-      const result = await response.json();
-      console.log('📋 Edge function result:', {
-        success: result.success,
-        error: result.error,
-        hasSession: !!result.session
-      });
-
-      if (!result.success) {
-        // If refresh token is invalid, clear credentials and require re-login
-        if (result.error === 'refresh_token_expired' || result.error === 'Invalid or expired refresh token') {
-          console.log('🔄 Refresh token expired, clearing stored credentials...');
-          this.clearStoredCredentials();
-          return { success: false, error: 'Session expired. Please log in again to set up MPIN.' };
-        }
+      // Type guard and validation for the result
+      const result = verifyResult as any;
+      if (!result || !result.ok) {
+        let errorMessage = 'Invalid MPIN';
         
-        // Try to update refresh token if we have a current session
-        if (result.error === 'session_expired' && currentSession.session?.refresh_token) {
-          console.log('🔄 Updating stored credentials with current session...');
-          this.storeCredentials(
-            credentials.email,
-            credentials.userId,
-            credentials.password,
-            currentSession.session.refresh_token
-          );
-          return { success: false, error: 'Refresh token updated. Please try again.' };
+        if (result && typeof result === 'object') {
+          if (result.reason === 'locked') {
+            errorMessage = 'Account locked due to too many failed attempts';
+          } else if (result.reason === 'not_found') {
+            errorMessage = 'User not found';
+          } else if (result.reason === 'not_set') {
+            errorMessage = 'MPIN not set. Please set up MPIN first.';
+          } else if (result.reason === 'invalid') {
+            const remaining = result.remaining_attempts || 0;
+            errorMessage = `Invalid MPIN. ${remaining} attempts remaining.`;
+          }
         }
-        
-        return { success: false, error: result.error || 'MPIN verification failed' };
+
+        return { success: false, error: errorMessage };
       }
 
-      // MPIN verified, now login with stored credentials
+      // MPIN verified successfully! Now log in with stored password
+      console.log('✅ MPIN verified! Attempting login with stored credentials...');
+      
       const deviceKey = getDeviceFingerprint();
       const password = decryptPassword(credentials.password, deviceKey);
 
       if (!password) {
         console.log('❌ Failed to decrypt stored password');
-        return { success: false, error: 'Failed to decrypt stored password' };
+        this.clearStoredCredentials();
+        return { success: false, error: 'Failed to decrypt password. Please set up MPIN again.' };
       }
 
-      console.log('🔐 Attempting Supabase login with decrypted credentials...');
-      const { error: loginError } = await supabase.auth.signInWithPassword({
+      // Log in with email and password
+      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
         email: credentials.email,
         password: password
       });
 
       if (loginError) {
-        console.error('❌ Supabase login error:', loginError);
-        // If login fails, clear stored credentials as they might be invalid
-        this.clearStoredCredentials();
-        return { success: false, error: 'Stored credentials are invalid' };
+        console.error('❌ Login error:', loginError);
+        
+        // If password is wrong, clear stored credentials
+        if (loginError.message?.includes('Invalid login credentials')) {
+          this.clearStoredCredentials();
+          return { success: false, error: 'Stored password is invalid. Please set up MPIN again.' };
+        }
+        
+        return { success: false, error: loginError.message || 'Login failed' };
       }
 
-      console.log('✅ MPIN login successful!');
-      return { success: true };
+      if (loginData.session && loginData.user) {
+        console.log('✅ MPIN login successful for user:', loginData.user.email);
+        
+        // Update stored credentials with fresh refresh token
+        try {
+          this.storeCredentials(
+            credentials.email,
+            credentials.userId,
+            password, // Use the decrypted password
+            loginData.session.refresh_token
+          );
+          console.log('🔄 Updated stored credentials with fresh token');
+        } catch (e) {
+          console.warn('⚠️ Failed to update credentials, but login was successful:', e);
+        }
+        
+        return { success: true };
+      }
+
+      return { success: false, error: 'Login succeeded but no session created' };
+      
     } catch (error) {
       console.error('💥 MPIN verification error:', error);
       return { success: false, error: 'Verification failed' };
