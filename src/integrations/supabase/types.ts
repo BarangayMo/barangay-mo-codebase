@@ -1214,6 +1214,45 @@ export type Database = {
         }
         Relationships: []
       }
+      otp_verifications: {
+        Row: {
+          attempts: number
+          created_at: string
+          expires_at: string
+          id: string
+          is_verified: boolean
+          max_attempts: number
+          otp_code: string
+          phone_number: string
+          updated_at: string
+          user_role: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          expires_at: string
+          id?: string
+          is_verified?: boolean
+          max_attempts?: number
+          otp_code: string
+          phone_number: string
+          updated_at?: string
+          user_role: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          expires_at?: string
+          id?: string
+          is_verified?: boolean
+          max_attempts?: number
+          otp_code?: string
+          phone_number?: string
+          updated_at?: string
+          user_role?: string
+        }
+        Relationships: []
+      }
       product_categories: {
         Row: {
           created_at: string
@@ -2675,7 +2714,7 @@ export type Database = {
         Returns: string
       }
       set_user_mpin: {
-        Args: { mpin_text: string }
+        Args: { mpin_text: string } | { payload: Json }
         Returns: boolean
       }
       sync_approved_officials_to_profiles: {
