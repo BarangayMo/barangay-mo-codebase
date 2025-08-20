@@ -18,34 +18,22 @@ const PhoneVerificationStep = ({ userRole, onBack }: PhoneVerificationStepProps)
   const [isSending, setIsSending] = useState(false);
 
   const formatPhoneNumber = (value: string) => {
-    // Remove all non-digits
-    const cleaned = value.replace(/\D/g, '');
+    // Remove all non-digits except + at the beginning
+    const cleaned = value.replace(/[^\d+]/g, '');
     
-    // Handle different phone number formats
-    if (cleaned.length <= 10) {
-      // Local format: 09XXXXXXXXX
-      return cleaned;
-    } else if (cleaned.length === 12 && cleaned.startsWith('63')) {
-      // International format: 639XXXXXXXXX
-      return cleaned;
-    } else if (cleaned.length === 13 && cleaned.startsWith('639')) {
-      // With country code: +639XXXXXXXXX
-      return cleaned;
-    }
-    
-    return cleaned.slice(0, 13); // Limit to max length
+    // Limit to reasonable international phone number length
+    return cleaned.slice(0, 16);
   };
 
   const validatePhoneNumber = (phone: string) => {
-    const cleaned = phone.replace(/\D/g, '');
+    const cleaned = phone.replace(/[^\d+]/g, '');
     
-    // Check if it's a valid Philippine mobile number
-    if (cleaned.length === 11 && cleaned.startsWith('09')) {
-      return `+63${cleaned.slice(1)}`; // Convert to international format
-    } else if (cleaned.length === 12 && cleaned.startsWith('63')) {
-      return `+${cleaned}`;
-    } else if (cleaned.length === 13 && cleaned.startsWith('639')) {
-      return `+${cleaned}`;
+    // Basic international phone number validation
+    // Must start with + and have 7-15 digits after country code
+    const phoneRegex = /^\+\d{7,15}$/;
+    
+    if (phoneRegex.test(cleaned)) {
+      return cleaned;
     }
     
     return null;
@@ -60,7 +48,7 @@ const PhoneVerificationStep = ({ userRole, onBack }: PhoneVerificationStepProps)
     const validatedPhone = validatePhoneNumber(phoneNumber);
     
     if (!validatedPhone) {
-      toast.error("Please enter a valid Philippine mobile number (e.g., 09123456789)");
+      toast.error("Please enter a valid international phone number (e.g., +1234567890)");
       return;
     }
 
@@ -108,11 +96,11 @@ const PhoneVerificationStep = ({ userRole, onBack }: PhoneVerificationStepProps)
   };
 
   const getPlaceholderText = () => {
-    return "09123456789";
+    return "+1234567890";
   };
 
   const getHelpText = () => {
-    return "Enter your Philippine mobile number to receive a verification code";
+    return "Enter your international phone number to receive a verification code";
   };
 
   return (
@@ -133,24 +121,19 @@ const PhoneVerificationStep = ({ userRole, onBack }: PhoneVerificationStepProps)
         <CardContent className="space-y-6">
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">
-              Mobile Number
+              Phone Number
             </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span className="text-gray-500 text-sm">🇵🇭 +63</span>
-              </div>
-              <Input
-                type="tel"
-                value={phoneNumber}
-                onChange={handlePhoneChange}
-                onKeyPress={handleKeyPress}
-                placeholder={getPlaceholderText()}
-                className="pl-16"
-                maxLength={15}
-                autoComplete="tel"
-                autoFocus
-              />
-            </div>
+            <Input
+              type="tel"
+              value={phoneNumber}
+              onChange={handlePhoneChange}
+              onKeyPress={handleKeyPress}
+              placeholder={getPlaceholderText()}
+              className=""
+              maxLength={16}
+              autoComplete="tel"
+              autoFocus
+            />
             <p className="text-xs text-gray-500">
               We'll send a 6-digit verification code to this number
             </p>
