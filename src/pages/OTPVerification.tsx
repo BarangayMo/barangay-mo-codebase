@@ -120,7 +120,14 @@ const OTPVerification = () => {
 
       if (error) {
         console.error('Resend error:', error);
-        toast.error("Failed to resend OTP. Please try again.");
+        
+        // Handle specific error cases
+        if (error.message?.includes('SMS service not configured') || 
+            error.message?.includes('503')) {
+          toast.error("Phone verification service is currently unavailable. Please contact support.");
+        } else {
+          toast.error(error.message || "Failed to resend OTP. Please try again.");
+        }
         return;
       }
 
