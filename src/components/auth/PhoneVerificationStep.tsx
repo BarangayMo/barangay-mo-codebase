@@ -55,6 +55,8 @@ const PhoneVerificationStep = ({ userRole, onBack }: PhoneVerificationStepProps)
     setIsSending(true);
 
     try {
+      console.log('Attempting to send OTP to:', validatedPhone, 'for role:', userRole);
+      
       const { data, error } = await supabase.functions.invoke('send-otp', {
         body: {
           phoneNumber: validatedPhone,
@@ -62,13 +64,15 @@ const PhoneVerificationStep = ({ userRole, onBack }: PhoneVerificationStepProps)
         }
       });
 
+      console.log('Supabase function response:', { data, error });
+
       if (error) {
         console.error('Send OTP error:', error);
-        toast.error("Failed to send OTP. Please try again.");
+        toast.error(`Failed to send OTP: ${error.message || 'Unknown error'}`);
         return;
       }
 
-      if (data.success) {
+      if (data && data.success) {
         toast.success("OTP sent to your phone number!");
         
         // Navigate to OTP verification page
@@ -79,11 +83,12 @@ const PhoneVerificationStep = ({ userRole, onBack }: PhoneVerificationStepProps)
           }
         });
       } else {
-        toast.error(data.error || "Failed to send OTP");
+        console.error('OTP sending failed:', data);
+        toast.error(data?.error || "Failed to send OTP");
       }
     } catch (error) {
       console.error('Error sending OTP:', error);
-      toast.error("Failed to send OTP. Please try again.");
+      toast.error(`Network error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsSending(false);
     }
