@@ -36,6 +36,16 @@ verify_jwt = false
 # Public so logged-out users can use MPIN to authenticate
 verify_jwt = false
 
+# Configure the Auth setting for the Edge Function send-otp
+[functions.send-otp]
+# Public so unauthenticated users can send OTP during registration
+verify_jwt = false
+
+# Configure the Auth setting for the Edge Function verify-otp
+[functions.verify-otp]
+# Public so unauthenticated users can verify OTP during registration
+verify_jwt = false
+
 # Configure the Dashboard
 [inbucket]
 # The inbucket port to use. Defaults to 54324.

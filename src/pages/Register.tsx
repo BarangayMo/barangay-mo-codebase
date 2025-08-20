@@ -21,6 +21,8 @@ interface LocationState {
   barangay: string;
   officials?: any[];
   logoUrl?: string;
+  verifiedPhoneNumber?: string;
+  userRole?: 'resident' | 'official';
 }
 
 const COMMON_SUFFIXES = [
@@ -46,6 +48,7 @@ export default function Register() {
   const province = localStorage.getItem('registration_province') || locationState?.province;
   const municipality = localStorage.getItem('registration_municipality') || locationState?.municipality;
   const barangay = localStorage.getItem('registration_barangay') || locationState?.barangay;
+  const verifiedPhoneNumber = locationState?.verifiedPhoneNumber;
 
   // Check if we need to redirect to role selection
   const needsRedirect = !role || !region || !province || !municipality || !barangay;
@@ -118,7 +121,7 @@ export default function Register() {
         province: registrationData.province,
         municipality: registrationData.municipality,
         barangay: registrationData.barangay,
-        phoneNumber: null,
+        phoneNumber: verifiedPhoneNumber || null,
         landlineNumber: null,
         logoUrl: registrationData.logoUrl || null,
         officials: registrationData.officials || null

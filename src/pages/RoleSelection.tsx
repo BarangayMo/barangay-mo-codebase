@@ -6,9 +6,11 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { RegistrationProgress } from "@/components/ui/registration-progress";
+import PhoneVerificationStep from "@/components/auth/PhoneVerificationStep";
 
 export default function RoleSelection() {
   const [selectedRole, setSelectedRole] = useState("");
+  const [currentStep, setCurrentStep] = useState<'role' | 'phone'>('role');
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 768px)");
 
@@ -28,12 +30,26 @@ export default function RoleSelection() {
   }, [selectedRole]);
 
   const handleNext = () => {
-    // Save role to localStorage before navigation
+    // Save role to localStorage before moving to phone verification
     localStorage.setItem('registration_role', selectedRole);
-    
-    // Both resident and official go to location selection first
-    navigate("/register/location", { state: { role: selectedRole } });
+    setCurrentStep('phone');
   };
+
+  const handleBackToRoleSelection = () => {
+    setCurrentStep('role');
+  };
+
+  // Show phone verification step
+  if (currentStep === 'phone') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <PhoneVerificationStep 
+          userRole={selectedRole as 'resident' | 'official'} 
+          onBack={handleBackToRoleSelection}
+        />
+      </div>
+    );
+  }
 
   if (isMobile) {
     return (

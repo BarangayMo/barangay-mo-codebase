@@ -21,6 +21,8 @@ interface LocationState {
   barangay: string;
   officials?: any[];
   logoUrl?: string;
+  verifiedPhoneNumber?: string;
+  userRole?: 'resident' | 'official';
 }
 
 const COMMON_SUFFIXES = [
@@ -58,6 +60,7 @@ export default function OfficialRegistration() {
   const province = localStorage.getItem('registration_province') || locationState?.province;
   const municipality = localStorage.getItem('registration_municipality') || locationState?.municipality;
   const barangay = localStorage.getItem('registration_barangay') || locationState?.barangay;
+  const verifiedPhoneNumber = locationState?.verifiedPhoneNumber;
 
   // Check if we need to redirect to role selection
   const needsRedirect = !role || role !== 'official' || !region || !province || !municipality || !barangay;
@@ -91,7 +94,7 @@ export default function OfficialRegistration() {
     middleName: "",
     suffix: "",
     email: "",
-    phoneNumber: "",
+    phoneNumber: verifiedPhoneNumber || "",
     landlineNumber: "",
     position: "",
     password: ""

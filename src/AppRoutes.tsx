@@ -124,6 +124,8 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { RbiProtectedRoute } from "@/components/auth/RbiProtectedRoute";
 import AuthCallback from "@/pages/AuthCallback";
 
+import OTPVerification from "@/pages/OTPVerification";
+
 export function AppRoutes() {
   return (
     <Routes>
@@ -134,6 +136,7 @@ export function AppRoutes() {
       <Route path="/register/official" element={<OfficialRegistration />} />
       <Route path="/register/official-success" element={<OfficialRegistrationSuccess />} />
       <Route path="/register/role" element={<RoleSelection />} />
+      <Route path="/otp-verification" element={<OTPVerification />} />
       <Route path="/register/location" element={<LocationSelection />} />
       <Route path="/register/officials" element={<OfficialsInfo />} />
       <Route path="/register/official-documents" element={<OfficialDocuments />} />
