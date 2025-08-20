@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Upload, X } from "lucide-react";
@@ -15,16 +15,44 @@ export default function LogoUpload() {
   const isMobile = useMediaQuery("(max-width: 768px)");
   
   const locationState = location.state;
-  
-  // If no required data, redirect to role selection
+  // Debug log for state
+  console.log('LogoUpload locationState:', locationState);
+  // If no required data, show error message and redirect
   if (!locationState?.role || !locationState?.region) {
-    navigate('/register/role');
-    return null;
+    console.error('Missing required registration state:', locationState);
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center', color: 'red' }}>
+        <h2>Missing registration data</h2>
+        <p>Required information was not provided. Please restart the registration process.</p>
+      </div>
+    );
   }
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [existingLogoUrl, setExistingLogoUrl] = useState<string | null>(null);
+
+  // Fetch existing logo on mount
+  React.useEffect(() => {
+    async function fetchLogo() {
+      if (!locationState?.barangay) return;
+      // Try to get logo from Barangays table
+      const { data, error } = await supabase
+        .from('Barangays')
+        .select('Logo')
+        .eq('BARANGAY', locationState.barangay)
+        .single();
+      if (error) {
+        console.error('Error fetching barangay logo:', error);
+        return;
+      }
+      if (data?.Logo) {
+        setExistingLogoUrl(data.Logo);
+      }
+    }
+    fetchLogo();
+  }, [locationState?.barangay]);
 
   const handleBack = () => {
     navigate("/register/official-documents", { state: locationState });
@@ -186,6 +214,16 @@ export default function LogoUpload() {
                   Remove
                 </button>
               </div>
+            ) : existingLogoUrl ? (
+              <div className="text-center py-4">
+                <img
+                  src={existingLogoUrl}
+                  alt="Barangay Logo"
+                  className="max-h-20 max-w-full object-contain rounded mx-auto mb-2"
+                />
+                <p className="text-xs text-gray-500 mb-2">Current barangay logo</p>
+                <p className="text-xs text-gray-400">PNG, JPG, GIF up to 10MB</p>
+              </div>
             ) : (
               <div className="text-center py-4">
                 <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
@@ -293,6 +331,16 @@ export default function LogoUpload() {
                   <X className="w-4 h-4 mr-1" />
                   Remove
                 </button>
+              </div>
+            ) : existingLogoUrl ? (
+              <div className="text-center">
+                <img
+                  src={existingLogoUrl}
+                  alt="Barangay Logo"
+                  className="max-h-32 max-w-full object-contain rounded mx-auto mb-2"
+                />
+                <p className="text-xs text-gray-500 mb-2">Current barangay logo</p>
+                <p className="text-xs text-gray-400">Supports PNG, JPG, GIF up to 10MB</p>
               </div>
             ) : (
               <div className="text-center">
