@@ -3,6 +3,7 @@ import React, { useState, useRef } from 'react';
 import { Button } from './button';
 import { Upload, X, Image } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface MediaUploadProps {
   value?: string;
@@ -10,6 +11,8 @@ interface MediaUploadProps {
   onRemove: () => void;
   className?: string;
   accept?: string;
+  bucketName?: string;
+  filePath?: string;
 }
 
 export const MediaUpload = ({ 
@@ -17,7 +20,9 @@ export const MediaUpload = ({
   onChange, 
   onRemove, 
   className,
-  accept = "image/*"
+  accept = "image/*",
+  bucketName = "official-documents",
+  filePath
 }: MediaUploadProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -54,11 +59,41 @@ export const MediaUpload = ({
     setIsUploading(true);
     
     try {
-      // For now, create a local URL - in a real app you'd upload to Supabase Storage
-      const url = URL.createObjectURL(file);
-      onChange(url);
+      if (filePath && bucketName) {
+        // Upload to Supabase Storage
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${filePath}_${Date.now()}.${fileExt}`;
+        
+        const { data, error } = await supabase.storage
+          .from(bucketName)
+          .upload(fileName, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (error) {
+          console.error('Supabase upload error:', error);
+          // Fall back to blob URL if upload fails
+          const url = URL.createObjectURL(file);
+          onChange(url);
+        } else {
+          // Get the public URL
+          const { data: urlData } = supabase.storage
+            .from(bucketName)
+            .getPublicUrl(fileName);
+          
+          onChange(urlData.publicUrl);
+        }
+      } else {
+        // Fall back to blob URL if no path specified
+        const url = URL.createObjectURL(file);
+        onChange(url);
+      }
     } catch (error) {
       console.error('Upload failed:', error);
+      // Fall back to blob URL on any error
+      const url = URL.createObjectURL(file);
+      onChange(url);
     } finally {
       setIsUploading(false);
     }
