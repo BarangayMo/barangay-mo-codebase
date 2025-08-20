@@ -69,12 +69,20 @@ const OTPVerification = () => {
       });
 
       if (error) {
-        console.error('Verification error:', error);
-        toast.error("Failed to verify OTP. Please try again.");
+        console.error('Verification error details:', error);
+        
+        // Handle specific error cases
+        if (error.message?.includes('Edge Function returned a non-2xx status code')) {
+          toast.error("Verification service is currently unavailable. Please try again later.");
+        } else if (error.message?.includes('Failed to fetch') || error.message?.includes('network')) {
+          toast.error("Network error. Please check your connection and try again.");
+        } else {
+          toast.error(error.message || "Failed to verify OTP. Please try again.");
+        }
         return;
       }
 
-      if (data.success) {
+      if (data?.success) {
         toast.success("Phone number verified successfully!");
         
         // Navigate to appropriate registration form with verified phone number
@@ -94,14 +102,23 @@ const OTPVerification = () => {
           });
         }
       } else {
-        if (data.remainingAttempts !== undefined) {
+        if (data?.remainingAttempts !== undefined) {
           setRemainingAttempts(data.remainingAttempts);
         }
-        toast.error(data.error || "Invalid OTP code");
+        const errorMessage = data?.error || data?.message || "Invalid OTP code";
+        toast.error(errorMessage);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error verifying OTP:', error);
-      toast.error("Failed to verify OTP. Please try again.");
+      
+      // Handle network and other errors
+      if (error.message?.includes('Edge Function returned a non-2xx status code')) {
+        toast.error("Verification service is currently unavailable. Please try again later.");
+      } else if (error.message?.includes('Failed to fetch') || error.message?.includes('network')) {
+        toast.error("Network error. Please check your connection and try again.");
+      } else {
+        toast.error("Failed to verify OTP. Please try again.");
+      }
     } finally {
       setIsVerifying(false);
     }
@@ -119,29 +136,48 @@ const OTPVerification = () => {
       });
 
       if (error) {
-        console.error('Resend error:', error);
+        console.error('Resend error details:', error);
         
         // Handle specific error cases
         if (error.message?.includes('SMS service not configured') || 
-            error.message?.includes('503')) {
-          toast.error("Phone verification service is currently unavailable. Please contact support.");
+            error.message?.includes('503') ||
+            error.message?.includes('Service Unavailable') ||
+            error.message?.includes('Twilio credentials')) {
+          toast.error("SMS service is not configured. Please contact the administrator to set up Twilio credentials.");
+        } else if (error.message?.includes('Edge Function returned a non-2xx status code')) {
+          toast.error("SMS service is currently unavailable. Please contact support.");
         } else {
           toast.error(error.message || "Failed to resend OTP. Please try again.");
         }
         return;
       }
 
-      if (data.success) {
+      if (data?.success) {
         toast.success("OTP sent successfully!");
         setTimeLeft(600); // Reset timer to 10 minutes
         setRemainingAttempts(3); // Reset attempts
         setOtpCode(""); // Clear current input
       } else {
-        toast.error(data.error || "Failed to send OTP");
+        // Handle error responses from the function
+        const errorMessage = data?.error || data?.message || "Failed to send OTP";
+        if (errorMessage.includes('Twilio credentials') || 
+            errorMessage.includes('SMS service not configured')) {
+          toast.error("SMS service is not configured. Please contact the administrator.");
+        } else {
+          toast.error(errorMessage);
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error resending OTP:', error);
-      toast.error("Failed to resend OTP. Please try again.");
+      
+      // Handle network and other errors
+      if (error.message?.includes('Edge Function returned a non-2xx status code')) {
+        toast.error("SMS service is currently unavailable. Please contact support.");
+      } else if (error.message?.includes('Failed to fetch') || error.message?.includes('network')) {
+        toast.error("Network error. Please check your connection and try again.");
+      } else {
+        toast.error("Failed to resend OTP. Please try again.");
+      }
     } finally {
       setIsResending(false);
     }
@@ -246,6 +282,14 @@ const OTPVerification = () => {
                   'Resend Code'
                 )}
               </Button>
+              
+              {/* Help text for configuration issues */}
+              <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-xs text-amber-700">
+                  <strong>Having trouble receiving SMS?</strong><br/>
+                  Contact support if you continue to experience issues with SMS delivery.
+                </p>
+              </div>
             </div>
 
             <Button
