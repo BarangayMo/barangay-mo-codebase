@@ -22,6 +22,7 @@ interface OfficialRegistrationData {
   municipality: string;
   province: string;
   region: string;
+  registration_id?: string;
 }
 
 serve(async (req) => {
@@ -215,6 +216,7 @@ serve(async (req) => {
       municipality: registrationData.municipality.trim(),
       province: registrationData.province.trim(),
       region: registrationData.region.trim(),
+      registration_id: registrationData.registration_id || null, // Store registration ID
       status: 'pending',
       is_approved: false,
       user_id: null, // No user associated yet
