@@ -264,18 +264,43 @@ export default function OfficialRegistrationsPage() {
                     {/* Middle Section - Official Information */}
                     <div className="flex-1 min-w-0 lg:mx-8">
                       <div className="space-y-2 text-sm">
-                        <div className="flex items-start">
-                          <span className="font-medium text-gray-700 min-w-[80px]">{registration.position}:</span>
-                          <span className="text-gray-900 ml-2">{getFullName(registration)}</span>
-                        </div>
-                        <div className="flex items-start">
-                          <span className="font-medium text-gray-700 min-w-[80px]">Email:</span>
-                          <span className="text-gray-900 ml-2">{registration.email}</span>
-                        </div>
-                        <div className="flex items-start">
-                          <span className="font-medium text-gray-700 min-w-[80px]">Submitted:</span>
-                          <span className="text-gray-900 ml-2">{formatDate(registration.submitted_at!)}</span>
-                        </div>
+                        {/* Secretary Details */}
+                        {registration.position === 'Secretary' ? (
+                          <div className="flex items-start">
+                            <User className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-gray-600" />
+                            <div>
+                              <span className="font-medium text-gray-700">Secretary:</span>
+                              <span className="text-gray-900 ml-2">{getFullName(registration)}</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-start">
+                            <User className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-gray-600" />
+                            <div>
+                              <span className="font-medium text-gray-700">Secretary:</span>
+                              <span className="text-gray-500 ml-2 italic">Not specified</span>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Punong Barangay Details */}
+                        {registration.position === 'Punong Barangay' ? (
+                          <div className="flex items-start">
+                            <User className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-gray-600" />
+                            <div>
+                              <span className="font-medium text-gray-700">Brgy. Captain:</span>
+                              <span className="text-gray-900 ml-2">{getFullName(registration)}</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-start">
+                            <User className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-gray-600" />
+                            <div>
+                              <span className="font-medium text-gray-700">Brgy. Captain:</span>
+                              <span className="text-gray-500 ml-2 italic">Not specified</span>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 
