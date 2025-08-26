@@ -239,8 +239,8 @@ export default function OfficialRegistrationsPage() {
             registrations.map((registration) => (
               <Card key={registration.id}>
                 <CardContent className="p-6">
-                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between space-y-4 lg:space-y-0">
-                    {/* Left Section - Barangay and Location */}
+                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                    {/* Left Section - Barangay and Status */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-3 mb-3">
                         <h3 className="text-xl font-bold text-gray-900">
@@ -249,68 +249,62 @@ export default function OfficialRegistrationsPage() {
                         {getStatusBadge(registration.status)}
                       </div>
                       
-                      <div className="space-y-1 text-sm text-gray-600">
-                        <div className="flex items-center">
-                          <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
-                          <span>{registration.municipality}, {registration.province}</span>
+                      {/* Two-column layout for details */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1 text-sm text-gray-600">
+                        {/* Left column - Location & Phone */}
+                        <div className="space-y-1">
+                          <div className="flex items-center">
+                            <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+                            <span>{registration.municipality}, {registration.province}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <Phone className="h-4 w-4 mr-2 flex-shrink-0" />
+                            <span>{registration.phone_number}</span>
+                          </div>
                         </div>
-                        <div className="flex items-center">
-                          <Phone className="h-4 w-4 mr-2 flex-shrink-0" />
-                          <span>{registration.phone_number}</span>
-                        </div>
-                      </div>
-                    </div>
 
-                    {/* Middle Section - Official Information */}
-                    <div className="flex-1 min-w-0 lg:mx-8">
-                      <div className="space-y-2 text-sm">
-                        {/* Secretary Details */}
-                        {registration.position === 'Secretary' ? (
-                          <div className="flex items-start">
-                            <User className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-gray-600" />
-                            <div>
+                        {/* Right column - Officials */}
+                        <div className="space-y-1">
+                          {/* Secretary Details */}
+                          {registration.position === 'Secretary' ? (
+                            <div className="flex items-center">
+                              <User className="h-4 w-4 mr-2 flex-shrink-0 text-gray-600" />
                               <span className="font-medium text-gray-700">Secretary:</span>
                               <span className="text-gray-900 ml-2">{getFullName(registration)}</span>
                             </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-start">
-                            <User className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-gray-600" />
-                            <div>
+                          ) : (
+                            <div className="flex items-center">
+                              <User className="h-4 w-4 mr-2 flex-shrink-0 text-gray-600" />
                               <span className="font-medium text-gray-700">Secretary:</span>
                               <span className="text-gray-500 ml-2 italic">Not specified</span>
                             </div>
-                          </div>
-                        )}
-                        
-                        {/* Punong Barangay Details */}
-                        {registration.position === 'Punong Barangay' ? (
-                          <div className="flex items-start">
-                            <User className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-gray-600" />
-                            <div>
+                          )}
+                          
+                          {/* Punong Barangay Details */}
+                          {registration.position === 'Punong Barangay' ? (
+                            <div className="flex items-center">
+                              <User className="h-4 w-4 mr-2 flex-shrink-0 text-gray-600" />
                               <span className="font-medium text-gray-700">Brgy. Captain:</span>
                               <span className="text-gray-900 ml-2">{getFullName(registration)}</span>
                             </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-start">
-                            <User className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-gray-600" />
-                            <div>
+                          ) : (
+                            <div className="flex items-center">
+                              <User className="h-4 w-4 mr-2 flex-shrink-0 text-gray-600" />
                               <span className="font-medium text-gray-700">Brgy. Captain:</span>
                               <span className="text-gray-500 ml-2 italic">Not specified</span>
                             </div>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </div>
 
                     {/* Right Section - Action Buttons */}
-                    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 lg:flex-col lg:space-x-0 lg:space-y-2">
+                    <div className="flex flex-col sm:flex-row xl:flex-col space-y-2 sm:space-y-0 sm:space-x-2 xl:space-x-0 xl:space-y-2 flex-shrink-0">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleView(registration)}
-                        className="w-full sm:w-auto lg:w-full"
+                        className="w-full sm:w-auto xl:w-full min-w-[100px]"
                       >
                         <Eye className="h-4 w-4 mr-1" />
                         View
@@ -323,7 +317,7 @@ export default function OfficialRegistrationsPage() {
                             size="sm"
                             onClick={() => handleApprove(registration.id)}
                             disabled={approveOfficial.isPending}
-                            className="w-full sm:w-auto lg:w-full bg-green-600 hover:bg-green-700"
+                            className="w-full sm:w-auto xl:w-full min-w-[100px] bg-green-600 hover:bg-green-700"
                           >
                             <CheckCircle className="h-4 w-4 mr-1" />
                             Approve
@@ -334,7 +328,7 @@ export default function OfficialRegistrationsPage() {
                             size="sm"
                             onClick={() => handleReject(registration)}
                             disabled={rejectOfficial.isPending}
-                            className="w-full sm:w-auto lg:w-full"
+                            className="w-full sm:w-auto xl:w-full min-w-[100px]"
                           >
                             <XCircle className="h-4 w-4 mr-1" />
                             Reject
