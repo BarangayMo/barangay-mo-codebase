@@ -239,73 +239,84 @@ export default function OfficialRegistrationsPage() {
             registrations.map((registration) => (
               <Card key={registration.id}>
                 <CardContent className="p-6">
-                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {getFullName(registration)}
+                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between space-y-4 lg:space-y-0">
+                    {/* Left Section - Barangay and Location */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-3 mb-3">
+                        <h3 className="text-xl font-bold text-gray-900">
+                          Barangay {registration.barangay}
                         </h3>
                         {getStatusBadge(registration.status)}
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-gray-600">
+                      <div className="space-y-1 text-sm text-gray-600">
                         <div className="flex items-center">
-                          <User className="h-4 w-4 mr-2" />
-                          <span>{registration.position}</span>
+                          <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+                          <span>{registration.municipality}, {registration.province}</span>
                         </div>
                         <div className="flex items-center">
-                          <Mail className="h-4 w-4 mr-2" />
-                          <span>{registration.email}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <Phone className="h-4 w-4 mr-2" />
+                          <Phone className="h-4 w-4 mr-2 flex-shrink-0" />
                           <span>{registration.phone_number}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <MapPin className="h-4 w-4 mr-2" />
-                          <span>{registration.barangay}, {registration.municipality}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <Calendar className="h-4 w-4 mr-2" />
-                          <span>Submitted: {formatDate(registration.submitted_at!)}</span>
                         </div>
                       </div>
                     </div>
 
-                   <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-  <Button
-    variant="outline"
-    size="sm"
-    onClick={() => handleView(registration)}
-  >
-    <Eye className="h-4 w-4 mr-1" />
-    View
-  </Button>
+                    {/* Middle Section - Official Information */}
+                    <div className="flex-1 min-w-0 lg:mx-8">
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-start">
+                          <span className="font-medium text-gray-700 min-w-[80px]">{registration.position}:</span>
+                          <span className="text-gray-900 ml-2">{getFullName(registration)}</span>
+                        </div>
+                        <div className="flex items-start">
+                          <span className="font-medium text-gray-700 min-w-[80px]">Email:</span>
+                          <span className="text-gray-900 ml-2">{registration.email}</span>
+                        </div>
+                        <div className="flex items-start">
+                          <span className="font-medium text-gray-700 min-w-[80px]">Submitted:</span>
+                          <span className="text-gray-900 ml-2">{formatDate(registration.submitted_at!)}</span>
+                        </div>
+                      </div>
+                    </div>
 
-  {registration.status === 'pending' && (
-    <>
-      <Button
-        variant="default"
-        size="sm"
-        onClick={() => handleApprove(registration.id)}
-        disabled={approveOfficial.isPending}
-      >
-        Approve
-      </Button>
+                    {/* Right Section - Action Buttons */}
+                    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 lg:flex-col lg:space-x-0 lg:space-y-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleView(registration)}
+                        className="w-full sm:w-auto lg:w-full"
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
 
-      <Button
-        variant="destructive"
-        size="sm"
-        onClick={() => handleReject(registration)}
-        disabled={rejectOfficial.isPending}
-      >
-        <XCircle className="h-4 w-4 mr-1" />
-        Reject
-      </Button>
-    </>
-  )}
-</div>
+                      {registration.status === 'pending' && (
+                        <>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => handleApprove(registration.id)}
+                            disabled={approveOfficial.isPending}
+                            className="w-full sm:w-auto lg:w-full bg-green-600 hover:bg-green-700"
+                          >
+                            <CheckCircle className="h-4 w-4 mr-1" />
+                            Approve
+                          </Button>
 
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleReject(registration)}
+                            disabled={rejectOfficial.isPending}
+                            className="w-full sm:w-auto lg:w-full"
+                          >
+                            <XCircle className="h-4 w-4 mr-1" />
+                            Reject
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>

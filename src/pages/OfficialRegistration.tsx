@@ -23,6 +23,7 @@ interface LocationState {
   logoUrl?: string;
   verifiedPhoneNumber?: string;
   userRole?: 'resident' | 'official';
+  registrationId?: string;
 }
 
 const COMMON_SUFFIXES = [
@@ -172,8 +173,9 @@ export default function OfficialRegistration() {
         municipality: municipality!,
         province: province!,
         region: region!,
-        registration_id: locationState?.registrationId // Include registration ID
+        registration_id: locationState?.registrationId || undefined
       };
+      
       const { data, error } = await supabase
         .from('officials')
         .insert([registrationData]);
